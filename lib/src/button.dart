@@ -52,14 +52,14 @@ class LiquidPrismButton extends StatelessWidget {
   final Color? foregroundColor;
   @override
   Widget build(BuildContext context) {
+    final theme = LiquidPrismTheme.of(context);
     final colors = LiquidPrismTheme.colorsOf(context);
     final tint = LiquidPrismTheme.tintOf(context);
     final prominent = buttonStyle == GlassButtonStyle.glassProminent;
     final enabled = onPressed != null;
     final explicitForeground =
-        foregroundColor ??
-        (prominent ? null : LiquidPrismTheme.of(context).foregroundColor);
-    final base = glass ?? LiquidPrismTheme.of(context).glass ?? Glass.regular;
+        foregroundColor ?? (prominent ? null : theme.foregroundColor);
+    final base = glass ?? theme.glass ?? Glass.regular;
     final material = prominent && base.tintColor == null
         ? base.tint(tint)
         : base;

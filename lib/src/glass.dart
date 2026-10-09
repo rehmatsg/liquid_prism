@@ -57,7 +57,7 @@ class LiquidPrism extends StatefulWidget {
     await SystemGlass.initialize();
     if (_loading != null) return _loading!;
     if (!isShaderSupported || (_program != null && _linearSampler != null)) {
-      return Future.value();
+      return;
     }
     return _loading ??= _load();
   }
@@ -114,7 +114,7 @@ class LiquidPrism extends StatefulWidget {
 }
 
 class _LiquidPrismState extends State<LiquidPrism> {
-  Glass _material = Glass.regular;
+  Glass get _material => widget.glass ?? _theme.glass ?? Glass.regular;
   LiquidPrismThemeData _theme = const LiquidPrismThemeData();
   bool get _usesSystem =>
       (widget.rendering ?? _theme.rendering ?? GlassRendering.system) ==
@@ -128,7 +128,6 @@ class _LiquidPrismState extends State<LiquidPrism> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _theme = LiquidPrismTheme.of(context);
-    _material = widget.glass ?? _theme.glass ?? Glass.regular;
     _ensureShader();
   }
 
@@ -136,16 +135,14 @@ class _LiquidPrismState extends State<LiquidPrism> {
   @override
   void didUpdateWidget(LiquidPrism oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _theme = LiquidPrismTheme.of(context);
-    _material = widget.glass ?? _theme.glass ?? Glass.regular;
     _ensureShader();
   }
 
   bool _loadingShader = false;
   void _ensureShader() {
     if (_usesSystem ||
-        (_material.variant == GlassVariant.identity ||
-            _material.isInteractive) ||
+        _material.variant == GlassVariant.identity ||
+        _material.isInteractive ||
         _shader != null ||
         _loadingShader) {
       return;
@@ -206,7 +203,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
         ),
       );
     }
-    final theme = LiquidPrismTheme.of(context);
+    final theme = _theme;
     final optics = widget.optics ?? theme.optics;
     final shape =
         widget.shape ??
@@ -217,12 +214,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
         (optics == null
             ? GlassShape.capsule
             : GlassShape.rect(cornerRadius: optics.cornerRadius));
-    if ((widget.rendering ?? theme.rendering ?? GlassRendering.system) ==
-            GlassRendering.system &&
-        SystemGlass.supported &&
-        optics == null &&
-        widget.blur == null &&
-        theme.blur == null) {
+    if (_usesSystem) {
       return SystemGlassSurface(
         glass: _material,
         shape: shape,
@@ -248,7 +240,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
       _material.tintColor ?? const Color(0x00000000),
       optics?.tint ?? Color(recipe.dark ? 0x99000000 : 0x99FFFFFF),
     );
-    final surface = CustomPaint(
+    return CustomPaint(
       painter: shader == null ? _ExteriorShadow(shape) : null,
       child: shader != null
           ? _GlassRenderWidget(
@@ -290,6 +282,10 @@ class _LiquidPrismState extends State<LiquidPrism> {
                             borderRadius: BorderRadius.circular(shape.radius),
                             side: const BorderSide(color: Color(0x55FFFFFF)),
                           )
+                        : shape.isCircle
+                        ? const CircleBorder(
+                            side: BorderSide(color: Color(0x55FFFFFF)),
+                          )
                         : RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(shape.radius),
                             side: const BorderSide(color: Color(0x55FFFFFF)),
@@ -303,7 +299,6 @@ class _LiquidPrismState extends State<LiquidPrism> {
               ),
             ),
     );
-    return surface;
   }
 }
 
@@ -424,12 +419,10 @@ class _RenderGlass extends RenderProxyBox {
           ? superellipseUniforms(size, shape.radius)
           : List.filled(12, 0);
     }
-    final m = getTransformTo(null).storage;
+    final transform = getTransformTo(null);
+    final m = transform.storage;
     final rect = shape.rect(size);
-    final origin = MatrixUtils.transformPoint(
-      getTransformTo(null),
-      rect.topLeft,
-    );
+    final origin = MatrixUtils.transformPoint(transform, rect.topLeft);
     final values = <double>[
       0, 0, // The engine supplies the bound texture size.
       origin.dx * pixelRatio, origin.dy * pixelRatio, rect.width, rect.height,

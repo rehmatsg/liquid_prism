@@ -1,3 +1,9 @@
+## Unreleased
+
+- Fix the fallback circle border in non-square layouts.
+- Simplify renderer dispatch and batch grouping without changing the public API.
+- Document the research, source projects, and rendering limitations in the README.
+
 ## 0.1.0
 
 - Introduce LiquidPrism surfaces, glass buttons, and controlled spring tab bars.

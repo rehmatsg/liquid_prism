@@ -178,8 +178,7 @@ class _GlassGroupData {
         rect.inflate(margin),
       ).inflate(8 / member.pixelRatio);
     }
-    final groups =
-        <(double, double, double, double, double), List<_RenderGlass>>{};
+    final groups = <double, List<_RenderGlass>>{};
     for (final member in surfaces) {
       final near = surfaces.any(
         (other) =>
@@ -224,14 +223,7 @@ class _GlassGroupData {
           matrix[15] != 1) {
         continue;
       }
-      final key = (
-        member.style.frost,
-        matrix[0],
-        matrix[1],
-        matrix[4],
-        matrix[5],
-      );
-      groups.putIfAbsent(key, () => []).add(member);
+      groups.putIfAbsent(member.style.frost, () => []).add(member);
     }
     var used = 0;
     for (final group in groups.values) {

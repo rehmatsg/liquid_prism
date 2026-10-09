@@ -4,7 +4,7 @@ import 'material.dart';
 import 'style.dart';
 
 // Default tint ramps map material luminance to output sRGB.
-enum GlassRole { surface, button, tabBar, selection }
+enum GlassRole { surface, button, tabBar }
 
 final class GlassRecipe {
   const GlassRecipe(
@@ -54,7 +54,6 @@ final class GlassRecipe {
   LiquidPrismStyle optics(double radius) => kind == 2
       ? LiquidPrismStyle.clear.copyWith(cornerRadius: radius)
       : LiquidPrismStyle(
-          edgeWidth: 16,
           refraction: 48,
           frost: 3.3,
           brightness: 0,

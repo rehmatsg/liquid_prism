@@ -4,7 +4,7 @@ Liquid glass surfaces, buttons, and draggable tab bars for Flutter on iOS and An
 
 - Native Liquid Glass on iOS 26+, following system appearance preferences.
 - A customizable Impeller shader for explicit optical settings and Android.
-- Spring-driven touch feedback, interruption, and Reduce Motion support.
+- Interruptible springs, drag selection, and Reduce Motion support.
 - Shared app defaults for materials, tint, foreground colors, shapes, and navigation.
 - Continuous rounded corners, custom tab artwork, and optional labels.
 
@@ -89,8 +89,8 @@ LiquidPrismButton(
 )
 ```
 
-A null `onPressed` disables the button. Callbacks accept synchronous or asynchronous
-work. Async callbacks may overlap; disable the button while an exclusive action runs.
+A null `onPressed` disables the button. Async callbacks may overlap; disable the
+button while an exclusive action runs.
 Use `GlassShape.circle` with an icon for a circular button.
 
 ## Tab bar
@@ -110,11 +110,10 @@ LiquidPrismTabBar(
 )
 ```
 
-The parent owns selection. Taps spring the pill to its destination; holding and
-sliding previews a selection and commits once on release. Supply any widget as an
-icon and optionally provide `selectedIcon`. Labels can be always visible, selected
-only, or hidden; accessibility labels remain available. Give the bar a bounded width
-and position it inside your app's safe area.
+The parent owns selection. Taps move the pill with a spring; dragging previews a
+selection and commits on release. Icons accept any widget, with an optional
+`selectedIcon`. Labels can be always visible, selected only, or hidden. Accessibility
+labels remain available. Place the bar inside a safe area with a bounded width.
 
 ## App-wide appearance
 
@@ -178,6 +177,77 @@ interactive tabs over an original procedural background.
 
 Run `./tool/check.sh` from the repository root for formatting, analysis, and tests.
 See [contributing](CONTRIBUTING.md) for native build checks.
+
+## Research and acknowledgments
+
+Thank you to **[AhmeedGamil/liquid_glass_easy](https://github.com/AhmeedGamil/liquid_glass_easy)**
+and **[luciascarlet/gpui-glass-demo](https://github.com/luciascarlet/gpui-glass-demo)**.
+These two projects made this work possible:
+
+- **Liquid Glass Easy** was the starting point for the Flutter investigation. Its
+  [composition-time uniform updates](https://github.com/AhmeedGamil/liquid_glass_easy/tree/9bc72e3795cb7b972ef2fe381a2224237162cf5b/lib)
+  informed how the shader stays aligned with a moving backdrop. Liquid Prism has
+  no dependency on the package.
+- **GPUI Glass Demo** supplied the optical profile, spectral dispersion,
+  directional highlight and vibrancy equations, and Radiance reflection blend.
+  Its [macOS reverse-engineering notes](https://github.com/luciascarlet/gpui-glass-demo/blob/78858810d3dcb0b0ad1f6cec97db206c5efc84fe/RESEARCH.md)
+  were the main technical reference. Radiance is that project's approximation,
+  not a recovered Apple formula.
+
+### What we measured and changed
+
+We compared matching Flutter and SwiftUI galleries on iPhone 17 simulators running
+**iOS 26.5 and 27**, using the same backgrounds and geometry. LLDB inspection of
+our own native reference app helped separate material, edge, foreground, and
+selection effects. These are observations of those runtimes, not Apple API
+contracts. The shipped plugin uses public UIKit APIs only.
+
+| Area | Finding and implementation |
+| --- | --- |
+| Borders | The inspected iOS highlights use opposing diagonal lights (−π/4 and 3π/4), 1-point height, 90° spread, and 0.7 curvature. The shader grades backdrop color under that mask rather than drawing a uniform white border. Larger native cards can use a wider spread. |
+| Sampling | Display-resolution geometry, bilinear sampling, and integration over compressed pixel footprints reduce jagged refraction at the rim. Gaussian blur runs before refraction; foreground content stays sharp. |
+| Materials | Regular and clear glass have different face and highlight treatments. Role- and backdrop-dependent grading is approximated in the custom shader. |
+| Tint | Light/dark blue, green, orange, and pink ramps came from native color matrices. Other colors use an approximate luminance response. |
+| Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons and selected tabs share a measured resting palette on native glass and iOS 27; the older shader treatment uses backdrop-dependent vibrancy. |
+| Selection | The selected pill has its own color adjustment and an additional 2-point blur, including when bar blur is zero. The measured iOS 27 dark pill is darker than the iOS 26 treatment. |
+| Touch | A held native button expanded to about 1.10× its resting size. Springs were tuned by comparison; their timing was not extracted from Apple. |
+| Rendering cost | Simulator profiling motivated sharing compatible optical passes. Nearby, overlapping, clipped, scaled, or fractionally positioned surfaces retain separate passes to preserve their appearance. |
+
+The default semantic blue is `#0088FF` in light mode and `#0091FF` in dark mode.
+The resting iOS 27 foreground measured on our reference wallpaper is `#005DC7`
+and `#3BCCFF`, respectively. Those foreground values are useful defaults, not
+universal native colors: Apple's output changes with the backdrop and settings.
+The implementation lives in [material recipes](lib/src/recipe.dart),
+[foreground colors](lib/src/foreground.dart), [selection](lib/src/selection.dart),
+and the [shared shader](shaders/glass_core.glsl).
+
+The shader does not reproduce Apple's complete adaptive renderer. Shadows,
+overlapping materials, custom tint, and color management remain approximations.
+Simulator comparisons do not establish physical-device battery use or temperature.
+Raw probes, screenshots, and comparison apps stay in the ignored local research
+archive; they are not shipped with the package.
+
+### Further sources
+
+- Apple: [Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/),
+  [applying glass to custom SwiftUI views](https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views),
+  [UIGlassEffect](https://developer.apple.com/documentation/uikit/uiglasseffect),
+  and the [WWDC26 system appearance update](https://developer.apple.com/videos/play/wwdc2026/102/).
+  The native backend follows system appearance; the shader does not read a numeric
+  system blur setting.
+- Flutter: [fragment shaders and backdrop filters](https://docs.flutter.dev/ui/design/graphics/fragment-shaders)
+  and [performance profiling](https://docs.flutter.dev/perf/ui-performance).
+- Flutter's [rounded-superellipse parameters](https://github.com/flutter/flutter/blob/3.47.4/engine/src/flutter/impeller/geometry/round_superellipse_param.cc)
+  and [distance functions](https://github.com/flutter/flutter/blob/3.47.4/engine/src/flutter/impeller/entity/shaders/uber_sdf.frag)
+  informed the continuous-corner geometry. The closest-point search derives from
+  [Inigo Quilez's distance-function work](https://iquilezles.org/articles/ellipsedist/),
+  also credited in Flutter's [SDF helpers](https://github.com/flutter/flutter/blob/3.47.4/engine/src/flutter/impeller/entity/shaders/sdf_functions.glsl).
+- [SniperGER/iOS-Wallpapers](https://github.com/SniperGER/iOS-Wallpapers) supplied
+  reference backgrounds for the local comparisons. No Apple wallpapers are included
+  in this package or its example.
+
+Pinned revisions and redistribution terms are in
+[third-party notices](THIRD_PARTY_NOTICES.md) and [LICENSES](LICENSES/).
 
 ## License
 

@@ -42,6 +42,65 @@ class _ReferenceClip extends CustomClipper<Path> {
 
 void main() {
   testWidgets(
+    'inscribed circle retains the square reference rim in rectangular layouts',
+    (tester) async {
+      final imageKey = GlobalKey();
+      const center = Offset(120, 80);
+      // Pixel centers near the diagonal circumference of an independent
+      // diameter-80 circle; layout rectangles all share this same circle.
+      final rimPoints = <Offset>[
+        for (var y = 40; y < 120; y++)
+          for (var x = 80; x < 160; x++)
+            if ((x + .5 - center.dx).abs() >= 16 &&
+                (y + .5 - center.dy).abs() >= 16 &&
+                (Offset(x + .5, y + .5) - center).distanceSquared >= 38 * 38 &&
+                (Offset(x + .5, y + .5) - center).distanceSquared <= 41 * 41)
+              Offset(x.toDouble(), y.toDouble()),
+      ];
+      Future<List<List<int>>> render(Size layout) async {
+        await tester.pumpWidget(
+          glassHarness(
+            imageKey: imageKey,
+            background: const Color(0xFF000000),
+            child: LiquidPrism(
+              shape: GlassShape.circle,
+              rendering: GlassRendering.shader,
+              child: SizedBox(
+                key: _childKey,
+                width: layout.width,
+                height: layout.height,
+              ),
+            ),
+          ),
+        );
+        expect(tester.getSize(find.byKey(_childKey)), layout);
+        return pixelsAt(tester, imageKey, [...rimPoints, center]);
+      }
+
+      final square = await render(const Size(80, 80));
+      expect(square.last, [0, 0, 0, 255]);
+      expect(
+        square.take(rimPoints.length).any((pixel) => pixel[0] > 20),
+        isTrue,
+        reason: 'The reference must contain a visible rim over the black face',
+      );
+      for (final layout in [const Size(160, 80), const Size(80, 160)]) {
+        final rectangle = await render(layout);
+        for (var i = 0; i < rimPoints.length; i++) {
+          for (var channel = 0; channel < 4; channel++) {
+            expect(
+              rectangle[i][channel],
+              closeTo(square[i][channel], 1),
+              reason: '$layout circle rim at ${rimPoints[i]}, channel $channel',
+            );
+          }
+        }
+        expect(rectangle.last, square.last);
+      }
+    },
+  );
+
+  testWidgets(
     'smooth and circular corners clip to distinct SDK contours after live shape changes',
     (tester) async {
       final imageKey = GlobalKey();

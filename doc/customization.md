@@ -38,8 +38,7 @@ then inherited blur and optical defaults. Shape precedence is explicit `shape`,
 explicit `optics.cornerRadius`, inherited `shape`, inherited optical corner radius,
 then capsule. Zero blur and `Glass.identity` are explicit choices.
 
-A theme does not override an explicitly styled child's text or artwork. For
-consistent semantic colors, let child icons and text inherit the ambient style.
+Let child icons and text inherit the ambient style for consistent semantic colors.
 
 ## Foreground and tint
 
@@ -58,7 +57,10 @@ Ordinary buttons and selected tabs share the default resting accent on native gl
 and iOS 27. Custom shader rendering on earlier platforms uses backdrop-dependent
 foreground treatment. Explicit foreground overrides bypass that treatment.
 Prominent buttons default to white; disabled controls use a muted semantic color.
-Multicolor images and explicitly colored child widgets retain their own pixels.
+Tab bars preserve explicitly colored icons and custom artwork. In the older
+shader foreground mode, ordinary buttons use their entire child as a vibrancy
+mask. Set the button's `foregroundColor` (or the theme equivalent) to bypass that
+mask when using multicolor artwork or explicitly styled text.
 
 ## Navigation
 
