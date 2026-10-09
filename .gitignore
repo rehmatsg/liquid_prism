@@ -1,0 +1,32 @@
+# Local research archive, generated evidence, and credentials.
+/_research/
+/artifacts/
+.env
+.env.*
+*.pem
+*.p12
+*.mobileprovision
+key.properties
+*.jks
+*.keystore
+
+# Dart / Flutter.
+.dart_tool/
+.flutter-plugins-dependencies
+**/build/
+/coverage/
+/doc/api/
+/pubspec.lock
+
+# Tooling / platforms.
+.DS_Store
+*.log
+*.pyc
+__pycache__/
+.idea/
+.vscode/
+*.iml
+**/Pods/
+**/.symlinks/
+**/xcuserdata/
+*.xcresult/

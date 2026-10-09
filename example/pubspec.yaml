@@ -1,0 +1,20 @@
+name: liquid_prism_example
+description: A compact demonstration of Liquid Prism surfaces, buttons, and tabs.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.3
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  liquid_prism:
+    path: ..
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
