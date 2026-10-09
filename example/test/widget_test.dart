@@ -113,9 +113,148 @@ void main() {
     await tester.pumpAndSettle();
     expect(_title('Saved').hitTestable(), findsOneWidget);
     _expectSelection(tester, 'Saved');
+    await _press(tester, 'Toggle rendering mode');
+    expect(find.text('Flutter shader'), findsOneWidget);
+    await _press(tester, 'Open another page');
+    expect(find.text('Another page'), findsOneWidget);
+    await tester.ensureVisible(find.text('Another page'));
+    await tester.pumpAndSettle();
+    expect(find.text('Another page').hitTestable(), findsOneWidget);
+    await _press(tester, 'Back to gallery');
+    expect(find.text('Another page'), findsNothing);
+    _expectSelection(tester, 'Saved');
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'pushed routes inherit settings and cancel or complete swipe-back without losing home state',
+    (tester) async {
+      _phone(tester);
+      await tester.pumpWidget(const LiquidPrismExample());
+      await _press(tester, 'Add a tap');
+      await _press(tester, 'Favorite');
+      await tester.tap(_tab('Saved'));
+      await tester.pumpAndSettle();
+      expect(find.text('System glass'), findsOneWidget);
+
+      Future<double> openDetail() async {
+        final open = _button('Open another page');
+        await tester.ensureVisible(open);
+        await tester.pumpAndSettle();
+        final offset = _scrollOffset(tester);
+        await tester.tap(open);
+        await tester.pumpAndSettle();
+        expect(find.text('Another page'), findsOneWidget);
+        expect(open, findsNothing);
+        return offset;
+      }
+
+      void expectDetailTheme(
+        Brightness brightness,
+        Glass glass,
+        GlassRendering rendering,
+      ) {
+        final context = tester.element(_button('Back to gallery'));
+        final theme = LiquidPrismTheme.of(context);
+        expect(theme.brightness, brightness);
+        expect(CupertinoTheme.of(context).brightness, brightness);
+        expect(theme.glass, glass);
+        expect(theme.rendering, rendering);
+      }
+
+      Future<void> expectHome(double scrollOffset) async {
+        expect(find.text('Another page'), findsNothing);
+        expect(_scrollOffset(tester), closeTo(scrollOffset, .01));
+        expect(find.text('1 taps'), findsOneWidget);
+        expect(_title('Saved'), findsOneWidget);
+        _expectSelection(tester, 'Saved');
+        await tester.ensureVisible(_button('Favorite'));
+        await tester.pumpAndSettle();
+        expect(_favorite(tester), ui.Tristate.isTrue);
+      }
+
+      final firstOffset = await openDetail();
+      expectDetailTheme(Brightness.dark, Glass.regular, GlassRendering.system);
+      await _press(tester, 'Back to gallery');
+      await expectHome(firstOffset);
+
+      await _press(tester, 'Toggle appearance');
+      await _press(tester, 'Toggle glass material');
+      await _press(tester, 'Toggle rendering mode');
+      expect(find.text('Flutter shader'), findsOneWidget);
+      final secondOffset = await openDetail();
+      expectDetailTheme(Brightness.light, Glass.clear, GlassRendering.shader);
+      final restingTitle = tester.getTopLeft(find.text('Another page'));
+      final cancelled = await tester.startGesture(const Offset(1, 300));
+      await cancelled.moveTo(
+        const Offset(41, 300),
+        timeStamp: const Duration(milliseconds: 120),
+      );
+      await tester.pump();
+      await cancelled.moveTo(
+        const Offset(81, 300),
+        timeStamp: const Duration(milliseconds: 240),
+      );
+      await tester.pump();
+      expect(
+        tester.getTopLeft(find.text('Another page')).dx,
+        greaterThan(restingTitle.dx + 10),
+        reason: 'The edge gesture must visibly control the route before cancellation',
+      );
+      // A stationary sample removes fling velocity; distance controls release.
+      await cancelled.moveTo(
+        const Offset(81, 300),
+        timeStamp: const Duration(milliseconds: 600),
+      );
+      await cancelled.up(timeStamp: const Duration(milliseconds: 800));
+      await tester.pumpAndSettle();
+      expect(find.text('Another page'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('Another page')), restingTitle);
+      expectDetailTheme(Brightness.light, Glass.clear, GlassRendering.shader);
+
+      final completed = await tester.startGesture(const Offset(1, 300));
+      await completed.moveTo(
+        const Offset(151, 300),
+        timeStamp: const Duration(milliseconds: 200),
+      );
+      await tester.pump();
+      await completed.moveTo(
+        const Offset(331, 300),
+        timeStamp: const Duration(milliseconds: 400),
+      );
+      await tester.pump();
+      await completed.moveTo(
+        const Offset(331, 300),
+        timeStamp: const Duration(milliseconds: 650),
+      );
+      await completed.up(timeStamp: const Duration(milliseconds: 800));
+      await tester.pumpAndSettle();
+      await expectHome(secondOffset);
+      expect(find.text('Light'), findsOneWidget);
+      expect(find.text('Clear'), findsOneWidget);
+      expect(find.text('Flutter shader'), findsOneWidget);
+      await _press(tester, 'Toggle rendering mode');
+      expect(find.text('System glass'), findsOneWidget);
+      expect(
+        LiquidPrismTheme.of(tester.element(_button('Toggle rendering mode')))
+            .rendering,
+        GlassRendering.system,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
 }
+
+double _scrollOffset(WidgetTester tester) => tester
+    .state<ScrollableState>(
+      find.descendant(
+        of: find.byType(SingleChildScrollView),
+        matching: find.byType(Scrollable),
+      ),
+    )
+    .position
+    .pixels;
 
 void _phone(WidgetTester tester, {Size size = const Size(402, 874)}) {
   tester.view.devicePixelRatio = 1;

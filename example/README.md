@@ -1,8 +1,9 @@
 # Liquid Prism example
 
 A small app using only `package:liquid_prism/liquid_prism.dart` for glass controls.
-It demonstrates material and theme changes, tinted surfaces, buttons, favorites,
-optional tab labels, and a draggable selection pill. Its background is drawn in
+It demonstrates system/shader rendering, material and theme changes, tinted surfaces, buttons, favorites,
+optional tab labels, a draggable selection pill, and an iOS page transition with
+swipe-back navigation. Tap **Open another page** to try it. Its background is drawn in
 Dart and needs no external images.
 
 ```sh
