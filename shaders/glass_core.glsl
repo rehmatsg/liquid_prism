@@ -144,20 +144,28 @@ void shadeGlass() {
     }
     if (u_material.x > 0.5 && u_material.x < 1.5) {
         bool dark = u_material.y > 0.5;
-        bool button = u_material.z > 0.5 && u_material.z < 1.5;
         bool bar = u_material.z > 1.5 && u_material.z < 2.5;
-        // Native face levels grade luminance while preserving independent chroma.
-        // A scalar per-channel contrast would turn the material muddy gray.
         float value = dot(color,vec3(0.2126,0.7152,0.0722));
-        vec3 center = sampleLocal(u_extent * 0.5);
-        float adaptation = dot(center,vec3(0.2126,0.7152,0.0722));
-        float buttonBlack = clamp(0.9 * adaptation - 0.09,0.2,0.6);
-        float black = button ? buttonBlack : (dark ? (bar ? 0.1870968 : 0.2) : (bar ? 0.5741935 : 0.5));
-        float white = dark ? (button ? min(black + 0.6,0.9) : (bar ? 0.8370968 : 0.6)) : 1.03;
-        float fill = bar ? (dark ? 0. : 0.25) : (button ? (dark ? 0.303571 + black * 0.357143 : 0.675 - black * 0.5) : 0.4);
-        float saturation = bar ? (dark ? 1.3 : 1.1) : 1.;
-        vec3 graded = (color-vec3(value))*saturation + black + value*(white-black);
-        color = clamp(mix(graded,vec3(dark ? 0. : 1.),fill),0.,1.);
+        float mapped;
+        if (bar) {
+            float black = dark ? 0.1870968 : 0.5741935;
+            float white = dark ? 0.8370968 : 1.03;
+            mapped = mix(black + value*(white-black),1.,dark ? 0. : 0.25);
+        } else {
+            // Resting regular surfaces and buttons, measured against SwiftUI
+            // over four neutral backdrops. Preserve chroma independently.
+            vec4 levels = dark ? vec4(56.,106.,151.,174.) / 255.
+                               : vec4(146.,177.,213.,241.) / 255.;
+            vec3 intervals = vec3(63.,77.,63.) / 255.;
+            vec3 slope = (levels.yzw-levels.xyz)/intervals;
+            float x = value-26./255.;
+            mapped = levels.x + slope.x*x
+                   + (slope.y-slope.x)*max(value-89./255.,0.)
+                   + (slope.z-slope.y)*max(value-166./255.,0.);
+        }
+        float saturation = bar ? (dark ? 1.3 : 1.1) : (dark ? 1.2 : 0.9);
+        float chroma = bar && !dark ? 0.75 : 1.;
+        color = clamp((color-vec3(value))*saturation*chroma + mapped,0.,1.);
     }
     if (u_material.w > 0.) {
         float value = dot(color,vec3(0.2126,0.7152,0.0722));

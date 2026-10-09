@@ -17,7 +17,6 @@ class LiquidPrismExample extends StatefulWidget {
 class _LiquidPrismExampleState extends State<LiquidPrismExample> {
   bool _dark = true, _labels = true, _clear = false, _favorite = false;
   int _selected = 0, _count = 0;
-  GlassRendering _rendering = GlassRendering.system;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +28,6 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
       builder: (context, child) => LiquidPrismTheme(
         data: LiquidPrismThemeData(
           brightness: brightness,
-          rendering: _rendering,
           glass: _clear ? Glass.clear : Glass.regular,
           tabBar: GlassTabBarStyle(
             labelBehavior: _labels
@@ -82,20 +80,6 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
                                   onPressed: () =>
                                       setState(() => _clear = !_clear),
                                   child: Text(_clear ? 'Clear' : 'Regular'),
-                                ),
-                                LiquidPrismButton(
-                                  label: 'Toggle rendering mode',
-                                  onPressed: () => setState(() {
-                                    _rendering =
-                                        _rendering == GlassRendering.system
-                                        ? GlassRendering.shader
-                                        : GlassRendering.system;
-                                  }),
-                                  child: Text(
-                                    _rendering == GlassRendering.system
-                                        ? 'System glass'
-                                        : 'Flutter shader',
-                                  ),
                                 ),
                                 LiquidPrismButton(
                                   label: 'Toggle tab labels',

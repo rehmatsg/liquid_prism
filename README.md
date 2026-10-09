@@ -2,8 +2,8 @@
 
 Liquid glass surfaces, buttons, and draggable tab bars for Flutter on iOS and Android.
 
-- Native Liquid Glass on iOS 26+, following system appearance preferences.
-- A customizable Impeller shader for explicit optical settings and Android.
+- Flutter-rendered glass with colors calibrated against SwiftUI Liquid Glass.
+- A customizable Impeller shader for refraction, blur, lighting, and tint.
 - Interruptible springs, drag selection, and Reduce Motion support.
 - Shared app defaults for materials, tint, foreground colors, shapes, and navigation.
 - Continuous rounded corners, custom tab artwork, and optional labels.
@@ -69,8 +69,7 @@ class GlassPage extends StatelessWidget {
 }
 ```
 
-`preload()` initializes native support and shader assets. Rebuild your app after
-adding the dependency: hot reload cannot register a new native plugin.
+`preload()` loads shader assets before the first glass surface appears.
 
 ## Buttons
 
@@ -144,21 +143,19 @@ are independent.
 
 ## Rendering and customization
 
-| Configuration | Rendering |
+| Renderer | Rendering |
 | --- | --- |
-| Default on iOS 26+ | Native system glass |
-| Explicit `blur`, `optics`, or `GlassRendering.shader` | Custom shader when supported |
-| Android / earlier iOS | Custom shader when supported |
+| Impeller with shader-filter support | Flutter glass shader |
 | Renderer without shader filters | Frosted fallback |
 
-Explicit `blur: 0` selects the custom renderer; it is not the system's lowest glass
-setting. `GlassTabBarStyle.selectionBlur` is additional pill blur, independent of
-bar blur, and defaults to 2 logical pixels. Set it to zero to disable it.
+All surfaces, content, and interactions render in Flutter. There are no platform
+views or native plugins. `blur` and `optics` customize the shader directly;
+`blur: 0` removes the material blur. `GlassTabBarStyle.selectionBlur` adds independent
+pill blur and defaults to 2 logical pixels. Set it to zero to disable it.
 
-Native materials follow system preferences. Custom shader optics do not read a
-numeric system blur setting. Flutter-drawn selected colors approximate native
-backdrop adaptation; they are not guaranteed to match every wallpaper or contrast
-setting exactly.
+Colors approximate the native reference, including its brighter dark-mode accent
+and darker selected pill. Apple's backdrop adaptation varies with wallpaper and
+contrast settings. The package does not read the system Liquid Glass blur setting.
 
 See [customization](doc/customization.md) for precedence, shapes, motion, and
 advanced optics, and [rendering](doc/rendering.md) for performance and composition
@@ -176,7 +173,7 @@ The example demonstrates surfaces, tint, buttons, dark/light appearance, and
 interactive tabs over an original procedural background.
 
 Run `./tool/check.sh` from the repository root for formatting, analysis, and tests.
-See [contributing](CONTRIBUTING.md) for native build checks.
+See [contributing](CONTRIBUTING.md) for mobile build checks.
 
 ## Research and acknowledgments
 
@@ -200,15 +197,15 @@ We compared matching Flutter and SwiftUI galleries on iPhone 17 simulators runni
 **iOS 26.5 and 27**, using the same backgrounds and geometry. LLDB inspection of
 our own native reference app helped separate material, edge, foreground, and
 selection effects. These are observations of those runtimes, not Apple API
-contracts. The shipped plugin uses public UIKit APIs only.
+contracts. Native code is confined to the separate research reference app.
 
 | Area | Finding and implementation |
 | --- | --- |
 | Borders | The inspected iOS highlights use opposing diagonal lights (−π/4 and 3π/4), 1-point height, 90° spread, and 0.7 curvature. The shader grades backdrop color under that mask rather than drawing a uniform white border. Larger native cards can use a wider spread. |
 | Sampling | Display-resolution geometry, bilinear sampling, and integration over compressed pixel footprints reduce jagged refraction at the rim. Gaussian blur runs before refraction; foreground content stays sharp. |
-| Materials | Regular and clear glass have different face and highlight treatments. Role- and backdrop-dependent grading is approximated in the custom shader. |
+| Materials | Regular and clear glass have different face and highlight treatments. Regular surfaces and buttons use a luminance response measured against iOS 27; tab bars retain their separate role calibration. |
 | Tint | Light/dark blue, green, orange, and pink ramps came from native color matrices. Other colors use an approximate luminance response. |
-| Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons and selected tabs share a measured resting palette on native glass and iOS 27; the older shader treatment uses backdrop-dependent vibrancy. |
+| Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons and selected tabs share the measured iOS 27 resting palette on every platform, without foreground readback passes. |
 | Selection | The selected pill has its own color adjustment and an additional 2-point blur, including when bar blur is zero. The measured iOS 27 dark pill is darker than the iOS 26 treatment. |
 | Touch | A held native button expanded to about 1.10× its resting size. Springs were tuned by comparison; their timing was not extracted from Apple. |
 | Rendering cost | Simulator profiling motivated sharing compatible optical passes. Nearby, overlapping, clipped, scaled, or fractionally positioned surfaces retain separate passes to preserve their appearance. |
@@ -233,8 +230,7 @@ archive; they are not shipped with the package.
   [applying glass to custom SwiftUI views](https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views),
   [UIGlassEffect](https://developer.apple.com/documentation/uikit/uiglasseffect),
   and the [WWDC26 system appearance update](https://developer.apple.com/videos/play/wwdc2026/102/).
-  The native backend follows system appearance; the shader does not read a numeric
-  system blur setting.
+  These inform the visual reference; the shader does not read a numeric system blur setting.
 - Flutter: [fragment shaders and backdrop filters](https://docs.flutter.dev/ui/design/graphics/fragment-shaders)
   and [performance profiling](https://docs.flutter.dev/perf/ui-performance).
 - Flutter's [rounded-superellipse parameters](https://github.com/flutter/flutter/blob/3.47.4/engine/src/flutter/impeller/geometry/round_superellipse_param.cc)

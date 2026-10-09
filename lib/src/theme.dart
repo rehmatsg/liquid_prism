@@ -3,12 +3,11 @@ import 'package:flutter/widgets.dart';
 
 import 'material.dart';
 import 'style.dart';
-import 'system_glass.dart';
 import 'motion.dart';
 import 'tab_bar_style.dart';
 
 /// Default sRGB semantic colors for normal-contrast glass content.
-/// These are source colors: native vibrancy can alter their displayed pixels.
+/// Material tint uses these source colors; controls calibrate their foregrounds.
 @immutable
 final class GlassColors {
   const GlassColors(this.brightness);
@@ -38,7 +37,6 @@ class LiquidPrismThemeData {
     this.shape,
     this.motion,
     this.tabBar,
-    this.rendering,
   }) : assert(blur == null || (blur >= 0 && blur <= 12));
   final Brightness? brightness;
   final Color? tint;
@@ -51,7 +49,6 @@ class LiquidPrismThemeData {
 
   /// Gaussian blur in logical pixels. Null retains the material default.
   final double? blur;
-  final GlassRendering? rendering;
   final GlassShape? shape;
   final GlassMotion? motion;
   final GlassTabBarStyle? tabBar;
@@ -65,7 +62,6 @@ class LiquidPrismThemeData {
         optics: other.optics ?? optics,
         blur: other.blur ?? blur,
         shape: other.shape ?? shape,
-        rendering: other.rendering ?? rendering,
         motion: other.motion ?? motion,
         tabBar: (tabBar ?? const GlassTabBarStyle()).merge(other.tabBar),
       );

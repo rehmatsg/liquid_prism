@@ -10,9 +10,7 @@ import 'pressable.dart';
 import 'recipe.dart';
 import 'theme.dart';
 import 'style.dart';
-import 'system_glass.dart';
 import 'motion.dart';
-import 'vibrancy.dart';
 
 enum GlassButtonStyle { glass, glassProminent }
 
@@ -29,7 +27,6 @@ class LiquidPrismButton extends StatelessWidget {
     this.glass,
     this.optics,
     this.blur,
-    this.rendering,
     this.motion,
     this.buttonStyle = GlassButtonStyle.glass,
     this.shape,
@@ -43,7 +40,6 @@ class LiquidPrismButton extends StatelessWidget {
   final Glass? glass;
   final LiquidPrismStyle? optics;
   final double? blur;
-  final GlassRendering? rendering;
   final GlassMotion? motion;
   final GlassButtonStyle buttonStyle;
   final GlassShape? shape;
@@ -63,6 +59,12 @@ class LiquidPrismButton extends StatelessWidget {
     final material = prominent && base.tintColor == null
         ? base.tint(tint)
         : base;
+    final foreground = !enabled
+        ? colors.disabledLabel
+        : explicitForeground ??
+              (prominent
+                  ? const Color(0xFFFFFFFF)
+                  : restingGlassAccent(tint, colors.brightness));
     return LiquidPrismPressable.glass(
       label: label,
       motion: motion,
@@ -73,43 +75,20 @@ class LiquidPrismButton extends StatelessWidget {
         shape: shape,
         optics: optics,
         blur: blur,
-        rendering: rendering,
         role: GlassRole.button,
-        child: Builder(
-          builder: (context) {
-            final resting = usesRestingGlassPalette(context);
-            final foreground = !enabled
-                ? colors.disabledLabel
-                : explicitForeground ??
-                      (prominent
-                          ? const Color(0xFFFFFFFF)
-                          : resting
-                          ? restingGlassAccent(tint, colors.brightness)
-                          : tint);
-            return Padding(
-              padding: padding,
-              child: DefaultTextStyle.merge(
-                style: TextStyle(
-                  color: foreground,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
-                child: IconTheme.merge(
-                  data: IconThemeData(color: foreground),
-                  child: GlassVibrantForeground(
-                    enabled:
-                        enabled &&
-                        !resting &&
-                        !prominent &&
-                        explicitForeground == null,
-                    tint: tint,
-                    brightness: colors.brightness,
-                    child: child,
-                  ),
-                ),
-              ),
-            );
-          },
+        child: Padding(
+          padding: padding,
+          child: DefaultTextStyle.merge(
+            style: TextStyle(
+              color: foreground,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+            child: IconTheme.merge(
+              data: IconThemeData(color: foreground),
+              child: child,
+            ),
+          ),
         ),
       ),
     );

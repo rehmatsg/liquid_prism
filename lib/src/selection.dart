@@ -5,7 +5,6 @@ import 'package:flutter/widgets.dart';
 
 import 'theme.dart';
 import 'material.dart';
-import 'system_glass.dart';
 
 /// Native-style selected-tab material, with no rim or independent glass lens.
 /// Adds a small independent blur and grades the glass underneath, keeping
@@ -30,18 +29,11 @@ class LiquidPrismSelection extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = LiquidPrismTheme.brightnessOf(context) == Brightness.dark;
     if (!selected) return child;
-    final modern = SystemGlass.appearanceVersion >= 27;
-    final matrix = dark ? (modern ? _dark27 : _dark) : _light;
-    final fill =
-        color ??
-        (SystemGlassBackground.of(context)
-            ? Color(dark ? (modern ? 0x38000000 : 0x24FFFFFF) : 0x30000000)
-            : null);
+    final matrix = dark ? _dark : _light;
+    final fill = color;
     final content = fill != null
         ? BackdropFilter(
             enabled: blur > 0,
-            // iOS platform views support a blur-only backdrop filter;
-            // composing a color filter would disable that native blur.
             filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
             child: ColoredBox(color: fill, child: child),
           )
@@ -52,8 +44,6 @@ class LiquidPrismSelection extends StatelessWidget {
             ),
             child: child,
           );
-    // These clip primitives reach iOS's native backdrop blur. ClipPath does
-    // not, and would soften a rectangular area outside the selection corners.
     return shape.isSmooth
         ? ClipRSuperellipse(
             borderRadius: BorderRadius.circular(shape.radius),
@@ -82,28 +72,6 @@ class _SelectionClipper extends CustomClipper<RRect> {
 }
 
 // Core Animation normalized offsets become Flutter's 0..255 color offsets.
-const _dark = <double>[
-  1.082,
-  -.113,
-  -.011,
-  0,
-  34.425,
-  -.034,
-  1.003,
-  -.011,
-  0,
-  34.425,
-  -.034,
-  -.113,
-  1.105,
-  0,
-  34.425,
-  0,
-  0,
-  0,
-  1,
-  0,
-];
 const _light = <double>[
   1.185,
   -.05,
@@ -128,7 +96,7 @@ const _light = <double>[
 ];
 
 // Dark selected-tab color adjustment for iOS 27 and later.
-const _dark27 = <double>[
+const _dark = <double>[
   1.1298,
   -.2361,
   -.0237,

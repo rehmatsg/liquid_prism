@@ -113,8 +113,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(_title('Saved').hitTestable(), findsOneWidget);
     _expectSelection(tester, 'Saved');
-    await _press(tester, 'Toggle rendering mode');
-    expect(find.text('Flutter shader'), findsOneWidget);
     await _press(tester, 'Open another page');
     expect(find.text('Another page'), findsOneWidget);
     await tester.ensureVisible(find.text('Another page'));
@@ -135,7 +133,6 @@ void main() {
       await _press(tester, 'Favorite');
       await tester.tap(_tab('Saved'));
       await tester.pumpAndSettle();
-      expect(find.text('System glass'), findsOneWidget);
 
       Future<double> openDetail() async {
         final open = _button('Open another page');
@@ -149,17 +146,12 @@ void main() {
         return offset;
       }
 
-      void expectDetailTheme(
-        Brightness brightness,
-        Glass glass,
-        GlassRendering rendering,
-      ) {
+      void expectDetailTheme(Brightness brightness, Glass glass) {
         final context = tester.element(_button('Back to gallery'));
         final theme = LiquidPrismTheme.of(context);
         expect(theme.brightness, brightness);
         expect(CupertinoTheme.of(context).brightness, brightness);
         expect(theme.glass, glass);
-        expect(theme.rendering, rendering);
       }
 
       Future<void> expectHome(double scrollOffset) async {
@@ -174,16 +166,14 @@ void main() {
       }
 
       final firstOffset = await openDetail();
-      expectDetailTheme(Brightness.dark, Glass.regular, GlassRendering.system);
+      expectDetailTheme(Brightness.dark, Glass.regular);
       await _press(tester, 'Back to gallery');
       await expectHome(firstOffset);
 
       await _press(tester, 'Toggle appearance');
       await _press(tester, 'Toggle glass material');
-      await _press(tester, 'Toggle rendering mode');
-      expect(find.text('Flutter shader'), findsOneWidget);
       final secondOffset = await openDetail();
-      expectDetailTheme(Brightness.light, Glass.clear, GlassRendering.shader);
+      expectDetailTheme(Brightness.light, Glass.clear);
       final restingTitle = tester.getTopLeft(find.text('Another page'));
       final cancelled = await tester.startGesture(const Offset(1, 300));
       await cancelled.moveTo(
@@ -210,7 +200,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Another page'), findsOneWidget);
       expect(tester.getTopLeft(find.text('Another page')), restingTitle);
-      expectDetailTheme(Brightness.light, Glass.clear, GlassRendering.shader);
+      expectDetailTheme(Brightness.light, Glass.clear);
 
       final completed = await tester.startGesture(const Offset(1, 300));
       await completed.moveTo(
@@ -232,14 +222,6 @@ void main() {
       await expectHome(secondOffset);
       expect(find.text('Light'), findsOneWidget);
       expect(find.text('Clear'), findsOneWidget);
-      expect(find.text('Flutter shader'), findsOneWidget);
-      await _press(tester, 'Toggle rendering mode');
-      expect(find.text('System glass'), findsOneWidget);
-      expect(
-        LiquidPrismTheme.of(tester.element(_button('Toggle rendering mode')))
-            .rendering,
-        GlassRendering.system,
-      );
       expect(tester.takeException(), isNull);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),

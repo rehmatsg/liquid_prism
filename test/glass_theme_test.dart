@@ -40,7 +40,6 @@ void main() {
               ),
               child: LiquidPrismTabBar(
                 glass: Glass.identity,
-                rendering: GlassRendering.shader,
                 selectedIndex: 0,
                 onSelected: enabled ? (_) {} : null,
                 style: GlassTabBarStyle(

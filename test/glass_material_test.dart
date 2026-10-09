@@ -6,7 +6,7 @@ import 'support/rendering.dart';
 
 void main() {
   testWidgets(
-    'opaque foreground follows backdrop color and bypasses unsupported masks',
+    'explicit button artwork remains literal across backdrop and tint changes',
     (tester) async {
       final imageKey = GlobalKey();
       const tint = Color(0xFF805040);
@@ -56,7 +56,6 @@ void main() {
         ]);
       }
 
-      final samples = <(Brightness, Color, List<List<int>>)>[];
       for (final brightness in [Brightness.dark, Brightness.light]) {
         for (final background in [
           const Color(0xFF202020),
@@ -66,24 +65,12 @@ void main() {
             brightness: brightness,
             background: background,
           );
-          samples.add((brightness, background, pixels));
-        }
-      }
-      for (final (brightness, background, pixels) in samples) {
-        for (var channel = 0; channel < 3; channel++) {
-          final accent = [128, 80, 64][channel];
-          final expected =
-              (pixels.first[channel] * 0.5 +
-                      accent -
-                      (brightness == Brightness.light ? 127.5 : 0))
-                  .clamp(0, 255);
-          expect(
-            pixels.last[channel],
-            // Two blend passes quantize their colors and alpha to 8-bit values.
-            closeTo(expected, 3),
-            reason:
-                '$brightness on $background, channel $channel; samples: $samples',
-          );
+          expect(pixels.last, [
+            204,
+            17,
+            51,
+            255,
+          ], reason: '$brightness on $background preserves explicit artwork');
         }
       }
       final composited = await render(
@@ -286,7 +273,7 @@ void main() {
       final unselected = await render(Brightness.dark, false);
       final dark = await render(Brightness.dark, true);
       final light = await render(Brightness.light, true);
-      expect(dark.first.first, greaterThan(unselected.first.first));
+      expect(dark.first.first, lessThan(unselected.first.first));
       expect(light.first.first, lessThan(unselected.first.first));
       expect(dark.last, [255, 0, 0, 255]);
       expect(light.last, [255, 0, 0, 255]);

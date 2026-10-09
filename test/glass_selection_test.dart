@@ -132,7 +132,6 @@ void main() {
                 inherit: inherit,
                 child: StatefulBuilder(
                   builder: (context, update) => LiquidPrismTabBar(
-                    rendering: GlassRendering.shader,
                     blur: 0,
                     optics: LiquidPrismStyle.clear.copyWith(
                       tint: const Color(0x00000000),

@@ -64,7 +64,6 @@ void main() {
             background: const Color(0xFF000000),
             child: LiquidPrism(
               shape: GlassShape.circle,
-              rendering: GlassRendering.shader,
               child: SizedBox(
                 key: _childKey,
                 width: layout.width,

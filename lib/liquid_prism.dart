@@ -11,7 +11,6 @@ export 'src/motion.dart' show GlassMotion;
 export 'src/pressable.dart' show LiquidPrismPressable;
 export 'src/selection.dart' show LiquidPrismSelection;
 export 'src/style.dart' show LiquidPrismStyle;
-export 'src/system_glass.dart' show GlassRendering;
 export 'src/tab_bar.dart' show LiquidPrismTab, LiquidPrismTabBar;
 export 'src/tab_bar_style.dart' show GlassTabBarStyle, GlassTabLabelBehavior;
 export 'src/theme.dart'

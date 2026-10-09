@@ -7,7 +7,6 @@ import 'package:flutter/widgets.dart';
 
 import 'style.dart';
 import 'superellipse.dart';
-import 'system_glass.dart';
 import 'material.dart';
 import 'theme.dart';
 import 'recipe.dart';
@@ -18,8 +17,8 @@ part 'glass_group.dart';
 /// A live backdrop lens. Foreground content stays sharp above the material.
 ///
 /// Call [preload] before runApp to compile the program before the first lens.
-/// iOS uses native glass by default. Custom refraction requires Impeller;
-/// unsupported custom renderers use a frosted fallback.
+/// Refraction uses Flutter shader filters on Impeller; unsupported renderers
+/// use a frosted fallback.
 /// Ancestor ImageFiltered/Opacity saveLayers isolate the backdrop and are
 /// outside the supported composition.
 class LiquidPrism extends StatefulWidget {
@@ -27,7 +26,6 @@ class LiquidPrism extends StatefulWidget {
     super.key,
     this.glass,
     this.blur,
-    this.rendering,
     this.optics,
     this.shape,
     this.child,
@@ -35,7 +33,6 @@ class LiquidPrism extends StatefulWidget {
   }) : assert(blur == null || (blur >= 0 && blur <= 12));
   final Glass? glass;
   final double? blur;
-  final GlassRendering? rendering;
 
   /// Expert optics override the material recipe. Shape and fluent tint still apply.
   final LiquidPrismStyle? optics;
@@ -51,10 +48,8 @@ class LiquidPrism extends StatefulWidget {
   static Future<void>? _loading;
 
   /// Whether the current renderer supports custom backdrop shaders.
-  /// Native iOS glass and the frosted fallback do not require this capability.
   static bool get isShaderSupported => ui.ImageFilter.isShaderFilterSupported;
   static Future<void> preload() async {
-    await SystemGlass.initialize();
     if (_loading != null) return _loading!;
     if (!isShaderSupported || (_program != null && _linearSampler != null)) {
       return;
@@ -116,14 +111,6 @@ class LiquidPrism extends StatefulWidget {
 class _LiquidPrismState extends State<LiquidPrism> {
   Glass get _material => widget.glass ?? _theme.glass ?? Glass.regular;
   LiquidPrismThemeData _theme = const LiquidPrismThemeData();
-  bool get _usesSystem =>
-      (widget.rendering ?? _theme.rendering ?? GlassRendering.system) ==
-          GlassRendering.system &&
-      SystemGlass.supported &&
-      widget.optics == null &&
-      _theme.optics == null &&
-      widget.blur == null &&
-      _theme.blur == null;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -140,8 +127,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
 
   bool _loadingShader = false;
   void _ensureShader() {
-    if (_usesSystem ||
-        _material.variant == GlassVariant.identity ||
+    if (_material.variant == GlassVariant.identity ||
         _material.isInteractive ||
         _shader != null ||
         _loadingShader) {
@@ -162,7 +148,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
           _material.variant != GlassVariant.identity &&
           !_material.isInteractive) {
         setState(() {
-          if (!_usesSystem) _shader = LiquidPrism._createShader();
+          _shader = LiquidPrism._createShader();
         });
       }
     } catch (error, stack) {
@@ -197,7 +183,6 @@ class _LiquidPrismState extends State<LiquidPrism> {
           optics: widget.optics,
           shape: widget.shape,
           blur: widget.blur,
-          rendering: widget.rendering,
           role: widget.role,
           child: widget.child,
         ),
@@ -214,14 +199,6 @@ class _LiquidPrismState extends State<LiquidPrism> {
         (optics == null
             ? GlassShape.capsule
             : GlassShape.rect(cornerRadius: optics.cornerRadius));
-    if (_usesSystem) {
-      return SystemGlassSurface(
-        glass: _material,
-        shape: shape,
-        brightness: LiquidPrismTheme.brightnessOf(context),
-        child: widget.child ?? const SizedBox.shrink(),
-      );
-    }
     final recipe = GlassRecipe.resolve(
       _material,
       LiquidPrismTheme.brightnessOf(context),
@@ -253,10 +230,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
               pixelRatio: MediaQuery.devicePixelRatioOf(context),
               child: ClipPath(
                 clipper: GlassShapeClipper(shape),
-                child: SystemGlassBackground(
-                  native: false,
-                  child: widget.child ?? const SizedBox.shrink(),
-                ),
+                child: widget.child ?? const SizedBox.shrink(),
               ),
             )
           : ClipPath(
@@ -291,10 +265,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
                             side: const BorderSide(color: Color(0x55FFFFFF)),
                           ),
                   ),
-                  child: SystemGlassBackground(
-                    native: false,
-                    child: widget.child ?? const SizedBox.shrink(),
-                  ),
+                  child: widget.child ?? const SizedBox.shrink(),
                 ),
               ),
             ),

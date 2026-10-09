@@ -13,11 +13,9 @@ import 'motion.dart';
 import 'pressable.dart';
 import 'recipe.dart';
 import 'style.dart';
-import 'system_glass.dart';
 import 'selection.dart';
 import 'tab_bar_style.dart';
 import 'theme.dart';
-import 'vibrancy.dart';
 
 @immutable
 final class LiquidPrismTab {
@@ -49,7 +47,6 @@ class LiquidPrismTabBar extends StatefulWidget {
     this.optics,
     this.blur,
     this.motion,
-    this.rendering,
   }) : assert(tabs.length > 1),
        assert(selectedIndex >= 0 && selectedIndex < tabs.length),
        assert(blur == null || (blur >= 0 && blur <= 12));
@@ -61,7 +58,6 @@ class LiquidPrismTabBar extends StatefulWidget {
   final LiquidPrismStyle? optics;
   final double? blur;
   final GlassMotion? motion;
-  final GlassRendering? rendering;
   @override
   State<LiquidPrismTabBar> createState() => _LiquidPrismTabBarState();
   @override
@@ -410,7 +406,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                     progress: contact,
                     child: LiquidPrism(
                       glass: widget.glass,
-                      rendering: widget.rendering,
                       optics: widget.optics,
                       blur: widget.blur,
                       shape: style.shape,
@@ -474,58 +469,42 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final enabled = widget.onSelected != null;
     final tab = widget.tabs[index];
     final icon = selected ? tab.selectedIcon ?? tab.icon : tab.icon;
-    final vibrant =
+    final calibrated =
         selected &&
         enabled &&
         style.selectedColor == null &&
         LiquidPrismTheme.of(context).foregroundColor == null;
-    final content = Builder(
-      builder: (context) {
-        final resting = usesRestingGlassPalette(context);
-        final selectedAccent = vibrant && resting
-            ? restingGlassAccent(accent, colors.brightness)
-            : accent;
-        final color = !enabled
-            ? colors.disabledLabel
-            : selected
-            ? selectedAccent
-            : style.unselectedColor ?? colors.label;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconTheme.merge(
-              data: IconThemeData(size: iconSize, color: color),
-              child: GlassVibrantForeground(
-                enabled:
-                    vibrant && !resting && icon is Icon && icon.color == null,
-                tint: accent,
-                brightness: colors.brightness,
-                child: icon,
-              ),
+    final selectedAccent = calibrated
+        ? restingGlassAccent(accent, colors.brightness)
+        : accent;
+    final color = !enabled
+        ? colors.disabledLabel
+        : selected
+        ? selectedAccent
+        : style.unselectedColor ?? colors.label;
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconTheme.merge(
+          data: IconThemeData(size: iconSize, color: color),
+          child: icon,
+        ),
+        if (labels != GlassTabLabelBehavior.never &&
+            (labels != GlassTabLabelBehavior.selected || selected)) ...[
+          const SizedBox(height: 2),
+          Text(
+            tab.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: labelStyle.copyWith(
+              color: labelStyle.color ?? color,
+              fontWeight:
+                  labelStyle.fontWeight ??
+                  (selected ? FontWeight.w600 : FontWeight.w500),
             ),
-            if (labels != GlassTabLabelBehavior.never &&
-                (labels != GlassTabLabelBehavior.selected || selected)) ...[
-              const SizedBox(height: 2),
-              GlassVibrantForeground(
-                enabled: vibrant && !resting && labelStyle.color == null,
-                tint: accent,
-                brightness: colors.brightness,
-                child: Text(
-                  tab.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: labelStyle.copyWith(
-                    color: labelStyle.color ?? color,
-                    fontWeight:
-                        labelStyle.fontWeight ??
-                        (selected ? FontWeight.w600 : FontWeight.w500),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        );
-      },
+          ),
+        ],
+      ],
     );
     return Semantics(
       container: true,

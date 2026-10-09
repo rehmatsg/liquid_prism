@@ -15,7 +15,7 @@ void main() {
       var selected = 0;
       var changes = 0;
       var brightness = Brightness.dark;
-      Color? tint;
+      Color? foreground;
       late StateSetter update;
       final imageKey = GlobalKey();
       await tester.pumpWidget(
@@ -26,7 +26,7 @@ void main() {
               update = setState;
               return LiquidPrismTheme(
                 brightness: brightness,
-                tint: tint,
+                data: LiquidPrismThemeData(foregroundColor: foreground),
                 child: LiquidPrismTabBar(
                   tabs: const [
                     LiquidPrismTab(
@@ -81,7 +81,7 @@ void main() {
       await tester.pump();
       expect(textColor('Gallery'), isNot(darkLabel));
       expect(textColor('Favorites'), isNot(darkAccent));
-      update(() => tint = const Color(0xFFAA00CC));
+      update(() => foreground = const Color(0xFFAA00CC));
       await tester.pump();
       expect(textColor('Favorites'), const Color(0xFFAA00CC));
       tester.semantics.tap(find.semantics.byLabel('Settings'));
@@ -89,7 +89,7 @@ void main() {
       expect(changes, 2);
       expectSelection('Settings');
       expect(textColor('Settings'), const Color(0xFFAA00CC));
-      update(() => tint = null);
+      update(() => foreground = null);
       await tester.pump();
       expect(textColor('Settings'), isNot(const Color(0xFFAA00CC)));
     },

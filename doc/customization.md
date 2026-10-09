@@ -27,7 +27,7 @@ inscribed in the available rectangle without changing layout dimensions.
 ## Defaults and precedence
 
 `LiquidPrismThemeData` accepts `brightness`, `glass`, `tint`, `foregroundColor`,
-`rendering`, `optics`, `blur`, `shape`, `motion`, and `tabBar`.
+`optics`, `blur`, `shape`, `motion`, and `tabBar`.
 
 1. Explicit widget arguments override their corresponding theme fields.
 2. Nested themes merge each non-null field; omitted values inherit.
@@ -53,14 +53,13 @@ Let child icons and text inherit the ambient style for consistent semantic color
 | Tab style `labelStyle.color` | Independent label color |
 | Tab style `selectionColor` | Selection pill fill |
 
-Ordinary buttons and selected tabs share the default resting accent on native glass
-and iOS 27. Custom shader rendering on earlier platforms uses backdrop-dependent
-foreground treatment. Explicit foreground overrides bypass that treatment.
+Ordinary buttons and selected tabs share the measured resting accent:
+`#3BCCFF` in dark mode and `#005DC7` in light mode for the default blue tint.
+These displayed colors are distinct from `GlassColors.blue`, the semantic source
+used for material tint. Custom opaque tints use an approximate brightness adjustment;
+translucent tints and explicit foreground overrides retain their literal values.
 Prominent buttons default to white; disabled controls use a muted semantic color.
-Tab bars preserve explicitly colored icons and custom artwork. In the older
-shader foreground mode, ordinary buttons use their entire child as a vibrancy
-mask. Set the button's `foregroundColor` (or the theme equivalent) to bypass that
-mask when using multicolor artwork or explicitly styled text.
+Explicitly colored icons, styled text, and custom artwork retain their colors.
 
 ## Navigation
 
@@ -78,8 +77,7 @@ material's blur. It also applies with a custom selection color.
 
 Custom icons are ordinary widgets, including images and SVG widgets supplied by
 your app. `selectedIcon` is optional. Unchanged icon state is retained during tab,
-style, and appearance updates within one renderer. Switching between native and
-shader composition can remount foreground state.
+style, and appearance updates.
 
 RTL reverses visual positions. Arrow keys move focus and selection; Space/Enter
 activates the focused tab. Hidden visual labels remain available to accessibility.
@@ -110,7 +108,6 @@ removal, and scrolling takeover release feedback.
 
 ```dart
 LiquidPrism(
-  rendering: GlassRendering.shader,
   optics: const LiquidPrismStyle(
     frost: 3,
     refraction: 18,
@@ -126,7 +123,7 @@ The same `optics` argument is available on buttons, tab bars, and themes.
 `LiquidPrismStyle` also exposes brightness, face tint, saturation, light,
 reflection reach, splay, and corner radius, with `copyWith` and clear/frosted/smoked
 presets. Constructor assertions document the accepted ranges. Explicit optical
-settings opt out of native system material adaptation.
+settings replace the default material recipe.
 
 `LiquidPrismSelection` provides just the selected fill/blur treatment for custom
 controls. `LiquidPrismPressable` provides the lower-level semantic interaction

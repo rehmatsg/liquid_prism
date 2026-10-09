@@ -1,6 +1,6 @@
 # Contributing
 
-Use Flutter 3.47+ with Dart 3.13.3+. Native iOS builds require macOS and Xcode 26+.
+Use Flutter 3.47+ with Dart 3.13.3+. iOS builds require macOS and a compatible Xcode.
 The public API is exported by `lib/liquid_prism.dart`; keep consumer examples and
 `doc/` in sync when changing it.
 
@@ -23,5 +23,4 @@ Publishing to pub.dev is a separate maintainer action; CI does not publish.
 package archives. Keep required third-party notices and license texts in distributions.
 
 An API or renderer change should be exercised on a real mobile renderer. Headless
-widget tests use the fallback path and cannot certify shader output or native
-platform-view pixels. Report device/build mode and remaining validation gaps.
+widget tests use the fallback path and cannot certify shader output. Report device/build mode and remaining validation gaps.
