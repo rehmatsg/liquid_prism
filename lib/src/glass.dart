@@ -526,7 +526,12 @@ class _RenderGlass extends RenderProxyBox {
         offset,
         contour.getBounds(),
         contour,
-        (context, offset) => context.pushLayer(frost, (_, _) {}, offset),
+        (context, offset) => context.pushLayer(
+          frost,
+          (context, offset) =>
+              context.pushLayer(frost.filter, (_, _) {}, offset),
+          offset,
+        ),
         oldLayer: _frostClip.layer,
       );
     } else {
@@ -627,9 +632,21 @@ class _GlassLayer extends ContainerLayer {
 
 /// Frost for one unbatched surface, clipped to its contour by the parent.
 /// Batched members skip it: their batch filter composes its own frost.
-class _FrostLayer extends BackdropFilterLayer {
+/// Like [_GlassLayer], it configures a child filter layer at composition, since
+/// a layer that always needs adding cannot mark itself dirty.
+class _FrostLayer extends ContainerLayer {
   _RenderGlass? glass;
+  // The handle keeps the child alive while it is detached between repaints.
+  final _filter = LayerHandle<BackdropFilterLayer>(BackdropFilterLayer());
+  BackdropFilterLayer get filter => _filter.layer!;
   double? _sigma;
+
+  @override
+  void dispose() {
+    _filter.layer = null;
+    super.dispose();
+  }
+
   @override
   bool get alwaysNeedsAddToScene => true;
   @override
@@ -641,16 +658,18 @@ class _FrostLayer extends BackdropFilterLayer {
     final sigma = owner.style.frost;
     if (sigma != _sigma) {
       _sigma = sigma;
-      filter = ui.ImageFilter.blur(
+      filter.filter = ui.ImageFilter.blur(
         sigmaX: sigma,
         sigmaY: sigma,
         tileMode: ui.TileMode.clamp,
       );
     }
-    backdropKey = group != null && group.shared.contains(owner)
-        ? group.sharedKey
-        : null;
-    super.addToScene(builder);
+    filter
+      ..backdropKey = group != null && group.shared.contains(owner)
+          ? group.sharedKey
+          : null
+      ..markNeedsAddToScene();
+    addChildrenToScene(builder);
   }
 }
 
