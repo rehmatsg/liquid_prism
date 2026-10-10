@@ -44,6 +44,19 @@ every consumer of the field (26pt plus the corner slack) skip it entirely; the
 projected contour is unchanged. The circular corner sector compares against a
 precomputed cosine. Geometry and edge sampling stay at display resolution.
 
+Frost runs as its own backdrop pass clipped to the glass contour, followed by a
+shader-only optical pass. Impeller renders the input of a composed shader filter
+without a coverage limit, so a blur composed under the optical shader would
+filter the whole captured backdrop for every surface on every frame; on an
+iPhone 16 Pro that doubled whole-device power and reached the serious thermal
+state. Reflection taps outside the contour read the unfrosted backdrop, and the
+rim reflection averages four taps one sigma apart in its place. Press scaling is
+applied by the glass to its contour, clip, shadow and content rather than as an
+ancestor transform, since a non-identity basis above a shader filter makes
+Impeller re-rasterize its backdrop. Avoid wrapping glass in your own scale or
+rotation transforms for the same reason. Batched group members still compose
+frost into their one batch filter.
+
 Filter descriptions are reused while their shader, uniforms and blur stay equal.
 The backdrop itself remains live: movement, scrolling, material changes and
 presses update the filter inputs during scene composition. Reusing a description

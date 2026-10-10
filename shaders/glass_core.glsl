@@ -204,7 +204,14 @@ void shadeGlass() {
         if (depth < rimEnd) {
             float edge = max(1.-depth/4.,0.);
             float rim = edge*sqrt(edge);
-            vec3 reflected = sampleLocal(boundary+normal*(1.+depth*reach/12.));
+            // Reflection taps land outside the contour, where the backdrop is not
+            // frosted; a cross of four taps one sigma apart stands in for it.
+            vec2 tap = boundary+normal*(1.+depth*reach/12.);
+            float s = u_optics.z * 0.85;
+            vec3 reflected = s > 0.05
+                ? (sampleLocal(tap+normal*s) + sampleLocal(tap-normal*s)
+                 + sampleLocal(tap+tangent*s) + sampleLocal(tap-tangent*s)) * 0.25
+                : sampleLocal(tap);
             color = radiance(color,reflected,u_finish.z*rim);
         }
         if (depth < broadEnd) {

@@ -425,9 +425,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                   _position.value * width,
                                   _vertical.value,
                                 ),
-                                child: Transform.scale(
-                                  scaleX: scale,
-                                  scaleY: _reduceMotion ? 1 : 1 + .06 * contact,
+                                // Grow the pill by size, not by a scale
+                                // transform above its backdrop filter.
+                                child: OverflowBox(
+                                  maxWidth: (width + 8) * scale,
+                                  maxHeight:
+                                      height *
+                                      (_reduceMotion ? 1 : 1 + .06 * contact),
                                   child: LiquidPrismSelection(
                                     selected: true,
                                     shape:

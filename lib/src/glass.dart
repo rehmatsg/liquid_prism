@@ -213,11 +213,18 @@ class _LiquidPrismState extends State<LiquidPrism> {
     );
     final shader = _shader;
     final press = LiquidPrismPressFeedback.of(context);
+    final pressScale = LiquidPrismPressFeedback.scaleOf(context);
+    // Nested glass inherits the press highlight but not the scale, which this
+    // surface already applies to its content.
+    final content = LiquidPrismPressFeedback(
+      progress: press,
+      child: widget.child ?? const SizedBox.shrink(),
+    );
     final fallbackTint = Color.alphaBlend(
       _material.tintColor ?? const Color(0x00000000),
       optics?.tint ?? Color(recipe.dark ? 0x99000000 : 0x99FFFFFF),
     );
-    return CustomPaint(
+    final glass = CustomPaint(
       painter: shader == null ? _ExteriorShadow(shape) : null,
       child: shader != null
           ? _GlassRenderWidget(
@@ -226,11 +233,12 @@ class _LiquidPrismState extends State<LiquidPrism> {
               shape: shape,
               recipe: recipe,
               press: press,
+              scale: pressScale,
               group: _GlassGroupScope.of(context),
               pixelRatio: MediaQuery.devicePixelRatioOf(context),
               child: ClipPath(
                 clipper: GlassShapeClipper(shape),
-                child: widget.child ?? const SizedBox.shrink(),
+                child: content,
               ),
             )
           : ClipPath(
@@ -265,11 +273,15 @@ class _LiquidPrismState extends State<LiquidPrism> {
                             side: const BorderSide(color: Color(0x55FFFFFF)),
                           ),
                   ),
-                  child: widget.child ?? const SizedBox.shrink(),
+                  child: content,
                 ),
               ),
             ),
     );
+    // The fallback blur tolerates a transform; the shader path scales itself.
+    return shader == null && pressScale != 1
+        ? Transform.scale(scale: pressScale, child: glass)
+        : glass;
   }
 }
 
@@ -341,6 +353,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
     required this.shape,
     required this.recipe,
     required this.press,
+    required this.scale,
     required this.group,
     required this.pixelRatio,
     super.child,
@@ -350,11 +363,20 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
   final GlassShape shape;
   final GlassRecipe recipe;
   final double press;
+  final double scale;
   final _GlassGroupData? group;
   final double pixelRatio;
   @override
-  _RenderGlass createRenderObject(BuildContext context) =>
-      _RenderGlass(shader, style, shape, recipe, press, pixelRatio, group);
+  _RenderGlass createRenderObject(BuildContext context) => _RenderGlass(
+    shader,
+    style,
+    shape,
+    recipe,
+    press,
+    scale,
+    pixelRatio,
+    group,
+  );
   @override
   void updateRenderObject(BuildContext context, _RenderGlass renderObject) {
     renderObject
@@ -363,6 +385,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
       ..shape = shape
       ..recipe = recipe
       ..press = press
+      ..scale = scale
       ..group = group
       ..pixelRatio = pixelRatio;
   }
@@ -375,6 +398,7 @@ class _RenderGlass extends RenderProxyBox {
     this._shape,
     this.recipe,
     this.press,
+    this._scale,
     this.pixelRatio,
     this._group,
   );
@@ -392,6 +416,33 @@ class _RenderGlass extends RenderProxyBox {
   }
 
   double press;
+
+  /// Press scale about the center. Applied to the contour uniforms, clip,
+  /// shadow and content rather than as an ancestor transform: Impeller
+  /// re-rasterizes a shader filter's backdrop when its basis is not identity.
+  double _scale;
+  double get scale => _scale;
+  set scale(double value) {
+    if (value == _scale) return;
+    _scale = value;
+    markNeedsPaint();
+  }
+
+  Matrix4? get _scaleTransform {
+    if (_scale == 1) return null;
+    final center = size.center(Offset.zero);
+    return Matrix4.translationValues(center.dx, center.dy, 0)
+      ..scaleByDouble(_scale, _scale, 1, 1)
+      ..translateByDouble(-center.dx, -center.dy, 0, 1);
+  }
+
+  /// Screen transform of the glass contour, including the press scale.
+  Matrix4 glassTransform([Matrix4? globalTransform]) {
+    final transform = globalTransform ?? getTransformTo(null);
+    final local = _scaleTransform;
+    return local == null ? transform : transform.multiplied(local);
+  }
+
   double pixelRatio;
   _GlassGroupData? _group;
   set group(_GlassGroupData? value) {
@@ -411,6 +462,9 @@ class _RenderGlass extends RenderProxyBox {
   final _glassLayer = LayerHandle<_GlassLayer>();
   final _filterLayer = LayerHandle<BackdropFilterLayer>();
   final _clipLayer = LayerHandle<ClipRectLayer>();
+  final _contentLayer = LayerHandle<TransformLayer>();
+  final _frostClip = LayerHandle<ClipPathLayer>();
+  final _frostLayer = LayerHandle<_FrostLayer>();
   @override
   bool get alwaysNeedsCompositing => true;
   Size? _contourSize;
@@ -424,7 +478,7 @@ class _RenderGlass extends RenderProxyBox {
           ? superellipseUniforms(size, shape.radius)
           : List.filled(superellipseUniformCount, 0);
     }
-    final transform = globalTransform ?? getTransformTo(null);
+    final transform = glassTransform(globalTransform);
     final m = transform.storage;
     final rect = shape.rect(size);
     final origin = MatrixUtils.transformPoint(transform, rect.topLeft);
@@ -452,16 +506,42 @@ class _RenderGlass extends RenderProxyBox {
       final canvas = context.canvas;
       canvas.save();
       canvas.translate(offset.dx, offset.dy);
+      final local = _scaleTransform;
+      if (local != null) canvas.transform(local.storage);
       _ExteriorShadow(shape).paint(canvas, size);
       canvas.restore();
     }, offset);
+    // Frost runs as its own backdrop pass clipped to the contour. Composed under
+    // the optical shader it would be rendered without a coverage limit: Impeller
+    // blurs the whole captured backdrop for every surface, every frame.
+    if (style.frost > 0.05) {
+      final frost = _frostLayer.layer ??= _FrostLayer();
+      frost.glass = this;
+      final local = _scaleTransform;
+      final contour = local == null
+          ? shape.path(size)
+          : shape.path(size).transform(local.storage);
+      _frostClip.layer = context.pushClipPath(
+        needsCompositing,
+        offset,
+        contour.getBounds(),
+        contour,
+        (context, offset) => context.pushLayer(frost, (_, _) {}, offset),
+        oldLayer: _frostClip.layer,
+      );
+    } else {
+      _frostClip.layer = null;
+    }
     final layer = _glassLayer.layer ??= _GlassLayer();
     layer.glass = this;
     layer.filter = _filterLayer.layer ??= BackdropFilterLayer();
     _clipLayer.layer = context.pushClipRect(
       needsCompositing,
       offset,
-      (Offset.zero & size).inflate(2),
+      MatrixUtils.transformRect(
+        _scaleTransform ?? Matrix4.identity(),
+        Offset.zero & size,
+      ).inflate(2),
       (context, offset) => context.pushLayer(
         layer,
         (context, offset) =>
@@ -470,23 +550,40 @@ class _RenderGlass extends RenderProxyBox {
       ),
       oldLayer: _clipLayer.layer,
     );
-    super.paint(context, offset);
+    final local = _scaleTransform;
+    if (local == null) {
+      _contentLayer.layer = null;
+      super.paint(context, offset);
+    } else {
+      _contentLayer.layer = context.pushTransform(
+        needsCompositing,
+        offset,
+        local,
+        super.paint,
+        oldLayer: _contentLayer.layer,
+      );
+    }
   }
 
   @override
   void detach() {
     _group?.members.remove(this);
     _glassLayer.layer?.glass = null;
+    _frostLayer.layer?.glass = null;
     super.detach();
   }
 
   @override
   void dispose() {
     _glassLayer.layer?.glass = null;
+    _frostLayer.layer?.glass = null;
+    _frostClip.layer = null;
+    _frostLayer.layer = null;
     _shadowLayer.layer = null;
     _glassLayer.layer = null;
     _filterLayer.layer = null;
     _clipLayer.layer = null;
+    _contentLayer.layer = null;
     super.dispose();
   }
 }
@@ -506,13 +603,18 @@ class _GlassLayer extends ContainerLayer {
     final backdrop = filter!;
     if (batch == null) {
       final group = owner._group;
-      backdrop.backdropKey = group != null && group.shared.contains(owner)
+      final frosted = owner.style.frost > 0.05;
+      // With frost, each optical pass must read its own frosted backdrop; the
+      // members' frost passes share the capture instead (see _FrostLayer).
+      backdrop.backdropKey =
+          !frosted && group != null && group.shared.contains(owner)
           ? group.sharedKey
           : null;
       backdrop.filter = _filterCache.resolve(
         owner.shader,
         owner.uniforms(),
         owner.style.frost,
+        composeFrost: false,
       );
     } else {
       backdrop.backdropKey = batch.key;
@@ -520,6 +622,35 @@ class _GlassLayer extends ContainerLayer {
     }
     backdrop.markNeedsAddToScene();
     addChildrenToScene(builder);
+  }
+}
+
+/// Frost for one unbatched surface, clipped to its contour by the parent.
+/// Batched members skip it: their batch filter composes its own frost.
+class _FrostLayer extends BackdropFilterLayer {
+  _RenderGlass? glass;
+  double? _sigma;
+  @override
+  bool get alwaysNeedsAddToScene => true;
+  @override
+  void addToScene(ui.SceneBuilder builder) {
+    final owner = glass;
+    if (owner == null || !owner.attached) return;
+    final group = owner._group;
+    if (group?.prepared[owner] != null) return;
+    final sigma = owner.style.frost;
+    if (sigma != _sigma) {
+      _sigma = sigma;
+      filter = ui.ImageFilter.blur(
+        sigmaX: sigma,
+        sigmaY: sigma,
+        tileMode: ui.TileMode.clamp,
+      );
+    }
+    backdropKey = group != null && group.shared.contains(owner)
+        ? group.sharedKey
+        : null;
+    super.addToScene(builder);
   }
 }
 
@@ -534,8 +665,10 @@ class _GlassFilterCache {
   ui.ImageFilter resolve(
     ui.FragmentShader shader,
     List<double> values,
-    double frost,
-  ) {
+    double frost, {
+    bool composeFrost = true,
+  }) {
+    if (!composeFrost) frost = 0;
     if (!identical(shader, _shader) ||
         frost != _frost ||
         !listEquals(values, _values)) {

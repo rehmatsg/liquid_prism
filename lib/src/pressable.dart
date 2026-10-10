@@ -170,15 +170,24 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
         const GlassMotion();
     final visual = AnimatedBuilder(
       animation: _press,
-      builder: (context, child) => Transform.scale(
-        scale: _reduceMotion
-            ? 1
-            : 1 + (widget._glass ? motion.pressScale - 1 : -.04) * _press.value,
-        child: LiquidPrismPressFeedback(
-          progress: widget._glass ? _press.value.clamp(0, 1) : 0,
-          child: child!,
-        ),
-      ),
+      builder: (context, child) {
+        final scale = _reduceMotion
+            ? 1.0
+            : 1 + (widget._glass ? motion.pressScale - 1 : -.04) * _press.value;
+        // Glass applies the scale itself: a scale above its backdrop filter
+        // makes Impeller re-rasterize the captured backdrop every frame.
+        if (widget._glass) {
+          return LiquidPrismPressFeedback(
+            progress: _press.value.clamp(0, 1),
+            scale: scale,
+            child: child!,
+          );
+        }
+        return Transform.scale(
+          scale: scale,
+          child: LiquidPrismPressFeedback(progress: 0, child: child!),
+        );
+      },
       child: widget.child,
     );
     final listener = Listener(
@@ -240,20 +249,32 @@ class LiquidPrismPressFeedback extends InheritedWidget {
   const LiquidPrismPressFeedback({
     super.key,
     required this.progress,
+    this.scale = 1,
     required super.child,
   });
   final double progress;
+
+  /// Press scale for the nearest glass, which scales its own contour, shadow
+  /// and content so the backdrop filter stays untransformed.
+  final double scale;
   static double of(BuildContext context) =>
       context
           .dependOnInheritedWidgetOfExactType<LiquidPrismPressFeedback>()
           ?.progress ??
       0;
+  static double scaleOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<LiquidPrismPressFeedback>()
+          ?.scale ??
+      1;
   @override
   bool updateShouldNotify(LiquidPrismPressFeedback oldWidget) =>
-      progress != oldWidget.progress;
+      progress != oldWidget.progress || scale != oldWidget.scale;
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DoubleProperty('progress', progress));
+    properties
+      ..add(DoubleProperty('progress', progress))
+      ..add(DoubleProperty('scale', scale, defaultValue: 1));
   }
 }

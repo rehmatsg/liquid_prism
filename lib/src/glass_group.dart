@@ -163,7 +163,7 @@ class _GlassGroupData {
     final transforms = <_RenderGlass, Matrix4>{};
     final aligned = <_RenderGlass>{};
     for (final member in surfaces) {
-      final transform = transforms[member] = member.getTransformTo(null);
+      final transform = transforms[member] = member.glassTransform();
       final rect = member.shape.rect(member.size);
       final globalRect = MatrixUtils.transformRect(transform, rect);
       if (_pixelAlignedRect(globalRect, member.pixelRatio)) {
