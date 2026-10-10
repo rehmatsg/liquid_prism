@@ -3,21 +3,52 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+/// Number of floats in [superellipseUniforms]: u_shapeA..u_shapeD (16) plus
+/// u_curve[65] (260).
+const int superellipseUniformCount = 276;
+
 /// Uniform-radius rounded superellipse parameters, matching Flutter's contour.
 /// Computed once per geometry, never per animation frame.
+///
+/// Layout: u_shapeA (n_top, n_right, w/2, h/2), u_shapeB (top arc circle:
+/// center x, y, radius, span), u_shapeC (right arc circle), u_shapeD
+/// (cos(top span), cos(right span), 0, 0), then u_curve[65]: the superellipse
+/// arc vertex at angle k*pi/256 for k = 0..64, top octant in xy and right
+/// octant in zw. The shader bisects over these vertices instead of evaluating
+/// pow per step; the vertices are the ones the previous shader computed itself.
 List<double> superellipseUniforms(Size size, double radius) {
-  if (radius <= .001 || size.isEmpty) return List.filled(12, 0);
+  if (radius <= .001 || size.isEmpty) {
+    return List.filled(superellipseUniformCount, 0);
+  }
   final r = math.min(radius, size.shortestSide / 2);
   final top = _octant(size.width / 2, r);
   final right = _octant(size.height / 2, r);
-  return [
+  final values = <double>[
     top.$1,
     right.$1,
     size.width / 2,
     size.height / 2,
     ...top.$2,
     ...right.$2,
+    math.cos(top.$2[3]),
+    math.cos(right.$2[3]),
+    0,
+    0,
   ];
+  final pTop = 2 / top.$1;
+  final pRight = 2 / right.$1;
+  for (var k = 0; k <= 64; k++) {
+    final theta = k * math.pi / 256;
+    final c = math.cos(theta);
+    final s = math.sin(theta);
+    values
+      ..add(math.pow(c, pTop).toDouble())
+      ..add(math.pow(s, pTop).toDouble())
+      ..add(math.pow(c, pRight).toDouble())
+      ..add(math.pow(s, pRight).toDouble());
+  }
+  assert(values.length == superellipseUniformCount);
+  return values;
 }
 
 (double, List<double>) _octant(double a, double radius) {

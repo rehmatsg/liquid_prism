@@ -17,6 +17,9 @@ uniform vec4 u_tintBias;
 uniform vec4 u_shapeA;
 uniform vec4 u_shapeB;
 uniform vec4 u_shapeC;
+uniform vec4 u_shapeD;     // cos(top arc span), cos(right arc span), unused, unused.
+// Superellipse arc vertices at k*pi/256, k = 0..64: top octant in xy, right in zw.
+uniform vec4 u_curve[65];
 uniform sampler2D u_backdrop;
 out vec4 frag_color;
 

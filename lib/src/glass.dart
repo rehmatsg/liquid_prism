@@ -415,14 +415,14 @@ class _RenderGlass extends RenderProxyBox {
   bool get alwaysNeedsCompositing => true;
   Size? _contourSize;
   GlassShape? _contourShape;
-  List<double> _contour = List.filled(12, 0);
+  List<double> _contour = List.filled(superellipseUniformCount, 0);
   List<double> uniforms([Matrix4? globalTransform]) {
     if (size != _contourSize || shape != _contourShape) {
       _contourSize = size;
       _contourShape = shape;
       _contour = shape.isSmooth
           ? superellipseUniforms(size, shape.radius)
-          : List.filled(12, 0);
+          : List.filled(superellipseUniformCount, 0);
     }
     final transform = globalTransform ?? getTransformTo(null);
     final m = transform.storage;

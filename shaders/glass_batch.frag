@@ -18,6 +18,8 @@ vec4 u_tintBias;
 const vec4 u_shapeA = vec4(0.);
 const vec4 u_shapeB = vec4(0.);
 const vec4 u_shapeC = vec4(0.);
+const vec4 u_shapeD = vec4(0.);
+vec4 u_curve[65];
 #include "glass_core.glsl"
 void main() {
     vec2 p = FlutterFragCoord().xy;

@@ -25,16 +25,24 @@ size. An idle component has no repeating ticker.
 
 The optical shader skips reflection samples where their weight falls below half
 an 8-bit step, and skips the highlight and press color matrices at zero weight.
-Over a frost blur of at least 2px, the compressed-rim footprint reads one sample
-per step instead of a ±¼px pair. Exterior shadows are drawn as rounded-rect or
+Footprint integration scales with the frost blur: a compressed footprint under
+0.3σ reads one sample, under 0.7σ a ±¼ pair, and only wider footprints the
+four-point rule. Where the dispersion split is under 0.45σ, three taps with
+moment-matched per-channel weights replace the five spectral bands. Each gate
+keeps the change below half an 8-bit step over the blurred backdrop; at zero
+frost the full paths run. The flat center skips the lens direction arithmetic,
+and highlights and reflections are evaluated only within their reach of the
+edge. Exterior shadows are drawn as rounded-rect or
 rounded-superellipse primitives, so Impeller uses its analytic blur instead of
 tessellating a blurred path every frame. Press, tint and material changes update
 uniforms at composition without repainting the glass content.
-Smooth-corner distance uses six angular bisections with cached curve endpoints
-and unit-vector midpoints. A terminal-segment test skips the search when its
-answer is already known; the projected contour is unchanged. The circular corner
-sector uses a dot-product test instead of an inverse tangent. Geometry and edge
-sampling stay at display resolution.
+Smooth-corner distance bisects over the 64-chord arc whose vertices are computed
+once per geometry in Dart and passed as uniforms, so the search evaluates no
+`pow` or trigonometry per pixel. A terminal-segment test skips the search when
+its answer is already known, and pixels whose box depth proves they lie beyond
+every consumer of the field (26pt plus the corner slack) skip it entirely; the
+projected contour is unchanged. The circular corner sector compares against a
+precomputed cosine. Geometry and edge sampling stay at display resolution.
 
 Filter descriptions are reused while their shader, uniforms and blur stay equal.
 The backdrop itself remains live: movement, scrolling, material changes and

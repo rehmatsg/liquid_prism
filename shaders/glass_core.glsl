@@ -7,7 +7,7 @@ vec2 scenePoint(vec2 local) {
 // The engine replaces the bound image with the live backdrop while preserving
 // the linear sampler descriptor configured by the material's shader factory.
 vec3 readScene(vec2 px) {
-    vec2 uv = clamp(px, vec2(0.5), u_textureSize - 0.5) / u_textureSize;
+    vec2 uv = clamp(px, vec2(0.5), u_textureSize - 0.5) * (1. / u_textureSize);
     #ifdef IMPELLER_TARGET_OPENGLES
     #ifndef IMPELLER_OPENGLES_UNFLIPPED_DEPRECATED
     uv.y = 1.0 - uv.y;
@@ -20,16 +20,25 @@ vec3 sampleLocal(vec2 p) { return readScene(scenePoint(p)); }
 // The backdrop has already been Gaussian filtered, before refraction. Integrate
 // the mapped pixel footprint only where the lens compresses that source.
 vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
-    float stretch = max(length(dx), length(dy));
-    if (stretch <= 1.5) return readScene(p);
-    vec2 major = length(dx) > length(dy) ? dx : dy;
-    vec2 minor = length(dx) > length(dy) ? dy : dx;
+    float dxx = dot(dx, dx);
+    float dyy = dot(dy, dy);
+    float stretch2 = max(dxx, dyy);
+    // The frost kernel bounds the backdrop's curvature: box-integrating a width
+    // under 0.3 sigma moves a channel below half an 8-bit step, and under
+    // 0.7 sigma a +-1/4 pair matches the four-point rule to the same precision.
+    float sigma = u_optics.z * u_geometry.y;
+    if (stretch2 <= max(2.25, 0.09 * sigma * sigma)) return readScene(p);
+    vec2 major = dxx > dyy ? dx : dy;
+    vec2 minor = dxx > dyy ? dy : dx;
     // Bound a grazing footprint while retaining subpixel integration at the rim.
-    major *= min(1., 16. / max(length(major), 0.0001));
+    major *= min(1., 16. / max(sqrt(stretch2), 0.0001));
     vec3 result = vec3(0.);
     // With a frost kernel of at least 2px and a short minor axis, the ±¼ pair
     // equals its midpoint well below 8-bit precision; one read covers each step.
-    if (u_optics.z * u_geometry.y >= 2. && length(minor) <= 2.) {
+    if (sigma >= 2. && dot(minor, minor) <= 4.) {
+        if (stretch2 <= 0.49 * sigma * sigma) {
+            return (readScene(p - major * 0.25) + readScene(p + major * 0.25)) * 0.5;
+        }
         for (int i = 0; i < 4; i++) {
             result += readScene(p + major * ((float(i) + 0.5) * 0.25 - 0.5));
         }
@@ -45,21 +54,31 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
 
 #include "superellipse.glsl"
 
-// Distance and outward direction for a rounded rectangle/capsule.
-vec3 shape(vec2 p) {
-    if (u_tintBias.w > .5) return roundedSuperellipse(p);
-    float radius = min(u_geometry.x, min(u_extent.x,u_extent.y) * 0.5);
+// Distance, outward direction and its length for a rounded rectangle/capsule.
+// Beyond 26 points plus the corner's diagonal slack nothing reads the smooth
+// field (the profile, reflections and highlights all end within 24 points),
+// so the box depth stands in for it there.
+vec4 shape(vec2 p) {
     vec2 rel = p - u_extent * 0.5;
+    if (u_tintBias.w > .5) {
+        vec2 qb = abs(rel) - u_extent*0.5;
+        float boxDepth = -max(qb.x,qb.y);
+        if (boxDepth > 26. + 0.4142136*min(u_geometry.x,min(u_extent.x,u_extent.y)*0.5)) return vec4(-boxDepth, 0., 0., 0.);
+        return vec4(roundedSuperellipse(p), 1.);
+    }
+    float radius = min(u_geometry.x, min(u_extent.x,u_extent.y) * 0.5);
     vec2 q = abs(rel) - u_extent * 0.5 + radius;
     float d = min(max(q.x,q.y),0.) + length(max(q,0.)) - radius;
     vec2 n;
+    float len = 1.;
     if (q.x > 0. && q.y > 0.) {
         n = sign(rel) * normalize(max(q,vec2(0.0001)));
     } else {
         n = q.x > q.y ? vec2(sign(rel.x),0.) : vec2(0.,sign(rel.y));
-        n *= smoothstep(0.,1.,abs(q.x-q.y));
+        len = smoothstep(0.,1.,abs(q.x-q.y));
+        n *= len;
     }
-    return vec3(d,n);
+    return vec4(d,n,len);
 }
 float highlight(float direction, float depth, float width,
                 float spread, float focus, float softness, float aa) {
@@ -104,7 +123,7 @@ void shadeGlass() {
     if (abs(det) < 0.00001) { frag_color = vec4(0.); return; }
     mat2 inv = mat2(u_transform.w,-u_transform.z,-u_transform.y,u_transform.x)/det;
     vec2 local = inv * (screen-u_origin) / u_geometry.y;
-    vec3 field = shape(local);
+    vec4 field = shape(local);
     float d = field.x;
     vec2 normal = field.yz;
     float aa = 1. / u_geometry.y;
@@ -113,12 +132,20 @@ void shadeGlass() {
     float edge = min(u_optics.x,min(u_extent.x,u_extent.y)*0.49);
     float t = clamp(1.+d/max(edge,0.001),0.,1.);
     float profile = 1.-sqrt(max(1.-t*t,0.));
-    vec2 centered = (local-u_extent*0.5)*vec2(1.,u_extent.x/u_extent.y);
-    vec2 radial = centered/max(length(centered),0.0001);
-    vec2 direction = mix(normal,radial,u_finish.w);
-    direction = direction/max(length(direction),0.0001)*min(length(normal),1.);
     float displacement = min(u_optics.y, min(u_extent.x,u_extent.y)*0.55);
-    vec2 samplePoint = scenePoint(local-direction*displacement*profile);
+    // The lens offset vanishes with the profile, so the flat center skips the
+    // direction arithmetic. The branch follows the band contour, so SIMD groups
+    // stay coherent away from its boundary.
+    vec2 direction = vec2(0.);
+    vec2 offset = vec2(0.);
+    if (profile > 0.) {
+        vec2 centered = (local-u_extent*0.5)*vec2(1.,u_extent.x/u_extent.y);
+        vec2 radial = centered/max(length(centered),0.0001);
+        direction = mix(normal,radial,u_finish.w);
+        direction = direction/max(length(direction),0.0001)*min(field.w,1.);
+        offset = direction*displacement*profile;
+    }
+    vec2 samplePoint = scenePoint(local-offset);
     vec2 dx = vec2(1., 0.);
     vec2 dy = vec2(0., 1.);
     #if defined(IMPELLER_GRAPHICS_BACKEND)
@@ -130,7 +157,7 @@ void shadeGlass() {
     float coverage = clamp(0.5-d/aa,0.,1.);
     // The narrow exterior lobe darkens the sides between vertical highlights.
     float rimAlpha = 0.;
-    if (u_material.x > 1.5 && u_finish.y > 0.) {
+    if (u_material.x > 1.5 && u_finish.y > 0. && d > -0.5*aa) {
         float facing = clamp((abs(normal.x)-0.258819)/0.741181,0.,1.);
         float side = facing/(1.+0.5*(1.-facing));
         float outerCoverage = clamp(0.5-(d-0.533333)/aa,0.,1.);
@@ -139,12 +166,26 @@ void shadeGlass() {
     if (coverage < 0.001) { frag_color = vec4(0.,0.,0.,rimAlpha); return; }
     vec3 color;
     if (u_optics.w > 0.001 && profile > 0.001) {
-        vec2 split = scenePoint(local + direction*u_optics.w*(2.+displacement*0.12)*profile) - scenePoint(local);
-        color = filteredScene(samplePoint-split,dx,dy)*vec3(0.22,0.04,0.01)
-              + filteredScene(samplePoint-split*0.5,dx,dy)*vec3(0.40,0.22,0.10)
-              + filteredScene(samplePoint,dx,dy)*vec3(0.27,0.48,0.27)
-              + filteredScene(samplePoint+split*0.5,dx,dy)*vec3(0.10,0.22,0.40)
-              + filteredScene(samplePoint+split,dx,dy)*vec3(0.01,0.04,0.22);
+        vec2 split = mat2(u_transform.x, u_transform.z, u_transform.y, u_transform.w)
+                   * (direction*(u_optics.w*(2.+displacement*0.12)*profile*u_geometry.y));
+        // The outer bands are shared by both tap sets, so only the half-split
+        // taps sit behind the divergent branch.
+        vec3 outerA = filteredScene(samplePoint-split,dx,dy);
+        vec3 center = filteredScene(samplePoint,dx,dy);
+        vec3 outerB = filteredScene(samplePoint+split,dx,dy);
+        if (dot(split,split) <= 0.2025 * u_optics.z*u_optics.z*u_geometry.y*u_geometry.y) {
+            // Over the frost kernel the five bands equal three taps whose per-channel
+            // weights match the zeroth to second moments of each band kernel.
+            color = outerA*vec3(0.3575,0.095,-0.0025)
+                  + center*vec3(0.645,0.81,0.645)
+                  + outerB*vec3(-0.0025,0.095,0.3575);
+        } else {
+            color = outerA*vec3(0.22,0.04,0.01)
+                  + filteredScene(samplePoint-split*0.5,dx,dy)*vec3(0.40,0.22,0.10)
+                  + center*vec3(0.27,0.48,0.27)
+                  + filteredScene(samplePoint+split*0.5,dx,dy)*vec3(0.10,0.22,0.40)
+                  + outerB*vec3(0.01,0.04,0.22);
+        }
     } else { color = filteredScene(samplePoint,dx,dy); }
     float luma = dot(color,vec3(0.2126,0.7152,0.0722));
     color = clamp(mix(vec3(luma),color,u_finish.x),0.,1.);
@@ -152,10 +193,11 @@ void shadeGlass() {
     // radiance() moves a channel by at most w/(1+w). Past the depth where both
     // weights fall below half an 8-bit step (w < 0.001965) the terms are
     // invisible, so the reflection reads stop there instead of at 24/4 points.
-    float invisible = 0.001965 / max(u_finish.z, 0.0001);
-    float broadEnd = 24. * (1. - sqrt(min(invisible / 0.32, 1.)));
-    float rimEnd = 4. * (1. - pow(min(invisible, 1.), 0.6666667));
-    if (u_finish.z > 0.001 && u_geometry.z > 0.001 && depth < max(broadEnd, rimEnd)) {
+    // Both limits sit inside 24 points, so the depth test runs before their math.
+    if (depth < 24. && u_finish.z > 0.001 && u_geometry.z > 0.001) {
+        float invisible = 0.001965 / max(u_finish.z, 0.0001);
+        float broadEnd = 24. * (1. - sqrt(min(invisible / 0.32, 1.)));
+        float rimEnd = 4. * (1. - pow(min(invisible, 1.), 0.6666667));
         vec2 boundary = local-normal*d;
         vec2 tangent = vec2(-normal.y,normal.x);
         float reach = u_geometry.z;
@@ -204,17 +246,20 @@ void shadeGlass() {
         color = mix(color,tinted,u_material.w);
     }
     // Vertical key/fill lighting has a sharp rim and a softer eight-point lobe.
-    float light;
-    if (u_material.x > 1.5) {
-        float sharp = highlight(-normal.y,depth,1.,0.130526,0.,0.75,aa);
-        float diffuse = highlight(-normal.y,depth,8.,0.593419,11.333333,1.,aa);
-        light = sharp + diffuse;
-    } else {
-        light = highlight(dot(normal,vec2(-0.70710678,-0.70710678)),depth,1.,0.,0.,0.7,aa);
+    // Every lobe's band is zero past its width plus half the AA step.
+    bool clear = u_material.x > 1.5;
+    if (depth < (clear ? 8. : 1.) + aa) {
+        float light;
+        if (clear) {
+            float sharp = highlight(-normal.y,depth,1.,0.130526,0.,0.75,aa);
+            float diffuse = highlight(-normal.y,depth,8.,0.593419,11.333333,1.,aa);
+            light = sharp + diffuse;
+        } else {
+            light = highlight(dot(normal,vec2(-0.70710678,-0.70710678)),depth,1.,0.,0.,0.7,aa);
+        }
+        // Both matrices are mixed in by weight; at zero weight skip their arithmetic.
+        if (light*u_finish.y > 0.) color = vibrantHighlight(color,light*u_finish.y);
     }
-    // Both matrices are mixed in by weight; at zero weight skip their arithmetic.
-    if (light*u_finish.y > 0.) color = vibrantHighlight(color,light*u_finish.y);
-
     if (u_tintSlope.w > 0.) {
         vec3 pressed = vec3(dot(color,vec3(1.1575,-0.1431,-0.0144)),
             dot(color,vec3(-0.0425,1.0570,-0.0145)),
