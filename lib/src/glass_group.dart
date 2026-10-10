@@ -7,6 +7,8 @@ part of 'glass.dart';
 /// automatically use separate passes. Only regular material at unit scale on
 /// physical pixel boundaries is batched. Tab bars, clear/expert optics and
 /// members under an intermediate clip keep their individual rendering path.
+/// Unbatched members whose sampling never reaches another member's paint share
+/// one backdrop capture while keeping their own filter.
 /// This changes rendering work only; surfaces do not merge or morph.
 class LiquidPrismGroup extends StatefulWidget {
   const LiquidPrismGroup({super.key, required this.child});
@@ -27,7 +29,8 @@ class _LiquidPrismGroupState extends State<LiquidPrismGroup> {
     super.debugFillProperties(properties);
     properties
       ..add(IntProperty('batchedSurfaces', _data.prepared.length))
-      ..add(IntProperty('opticalBatches', _data._batches.length));
+      ..add(IntProperty('opticalBatches', _data._batches.length))
+      ..add(IntProperty('sharedBackdropSurfaces', _data.shared.length));
   }
 
   @override
@@ -131,31 +134,44 @@ class _GlassBatch {
   final BackdropKey key = BackdropKey();
   final ui.FragmentShader shader;
   late ui.ImageFilter filter;
+  final _filterCache = _GlassFilterCache();
 }
 
 class _GlassGroupData {
   final members = <_RenderGlass>{};
   final prepared = <_RenderGlass, _GlassBatch>{};
+
+  /// Scalar members reading one backdrop capture, each with its own filter.
+  final shared = <_RenderGlass>{};
+  final sharedKey = BackdropKey();
   final _batches = <_GlassBatch>[];
   bool _disposed = false;
 
   void prepare(_GlassGroupLayer groupLayer) {
     prepared.clear();
-    if (_disposed || LiquidPrism._batchProgram == null) return;
+    shared.clear();
+    if (_disposed) return;
+    final canBatch = LiquidPrism._batchProgram != null;
     final surfaces = members
         .where((m) => m.attached && m.hasSize && !m.size.isEmpty)
         .toList();
     final bounds = <_RenderGlass, Rect>{};
     final footprints = <_RenderGlass, Rect>{};
+    final painted = <_RenderGlass, Rect>{};
+    final sampled = <_RenderGlass, Rect>{};
+    // One render-tree walk per member per frame, shared by every use below.
+    final transforms = <_RenderGlass, Matrix4>{};
     final aligned = <_RenderGlass>{};
     for (final member in surfaces) {
-      final transform = member.getTransformTo(null);
+      final transform = transforms[member] = member.getTransformTo(null);
       final rect = member.shape.rect(member.size);
       final globalRect = MatrixUtils.transformRect(transform, rect);
       if (_pixelAlignedRect(globalRect, member.pixelRatio)) {
         aligned.add(member);
       }
       bounds[member] = MatrixUtils.transformRect(transform, rect.inflate(2));
+      // Everything a member paints, including its exterior shadow.
+      painted[member] = MatrixUtils.transformRect(transform, rect.inflate(18));
       // Refraction/dispersion and the anisotropic pixel footprint stay inside
       // this conservative local sampling envelope. Reflections reach outward.
       final displacement = math.min(
@@ -173,6 +189,19 @@ class _GlassGroupData {
           math.max(displacement * .5 + spread, reach) +
           member.style.frost * 3 +
           20;
+      // Exact outward reach of the optical pass: reflection taps, or dispersion
+      // plus half of the bounded 16px footprint, then the frost kernel (3σ).
+      final outside =
+          math.max(
+            member.style.reflection > .001 ? member.style.reflectionReach : 0,
+            spread + 8 / member.pixelRatio,
+          ) +
+          member.style.frost * 3 +
+          1;
+      sampled[member] = MatrixUtils.transformRect(
+        transform,
+        rect.inflate(outside),
+      );
       footprints[member] = MatrixUtils.transformRect(
         transform,
         rect.inflate(margin),
@@ -186,17 +215,6 @@ class _GlassGroupData {
             (footprints[member]!.overlaps(bounds[other]!) ||
                 footprints[other]!.overlaps(bounds[member]!)),
       );
-      // Clear, expert and tab-bar optics expose resampling differences in Impeller's
-      // cached filter snapshot at high-contrast edges. Keep their scalar path.
-      if (near ||
-          member.shape.isSmooth ||
-          member.recipe.kind != 1 ||
-          member.recipe.role == GlassRole.tabBar) {
-        continue;
-      }
-      final matrix = member.getTransformTo(null).storage;
-      // Cached output adds a resampling step. Fractional device-pixel edges or
-      // a changed basis retain the scalar path, preserving the animated rim.
       // Relocating shadows across an intermediate clip/saveLayer would alter
       // their visibility or their source pixels. Retain normal paint order.
       var ancestor = member._clipLayer.layer?.parent;
@@ -210,8 +228,32 @@ class _GlassGroupData {
         }
         ancestor = ancestor.parent;
       }
-      if (!independentLayers ||
-          ancestor != groupLayer ||
+      final sameLayers = independentLayers && ancestor == groupLayer;
+      // A shared capture omits whatever later members paint, shadows included.
+      // Members whose sampling never reaches that content can share it; each
+      // still applies its own scalar filter, so nothing is resampled.
+      if (sameLayers &&
+          !surfaces.any(
+            (other) =>
+                other != member &&
+                (sampled[member]!.overlaps(painted[other]!) ||
+                    sampled[other]!.overlaps(painted[member]!)),
+          )) {
+        shared.add(member);
+      }
+      // Clear, expert and tab-bar optics expose resampling differences in Impeller's
+      // cached filter snapshot at high-contrast edges. Keep their scalar path.
+      if (!canBatch ||
+          near ||
+          member.shape.isSmooth ||
+          member.recipe.kind != 1 ||
+          member.recipe.role == GlassRole.tabBar) {
+        continue;
+      }
+      final matrix = transforms[member]!.storage;
+      // Cached output adds a resampling step. Fractional device-pixel edges or
+      // a changed basis retain the scalar path, preserving the animated rim.
+      if (!sameLayers ||
           !aligned.contains(member) ||
           member.pixelRatio < 1 ||
           matrix[0] != 1 ||
@@ -232,34 +274,37 @@ class _GlassGroupData {
         if (chunk.length < 2) continue;
         if (used == _batches.length) _batches.add(_GlassBatch());
         final batch = _batches[used++];
-        batch.shader.setFloat(2, chunk.length.toDouble());
-        var index = 3;
+        final values = <double>[0, 0, chunk.length.toDouble()];
         for (final member in chunk) {
           final rect = bounds[member]!;
           final dpr = member.pixelRatio;
-          final data = [
+          values.addAll([
             rect.left * dpr,
             rect.top * dpr,
             rect.right * dpr,
             rect.bottom * dpr,
-            ...member.uniforms().skip(2).take(36),
-          ];
-          for (final value in data) {
-            batch.shader.setFloat(index++, value);
-          }
+            ...member.uniforms(transforms[member]).skip(2).take(36),
+          ]);
           prepared[member] = batch;
         }
-        batch.filter = _opticalFilter(batch.shader, chunk.first.style.frost);
+        batch.filter = batch._filterCache.resolve(
+          batch.shader,
+          values,
+          chunk.first.style.frost,
+        );
       }
     }
     while (_batches.length > used) {
       _batches.removeLast().shader.dispose();
     }
+    shared.removeAll(prepared.keys);
+    if (shared.length < 2) shared.clear();
   }
 
   void dispose() {
     _disposed = true;
     prepared.clear();
+    shared.clear();
     members.clear();
     for (final batch in _batches) {
       batch.shader.dispose();

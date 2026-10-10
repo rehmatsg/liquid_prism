@@ -289,19 +289,45 @@ class _ExteriorShadow extends CustomPainter {
         ..addRect(rect.inflate(48))
         ..addPath(outline, Offset.zero),
     );
-    canvas.drawPath(
-      outline.shift(const Offset(0, 1)),
+    _drawOutline(
+      canvas,
+      rect,
+      const Offset(0, 1),
       Paint()
         ..color = const Color(0x06000000)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
-    canvas.drawPath(
-      outline.shift(const Offset(0, 3)),
+    _drawOutline(
+      canvas,
+      rect,
+      const Offset(0, 3),
       Paint()
         ..color = const Color(0x05000000)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
     );
     canvas.restore();
+  }
+
+  /// Same contour as [GlassShape.path], drawn as a primitive so Impeller can
+  /// use its analytic blurred-shape shader rather than tessellating a path.
+  void _drawOutline(Canvas canvas, Rect rect, Offset shift, Paint paint) {
+    final bounds = shape.rect(rect.size).shift(shift);
+    if (shape.isSmooth && shape.radius > 0) {
+      canvas.drawRSuperellipse(
+        BorderRadius.circular(shape.radius).toRSuperellipse(bounds),
+        paint,
+      );
+    } else if (shape.isSmooth) {
+      canvas.drawRect(bounds, paint);
+    } else {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          bounds,
+          Radius.circular(shape.radius),
+        ).scaleRadii(),
+        paint,
+      );
+    }
   }
 
   @override
@@ -338,8 +364,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
       ..recipe = recipe
       ..press = press
       ..group = group
-      ..pixelRatio = pixelRatio
-      ..markNeedsPaint();
+      ..pixelRatio = pixelRatio;
   }
 }
 
@@ -347,16 +372,25 @@ class _RenderGlass extends RenderProxyBox {
   _RenderGlass(
     this.shader,
     this.style,
-    this.shape,
+    this._shape,
     this.recipe,
     this.press,
     this.pixelRatio,
     this._group,
   );
+  // Optical inputs are read as uniforms when the scene is composed, which every
+  // frame does for this layer; only the shadow and clip geometry need a repaint.
   ui.FragmentShader shader;
   LiquidPrismStyle style;
-  GlassShape shape;
   GlassRecipe recipe;
+  GlassShape _shape;
+  GlassShape get shape => _shape;
+  set shape(GlassShape value) {
+    if (value == _shape) return;
+    _shape = value;
+    markNeedsPaint();
+  }
+
   double press;
   double pixelRatio;
   _GlassGroupData? _group;
@@ -382,7 +416,7 @@ class _RenderGlass extends RenderProxyBox {
   Size? _contourSize;
   GlassShape? _contourShape;
   List<double> _contour = List.filled(12, 0);
-  List<double> uniforms() {
+  List<double> uniforms([Matrix4? globalTransform]) {
     if (size != _contourSize || shape != _contourShape) {
       _contourSize = size;
       _contourShape = shape;
@@ -390,7 +424,7 @@ class _RenderGlass extends RenderProxyBox {
           ? superellipseUniforms(size, shape.radius)
           : List.filled(12, 0);
     }
-    final transform = getTransformTo(null);
+    final transform = globalTransform ?? getTransformTo(null);
     final m = transform.storage;
     final rect = shape.rect(size);
     final origin = MatrixUtils.transformPoint(transform, rect.topLeft);
@@ -408,13 +442,6 @@ class _RenderGlass extends RenderProxyBox {
     values[33] = press;
     values[37] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
     return values;
-  }
-
-  void pack() {
-    final values = uniforms();
-    for (var i = 2; i < values.length; i++) {
-      shader.setFloat(i, values[i]);
-    }
   }
 
   @override
@@ -468,6 +495,7 @@ class _RenderGlass extends RenderProxyBox {
 class _GlassLayer extends ContainerLayer {
   _RenderGlass? glass;
   BackdropFilterLayer? filter;
+  final _filterCache = _GlassFilterCache();
   @override
   bool get alwaysNeedsAddToScene => true;
   @override
@@ -477,15 +505,49 @@ class _GlassLayer extends ContainerLayer {
     final batch = owner._group?.prepared[owner];
     final backdrop = filter!;
     if (batch == null) {
-      owner.pack();
-      backdrop.backdropKey = null;
-      backdrop.filter = _opticalFilter(owner.shader, owner.style.frost);
+      final group = owner._group;
+      backdrop.backdropKey = group != null && group.shared.contains(owner)
+          ? group.sharedKey
+          : null;
+      backdrop.filter = _filterCache.resolve(
+        owner.shader,
+        owner.uniforms(),
+        owner.style.frost,
+      );
     } else {
       backdrop.backdropKey = batch.key;
       backdrop.filter = batch.filter;
     }
     backdrop.markNeedsAddToScene();
     addChildrenToScene(builder);
+  }
+}
+
+/// ImageFilter.shader snapshots uniforms; reuse only when every input matches.
+/// This caches the filter description, not the changing backdrop pixels.
+class _GlassFilterCache {
+  ui.FragmentShader? _shader;
+  List<double>? _values;
+  double? _frost;
+  ui.ImageFilter? _filter;
+
+  ui.ImageFilter resolve(
+    ui.FragmentShader shader,
+    List<double> values,
+    double frost,
+  ) {
+    if (!identical(shader, _shader) ||
+        frost != _frost ||
+        !listEquals(values, _values)) {
+      for (var i = 2; i < values.length; i++) {
+        shader.setFloat(i, values[i]);
+      }
+      _filter = _opticalFilter(shader, frost);
+      _shader = shader;
+      _values = values;
+      _frost = frost;
+    }
+    return _filter!;
   }
 }
 

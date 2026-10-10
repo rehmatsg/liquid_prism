@@ -23,6 +23,24 @@ Prefer small control surfaces, bounded blur radii, and static materials during
 interaction. The built-in springs animate transforms rather than blur or layout
 size. An idle component has no repeating ticker.
 
+The optical shader skips reflection samples where their weight falls below half
+an 8-bit step, and skips the highlight and press color matrices at zero weight.
+Over a frost blur of at least 2px, the compressed-rim footprint reads one sample
+per step instead of a ±¼px pair. Exterior shadows are drawn as rounded-rect or
+rounded-superellipse primitives, so Impeller uses its analytic blur instead of
+tessellating a blurred path every frame. Press, tint and material changes update
+uniforms at composition without repainting the glass content.
+Smooth-corner distance uses six angular bisections with cached curve endpoints
+and unit-vector midpoints. A terminal-segment test skips the search when its
+answer is already known; the projected contour is unchanged. The circular corner
+sector uses a dot-product test instead of an inverse tangent. Geometry and edge
+sampling stay at display resolution.
+
+Filter descriptions are reused while their shader, uniforms and blur stay equal.
+The backdrop itself remains live: movement, scrolling, material changes and
+presses update the filter inputs during scene composition. Reusing a description
+does not eliminate the GPU work needed to filter a changing background.
+
 `LiquidPrismGroup` can share a shader pass among compatible regular capsules and
 circles:
 
@@ -35,6 +53,9 @@ Members must share a background painted outside the group; keep intervening
 content outside the group as well.
 Incompatible, overlapping, transformed, or smooth-rectangle surfaces can use
 individual passes.
+Members that are not batched, and whose sampling never reaches another member's
+paint, share one backdrop capture while keeping their own filter. This removes
+render-pass breaks without resampling their output.
 
 The optional batch shader targets Impeller. Builds and headless tests may print
 an SkSL compatibility warning for that shader; the Skia backend uses the frosted
@@ -45,6 +66,11 @@ content. Simulator frame timings do not establish battery consumption or heat.
 The example and regression tests are not a physical-device energy certification.
 
 ## Color and appearance
+
+Clear glass uses vertical bright highlights and a thin dark exterior rim,
+calibrated against the iOS 27 reference. Both follow the existing contour.
+Explicit custom optics retain their diagonal lighting. This adds arithmetic to the
+optical pass without adding texture samples or a separate rendering pass.
 
 Light/dark material tint ramps come from the native reference. Regular surface
 and button luminance is calibrated over neutral backgrounds; separate light/dark

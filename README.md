@@ -201,7 +201,7 @@ contracts. Native code is confined to the separate research reference app.
 
 | Area | Finding and implementation |
 | --- | --- |
-| Borders | The inspected iOS highlights use opposing diagonal lights (−π/4 and 3π/4), 1-point height, 90° spread, and 0.7 curvature. The shader grades backdrop color under that mask rather than drawing a uniform white border. Larger native cards can use a wider spread. |
+| Borders | Clear glass follows the inspected iOS 27 vertical key/fill highlights: a sharp 1-point rim, an 8-point diffuse lobe, and a thin dark exterior edge between bright regions. The dark edge uses a fitted opacity; native spread varies with size. Regular and custom materials retain the earlier diagonal lighting. Highlights grade backdrop color rather than drawing a uniform white stroke. |
 | Sampling | Display-resolution geometry, bilinear sampling, and integration over compressed pixel footprints reduce jagged refraction at the rim. Gaussian blur runs before refraction; foreground content stays sharp. |
 | Materials | Regular and clear glass have different face and highlight treatments. Regular surfaces and buttons use a luminance response measured against iOS 27; tab bars retain their separate role calibration. |
 | Tint | Light/dark blue, green, orange, and pink ramps came from native color matrices. Other colors use an approximate luminance response. |
