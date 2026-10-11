@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/recipe.dart';
 
 import 'support/rendering.dart';
 
@@ -400,10 +401,15 @@ void main() {
       );
       await tester.pumpAndSettle();
       // The held pill lifts into a lens 8 pt larger on every side inside the
-      // bar's 1.0516 hold scale at the measured default; pressScale scales both.
+      // bar's width-dependent expansion; pressScale scales both.
       double lifted(double pressScale) {
         final factor = (pressScale - 1) / (const GlassMotion().pressScale - 1);
-        return (width + 16 * factor) * (1 + .0516 * factor);
+        final bar = find.byWidgetPredicate(
+          (widget) => widget is LiquidPrism && widget.role == GlassRole.tabBar,
+        );
+        final barWidth = tester.getSize(bar).width;
+        return (width + 16 * factor) *
+            (1 + 14.1379310344828 / barWidth * factor);
       }
 
       expect(visibleWidth(tester, pill), closeTo(lifted(1.15), .01));

@@ -11,7 +11,7 @@ uniform vec4 u_optics;   // Edge width, displacement, frost, dispersion.
 uniform vec4 u_tint;
 uniform vec4 u_finish;   // Saturation, light, reflection, splay.
 uniform vec4 u_geometry; // Radius, device pixel ratio, reflection reach, face brightness.
-uniform vec4 u_material; // Recipe (0 custom, 1 regular, 2 clear), dark, role, tint alpha.
+uniform vec4 u_material; // Recipe (0 custom, 1 regular, 2 clear, 3 lens), dark, role, tint alpha.
 uniform vec4 u_tintRed;
 uniform vec4 u_tintGreen;
 uniform vec4 u_tintBlue;

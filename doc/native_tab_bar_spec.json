@@ -1,0 +1,5403 @@
+{
+  "provenance": {
+    "date": "2026-10-11",
+    "os": "Version 27.0 (Build 24A5370g)",
+    "device": "iPhone 17 simulator",
+    "screen": {
+      "bounds": "{{0, 0}, {402, 874}}",
+      "scale": 3
+    },
+    "fixture": "actual four-tab SwiftUI showcase, dark mode, wallpaper 0",
+    "method": "Objective-C runtime property reads, model/presentation layers, intercepted animation constructors, per-display-frame animatable property reads; no image fitting",
+    "research": "_research/tab_bar_specs/",
+    "caveat": "Values are specific to this runtime and fixture. A property value does not expose its implementation or prove a Flutter parameter mapping."
+  },
+  "largeLensSpec": {
+    "class": "UIKit._UILiquidLensViewLargeVariantSpec",
+    "properties": {
+      "contentWrapperDisplacement": -17.5,
+      "innerShadowOffsetY": 7,
+      "innerShadowOpacity": 0.06,
+      "innerShadowRadius": 3,
+      "lensHangTime": 0.22,
+      "liftedDisplacement": 9,
+      "liftSpring": {
+        "class": "UIViewSpringAnimationBehaviorSettings",
+        "properties": {
+          "behaviorType": 2,
+          "dampingRatio": 1,
+          "dampingRatioSmoothing": 0,
+          "deceleration": 0,
+          "inertialProjectionDeceleration": 0,
+          "inertialTargetSmoothingRatio": 0,
+          "preferredFrameRateRange": {
+            "class": "PTFrameRateRangeSettings",
+            "properties": {
+              "frameRateRange": {
+                "objCType": "{CAFrameRateRange=fff}",
+                "value": "{length = 12, bytes = 0x000000000000000000000000}"
+              },
+              "highFrameRateReason": 0,
+              "maximum": 0,
+              "minimum": 0,
+              "preferred": 0,
+              "preset": 0,
+              "reason": 0,
+              "reasonComponent": 0
+            }
+          },
+          "response": 0.25,
+          "responseSmoothing": 0,
+          "retargetImpulse": 0,
+          "smoothingAndProjectionEnabled": false,
+          "trackingDampingRatio": 0.86,
+          "trackingDampingRatioSmoothing": 0,
+          "trackingResponse": 0.15,
+          "trackingResponseSmoothing": 0,
+          "trackingRetargetImpulse": 0
+        }
+      },
+      "tryMe": false,
+      "unliftedBlurRadius": 0,
+      "unliftedDisplacement": 0,
+      "unLiftSpring": {
+        "class": "UIViewSpringAnimationBehaviorSettings",
+        "properties": {
+          "behaviorType": 2,
+          "dampingRatio": 1,
+          "dampingRatioSmoothing": 0,
+          "deceleration": 0,
+          "inertialProjectionDeceleration": 0,
+          "inertialTargetSmoothingRatio": 0,
+          "preferredFrameRateRange": {
+            "class": "PTFrameRateRangeSettings",
+            "properties": {
+              "frameRateRange": {
+                "objCType": "{CAFrameRateRange=fff}",
+                "value": "{length = 12, bytes = 0x000000000000000000000000}"
+              },
+              "highFrameRateReason": 0,
+              "maximum": 0,
+              "minimum": 0,
+              "preferred": 0,
+              "preset": 0,
+              "reason": 0,
+              "reasonComponent": 0
+            }
+          },
+          "response": 0.25,
+          "responseSmoothing": 0,
+          "retargetImpulse": 0,
+          "smoothingAndProjectionEnabled": false,
+          "trackingDampingRatio": 0.86,
+          "trackingDampingRatioSmoothing": 0,
+          "trackingResponse": 0.15,
+          "trackingResponseSmoothing": 0,
+          "trackingRetargetImpulse": 0
+        }
+      }
+    }
+  },
+  "rootSettings": {
+    "UIKit._UIFlexInteractionSettingsDomain": {
+      "class": "UIKit._UIFlexInteractionSettings",
+      "properties": {
+        "flexEnabled": true,
+        "interactionSpec": {
+          "class": "UIKit._UIFlexInteractionSpec",
+          "properties": {
+            "large": {
+              "class": "UIKit._UIFlexInteractionLargeVariantSpec",
+              "properties": {
+                "associatedDimension": 160,
+                "bigGlowOpacity": 0,
+                "interactionPulseDriftRatio": 0,
+                "interactionPulseNormalizationFactor": 1,
+                "interactionPulseScalePtsX": 0,
+                "interactionPulseScalePtsY": 0,
+                "liftScalePoints": 4,
+                "littleGlowDissipationDistance": 50,
+                "littleGlowOpacity": 0.2,
+                "movementMaxScale": 1.1,
+                "movementMinScale": 0.9,
+                "movementNormalizationFactor": 10000,
+                "movementScalePts": 5,
+                "scaleDistanceThreshold": 24000,
+                "scaleSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 0.6,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.36,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.625,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.314,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                }
+              }
+            },
+            "loupe": {
+              "class": "UIKit._UIFlexInteractionLoupeVariantSpec",
+              "properties": {
+                "associatedDimension": 70,
+                "bigGlowOpacity": 0,
+                "interactionPulseDriftRatio": 0,
+                "interactionPulseNormalizationFactor": 1,
+                "interactionPulseScalePtsX": 0,
+                "interactionPulseScalePtsY": 0,
+                "liftScalePoints": 0,
+                "littleGlowDissipationDistance": 0,
+                "littleGlowOpacity": 0,
+                "movementMaxScale": 1.15,
+                "movementMinScale": 0.75,
+                "movementNormalizationFactor": 2500,
+                "movementScalePts": 100,
+                "scaleDistanceThreshold": 0,
+                "scaleSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 1,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.5,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.9,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.5,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                }
+              }
+            },
+            "menu": {
+              "class": "UIKit._UIFlexInteractionMenuVariantSpec",
+              "properties": {
+                "associatedDimension": 160,
+                "bigGlowOpacity": 0,
+                "interactionPulseDriftRatio": 0.7,
+                "interactionPulseNormalizationFactor": 8000,
+                "interactionPulseScalePtsX": 50,
+                "interactionPulseScalePtsY": 32,
+                "liftScalePoints": 0,
+                "littleGlowDissipationDistance": 50,
+                "littleGlowOpacity": 0.5,
+                "movementMaxScale": 1.1,
+                "movementMinScale": 0.9,
+                "movementNormalizationFactor": 10000,
+                "movementScalePts": 5,
+                "scaleDistanceThreshold": 6000,
+                "scaleSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 0.5,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.6,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0.016,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.5,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.15,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0.016
+                  }
+                }
+              }
+            },
+            "small": {
+              "class": "UIKit._UIFlexInteractionSmallVariantSpec",
+              "properties": {
+                "associatedDimension": 44,
+                "bigGlowOpacity": 1,
+                "interactionPulseDriftRatio": 0,
+                "interactionPulseNormalizationFactor": 1,
+                "interactionPulseScalePtsX": 0,
+                "interactionPulseScalePtsY": 0,
+                "liftScalePoints": 16,
+                "littleGlowDissipationDistance": 50,
+                "littleGlowOpacity": 0.3,
+                "movementMaxScale": 1.1,
+                "movementMinScale": 0.9,
+                "movementNormalizationFactor": 10000,
+                "movementScalePts": 10,
+                "scaleDistanceThreshold": 6000,
+                "scaleSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 0.375,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.4,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.625,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.262,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                }
+              }
+            },
+            "smallLoupe": {
+              "class": "UIKit._UIFlexInteractionSmallLoupeVariantSpec",
+              "properties": {
+                "associatedDimension": 37,
+                "bigGlowOpacity": 0,
+                "interactionPulseDriftRatio": 0,
+                "interactionPulseNormalizationFactor": 1,
+                "interactionPulseScalePtsX": 0,
+                "interactionPulseScalePtsY": 0,
+                "liftScalePoints": 0,
+                "littleGlowDissipationDistance": 0,
+                "littleGlowOpacity": 0,
+                "movementMaxScale": 1.1,
+                "movementMinScale": 0.9,
+                "movementNormalizationFactor": 2000,
+                "movementScalePts": 10,
+                "scaleDistanceThreshold": 6000,
+                "scaleSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 0.56,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.444,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0.032,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.56,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.444,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0.032
+                  }
+                }
+              }
+            },
+            "ultraSmall": {
+              "class": "UIKit._UIFlexInteractionUltraSmallVariantSpec",
+              "properties": {
+                "associatedDimension": 44,
+                "bigGlowOpacity": 1,
+                "interactionPulseDriftRatio": 0,
+                "interactionPulseNormalizationFactor": 1,
+                "interactionPulseScalePtsX": 0,
+                "interactionPulseScalePtsY": 0,
+                "liftScalePoints": 16,
+                "littleGlowDissipationDistance": 50,
+                "littleGlowOpacity": 1,
+                "movementMaxScale": 1.1,
+                "movementMinScale": 0.9,
+                "movementNormalizationFactor": 10000,
+                "movementScalePts": 10,
+                "scaleDistanceThreshold": 2000,
+                "scaleSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 0.375,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.4,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.625,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.262,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "liftEnabled": true,
+        "liquidLensSpec": {
+          "class": "UIKit._UILiquidLensViewSpec",
+          "properties": {
+            "large": {
+              "class": "UIKit._UILiquidLensViewLargeVariantSpec",
+              "properties": {
+                "contentWrapperDisplacement": -17.5,
+                "innerShadowOffsetY": 7,
+                "innerShadowOpacity": 0.06,
+                "innerShadowRadius": 3,
+                "lensHangTime": 0.22,
+                "liftedDisplacement": 9,
+                "liftSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 1,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.25,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.86,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.15,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                },
+                "tryMe": false,
+                "unliftedBlurRadius": 0,
+                "unliftedDisplacement": 0,
+                "unLiftSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 1,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.25,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.86,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.15,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                }
+              }
+            },
+            "small": {
+              "class": "UIKit._UILiquidLensViewSmallVariantSpec",
+              "properties": {
+                "contentWrapperDisplacement": -17.5,
+                "innerShadowOffsetY": 7,
+                "innerShadowOpacity": 0.06,
+                "innerShadowRadius": 3,
+                "lensHangTime": 0.22,
+                "liftedDisplacement": 9,
+                "liftSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 0.625,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.27,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0.032,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.86,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.15,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                },
+                "tryMe": false,
+                "unliftedBlurRadius": 6,
+                "unliftedDisplacement": 50,
+                "unLiftSpring": {
+                  "class": "UIViewSpringAnimationBehaviorSettings",
+                  "properties": {
+                    "behaviorType": 2,
+                    "dampingRatio": 0.7,
+                    "dampingRatioSmoothing": 0,
+                    "deceleration": 0,
+                    "inertialProjectionDeceleration": 0,
+                    "inertialTargetSmoothingRatio": 0,
+                    "preferredFrameRateRange": {
+                      "class": "PTFrameRateRangeSettings",
+                      "properties": {
+                        "frameRateRange": {
+                          "objCType": "{CAFrameRateRange=fff}",
+                          "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                        },
+                        "highFrameRateReason": 0,
+                        "maximum": 0,
+                        "minimum": 0,
+                        "preferred": 0,
+                        "preset": 0,
+                        "reason": 0,
+                        "reasonComponent": 0
+                      }
+                    },
+                    "response": 0.5,
+                    "responseSmoothing": 0,
+                    "retargetImpulse": 0.016,
+                    "smoothingAndProjectionEnabled": false,
+                    "trackingDampingRatio": 0.86,
+                    "trackingDampingRatioSmoothing": 0,
+                    "trackingResponse": 0.15,
+                    "trackingResponseSmoothing": 0,
+                    "trackingRetargetImpulse": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "UIKit._UITabBarAnimationSettingsDomain": {
+      "class": "UIKit._UITabBarAnimationSettings",
+      "properties": {
+        "collapsedSpringDampingRatio": 0.75,
+        "collapsedSpringResponse": 0.4,
+        "collapseFinalSpring": {
+          "class": "UIViewSpringAnimationBehaviorSettings",
+          "properties": {
+            "behaviorType": 2,
+            "dampingRatio": 0.76,
+            "dampingRatioSmoothing": 0,
+            "deceleration": 0,
+            "inertialProjectionDeceleration": 0,
+            "inertialTargetSmoothingRatio": 0,
+            "preferredFrameRateRange": {
+              "class": "PTFrameRateRangeSettings",
+              "properties": {
+                "frameRateRange": {
+                  "objCType": "{CAFrameRateRange=fff}",
+                  "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                },
+                "highFrameRateReason": 0,
+                "maximum": 0,
+                "minimum": 0,
+                "preferred": 0,
+                "preset": 0,
+                "reason": 0,
+                "reasonComponent": 0
+              }
+            },
+            "response": 0.42,
+            "responseSmoothing": 0,
+            "retargetImpulse": 0,
+            "smoothingAndProjectionEnabled": false,
+            "trackingDampingRatio": 0.86,
+            "trackingDampingRatioSmoothing": 0,
+            "trackingResponse": 0.15,
+            "trackingResponseSmoothing": 0,
+            "trackingRetargetImpulse": 0
+          }
+        },
+        "collapseFinalSpringDelay": 0.05,
+        "collapseIntermediateSpring": {
+          "class": "UIViewSpringAnimationBehaviorSettings",
+          "properties": {
+            "behaviorType": 2,
+            "dampingRatio": 0.72,
+            "dampingRatioSmoothing": 0,
+            "deceleration": 0,
+            "inertialProjectionDeceleration": 0,
+            "inertialTargetSmoothingRatio": 0,
+            "preferredFrameRateRange": {
+              "class": "PTFrameRateRangeSettings",
+              "properties": {
+                "frameRateRange": {
+                  "objCType": "{CAFrameRateRange=fff}",
+                  "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                },
+                "highFrameRateReason": 0,
+                "maximum": 0,
+                "minimum": 0,
+                "preferred": 0,
+                "preset": 0,
+                "reason": 0,
+                "reasonComponent": 0
+              }
+            },
+            "response": 0.36,
+            "responseSmoothing": 0,
+            "retargetImpulse": 0,
+            "smoothingAndProjectionEnabled": false,
+            "trackingDampingRatio": 0.86,
+            "trackingDampingRatioSmoothing": 0,
+            "trackingResponse": 0.15,
+            "trackingResponseSmoothing": 0,
+            "trackingRetargetImpulse": 0
+          }
+        },
+        "expandFinalSpring": {
+          "class": "UIViewSpringAnimationBehaviorSettings",
+          "properties": {
+            "behaviorType": 2,
+            "dampingRatio": 0.72,
+            "dampingRatioSmoothing": 0,
+            "deceleration": 0,
+            "inertialProjectionDeceleration": 0,
+            "inertialTargetSmoothingRatio": 0,
+            "preferredFrameRateRange": {
+              "class": "PTFrameRateRangeSettings",
+              "properties": {
+                "frameRateRange": {
+                  "objCType": "{CAFrameRateRange=fff}",
+                  "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                },
+                "highFrameRateReason": 0,
+                "maximum": 0,
+                "minimum": 0,
+                "preferred": 0,
+                "preset": 0,
+                "reason": 0,
+                "reasonComponent": 0
+              }
+            },
+            "response": 0.36,
+            "responseSmoothing": 0,
+            "retargetImpulse": 0,
+            "smoothingAndProjectionEnabled": false,
+            "trackingDampingRatio": 0.86,
+            "trackingDampingRatioSmoothing": 0,
+            "trackingResponse": 0.15,
+            "trackingResponseSmoothing": 0,
+            "trackingRetargetImpulse": 0
+          }
+        },
+        "expandFinalSpringDelay": 0.05,
+        "expandIntermediateSpring": {
+          "class": "UIViewSpringAnimationBehaviorSettings",
+          "properties": {
+            "behaviorType": 2,
+            "dampingRatio": 0.72,
+            "dampingRatioSmoothing": 0,
+            "deceleration": 0,
+            "inertialProjectionDeceleration": 0,
+            "inertialTargetSmoothingRatio": 0,
+            "preferredFrameRateRange": {
+              "class": "PTFrameRateRangeSettings",
+              "properties": {
+                "frameRateRange": {
+                  "objCType": "{CAFrameRateRange=fff}",
+                  "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                },
+                "highFrameRateReason": 0,
+                "maximum": 0,
+                "minimum": 0,
+                "preferred": 0,
+                "preset": 0,
+                "reason": 0,
+                "reasonComponent": 0
+              }
+            },
+            "response": 0.3,
+            "responseSmoothing": 0,
+            "retargetImpulse": 0,
+            "smoothingAndProjectionEnabled": false,
+            "trackingDampingRatio": 0.86,
+            "trackingDampingRatioSmoothing": 0,
+            "trackingResponse": 0.15,
+            "trackingResponseSmoothing": 0,
+            "trackingRetargetImpulse": 0
+          }
+        },
+        "expansionSpringDampingRatio": 0.5,
+        "expansionSpringResponse": 0.4,
+        "expansionXAnchor": 0.5,
+        "expansionYAnchor": 0.5,
+        "scrollAwayHintResetSpring": {
+          "class": "UIViewSpringAnimationBehaviorSettings",
+          "properties": {
+            "behaviorType": 2,
+            "dampingRatio": 0.8,
+            "dampingRatioSmoothing": 0,
+            "deceleration": 0,
+            "inertialProjectionDeceleration": 0,
+            "inertialTargetSmoothingRatio": 0,
+            "preferredFrameRateRange": {
+              "class": "PTFrameRateRangeSettings",
+              "properties": {
+                "frameRateRange": {
+                  "objCType": "{CAFrameRateRange=fff}",
+                  "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                },
+                "highFrameRateReason": 0,
+                "maximum": 0,
+                "minimum": 0,
+                "preferred": 0,
+                "preset": 0,
+                "reason": 0,
+                "reasonComponent": 0
+              }
+            },
+            "response": 0.3,
+            "responseSmoothing": 0,
+            "retargetImpulse": 0,
+            "smoothingAndProjectionEnabled": false,
+            "trackingDampingRatio": 0.86,
+            "trackingDampingRatioSmoothing": 0,
+            "trackingResponse": 0.15,
+            "trackingResponseSmoothing": 0,
+            "trackingRetargetImpulse": 0
+          }
+        },
+        "scrollAwayProgressMultiplier": 0.05,
+        "scrollAwayProgressSpring": {
+          "class": "UIViewSpringAnimationBehaviorSettings",
+          "properties": {
+            "behaviorType": 2,
+            "dampingRatio": 0.8,
+            "dampingRatioSmoothing": 0,
+            "deceleration": 0,
+            "inertialProjectionDeceleration": 0,
+            "inertialTargetSmoothingRatio": 0,
+            "preferredFrameRateRange": {
+              "class": "PTFrameRateRangeSettings",
+              "properties": {
+                "frameRateRange": {
+                  "objCType": "{CAFrameRateRange=fff}",
+                  "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                },
+                "highFrameRateReason": 0,
+                "maximum": 0,
+                "minimum": 0,
+                "preferred": 0,
+                "preset": 0,
+                "reason": 0,
+                "reasonComponent": 0
+              }
+            },
+            "response": 0.5,
+            "responseSmoothing": 0,
+            "retargetImpulse": 0,
+            "smoothingAndProjectionEnabled": false,
+            "trackingDampingRatio": 0.86,
+            "trackingDampingRatioSmoothing": 0,
+            "trackingResponse": 0.15,
+            "trackingResponseSmoothing": 0,
+            "trackingRetargetImpulse": 0
+          }
+        },
+        "scrollAwayTrackingProgressSpring": {
+          "class": "UIViewSpringAnimationBehaviorSettings",
+          "properties": {
+            "behaviorType": 2,
+            "dampingRatio": 0.8,
+            "dampingRatioSmoothing": 0,
+            "deceleration": 0,
+            "inertialProjectionDeceleration": 0,
+            "inertialTargetSmoothingRatio": 0,
+            "preferredFrameRateRange": {
+              "class": "PTFrameRateRangeSettings",
+              "properties": {
+                "frameRateRange": {
+                  "objCType": "{CAFrameRateRange=fff}",
+                  "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                },
+                "highFrameRateReason": 0,
+                "maximum": 0,
+                "minimum": 0,
+                "preferred": 0,
+                "preset": 0,
+                "reason": 0,
+                "reasonComponent": 0
+              }
+            },
+            "response": 0.1,
+            "responseSmoothing": 0,
+            "retargetImpulse": 0,
+            "smoothingAndProjectionEnabled": false,
+            "trackingDampingRatio": 0.86,
+            "trackingDampingRatioSmoothing": 0,
+            "trackingResponse": 0.15,
+            "trackingResponseSmoothing": 0,
+            "trackingRetargetImpulse": 0
+          }
+        }
+      }
+    }
+  },
+  "restViews": [
+    {
+      "class": "UIKit._UITabBarItemPlatterView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{21, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit32_UITabBarVisualProvider_FloatingP33_3C6E5A7AE2316B749C88F887559DAAB619SelectedContentView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{0, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{4, 4}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0",
+      "bounds": "{{0, 0}, {29.666666666666668, 29.333333333333332}}",
+      "frame": "{{33, 5.6666666666666661}, {29.666666666666668, 29.333333333333332}}",
+      "win": "{{58, 800.66666666666663}, {29.666666666666671, 29.333333333333371}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{0.3333333333333357, 0, 0.66666666666666607, 0.66666666666666785}",
+        "baseline": 4.666666666666667,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 4.666666666666667,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0",
+      "bounds": "{{0, 0}, {57, 12}}",
+      "frame": "{{19.333333333333329, 35}, {57, 12}}",
+      "win": "{{44.333333333333329, 830}, {57, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Playground",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{89.444444444444443, 4}, {95.666666666666657, 54}}",
+      "win": "{{110.44444444444444, 795}, {95.666666666666643, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 21}}",
+      "frame": "{{33.333333333333336, 9.3333333333333357}, {29.333333333333332, 21}}",
+      "win": "{{143.77777777777777, 804.33333333333337}, {29.333333333333343, 21}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-2.6666666666666643, 0, -2.6666666666666661, 0}",
+        "baseline": 1.3333333333333333,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 1.3333333333333333,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{110.44444444444444, 795}, {95.666666666666643, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/1/0",
+      "bounds": "{{0, 0}, {24.333333333333332, 12}}",
+      "frame": "{{35.666666666666664, 35}, {24.333333333333332, 12}}",
+      "win": "{{146.11111111111111, 830}, {24.333333333333343, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Lists",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{174.88888888888891, 4}, {95.666666666666657, 54}}",
+      "win": "{{195.88888888888891, 795}, {95.666666666666629, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2/0",
+      "bounds": "{{0, 0}, {27, 25}}",
+      "frame": "{{34.333333333333336, 7.3333333333333321}, {27, 25}}",
+      "win": "{{230.22222222222226, 802.33333333333337}, {27.000000000000028, 25}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.3333333333333304, 0, -1.0000000000000009, 0}",
+        "baseline": 3,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 3,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{195.88888888888891, 795}, {95.666666666666629, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2/1/0",
+      "bounds": "{{0, 0}, {35.666666666666664, 12}}",
+      "frame": "{{29.999999999999996, 35}, {35.666666666666664, 12}}",
+      "win": "{{225.88888888888891, 830}, {35.666666666666686, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Gallery",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{260.33333333333331, 4}, {95.666666666666657, 54}}",
+      "win": "{{281.33333333333331, 795}, {95.666666666666686, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 23.666666666666668}}",
+      "frame": "{{33.333333333333336, 8.0000000000000018}, {29.333333333333332, 23.666666666666668}}",
+      "win": "{{314.66666666666663, 803}, {29.333333333333314, 23.666666666666629}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.6666666666666643, 0, -1.6666666666666679, 0}",
+        "baseline": 2.3333333333333335,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 2.3333333333333335,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{281.33333333333331, 795}, {95.666666666666686, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3/1/0",
+      "bounds": "{{0, 0}, {42.333333333333336, 12}}",
+      "frame": "{{26.666666666666668, 35}, {42.333333333333336, 12}}",
+      "win": "{{308, 830}, {42.333333333333314, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Settings",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UILiquidLensView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{4, 4}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UITabSelectionView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2714ClearGlassView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/1/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB277SDFView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/1/0/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2714SDFElementView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/1/0/0/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UIPortalView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/1/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/1/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit20_UITabBarPlatterViewP33_022AA364308030F4627162921FD6D31A11ContentView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{0, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{4, 4}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0/0",
+      "bounds": "{{0, 0}, {29.666666666666668, 29.333333333333332}}",
+      "frame": "{{33, 5.6666666666666661}, {29.666666666666668, 29.333333333333332}}",
+      "win": "{{58, 800.66666666666663}, {29.666666666666671, 29.333333333333371}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{0.3333333333333357, 0, 0.66666666666666607, 0.66666666666666785}",
+        "baseline": 4.666666666666667,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 4.666666666666667,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0/1/0",
+      "bounds": "{{0, 0}, {55.666666666666664, 12}}",
+      "frame": "{{19.999999999999996, 35}, {55.666666666666664, 12}}",
+      "win": "{{45, 830}, {55.666666666666657, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Playground",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{89.444444444444443, 4}, {95.666666666666657, 54}}",
+      "win": "{{110.44444444444444, 795}, {95.666666666666643, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 21}}",
+      "frame": "{{33.333333333333336, 9.3333333333333357}, {29.333333333333332, 21}}",
+      "win": "{{143.77777777777777, 804.33333333333337}, {29.333333333333343, 21}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-2.6666666666666643, 0, -2.6666666666666661, 0}",
+        "baseline": 1.3333333333333333,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 1.3333333333333333,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{110.44444444444444, 795}, {95.666666666666643, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1/1/0",
+      "bounds": "{{0, 0}, {23.666666666666668, 12}}",
+      "frame": "{{36, 35}, {23.666666666666668, 12}}",
+      "win": "{{146.44444444444446, 830}, {23.666666666666657, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Lists",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{174.88888888888891, 4}, {95.666666666666657, 54}}",
+      "win": "{{195.88888888888891, 795}, {95.666666666666629, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2/0",
+      "bounds": "{{0, 0}, {27, 25}}",
+      "frame": "{{34.333333333333336, 7.3333333333333321}, {27, 25}}",
+      "win": "{{230.22222222222226, 802.33333333333337}, {27.000000000000028, 25}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.3333333333333304, 0, -1.0000000000000009, 0}",
+        "baseline": 3,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 3,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{195.88888888888891, 795}, {95.666666666666629, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2/1/0",
+      "bounds": "{{0, 0}, {35, 12}}",
+      "frame": "{{30.333333333333329, 35}, {35, 12}}",
+      "win": "{{226.22222222222223, 830}, {35, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Gallery",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{260.33333333333331, 4}, {95.666666666666657, 54}}",
+      "win": "{{281.33333333333331, 795}, {95.666666666666686, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 23.666666666666668}}",
+      "frame": "{{33.333333333333336, 8.0000000000000018}, {29.333333333333332, 23.666666666666668}}",
+      "win": "{{314.66666666666663, 803}, {29.333333333333314, 23.666666666666629}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.6666666666666643, 0, -1.6666666666666679, 0}",
+        "baseline": 2.3333333333333335,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 2.3333333333333335,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{281.33333333333331, 795}, {95.666666666666686, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3/1/0",
+      "bounds": "{{0, 0}, {41.333333333333336, 12}}",
+      "frame": "{{27.000000000000004, 35}, {41.333333333333336, 12}}",
+      "win": "{{308.33333333333331, 830}, {41.333333333333314, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Settings",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2711DestOutView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/3",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{21, 791}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit20_UITabBarPlatterViewP33_022AA364308030F4627162921FD6D31A18BadgeContainerView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/4",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{0, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    }
+  ],
+  "contactViews": [
+    {
+      "class": "UIKit._UITabBarItemPlatterView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{21, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit32_UITabBarVisualProvider_FloatingP33_3C6E5A7AE2316B749C88F887559DAAB619SelectedContentView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{0, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{-3.6533333333333289, -0.31999999999999673}, {110.9733333333333, 62.640000000000001}}",
+      "win": "{{17.346666666666671, 790.67999999999995}, {110.97333333333333, 62.639999999999986}}",
+      "transform": "[1.1599999999999999, 0, 0, 1.1599999999999999, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0",
+      "bounds": "{{0, 0}, {29.666666666666668, 29.333333333333332}}",
+      "frame": "{{33, 5.6666666666666661}, {29.666666666666668, 29.333333333333332}}",
+      "win": "{{55.626666666666665, 797.25333333333333}, {34.413333333333327, 34.026666666666642}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{0.3333333333333357, 0, 0.66666666666666607, 0.66666666666666785}",
+        "baseline": 4.666666666666667,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 4.666666666666667,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{17.346666666666671, 790.67999999999995}, {110.97333333333333, 62.639999999999986}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0",
+      "bounds": "{{0, 0}, {57, 12}}",
+      "frame": "{{19.333333333333329, 35}, {57, 12}}",
+      "win": "{{39.773333333333326, 831.27999999999997}, {66.11999999999999, 13.919999999999959}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Playground",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{81.791111111111121, -0.31999999999999673}, {110.9733333333333, 62.640000000000001}}",
+      "win": "{{102.79111111111112, 790.67999999999995}, {110.9733333333333, 62.639999999999986}}",
+      "transform": "[1.1599999999999999, 0, 0, 1.1599999999999999, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 21}}",
+      "frame": "{{33.333333333333336, 9.3333333333333357}, {29.333333333333332, 21}}",
+      "win": "{{141.45777777777778, 801.50666666666666}, {34.026666666666671, 24.360000000000014}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-2.6666666666666643, 0, -2.6666666666666661, 0}",
+        "baseline": 1.3333333333333333,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 1.3333333333333333,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{102.79111111111112, 790.67999999999995}, {110.9733333333333, 62.639999999999986}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/1/0",
+      "bounds": "{{0, 0}, {24.333333333333332, 12}}",
+      "frame": "{{35.666666666666664, 35}, {24.333333333333332, 12}}",
+      "win": "{{144.16444444444446, 831.27999999999997}, {28.226666666666659, 13.919999999999959}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Lists",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{167.23555555555558, -0.31999999999999673}, {110.97333333333333, 62.640000000000001}}",
+      "win": "{{188.23555555555558, 790.67999999999995}, {110.97333333333333, 62.639999999999986}}",
+      "transform": "[1.1599999999999999, 0, 0, 1.1599999999999999, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2/0",
+      "bounds": "{{0, 0}, {27, 25}}",
+      "frame": "{{34.333333333333336, 7.3333333333333321}, {27, 25}}",
+      "win": "{{228.06222222222226, 799.18666666666672}, {31.319999999999993, 29}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.3333333333333304, 0, -1.0000000000000009, 0}",
+        "baseline": 3,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 3,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{188.23555555555558, 790.67999999999995}, {110.97333333333333, 62.639999999999986}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/2/1/0",
+      "bounds": "{{0, 0}, {35.666666666666664, 12}}",
+      "frame": "{{29.999999999999996, 35}, {35.666666666666664, 12}}",
+      "win": "{{223.03555555555556, 831.27999999999997}, {41.373333333333335, 13.919999999999959}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Gallery",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{252.67999999999998, -0.31999999999999673}, {110.97333333333333, 62.640000000000001}}",
+      "win": "{{273.67999999999995, 790.67999999999995}, {110.9733333333333, 62.639999999999986}}",
+      "transform": "[1.1599999999999999, 0, 0, 1.1599999999999999, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 23.666666666666668}}",
+      "frame": "{{33.333333333333336, 8.0000000000000018}, {29.333333333333332, 23.666666666666668}}",
+      "win": "{{312.34666666666664, 799.96000000000004}, {34.026666666666642, 27.453333333333376}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.6666666666666643, 0, -1.6666666666666679, 0}",
+        "baseline": 2.3333333333333335,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 2.3333333333333335,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{273.67999999999995, 790.67999999999995}, {110.9733333333333, 62.639999999999986}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/3/1/0",
+      "bounds": "{{0, 0}, {42.333333333333336, 12}}",
+      "frame": "{{26.666666666666668, 35}, {42.333333333333336, 12}}",
+      "win": "{{304.61333333333329, 831.27999999999997}, {49.106666666666683, 13.919999999999959}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Settings",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Semibold",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontDemiUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.3369140625
+      }
+    },
+    {
+      "class": "_UILiquidLensView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1",
+      "bounds": "{{0, 0}, {111.66666666666664, 70}}",
+      "frame": "{{81.444444444444457, -4}, {111.66666666666664, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666663, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2712BackdropView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/0",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB277SDFView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/0/0",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2714SDFElementView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/0/0/0",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UITabSelectionView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/1",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2714ClearGlassView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/2",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/2/0",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB277SDFView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/2/0/0",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2714SDFElementView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/2/0/0/0",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UIPortalView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/2/0/1",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/1/0/2/1",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "frame": "{{0, 0}, {111.66666666666666, 70}}",
+      "win": "{{102.44444444444446, 787}, {111.66666666666666, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit20_UITabBarPlatterViewP33_022AA364308030F4627162921FD6D31A11ContentView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{0, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{4, 4}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0/0",
+      "bounds": "{{0, 0}, {29.666666666666668, 29.333333333333332}}",
+      "frame": "{{33, 5.6666666666666661}, {29.666666666666668, 29.333333333333332}}",
+      "win": "{{58, 800.66666666666663}, {29.666666666666671, 29.333333333333371}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{0.3333333333333357, 0, 0.66666666666666607, 0.66666666666666785}",
+        "baseline": 4.666666666666667,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 4.666666666666667,
+        "scale": 3,
+        "size": "{21.333333333333332, 21.333333333333332}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{25, 795}, {95.666666666666657, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/0/1/0",
+      "bounds": "{{0, 0}, {55.666666666666664, 12}}",
+      "frame": "{{19.999999999999996, 35}, {55.666666666666664, 12}}",
+      "win": "{{45, 830}, {55.666666666666657, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Playground",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{89.444444444444443, 4}, {95.666666666666657, 54}}",
+      "win": "{{110.44444444444444, 795}, {95.666666666666643, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 21}}",
+      "frame": "{{33.333333333333336, 9.3333333333333357}, {29.333333333333332, 21}}",
+      "win": "{{143.77777777777777, 804.33333333333337}, {29.333333333333343, 21}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-2.6666666666666643, 0, -2.6666666666666661, 0}",
+        "baseline": 1.3333333333333333,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 1.3333333333333333,
+        "scale": 3,
+        "size": "{21, 15}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{110.44444444444444, 795}, {95.666666666666643, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/1/1/0",
+      "bounds": "{{0, 0}, {23.666666666666668, 12}}",
+      "frame": "{{36, 35}, {23.666666666666668, 12}}",
+      "win": "{{146.44444444444446, 830}, {23.666666666666657, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Lists",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{174.88888888888891, 4}, {95.666666666666657, 54}}",
+      "win": "{{195.88888888888891, 795}, {95.666666666666629, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2/0",
+      "bounds": "{{0, 0}, {27, 25}}",
+      "frame": "{{34.333333333333336, 7.3333333333333321}, {27, 25}}",
+      "win": "{{230.22222222222226, 802.33333333333337}, {27.000000000000028, 25}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.3333333333333304, 0, -1.0000000000000009, 0}",
+        "baseline": 3,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 3,
+        "scale": 3,
+        "size": "{19.333333333333332, 17.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{195.88888888888891, 795}, {95.666666666666629, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/2/1/0",
+      "bounds": "{{0, 0}, {35, 12}}",
+      "frame": "{{30.333333333333329, 35}, {35, 12}}",
+      "win": "{{226.22222222222223, 830}, {35, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Gallery",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_UITabButton",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{260.33333333333331, 4}, {95.666666666666657, 54}}",
+      "win": "{{281.33333333333331, 795}, {95.666666666666686, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "UIImageView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3/0",
+      "bounds": "{{0, 0}, {29.333333333333332, 23.666666666666668}}",
+      "frame": "{{33.333333333333336, 8.0000000000000018}, {29.333333333333332, 23.666666666666668}}",
+      "win": "{{314.66666666666663, 803}, {29.333333333333314, 23.666666666666629}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "image": {
+        "alignmentInsets": "{-1.6666666666666643, 0, -1.6666666666666679, 0}",
+        "baseline": 2.3333333333333335,
+        "isSymbol": true,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "symbolImage": {
+        "baseline": 2.3333333333333335,
+        "scale": 3,
+        "size": "{21, 16.999999999999996}",
+        "symbolConfiguration": "traits=(UserInterfaceIdiom = Phone, DisplayScale = 3, DisplayGamut = P3, HorizontalSizeClass = Compact, VerticalSizeClass = Regular, UserInterfaceStyle = Dark, UserInterfaceLayoutDirection = LTR, PreferredContentSizeCategory = L, AccessibilityContrast = Normal)"
+      },
+      "contentMode": 0
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3/1",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "frame": "{{0, 0}, {95.666666666666657, 54}}",
+      "win": "{{281.33333333333331, 795}, {95.666666666666686, 54}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/2/3/1/0",
+      "bounds": "{{0, 0}, {41.333333333333336, 12}}",
+      "frame": "{{27.000000000000004, 35}, {41.333333333333336, 12}}",
+      "win": "{{308.33333333333331, 830}, {41.333333333333314, 12}}",
+      "transform": "[1, 0, 0, 1, 0, 0]",
+      "text": "Settings",
+      "font": {
+        "ascender": 9.521484375,
+        "capHeight": 7.0458984375,
+        "descender": -2.412109375,
+        "lineHeight": 11.93359375,
+        "name": ".SFUI-Medium",
+        "size": 10,
+        "traits": {
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 10
+        },
+        "xHeight": 5.302734375
+      }
+    },
+    {
+      "class": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2711DestOutView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/3",
+      "bounds": "{{0, 0}, {111.66666666666664, 70}}",
+      "frame": "{{0, 0}, {111.66666666666664, 70}}",
+      "win": "{{21, 791}, {111.66666666666663, 70}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    },
+    {
+      "class": "_TtCC5UIKit20_UITabBarPlatterViewP33_022AA364308030F4627162921FD6D31A18BadgeContainerView",
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/4",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "frame": "{{0, 0}, {360, 62}}",
+      "win": "{{21, 791}, {360, 62}}",
+      "transform": "[1, 0, 0, 1, 0, 0]"
+    }
+  ],
+  "opticalPasses": [
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {29.666666666666668, 29.333333333333332}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/0/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {57, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {29.333333333333332, 21}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/1/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {24.333333333333332, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {27, 25}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/2/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {35.666666666666664, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {29.333333333333332, 23.666666666666668}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/0/3/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {42.333333333333336, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                0.5686274766921997,
+                0,
+                0.21484602987766266,
+                0.37783265113830566,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1",
+      "class": "CALayer",
+      "delegateClass": "_UILiquidLensView",
+      "bounds": "{{0, 0}, {111.66666666666664, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "opacityPair",
+          "inputs": {
+            "inputAmount": 1
+          },
+          "name": "opacityPair"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/0",
+      "class": "CABackdropLayer",
+      "delegateClass": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB2712BackdropView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "displacementMap",
+          "inputs": {
+            "inputAmount": 9,
+            "inputSourceSublayerName": "warpSDF"
+          },
+          "name": "displacementMap"
+        },
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {
+            "inputRadius": 0
+          },
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/0/0",
+      "class": "CASDFLayer",
+      "delegateClass": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB277SDFView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "effect": {
+        "angle": 0,
+        "curvature": 1,
+        "height": 36,
+        "maskOffset": 0
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/1",
+      "class": "CABackdropLayer",
+      "delegateClass": "_UITabSelectionView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {
+            "inputNormalizeEdges": true,
+            "inputRadius": 2
+          },
+          "name": "gaussianBlur"
+        },
+        {
+          "class": "CAFilter",
+          "description": "colorMatrix",
+          "inputs": {
+            "inputColorMatrix": {
+              "float32": [
+                1.1297999620437622,
+                -0.2360999882221222,
+                -0.02369999885559082,
+                0,
+                -0.07000000029802322,
+                -0.07009999454021454,
+                0.9639999866485596,
+                -0.023799998685717583,
+                0,
+                -0.07000000029802322,
+                -0.07019999623298645,
+                -0.23600000143051147,
+                1.1761999130249023,
+                0,
+                -0.07000000029802322,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "colorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 0
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/0/0",
+      "class": "CALayer",
+      "delegateClass": "UIView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "displacementMap",
+          "inputs": {
+            "inputAmount": -17.5,
+            "inputSourceSublayerName": "warpSDF"
+          },
+          "name": "displacementMap"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/0/0/0",
+      "class": "CASDFLayer",
+      "delegateClass": "_TtCE5UIKitCSo17_UILiquidLensViewP33_4C400BD973F5E4E0B779D1A21A7AEB277SDFView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "effect": {
+        "angle": 0,
+        "curvature": 1,
+        "height": 11.2,
+        "maskOffset": 0
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/1/0/0/0",
+      "class": "CABackdropLayer",
+      "delegateClass": "UIKit.UISDFBackdropView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "glassBackground",
+          "inputs": {
+            "inputBleedAmount": 0,
+            "inputBleedBlurRadius": 0,
+            "inputBleedColorMatrixBlack": 0,
+            "inputBleedColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "inputBleedColorMatrixSaturation": 1,
+            "inputBleedColorMatrixWhite": 1,
+            "inputBleedDarkenBlend": false,
+            "inputBleedDistance0": 1,
+            "inputBleedDistance1": 0,
+            "inputBleedHeight": 0,
+            "inputBleedOpacity": 0,
+            "inputBlurDistance0": -10,
+            "inputBlurDistance1": 0,
+            "inputBlurDistance2": 0,
+            "inputBlurDistance3": 0,
+            "inputBlurFillBlurRadius": 0,
+            "inputBlurFillDarkenOpacity": 0,
+            "inputBlurFillLightenOpacity": 0,
+            "inputBlurFillNormalOpacity": 0,
+            "inputBlurOpacity0": 0,
+            "inputBlurOpacity1": 0,
+            "inputBlurOpacity2": 0,
+            "inputBlurOpacity3": 0,
+            "inputBlurRadius": 0,
+            "inputFaceColorMatrixBlack": 0,
+            "inputFaceColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                1,
+                1,
+                1,
+                0
+              ]
+            },
+            "inputFaceColorMatrixMaxLuma": 1,
+            "inputFaceColorMatrixMaxLumaSDR": 1,
+            "inputFaceColorMatrixSaturation": 1,
+            "inputFaceColorMatrixWhite": 1,
+            "inputFaceOpacity": 1,
+            "inputInnerRefractionAmount": -10.5,
+            "inputInnerRefractionHeight": 7,
+            "inputKeyFillHighlightAmount": 0.5,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.6666666666666666,
+            "inputKeyFillHighlightHeight": 1,
+            "inputKeyFillHighlightSpread": 1.5707963267948966,
+            "inputKeyFillHighlightSpreadSDR": 2.0943951023931953,
+            "inputMaxHeadroom": 9999,
+            "inputOuterRefractionAmount": 0,
+            "inputOuterRefractionHeight": 0,
+            "inputRefractionDistance0": -1,
+            "inputRefractionDistance1": 0,
+            "inputRefractionOpacity": 0,
+            "inputRingShadowBlurRadius": 3,
+            "inputRingShadowMask": 0,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.10000000149011612,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRGradientDistance0": 0,
+            "inputSDRGradientDistance1": 0,
+            "inputSDRHoldingToneEnabled": false,
+            "inputSDRHoldingToneWhite": 1,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 17.5,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                1
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 7}"
+            },
+            "inputShadowOpacity": 0.0010000000474974513,
+            "inputShadowRadius": 8,
+            "inputShadowVibrancyContribution": 0,
+            "inputSourceSublayerName": "@0"
+          },
+          "name": "glassBackground"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/1/0/0/0/0",
+      "class": "CASDFLayer",
+      "delegateClass": "UIKit.UISDFView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "effect": {
+        "maximum": 8.062464498613942,
+        "minimum": -10000
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/1/0/0/1",
+      "class": "CALayer",
+      "delegateClass": "UIKit.ContentLensingView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "displacementMap",
+          "inputs": {
+            "inputAmount": -14,
+            "inputSourceSublayerName": "@0"
+          },
+          "name": "displacementMap"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/1/0/0/1/0",
+      "class": "CASDFLayer",
+      "delegateClass": "UIKit.UISDFView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "effect": {
+        "angle": 0,
+        "curvature": 1,
+        "height": 11.200000000000001,
+        "maskOffset": 0
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/1/0/0/2",
+      "class": "CABackdropLayer",
+      "delegateClass": "UIKit.UISDFBackdropView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "glassForeground",
+          "inputs": {
+            "inputAberrationAmount": 3.6842105388641357,
+            "inputAberrationAngle": -0.2617993877991494,
+            "inputAberrationHeight": 0,
+            "inputAberrationOffset": 38.88888931274414,
+            "inputEdgeEnd": 0,
+            "inputEdgeOpacityEnd": 0,
+            "inputEdgeOpacityStart": 1,
+            "inputEdgeStart": -14,
+            "inputRefractionAmount": 0,
+            "inputRefractionHeight": 0,
+            "inputRefractionOffset": 0,
+            "inputSourceSublayerName": "@0"
+          },
+          "name": "glassForeground"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/1/0/0/2/0",
+      "class": "CASDFLayer",
+      "delegateClass": "UIKit.UISDFView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "effect": {
+        "maximum": 1,
+        "minimum": -10000
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/1/0/2/1/0/0/3",
+      "class": "CASDFLayer",
+      "delegateClass": "UIKit.UISDFView",
+      "bounds": "{{0, 0}, {111.66666666666666, 70}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputClamp": 1,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                1.1201999187469482,
+                -0.18940000236034393,
+                -0.01899999938905239,
+                0,
+                0.14710000157356262,
+                -0.056299999356269836,
+                0.9870999455451965,
+                -0.019099999219179153,
+                0,
+                0.14710000157356262,
+                -0.056299999356269836,
+                -0.18930000066757202,
+                1.1574000120162964,
+                0,
+                0.14710000157356262,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "effect": {
+        "curvature": 0.75,
+        "diffuseAmountScale": 0.15000000596046448,
+        "diffuseHeightScale": 8,
+        "diffuseSpreadScale": 0.6499999761581421,
+        "fillAmount": 0.5,
+        "fillAngle": 3.141592653589793,
+        "fillColor": {
+          "colorSpace": "kCGColorSpaceExtendedSRGB",
+          "components": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "fillHeight": 1,
+        "fillHeightOffset": 0,
+        "fillHeightScale": 1,
+        "fillSpread": 1.3962634015954636,
+        "fillSpreadOffset": 0,
+        "fillSpreadScale": 1,
+        "global": false,
+        "keyAmount": 0.5,
+        "keyAngle": 0,
+        "keyColor": {
+          "colorSpace": "kCGColorSpaceExtendedSRGB",
+          "components": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "keyHeight": 1,
+        "keyHeightOffset": 0,
+        "keyHeightScale": 1,
+        "keySpread": 1.3962634015954636,
+        "keySpreadOffset": 0,
+        "keySpreadScale": 1
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/0/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {29.666666666666668, 29.333333333333332}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/0/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/0/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {55.666666666666664, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {29.333333333333332, 21}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/1/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/1/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {23.666666666666668, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/2/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {27, 25}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/2/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/2/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {35, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/3/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "UIImageView",
+      "bounds": "{{0, 0}, {29.333333333333332, 23.666666666666668}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/3/1",
+      "class": "CALayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D16TitleWrapperView",
+      "bounds": "{{0, 0}, {95.666666666666657, 54}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "gaussianBlur",
+          "inputs": {},
+          "name": "gaussianBlur"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/0/2/3/1/0",
+      "class": "_UIMultiLayer",
+      "delegateClass": "_TtCC5UIKit12_UITabButtonP33_4EA307C86E0356016F55ED2F1518661D5Label",
+      "bounds": "{{0, 0}, {41.333333333333336, 12}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputClamp": 0,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                0.3125,
+                0,
+                0,
+                0,
+                0.9375,
+                0,
+                0.3125,
+                0,
+                0,
+                0.9375,
+                0,
+                0,
+                0.3125,
+                0,
+                0.9375,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/0",
+      "class": "CALayer",
+      "delegateClass": "UIView",
+      "bounds": "{{0, 0}, {360, 62}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputColorMatrix": {
+              "float32": [
+                1.1575000286102295,
+                -0.14309999346733093,
+                -0.014399999752640724,
+                0,
+                0.04999999701976776,
+                -0.042500000447034836,
+                1.056999921798706,
+                -0.014499999582767487,
+                0,
+                0.04999999701976776,
+                -0.04259999841451645,
+                -0.14299999177455902,
+                1.18559992313385,
+                0,
+                0.04999999701976776,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 0.8448275923728943
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/0/0/0/0/1/1",
+      "class": "CALayer",
+      "delegateClass": "_UIFlexInteractionLittleGlowView",
+      "bounds": "{{0, 0}, {93, 93}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputBackdropAware": true,
+            "inputColorMatrix": {
+              "float32": [
+                4.483951091766357,
+                -1.1508281230926514,
+                -0.11582279205322266,
+                0,
+                0,
+                -0.34199896454811096,
+                3.675443649291992,
+                -0.11614453047513962,
+                0,
+                0,
+                -0.3423207104206085,
+                -1.1501846313476562,
+                4.709805488586426,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 0.2844827473163605
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/1/0/0/0",
+      "class": "CABackdropLayer",
+      "delegateClass": "UIKit.UISDFBackdropView",
+      "bounds": "{{0, 0}, {402, 83}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "glassBackground",
+          "inputs": {
+            "inputBleedAmount": 21.7,
+            "inputBleedBlurRadius": 0,
+            "inputBleedColorMatrixBlack": 0.125,
+            "inputBleedColorMatrixSaturation": 1,
+            "inputBleedColorMatrixWhite": 0.5,
+            "inputBleedDarkenBlend": false,
+            "inputBleedDistance0": 1,
+            "inputBleedDistance1": 0,
+            "inputBleedHeight": 21.7,
+            "inputBleedOpacity": 0,
+            "inputBlurDistance0": -31,
+            "inputBlurDistance1": -1,
+            "inputBlurDistance2": 0,
+            "inputBlurDistance3": 0,
+            "inputBlurFillBlurRadius": 8,
+            "inputBlurFillDarkenOpacity": 0.8999999761581421,
+            "inputBlurFillLightenOpacity": 0,
+            "inputBlurFillNormalOpacity": 0.5,
+            "inputBlurOpacity0": 0,
+            "inputBlurOpacity1": 0,
+            "inputBlurOpacity2": 0.5,
+            "inputBlurOpacity3": 1,
+            "inputBlurRadius": 5,
+            "inputClamp": 1.2427704334259033,
+            "inputClampPreserveHue": false,
+            "inputFaceColorMatrixBlack": 0.125,
+            "inputFaceColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            "inputFaceColorMatrixMaxLuma": 0.6000000238418579,
+            "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+            "inputFaceColorMatrixSaturation": 1.399999976158142,
+            "inputFaceColorMatrixWhite": 1.100000023841858,
+            "inputFaceOpacity": 1,
+            "inputInnerRefractionAmount": -31,
+            "inputInnerRefractionHeight": 15.5,
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.3089969389957472,
+            "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+            "inputMaxHeadroom": 9999,
+            "inputOuterRefractionAmount": 16,
+            "inputOuterRefractionHeight": 16,
+            "inputRefractionDistance0": -1,
+            "inputRefractionDistance1": 0,
+            "inputRefractionOpacity": 0.6000000238418579,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRGradientDistance0": 0,
+            "inputSDRGradientDistance1": 0,
+            "inputSDRHoldingToneEnabled": false,
+            "inputSDRHoldingToneWhite": 1,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0,
+            "inputSourceSublayerName": "@0"
+          },
+          "name": "glassBackground"
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/1/0/0/0/0",
+      "class": "CASDFLayer",
+      "delegateClass": "UIKit.UISDFView",
+      "bounds": "{{0, 0}, {402, 83}}",
+      "effect": {
+        "maximum": 8.890357668551713,
+        "minimum": -10000
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    },
+    {
+      "path": "window0/1/0/0/0/0/1/0/1/0/0/1",
+      "class": "CASDFLayer",
+      "delegateClass": "UIKit.UISDFView",
+      "bounds": "{{0, 0}, {402, 83}}",
+      "filters": [
+        {
+          "class": "CAFilter",
+          "description": "vibrantColorMatrix",
+          "inputs": {
+            "inputClamp": 1,
+            "inputClampPreserveHue": false,
+            "inputColorMatrix": {
+              "float32": [
+                1.1201999187469482,
+                -0.18940000236034393,
+                -0.01899999938905239,
+                0,
+                0.14710000157356262,
+                -0.056299999356269836,
+                0.9870999455451965,
+                -0.019099999219179153,
+                0,
+                0.14710000157356262,
+                -0.056299999356269836,
+                -0.18930000066757202,
+                1.1574000120162964,
+                0,
+                0.14710000157356262,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+            }
+          },
+          "name": "vibrantColorMatrix"
+        }
+      ],
+      "effect": {
+        "curvature": 0.75,
+        "diffuseAmountScale": 0.15000000596046448,
+        "diffuseHeightScale": 8,
+        "diffuseSpreadScale": 0.6499999761581421,
+        "fillAmount": 0.5,
+        "fillAngle": 3.141592653589793,
+        "fillColor": {
+          "colorSpace": "kCGColorSpaceExtendedSRGB",
+          "components": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "fillHeight": 1,
+        "fillHeightOffset": 0,
+        "fillHeightScale": 1,
+        "fillSpread": 1.3962634015954636,
+        "fillSpreadOffset": 0,
+        "fillSpreadScale": 1,
+        "global": false,
+        "keyAmount": 0.5,
+        "keyAngle": 0,
+        "keyColor": {
+          "colorSpace": "kCGColorSpaceExtendedSRGB",
+          "components": [
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "keyHeight": 1,
+        "keyHeightOffset": 0,
+        "keyHeightScale": 1,
+        "keySpread": 1.3962634015954636,
+        "keySpreadOffset": 0,
+        "keySpreadScale": 1
+      },
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "opacity": 1
+    }
+  ],
+  "springConstructorCalls": [
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 1,
+        "response": 0.5
+      },
+      "count": 51
+    },
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.4
+      },
+      "count": 33
+    },
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.6
+      },
+      "count": 33
+    },
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 1,
+        "response": 0.1
+      },
+      "count": 2
+    },
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 1,
+        "response": 0.15
+      },
+      "count": 44
+    },
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.2
+      },
+      "count": 48
+    },
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.3
+      },
+      "count": 48
+    },
+    {
+      "method": "UIViewSpringAnimationBehavior.init",
+      "arguments": {
+        "dampingRatio": 0.8,
+        "response": 0.4
+      },
+      "count": 4
+    }
+  ],
+  "flexPropertySamples": [
+    {
+      "time": 3.4616712083807215,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 3.5324620000319555,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.003627894667387,
+          "value": 1,
+          "velocity": 0.2717402936412638
+        },
+        "scaleY": {
+          "presentationValue": 1.003627894667387,
+          "value": 1,
+          "velocity": 0.2717402936412638
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 3.547910875058733,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.0072611932886486,
+          "value": 1,
+          "velocity": 0.16726596904617633
+        },
+        "scaleY": {
+          "presentationValue": 1.0072611932886486,
+          "value": 1,
+          "velocity": 0.16726596904617633
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 3.5979108749888837,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.010093060594603,
+          "value": 1,
+          "velocity": 0.015571470550959046
+        },
+        "scaleY": {
+          "presentationValue": 1.010093060594603,
+          "value": 1,
+          "velocity": 0.015571470550959046
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.005428763487814042,
+          "value": 0.151773472160435,
+          "velocity": 0.36265519861783413
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9997569210378591,
+          "value": 0.9932041728883387,
+          "velocity": -0.016238292475425346
+        },
+        "scaleY": {
+          "presentationValue": 1.0004051316035683,
+          "value": 1.0113263785194353,
+          "velocity": 0.02706382079237636
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 3.6979108749656007,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.0036164800444645,
+          "value": 1,
+          "velocity": -0.07918448126732872
+        },
+        "scaleY": {
+          "presentationValue": 1.0036164800444645,
+          "value": 1,
+          "velocity": -0.07918448126732872
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.04061955646966017,
+          "value": -0.13022163173504767,
+          "velocity": -0.2921667430152397
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9981812138894182,
+          "value": 1.00583081933142,
+          "velocity": 0.013082092970831495
+        },
+        "scaleY": {
+          "presentationValue": 1.003031310184303,
+          "value": 0.9902819677809667,
+          "velocity": -0.021803488284719105
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 3.89791087503545,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": -0.03743372206103529,
+          "value": 0.028044146096295006,
+          "velocity": 0.41235917212742434
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1.0018693159908556,
+          "value": 0.9985342780785909,
+          "velocity": -0.021047776450279693
+        },
+        "scaleY": {
+          "presentationValue": 0.9972310062857686,
+          "value": 1.002066138130179,
+          "velocity": 0.030444459926196446
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 4.197910874965601,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.0071462116147784985,
+          "value": 0.0013644790950707068,
+          "velocity": -0.05854155363724152
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9999286857615817,
+          "value": 0.9999286857615817,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.000100527299939,
+          "value": 1.000100527299939,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 6.797910875058733,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 6.89791087503545,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.0232759621319734,
+          "value": 1.039272030651341,
+          "velocity": 0.35455650784712256
+        },
+        "scaleY": {
+          "presentationValue": 1.0232759621319734,
+          "value": 1.039272030651341,
+          "velocity": 0.35455650784712256
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 1.8288533874565482,
+          "value": 8.560567298968476,
+          "velocity": 41.46679423120131
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9181110423526919,
+          "value": 0.6166910164640981,
+          "velocity": -1.856722129755283
+        },
+        "scaleY": {
+          "presentationValue": 1.0605269692564558,
+          "value": 1.283333327861519,
+          "velocity": 1.3723990065846219
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 6.997910875012167,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.0420638972814196,
+          "value": 1.039272030651341,
+          "velocity": 0.037010729744761904
+        },
+        "scaleY": {
+          "presentationValue": 1.0420638972814196,
+          "value": 1.039272030651341,
+          "velocity": 0.037010729744761904
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 2.801277607833976,
+          "value": -4.97426444452283,
+          "velocity": -33.93221403197421
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.8745696593507175,
+          "value": 1.2227282587099775,
+          "velocity": 1.5193528671033234
+        },
+        "scaleY": {
+          "presentationValue": 1.0711980143674604,
+          "value": 0.6473603400403276,
+          "velocity": -1.9536837467480206
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 7.097910874988884,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.040597400788615,
+          "value": 1.039272030651341,
+          "velocity": -0.02888133885569539
+        },
+        "scaleY": {
+          "presentationValue": 1.040597400788615,
+          "value": 1.039272030651341,
+          "velocity": -0.02888133885569539
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": -0.5463473582285259,
+          "value": -0.39405177871787184,
+          "velocity": -17.398614374344415
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1.024463314547546,
+          "value": 1.01764410949483,
+          "velocity": 0.7790424346721379
+        },
+        "scaleY": {
+          "presentationValue": 0.892375649078774,
+          "value": 0.9705931508419499,
+          "velocity": -0.6727417592528601
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 7.297910875058733,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.039272030651341,
+          "value": 1.039272030651341,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.039272030651341,
+          "value": 1.039272030651341,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.4224147287266774,
+          "value": 0.675279944545608,
+          "velocity": 5.393077187606507
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9810859076689549,
+          "value": 0.9697635845725847,
+          "velocity": -0.24148106810178524
+        },
+        "scaleY": {
+          "presentationValue": 1.0261326498583037,
+          "value": 1.0503940257123587,
+          "velocity": 0.49113237822530387
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 7.697910874965601,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.039272030651341,
+          "value": 1.039272030651341,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.039272030651341,
+          "value": 1.039272030651341,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.07675342575602409,
+          "value": -0.0005300920296364974,
+          "velocity": -0.8262212835625526
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.99656327944376,
+          "value": 1.0000237354640136,
+          "velocity": 0.0369949828460851
+        },
+        "scaleY": {
+          "presentationValue": 1.005806480580476,
+          "value": 0.9999604408933107,
+          "velocity": -0.062461360743501754
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 8.297910875058733,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0.872388443339911,
+          "value": 0.9934368210116453,
+          "velocity": 2.2526785915899117
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.0420213558497085,
+          "value": 1.0420213558497085,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.0365448520940799,
+          "value": 1.0365448520940799,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": -0.9433475695104616,
+          "value": 0.1644517485621077,
+          "velocity": 8.296085399537727
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1.0422178196352698,
+          "value": 0.9926364888703534,
+          "velocity": -0.37115983426259347
+        },
+        "scaleY": {
+          "presentationValue": 0.92963696727455,
+          "value": 1.012272518549411,
+          "velocity": 0.6185997237709893
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 8.6979108749656,
+      "housing": {
+        "driftX": {
+          "presentationValue": 1.6995116543229905,
+          "value": 1.750737069674008,
+          "velocity": 1.3310451249302928
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.044126826252274,
+          "value": 1.044126826252274,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.0344353547232763,
+          "value": 1.0344353547232763,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.20061593420355153,
+          "value": 0.3511638790081153,
+          "velocity": 1.1487397592124857
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9910174333937616,
+          "value": 0.9842762442235172,
+          "velocity": -0.05143812859224918
+        },
+        "scaleY": {
+          "presentationValue": 1.0149709443437307,
+          "value": 1.026206259627471,
+          "velocity": 0.08573021432041339
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 8.997910875012167,
+      "housing": {
+        "driftX": {
+          "presentationValue": 1.7507230703533103,
+          "value": 1.7509626689363034,
+          "velocity": -0.016388603511381994
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.0441236929291864,
+          "value": 1.0441236929291864,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.0344466346863908,
+          "value": 1.0344466346863908,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.8593754196204679,
+          "value": 0.3826862076037261,
+          "velocity": -1.9719300709990946
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9615205070252514,
+          "value": 0.98286479667446,
+          "velocity": 0.08829529256221208
+        },
+        "scaleY": {
+          "presentationValue": 1.0641324882912475,
+          "value": 1.0285586722092332,
+          "velocity": -0.1471588209370192
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 9.39791087503545,
+      "housing": {
+        "driftX": {
+          "presentationValue": 1.7502329478841194,
+          "value": 1.7502329478841194,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.0441338279438002,
+          "value": 1.0441338279438002,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.034410148633782,
+          "value": 1.034410148633782,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0.029955533000282236,
+          "value": -0.010596757655384929,
+          "velocity": -0.49933953740503895
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 0.9986587073834836,
+          "value": 1.000474481686062,
+          "velocity": 0.022358487931963423
+        },
+        "scaleY": {
+          "presentationValue": 1.002235487694194,
+          "value": 0.9992091971898966,
+          "velocity": -0.037264146553272606
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 9.681244208361022,
+      "housing": {
+        "driftX": {
+          "presentationValue": 1.7502352916602366,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.044133795391354,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.0344102658225882,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": -0.0073956349583236755,
+          "value": -0.002794844365906047,
+          "velocity": 0.026661029519830303
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1.0001251422850406,
+          "value": 1.0001251422850406,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 0.9997914295249324,
+          "value": 0.9997914295249324,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 9.681244208361022,
+      "housing": {
+        "driftX": {
+          "presentationValue": 1.7502352916602366,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.044133795391354,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1.0344102658225882,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": -0.0073956349583236755,
+          "value": -0.002794844365906047,
+          "velocity": 0.026661029519830303
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1.0001251422850406,
+          "value": 1.0001251422850406,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 0.9997914295249324,
+          "value": 0.9997914295249324,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 10.303878958337009,
+      "housing": {
+        "driftX": {
+          "presentationValue": 1.5955266889023911,
+          "value": 0,
+          "velocity": -10.474702360062611
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1.040232675437979,
+          "value": 1,
+          "velocity": -0.26412927047415447
+        },
+        "scaleY": {
+          "presentationValue": 1.0313686381218412,
+          "value": 1,
+          "velocity": -0.2059364785636012
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": -0.001755860844655219,
+          "value": 0,
+          "velocity": 0.004472650192338159
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 10.797910875058733,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0.00803139550464185,
+          "value": 0,
+          "velocity": -0.13489700175931632
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": -0.1143983752243815,
+          "value": -0.011242141161877469,
+          "velocity": 0.8256147740940403
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1.0059796972396626,
+          "value": 1.0005875683534082,
+          "velocity": -0.04316240002793023
+        },
+        "scaleY": {
+          "presentationValue": 0.9915707882284275,
+          "value": 0.999171740995798,
+          "velocity": 0.06084338317190031
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    },
+    {
+      "time": 11.997910875012167,
+      "housing": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 0,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "UIKit._UITabBarItemPlatterView"
+      },
+      "lens": {
+        "driftX": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "driftY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "preferredVariant": 4,
+        "scaleX": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "scaleY": {
+          "presentationValue": 1,
+          "value": 1,
+          "velocity": 0
+        },
+        "translationY": {
+          "presentationValue": 0,
+          "value": 0,
+          "velocity": 0
+        },
+        "view": "_UILiquidLensView"
+      }
+    }
+  ],
+  "fullFlexTrace": "_research/tab_bar_specs/raw/motion/four-drag-flex.json",
+  "derivedHousingExpansion": {
+    "widths": [
+      274,
+      360
+    ],
+    "expansionPoints": 14.1379310344828,
+    "status": "derived from two directly read presentation transforms; UIKit general formula not recovered"
+  },
+  "unresolved": [
+    "flex variant numeric enum mapping",
+    "drag behavior-to-property mapping",
+    "velocity integrator and deformation target formula",
+    "adaptive tab layout algorithm",
+    "portal render operations and SF Symbol rasterization",
+    "QuartzCore displacement and highlight operator implementations"
+  ]
+}

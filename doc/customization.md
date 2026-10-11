@@ -86,7 +86,7 @@ activates the focused tab. Hidden visual labels remain available to accessibilit
 
 ```dart
 const motion = GlassMotion(
-  response: Duration(milliseconds: 380),
+  response: Duration(milliseconds: 400),
   bounce: 0.15,
   pressResponse: Duration(milliseconds: 290),
   pressBounce: 0.35,
@@ -97,20 +97,35 @@ const motion = GlassMotion(
 );
 ```
 
-Set this on a theme or an individual control. The defaults are the springs
-and scales measured on iOS 27 system controls. `response` and `bounce` move
+Set this on a theme or an individual control. The defaults combine intercepted tab selection spring parameters with fitted
+button motion. `response` and `bounce` move
 the tab pill between tabs; `pressResponse`/`pressBounce` grow a held control
 and `releaseResponse`/`releaseBounce` let it go, with the native overshoot
 and undershoot. `pressScale` is the held size of an ordinary glass button; on
-the tab bar it scales the whole lift (lens inset, bar scale and item scale),
+the tab bar it controls the lens lift and housing expansion,
 and `pressScale: 1` disables that spatial response while retaining the glow.
 
-The tab pill follows the native behaviour: touching any tab lifts the pill
-into a clear glass lens 8 pt larger on every side, scales the bar content by
-1.0516 and every icon by 1.16, and glides the lens to that tab at once, before
-release. During a drag the lens chases the finger through a spring, stretches
-along the direction of travel in proportion to its speed and thins across it,
-and bulges the other way when the finger stops. The selected tint is painted
+The tab pill uses the native large-lens lift and release settings: a 250 ms
+response with damping ratio 1, plus the extracted 220 ms hang-time parameter. The lens
+grows by 8 pt on each side. The housing expands by approximately 14.14 pt in
+width, with the foreground inheriting that transform. The previous inverse
+housing scale was incorrect. Travel uses a 400 ms response and 0.85 damping ratio from native selection
+animation calls; the exact behavior-to-property mapping remains unresolved.
+
+Tracking, deformation, housing spring timing and glow still use fitted
+approximations. The native implementation has separate medium and semibold
+foreground copies and magnifies the selected portal while held; the current
+single-row selection window does not reproduce those details. See
+[native tab bar spec](native_tab_bar_spec.md) for exact extracted values,
+fixture geometry, optical passes and remaining differences.
+
+The lens captures the backdrop and bar before the foreground is painted, so
+icons and labels stay sharp. A broad outward sampling warp, using the captured
+9 pt underlay displacement and 36 pt SDF height, makes the housing visible
+through the lifted lens smaller. This is separate from its narrow rim;
+the displacement profile still uses this renderer's approximation.
+Its rim uses the native lens highlight matrix
+without the housing's face grading. The selected tint is painted
 wherever the pill is, so it travels with the lens. Icons must not contain
 repaint boundaries because that window paints them a second time.
 

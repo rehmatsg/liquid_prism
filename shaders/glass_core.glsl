@@ -99,7 +99,12 @@ vec3 vibrantHighlight(vec3 color, float strength) {
         dot(color,vec3(2.6492,-1.1803,-0.1189)),
         dot(color,vec3(-0.3507,1.8199,-0.1192)),
         dot(color,vec3(-0.3509,-1.1799,2.8809))) + 0.15;
-    if (u_material.x > 1.5) {
+    if (u_material.x > 2.5) {
+        // The lifted tab lens has its own, much quieter key/fill matrix.
+        transformed = vec3(dot(color,vec3(1.1202,-0.1894,-0.0190)),
+          dot(color,vec3(-0.0563,0.9871,-0.0191)),
+          dot(color,vec3(-0.0563,-0.1893,1.1574))) + 0.1471;
+    } else if (u_material.x > 1.5) {
         transformed = vec3(dot(color,vec3(1.3192,-0.0478,-0.0047)),
           dot(color,vec3(-0.0142,1.2856,-0.0048)),
           dot(color,vec3(-0.0142,-0.0476,1.3285))) + 0.2;
@@ -147,7 +152,18 @@ void shadeGlass() {
         direction = direction/max(length(direction),0.0001)*min(field.w,1.);
         offset = direction*displacement*profile;
     }
-    vec2 samplePoint = scenePoint(local-offset);
+    // The lifted tab lens also displaces the underlying housing across its
+    // face. Native uses a separate 36-point SDF with displacement amount 9;
+    // the narrow rim above cannot produce this minification on its own.
+    // Sample farther out along the SDF normal, so the housing seen through
+    // the lens is smaller. The tab foreground is painted after this pass.
+    vec2 underlayOffset = vec2(0.);
+    if (u_material.x > 2.5) {
+        float underlayT = clamp(1.-depth/36.,0.,1.);
+        float underlayProfile = 1.-sqrt(max(1.-underlayT*underlayT,0.));
+        underlayOffset = normal*displacement*underlayProfile;
+    }
+    vec2 samplePoint = scenePoint(local+underlayOffset-offset);
     vec2 dx = vec2(1., 0.);
     vec2 dy = vec2(0., 1.);
     #if defined(IMPELLER_GRAPHICS_BACKEND)
@@ -235,7 +251,7 @@ void shadeGlass() {
             color = radiance(color,diffuse,u_finish.z*fade*fade*0.32);
         }
     }
-    if (u_material.x > .5) {
+    if (u_material.x > .5 && u_material.x < 2.5) {
         // Extracted iOS 27 gray-backdrop glassBackground face inputs. The
         // optical/compositing implementation remains this package's renderer.
         bool dark = u_material.y > .5;

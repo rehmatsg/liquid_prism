@@ -86,16 +86,18 @@ class LiquidPrismTabBar extends StatefulWidget {
 class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     with TickerProviderStateMixin {
   /// Pill centre in slot units.
-  late final _position = AnimationController.unbounded(vsync: this);
+  late final _position = RetargetableGlassSpring(vsync: this);
 
   /// 0 resting pill, 1 lifted lens.
   late final _lift = AnimationController.unbounded(vsync: this);
-  late final _barScale = AnimationController.unbounded(vsync: this, value: 1);
-  late final _itemScale = AnimationController.unbounded(vsync: this, value: 1);
+  late final _lensScale = AnimationController.unbounded(vsync: this, value: 1);
   late final _glow = AnimationController.unbounded(vsync: this);
 
-  /// Logical pixels added along the travel axis and removed across it.
-  late final _stretch = AnimationController.unbounded(vsync: this);
+  /// Independent width and height deformation, relative to lens bounds.
+  late final _stretch = RetargetableGlassSpring(vsync: this);
+  late final _crossStretch = RetargetableGlassSpring(vsync: this);
+  bool _trackingDeformation = false;
+  double? _deformationTarget;
 
   /// Release ripple of the halo: 0 at release, 1 when gone.
   late final _halo = AnimationController(
@@ -103,7 +105,8 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     duration: NativeMotion.haloRelease,
     value: 1,
   );
-  late final _vertical = AnimationController.unbounded(vsync: this);
+  Timer? _lensDwell;
+  bool _releaseLensPending = false;
 
   /// True while the selected colour must follow the pill instead of the
   /// committed tab: the icons under the lens are recoloured by position.
@@ -112,8 +115,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   bool _dragging = false, _cancelled = false, _committing = false;
   int? _pointer;
   final _contacts = <int>{};
-  Offset _down = Offset.zero;
-  double _slotWidth = 1, _padLeft = 0, _fingerSlot = 0;
+  double _slotWidth = 1, _barWidth = 274, _padLeft = 0, _fingerSlot = 0;
   int _epoch = 0;
   final _focusNodes = <FocusNode>[];
   @override
@@ -151,7 +153,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   bool get _spatial => !_reduceMotion && _motion.pressScale > 1;
 
   /// Lift strength relative to the measured default: `pressScale` scales the
-  /// lens inset, the bar scale and the item scale together; 1 disables them.
+  /// lens inset and housing expansion together; 1 disables them.
   double get _liftFactor =>
       ((_motion.pressScale - 1) / (const GlassMotion().pressScale - 1)).clamp(
         0.0,
@@ -165,10 +167,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   }
 
   /// Finger position in slot units, resisted past the end tabs.
-  double _slotAt(double dx) => _resisted(
-    (dx - _padLeft) / _slotWidth - .5,
-    (widget.tabs.length - 1).toDouble(),
-  );
+  double _slotAt(double dx) {
+    final centre = _padLeft + _slotWidth * widget.tabs.length / 2;
+    final local = centre + (dx - centre) / _lensScale.value;
+    return _resisted(
+      (local - _padLeft) / _slotWidth - .5,
+      (widget.tabs.length - 1).toDouble(),
+    );
+  }
 
   void _updateWindow() {
     final away =
@@ -177,19 +183,46 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     if (_window.value != active) _window.value = active;
   }
 
-  /// Stretch chases the lens speed; the short bouncy filter lets a sudden stop
-  /// bulge the pill across the travel axis before it settles.
   double _stretchTarget = 0;
   void _followVelocity() {
-    if (!_spatial) return;
+    if (!_spatial || !_trackingDeformation) return;
     final speed = (_position.velocity * _slotWidth).abs();
-    final target = math.min(
-      NativeMotion.stretchLimit,
-      NativeMotion.stretchPerSpeed * speed,
-    );
-    if ((target - _stretchTarget).abs() < .25 && _stretch.isAnimating) return;
+    final target =
+        math.min(
+          NativeMotion.stretchLimit,
+          NativeMotion.stretchPerSpeed * speed,
+        ) /
+        110 *
+        _liftFactor;
+    if ((target - _stretchTarget).abs() < .0001 && _stretch.isAnimating) return;
     _stretchTarget = target;
     springGlass(_stretch, target, NativeMotion.stretchFilter);
+    springGlass(_crossStretch, -target * 110 / 70, NativeMotion.stretchFilter);
+  }
+
+  void _travelShape(double target, {bool contact = false}) {
+    if (_trackingDeformation ||
+        (!_spatial) ||
+        (!contact && target == _deformationTarget)) {
+      return;
+    }
+    _deformationTarget = target;
+    final distance = ((target - _position.value).abs()).clamp(0.0, 1.0);
+    final travel = distance * _liftFactor;
+    final timeScale = _motion.response.inMicroseconds / 400000;
+    for (final axis in [(_stretch, false), (_crossStretch, true)]) {
+      unawaited(
+        axis.$1.animateWith(
+          NativeLensDeformation(
+            vertical: axis.$2,
+            travel: travel,
+            timeScale: timeScale,
+            value: axis.$1.value,
+            velocity: axis.$1.velocity,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -207,12 +240,12 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       if (!_dragging) _position.value = _physical(widget.selectedIndex);
       final held = _pointer != null && !_cancelled;
       _lift.value = 0;
-      _barScale.value = 1;
-      _itemScale.value = 1;
+      _lensScale.value = 1;
       _stretch.value = 0;
+      _crossStretch.value = 0;
       _halo.value = 1;
       _glow.value = held ? 1 : 0;
-      _vertical.value = 0;
+      _cancelLensDwell();
     }
   }
 
@@ -224,7 +257,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         widget.onSelected == null) {
       _reset();
     } else if (widget.selectedIndex != oldWidget.selectedIndex) {
-      if (!_committing && _pointer != null) _cancelled = true;
+      if (!_committing && _pointer != null) {
+        _cancelled = true;
+        _feedback(false);
+      }
       _dragging = false;
       _settle();
     }
@@ -232,23 +268,27 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   }
 
   void _reset() {
+    _cancelLensDwell();
     _epoch++;
     _cancelled = true;
     _dragging = false;
     _pointer = null;
     _position.value = _physical(widget.selectedIndex);
     _lift.value = 0;
-    _barScale.value = 1;
-    _itemScale.value = 1;
+    _lensScale.value = 1;
     _glow.value = 0;
     _stretch.value = 0;
+    _crossStretch.value = 0;
+    _trackingDeformation = false;
+    _deformationTarget = null;
     _stretchTarget = 0;
     _halo.value = 1;
-    _vertical.value = 0;
+
     _updateWindow();
   }
 
   void _settle({double? velocity}) {
+    _travelShape(_physical(widget.selectedIndex));
     springGlass(
       _position,
       _physical(widget.selectedIndex),
@@ -256,29 +296,38 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       velocity: velocity,
       immediate: _reduceMotion,
     );
-    springGlass(_vertical, 0, _motion.spring, immediate: _reduceMotion);
   }
 
-  void _feedback(bool held) {
+  void _cancelLensDwell() {
+    _lensDwell?.cancel();
+    _lensDwell = null;
+    _releaseLensPending = false;
+  }
+
+  void _dropLens() {
+    springGlass(_lift, 0, NativeMotion.liftOut, immediate: _reduceMotion);
+  }
+
+  void _feedback(bool held, {bool finishLift = false}) {
     final spatial = _spatial;
     final factor = _liftFactor;
-    final releasing = !held && _lift.value > .5 && spatial;
+    final releasing = !held && _glow.value > .001 && spatial;
+    final keepLens = finishLift && _lensDwell != null && spatial;
+    if (keepLens) {
+      _releaseLensPending = true;
+    } else {
+      if (!held) _cancelLensDwell();
+      springGlass(
+        _lift,
+        held && spatial ? 1 : 0,
+        held ? NativeMotion.liftIn : NativeMotion.liftOut,
+        immediate: _reduceMotion,
+      );
+    }
     springGlass(
-      _lift,
-      held && spatial ? 1 : 0,
-      held ? NativeMotion.liftIn : NativeMotion.liftOut,
-      immediate: _reduceMotion,
-    );
-    springGlass(
-      _barScale,
-      held && spatial ? 1 + (NativeMotion.barScale - 1) * factor : 1,
+      _lensScale,
+      held && spatial ? 1 + NativeMotion.barExpansion / _barWidth * factor : 1,
       held ? NativeMotion.barScaleIn : NativeMotion.barScaleOut,
-      immediate: _reduceMotion,
-    );
-    springGlass(
-      _itemScale,
-      held && spatial ? 1 + (NativeMotion.itemScale - 1) * factor : 1,
-      held ? NativeMotion.itemScaleIn : NativeMotion.itemScaleOut,
       immediate: _reduceMotion,
     );
     springGlass(
@@ -294,8 +343,9 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     }
   }
 
-  void _commit(int index, {double? velocity}) {
+  void _commit(int index, {double? velocity, bool fromDrag = false}) {
     if (widget.onSelected == null) return;
+    if (!fromDrag) _trackingDeformation = false;
     final epoch = _epoch;
     final settleVelocity = velocity ?? _position.velocity;
     _committing = true;
@@ -328,13 +378,24 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     _epoch++;
     _pointer = event.pointer;
     _cancelled = false;
-    _down = event.localPosition;
+    _cancelLensDwell();
+    if (_spatial) {
+      _lensDwell = Timer(NativeMotion.lensDwell, () {
+        _lensDwell = null;
+        if (_releaseLensPending) {
+          _releaseLensPending = false;
+          _dropLens();
+        }
+      });
+    }
     // The pill glides to the touched tab on contact, before any release.
     _fingerSlot = _slotAt(event.localPosition.dx);
     final slot = _fingerSlot.roundToDouble().clamp(
       0.0,
       (widget.tabs.length - 1).toDouble(),
     );
+    _trackingDeformation = false;
+    _travelShape(slot, contact: true);
     springGlass(_position, slot, _motion.spring, immediate: _reduceMotion);
     _feedback(true);
     _updateWindow();
@@ -344,7 +405,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     _contacts.remove(event.pointer);
     if (_pointer != event.pointer) return;
     _pointer = null;
-    _feedback(false);
+    _feedback(false, finishLift: event is PointerUpEvent && !_cancelled);
     if (event is PointerCancelEvent) {
       _cancelled = true;
       _dragging = false;
@@ -363,17 +424,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     if (_cancelled || _slotWidth <= 0) return;
     if (!_dragging) _feedback(true);
     _dragging = true;
+    _trackingDeformation = true;
     _fingerSlot = _slotAt(location.dx);
     if (_reduceMotion) {
       _position.value = _fingerSlot;
     } else {
       springGlass(_position, _fingerSlot, NativeMotion.tracking);
     }
-    _vertical.value = _reduceMotion
-        ? 0
-        : 4 *
-              ((location.dy - _down.dy) /
-                  (36 + (location.dy - _down.dy).abs()));
   }
 
   void _dragEnd(DragEndDetails details) {
@@ -384,7 +441,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     _dragging = false;
     final velocity = (details.primaryVelocity ?? 0) / _slotWidth;
     final projected = _fingerSlot + velocity * _motion.dragProjection;
-    _commit(_logical(projected), velocity: _position.velocity);
+    _commit(_logical(projected), velocity: _position.velocity, fromDrag: true);
   }
 
   @override
@@ -393,6 +450,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     _pointer = null;
     _dragging = false;
     _contacts.clear();
+    _cancelLensDwell();
     for (final controller in _controllers) {
       controller.stop();
     }
@@ -408,16 +466,16 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   List<AnimationController> get _controllers => [
     _position,
     _lift,
-    _barScale,
-    _itemScale,
+    _lensScale,
     _glow,
     _stretch,
+    _crossStretch,
     _halo,
-    _vertical,
   ];
 
   @override
   void dispose() {
+    _cancelLensDwell();
     for (final node in _focusNodes) {
       node.dispose();
     }
@@ -467,6 +525,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             (constraints.maxWidth - padding.horizontal) / widget.tabs.length;
         if (!width.isFinite || width <= 0) return const SizedBox.shrink();
         _padLeft = padding.left;
+        _barWidth = constraints.maxWidth;
         if (width != _slotWidth) {
           _slotWidth = width;
           if (_pointer != null || _dragging) _reset();
@@ -535,146 +594,142 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
               animation: Listenable.merge([
                 _position,
                 _lift,
-                _barScale,
+                _lensScale,
                 _glow,
                 _stretch,
+                _crossStretch,
                 _halo,
-                _vertical,
+
                 _window,
               ]),
               child: content,
               builder: (context, child) {
                 final lift = _lift.value.clamp(0.0, 1.0);
-                final stretch = _stretch.value;
-                final drift = _vertical.value;
-                // Pill in row coordinates: slightly wider than its slot, grown
-                // by the lift inset and deformed by the stretch.
+                final deformation = _stretch.value.clamp(-.24, .24);
                 final inset = NativeMotion.lensInset * lift * _liftFactor;
                 final pillWidth = width + 8 + 2 * inset;
                 final pillHeight = height + 2 * inset;
                 final pill = Rect.fromCenter(
                   center: Offset(
                     _position.value * width + width / 2,
-                    height / 2 + drift,
+                    height / 2,
                   ),
-                  width: pillWidth + stretch,
-                  height: math.max(pillHeight - stretch, pillHeight * .6),
+                  width: pillWidth * (1 + deformation),
+                  height: pillHeight * (1 + _crossStretch.value.clamp(-.3, .3)),
                 );
+                final lensScale = _lensScale.value;
+                final barScale = lensScale;
+                // UIKit applies the flex transform to the housing and its
+                // foreground, with an additional lift on the lens bounds.
+                final foregroundPill = pill;
                 final window = _window.value
-                    ? selectionShape.path(pill.size).shift(pill.topLeft)
+                    ? selectionShape
+                          .path(foregroundPill.size)
+                          .shift(foregroundPill.topLeft)
                     : null;
-                final barScale = _barScale.value;
-                // The lens and halo sit outside the bar glass so that their
-                // backdrop filters stay untransformed; their placement follows
-                // the bar's scale about its own centre.
                 final centre = barSize.center(Offset.zero);
-                final pillOnBar = pill.shift(
-                  padding.topLeft + Offset(0, drift * .2),
-                );
+                final pillOnBar = pill.shift(padding.topLeft);
                 final lens = Rect.fromCenter(
                   center: centre + (pillOnBar.center - centre) * barScale,
-                  width: pillOnBar.width * barScale,
-                  height: pillOnBar.height * barScale,
+                  width: pillOnBar.width * lensScale,
+                  height: pillOnBar.height * lensScale,
                 );
                 final ripple = _halo.value;
-                final haloLevel = _pointer != null && !_cancelled
-                    ? lift
-                    : (ripple < 1 ? (1 - ripple) : 0.0);
-                final haloScale =
-                    1 + (NativeMotion.haloReleaseScale - 1) * ripple;
-                final bar = Transform.translate(
-                  offset: Offset(0, drift * .2),
-                  child: LiquidPrismPressFeedback(
-                    progress:
-                        _glow.value.clamp(0, 1) * NativeMotion.glowOpacity,
-                    scale: barScale,
-                    child: LiquidPrism(
-                      glass: widget.glass,
-                      optics: widget.optics,
-                      blur: widget.blur,
-                      shape: style.shape,
-                      role: GlassRole.tabBar,
-                      child: Padding(
-                        padding: padding,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Positioned.fromRect(
-                              rect: pill,
-                              child: Opacity(
-                                opacity: 1 - lift,
-                                child: LiquidPrismSelection(
-                                  selected: true,
-                                  shape: selectionShape,
-                                  color: style.selectionColor,
-                                  blur: style.selectionBlur ?? 2,
-                                  child: const SizedBox.expand(),
-                                ),
-                              ),
-                            ),
-                            _SelectionWindow(
-                              path: window,
-                              color: selectedAccent,
-                              child: child!,
-                            ),
-                          ],
+                final held = _pointer != null && !_cancelled;
+                final haloLevel = held ? 1.0 : (ripple < 1 ? 1 - ripple : 0.0);
+                final haloScale = held
+                    ? 1.0
+                    : 1 + (NativeMotion.haloReleaseScale - 1) * ripple;
+                return SizedBox.fromSize(
+                  size: barSize,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      LiquidPrismPressFeedback(
+                        progress:
+                            _glow.value.clamp(0, 1) * NativeMotion.glowOpacity,
+                        scale: barScale,
+                        child: LiquidPrism(
+                          glass: widget.glass,
+                          optics: widget.optics,
+                          blur: widget.blur,
+                          shape: style.shape,
+                          role: GlassRole.tabBar,
+                          child: SizedBox.fromSize(size: barSize),
                         ),
                       ),
-                    ),
-                  ),
-                );
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    bar,
-                    if (haloLevel > .001)
-                      Positioned.fromRect(
-                        rect: Rect.fromCenter(
-                          center: lens.center,
-                          width: NativeMotion.haloDiameter * haloScale,
-                          height: NativeMotion.haloDiameter * haloScale,
-                        ),
-                        child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  Color.from(
-                                    alpha: NativeMotion.haloOpacity * haloLevel,
-                                    red: 1,
-                                    green: 1,
-                                    blue: 1,
-                                  ),
-                                  const Color(0x00FFFFFF),
-                                ],
+                      if (haloLevel > .001)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: ClipPath(
+                              clipper: GlassShapeClipper(
+                                style.shape ?? GlassShape.capsule,
+                              ),
+                              child: CustomPaint(
+                                painter: _LensHalo(
+                                  lens.center,
+                                  NativeMotion.haloDiameter * haloScale,
+                                  NativeMotion.haloOpacity * haloLevel,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    if (lift > .001)
-                      Positioned.fromRect(
-                        rect: lens,
-                        child: IgnorePointer(
-                          child: Opacity(
-                            opacity: lift,
-                            // The native lens face is ungraded: no glow.
+                      // Capture only the bar and its backdrop, then paint the
+                      // selection and crisp foreground above the refracting rim.
+                      if (lift > .001)
+                        Positioned.fromRect(
+                          rect: lens,
+                          child: IgnorePointer(
                             child: LiquidPrismPressFeedback(
                               progress: 0,
                               child: LiquidPrism(
                                 glass: Glass.clear,
-                                optics: _lensOptics,
+                                optics: _lensOptics.copyWith(
+                                  refraction: _lensOptics.refraction * lift,
+                                  reflection: _lensOptics.reflection * lift,
+                                  light: _lensOptics.light * lift,
+                                ),
                                 blur: 0,
                                 shape: selectionShape,
-                                role: GlassRole.tabBar,
+                                role: GlassRole.tabLens,
                                 child: const SizedBox.expand(),
                               ),
                             ),
                           ),
                         ),
+                      Positioned.fromRect(
+                        key: const ValueKey('tab-selection'),
+                        rect: lens,
+                        child: IgnorePointer(
+                          child: Opacity(
+                            opacity: 1 - lift,
+                            child: LiquidPrismSelection(
+                              selected: true,
+                              shape: selectionShape,
+                              color: style.selectionColor,
+                              blur: style.selectionBlur ?? 2,
+                              child: const SizedBox.expand(),
+                            ),
+                          ),
+                        ),
                       ),
-                  ],
+                      Positioned.fill(
+                        key: const ValueKey('tab-foreground'),
+                        child: Transform.scale(
+                          scale: barScale,
+                          child: Padding(
+                            padding: padding,
+                            child: _SelectionWindow(
+                              path: window,
+                              color: selectedAccent,
+                              child: child!,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -769,14 +824,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
           },
           child: SizedBox(
             height: height,
-            child: Center(
-              child: AnimatedBuilder(
-                animation: _itemScale,
-                child: content,
-                builder: (context, child) =>
-                    Transform.scale(scale: _itemScale.value, child: child),
-              ),
-            ),
+            child: Center(child: content),
           ),
         ),
       ),
@@ -790,13 +838,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 /// wide band would mirror the icons inside a lens this small.
 const _lensOptics = LiquidPrismStyle(
   edgeWidth: 12,
-  refraction: 14,
+  refraction: 9,
   frost: 0,
-  dispersion: 0.08,
+  dispersion: 0.3,
   brightness: 0,
   tint: Color(0x00000000),
   saturation: 1,
-  reflection: 0.12,
+  reflection: 0.04,
   reflectionReach: 20,
   splay: 0.1,
   cornerRadius: 10000,
@@ -845,6 +893,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
   }
 
   final _clip = LayerHandle<ClipPathLayer>();
+  final _outsideClip = LayerHandle<ClipPathLayer>();
   final _filter = LayerHandle<ColorFilterLayer>();
   @override
   bool get alwaysNeedsCompositing => _path != null;
@@ -852,13 +901,29 @@ class _RenderSelectionWindow extends RenderProxyBox {
   void paint(PaintingContext context, Offset offset) {
     final child = this.child;
     if (child == null) return;
-    context.paintChild(child, offset);
     final path = _path;
     if (path == null) {
+      context.paintChild(child, offset);
       _clip.layer = null;
+      _outsideClip.layer = null;
       _filter.layer = null;
       return;
     }
+    // The selected and unselected copies occupy complementary regions.
+    // Painting both at the same pixel leaves unselected fringes around glyphs.
+    final outside = Path.combine(
+      PathOperation.difference,
+      Path()..addRect(Offset.zero & size),
+      path,
+    );
+    _outsideClip.layer = context.pushClipPath(
+      needsCompositing,
+      offset,
+      Offset.zero & size,
+      outside,
+      (context, offset) => context.paintChild(child, offset),
+      oldLayer: _outsideClip.layer,
+    );
     _clip.layer = context.pushClipPath(
       needsCompositing,
       offset,
@@ -879,7 +944,36 @@ class _RenderSelectionWindow extends RenderProxyBox {
   @override
   void dispose() {
     _clip.layer = null;
+    _outsideClip.layer = null;
     _filter.layer = null;
     super.dispose();
   }
+}
+
+class _LensHalo extends CustomPainter {
+  const _LensHalo(this.centre, this.diameter, this.opacity);
+  final Offset centre;
+  final double diameter, opacity;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromCircle(center: centre, radius: diameter / 2);
+    canvas.drawCircle(
+      centre,
+      diameter / 2,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            Color.from(alpha: opacity, red: 1, green: 1, blue: 1),
+            const Color(0x00FFFFFF),
+          ],
+        ).createShader(rect),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_LensHalo old) =>
+      centre != old.centre ||
+      diameter != old.diameter ||
+      opacity != old.opacity;
 }

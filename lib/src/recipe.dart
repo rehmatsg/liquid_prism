@@ -5,7 +5,7 @@ import 'native_colors.dart';
 import 'style.dart';
 
 // Native RGB tint matrices; explicit custom colors retain the legacy fallback.
-enum GlassRole { surface, button, tabBar }
+enum GlassRole { surface, button, tabBar, tabLens }
 
 final class GlassRecipe {
   const GlassRecipe(
@@ -50,7 +50,11 @@ final class GlassRecipe {
       ],
     ];
     return GlassRecipe(
-      customOptics ? 0 : (glass.variant == GlassVariant.clear ? 2 : 1),
+      role == GlassRole.tabLens
+          ? 3
+          : customOptics
+          ? 0
+          : (glass.variant == GlassVariant.clear ? 2 : 1),
       dark,
       role,
       matrix ?? fallback,

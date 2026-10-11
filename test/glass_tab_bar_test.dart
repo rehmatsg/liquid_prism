@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/pressable.dart';
+import 'package:liquid_prism/src/recipe.dart';
 
 import 'support/rendering.dart';
 
@@ -224,6 +226,136 @@ void _expectSelected(WidgetTester tester, int selected) {
 }
 
 void _motionTests() {
+  testWidgets('held lens matches the native 94 to 110 point lift', (
+    tester,
+  ) async {
+    final state = await _mountTabs(tester);
+    state.update(() {
+      state.width = 274;
+      state.style = const GlassTabBarStyle(haptics: false);
+    });
+    await tester.pump();
+    expect(_pill(tester).size, const Size(94, 54));
+    final gesture = await tester.startGesture(
+      tester.getCenter(_tab('Gallery')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(_pill(tester).width, closeTo(115.7, .3));
+    expect(_pill(tester).height, closeTo(73.6, .3));
+    final housing = find.byWidgetPredicate(
+      (widget) => widget is LiquidPrism && widget.role == GlassRole.tabBar,
+    );
+    expect(
+      LiquidPrismPressFeedback.scaleOf(tester.element(housing)),
+      closeTo(1 + 14.1379310344828 / 274, .001),
+    );
+    for (var i = 0; i < 3; i++) {
+      final icon = find.byKey(
+        ValueKey(i == 0 ? 'selected-icon-$i' : 'icon-$i'),
+      );
+      for (final foreground in [icon, find.text(_names[i])]) {
+        final box = tester.renderObject<RenderBox>(foreground);
+        expect(
+          box.getTransformTo(null).getMaxScaleOnAxis(),
+          closeTo(1 + 14.1379310344828 / 274, .001),
+        );
+      }
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(_pill(tester).size, const Size(94, 54));
+  });
+
+  testWidgets(
+    'four-tab-width housing uses the directly read native transform',
+    (tester) async {
+      final state = await _mountTabs(tester);
+      state.update(() {
+        state.width = 360;
+        state.style = const GlassTabBarStyle(haptics: false);
+      });
+      await tester.pump();
+      final gesture = await tester.startGesture(
+        tester.getCenter(_tab('Gallery')),
+      );
+      await tester.pumpAndSettle();
+      final housing = find.byWidgetPredicate(
+        (widget) => widget is LiquidPrism && widget.role == GlassRole.tabBar,
+      );
+      final box = tester.renderObject<RenderBox>(housing);
+      // Glass applies its flex scale inside its renderer, while the
+      // foreground exposes the same transform as a RenderTransform.
+      final foreground = tester.renderObject<RenderBox>(
+        find.byKey(const ValueKey('selected-icon-0')),
+      );
+      final transform = foreground.getTransformTo(null);
+      final size = MatrixUtils.transformRect(
+        transform,
+        Offset.zero & box.size,
+      ).size;
+      // UIKit presentation read: 360 × 62 at 1.039272030651341.
+      expect(size.width, closeTo(374.1379310344828, .001));
+      expect(size.height, closeTo(64.4348659003831, .001));
+      await gesture.cancel();
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets('quick tap completes the tall launch and wide arrival', (
+    tester,
+  ) async {
+    final state = await _mountTabs(tester);
+    state.update(() {
+      state.width = 274;
+      state.style = const GlassTabBarStyle(haptics: false);
+    });
+    await tester.pump();
+    final gesture = await tester.startGesture(
+      tester.getCenter(_tab('Favorites')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 65));
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 85));
+    final launch = _pill(tester);
+    expect(launch.height, greaterThan(72));
+    expect(launch.width, lessThan(104));
+    await tester.pump(const Duration(milliseconds: 175));
+    final arrival = _pill(tester);
+    expect(arrival.width, greaterThan(launch.width + 10));
+    expect(arrival.height, lessThan(launch.height - 10));
+    expect(state.requests, [1]);
+    await tester.pumpAndSettle();
+    expect(_pill(tester).size, const Size(94, 54));
+  });
+
+  testWidgets('continuous pointer samples advance the spring on every frame', (
+    tester,
+  ) async {
+    await _mountTabs(tester);
+    final start = tester.getCenter(_tab('Gallery'));
+    final gesture = await tester.startGesture(start);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    var previous = _pill(tester).center.dx;
+    for (var i = 1; i <= 18; i++) {
+      await gesture.moveTo(start + Offset(i * 6, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+      final current = _pill(tester).center.dx;
+      if (i > 5) expect(current, greaterThan(previous));
+      previous = current;
+    }
+    expect(previous, greaterThan(start.dx + 65));
+    final beforeRelease = _pill(tester).size;
+    await gesture.up();
+    await tester.pump();
+    expect(_pill(tester).width, closeTo(beforeRelease.width, .01));
+    expect(_pill(tester).height, closeTo(beforeRelease.height, .01));
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('semantic retarget preserves the moving pill velocity', (
     tester,
   ) async {
