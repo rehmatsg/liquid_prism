@@ -23,6 +23,11 @@ for index, prefix in enumerate(['switch-dark', 'slider-dark', 'segments-dark']):
         if [v for v in json.loads(p.read_text())['views']
             if v['class'] == '_UILiquidLensView'][index]['nativeSpecs']['lifted']))
 profiles = {}
+rest_layers = read('layers', 'slider-dark-model-start.json')['layers']
+track_bounds = []
+for class_name, suffix in [('UISwitchModernVisualElement', '/0'), ('UIKit._UISliderGlassVisualElement', '/1'), ('UISegmentedControl', '')]:
+    parent = next(l for l in rest_layers if class_name in l['delegateClass'])
+    track_bounds.append(next(l['bounds'] for l in rest_layers if l['path'] == parent['path'] + suffix))
 for index, (name, held_name) in enumerate(zip(['switch', 'slider', 'segmented'], held_names)):
     held = read('specs', held_name)
     resting_lens = [v for v in start['views'] if v['class'] == '_UILiquidLensView'][index]
@@ -38,6 +43,7 @@ for index, (name, held_name) in enumerate(zip(['switch', 'slider', 'segmented'],
                 and any(k in layer for k in ['filters', 'effect', 'sdfProperties'])]
     shadows = [{k: l[k] for k in ['frame', 'shadowOpacity', 'shadowRadius', 'shadowOffset', 'shadowColor']} for l in layer_capture['layers'] if l['path'].startswith(active['path']+'/') and l['shadowOpacity'] > 0]
     profiles[name] = {
+        'restingTrackBounds': track_bounds[index],
         'layerShadows': shadows,
         'restingLens': {k: resting_lens[k] for k in ['bounds', 'frame', 'transform']},
         'heldLens': {k: held_lens[k] for k in ['bounds', 'frame', 'transform']},

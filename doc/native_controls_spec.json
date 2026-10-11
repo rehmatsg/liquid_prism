@@ -671,7 +671,8 @@
         "bounds": "{{0, 0}, {96, 28}}",
         "frame": "{{2, 2}, {96, 28}}",
         "transform": "[1, 0, 0, 1, 0, 0]"
-      }
+      },
+      "restingTrackBounds": "{{0, 0}, {300, 32}}"
     },
     "slider": {
       "flexVariant": 4,
@@ -1208,7 +1209,8 @@
         "bounds": "{{0, 0}, {37, 24}}",
         "frame": "{{105, 4}, {37, 24}}",
         "transform": "[1, 0, 0, 1, 0, 0]"
-      }
+      },
+      "restingTrackBounds": "{{0, 0}, {300, 6}}"
     },
     "switch": {
       "flexVariant": 4,
@@ -1732,7 +1734,8 @@
         "bounds": "{{0, 0}, {37, 24}}",
         "frame": "{{2, 2}, {37, 24}}",
         "transform": "[1, 0, 0, 1, 0, 0]"
-      }
+      },
+      "restingTrackBounds": "{{0, 0}, {63, 28}}"
     }
   },
   "provenance": {

@@ -6,6 +6,7 @@ import 'glass.dart';
 import 'material.dart';
 import 'recipe.dart';
 import 'style.dart';
+import 'theme.dart';
 
 /// Direct layer/timing captures in doc/native_controls_spec.json.
 abstract final class NativeControl {
@@ -34,14 +35,15 @@ class ControlThumb extends StatelessWidget {
     required this.lift,
     this.small = true,
     this.restingShadow = false,
-    this.color = const Color(0xFFFFFFFF),
+    this.color,
   });
   final double lift;
   final bool small, restingShadow;
-  final Color color;
+  final Color? color;
   @override
   Widget build(BuildContext context) {
     final progress = lift.clamp(0.0, 1.0);
+    final fill = color ?? GlassColors.of(context).controlThumb;
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = constraints.maxHeight;
@@ -67,17 +69,28 @@ class ControlThumb extends StatelessWidget {
               brightness: 0,
               tint: const Color(0x00000000),
             ),
-            child: DecoratedBox(
-              decoration: ShapeDecoration(
-                shape: const StadiumBorder(),
-                color: color.withValues(alpha: color.a * (1 - progress)),
-              ),
+            // Let the lens clip own the fill contour as well as the optics;
+            // avoid a second, independently specified border shape.
+            child: ColoredBox(
+              color: fill.withValues(alpha: fill.a * (1 - progress)),
             ),
           ),
         );
       },
     );
   }
+}
+
+/// Uses the same continuous capsule contour as control optics and shadows.
+class ControlTrack extends StatelessWidget {
+  const ControlTrack({super.key, required this.color, this.child});
+  final Color color;
+  final Widget? child;
+  @override
+  Widget build(BuildContext context) => ClipPath(
+    clipper: const GlassShapeClipper(GlassShape.capsule),
+    child: ColoredBox(color: color, child: child),
+  );
 }
 
 /// Captured layer and ring-shadow inputs; radius-to-sigma and the ring mask

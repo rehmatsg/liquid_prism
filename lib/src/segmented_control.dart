@@ -78,11 +78,8 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                       top: 6,
                       width: width,
                       height: 32,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: backgroundColor ?? colors.tertiarySystemFill,
-                        ),
+                      child: ControlTrack(
+                        color: backgroundColor ?? colors.tertiarySystemFill,
                       ),
                     ),
                     Positioned(
@@ -100,7 +97,7 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                         child: ControlThumb(
                           lift: lift,
                           small: false,
-                          color: thumbColor ?? const Color(0xFFFFFFFF),
+                          color: thumbColor,
                         ),
                       ),
                     ),
@@ -127,7 +124,7 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                                       color:
                                           foregroundColor ??
                                           (i == selected && lift < .5
-                                              ? const Color(0xFF000000)
+                                              ? colors.controlThumbLabel
                                               : colors.label),
                                     ),
                                     child: children[keys[i]]!,

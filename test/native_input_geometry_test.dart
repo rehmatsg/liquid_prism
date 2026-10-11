@@ -13,7 +13,11 @@ void main() {
               as Map)['profiles']
           as Map;
   Size nativeSize(String name, String phase) {
-    final bounds = profiles[name][phase]['bounds'] as String;
+    final bounds =
+        (phase == 'restingTrack'
+                ? profiles[name]['restingTrackBounds']
+                : profiles[name][phase]['bounds'])
+            as String;
     final values = RegExp(r'-?\d+(?:\.\d+)?')
         .allMatches(bounds)
         .map((m) => double.parse(m[0]!))
@@ -59,6 +63,10 @@ void main() {
         expect(actual.height, closeTo(expected.height, .01));
       }
 
+      final track = tester.getSize(find.byType(ClipPath).first);
+      final nativeTrack = nativeSize(name, 'restingTrack');
+      expect(track.width, closeTo(nativeTrack.width, .01));
+      expect(track.height, closeTo(nativeTrack.height, .01));
       expectBounds('restingLens');
       final gesture = await tester.startGesture(tester.getCenter(lens));
       await tester.pumpAndSettle();

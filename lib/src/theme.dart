@@ -31,6 +31,17 @@ final class GlassColors {
   Color get teal => _dark ? const Color(0xFF00D2E0) : const Color(0xFF00C3D0);
   Color get yellow => _dark ? const Color(0xFFFFD600) : const Color(0xFFFFCC00);
   Color get label => _dark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
+
+  /// Native small-control resting fill, independent of appearance.
+  Color get controlThumb => const Color(0xFFFFFFFF);
+
+  /// Content above the opaque white segmented selection.
+  Color get controlThumbLabel => const Color(0xFF000000);
+
+  /// Extracted UISlider maximum track: 10% white/black in dark/light mode.
+  Color get sliderTrack => _dark
+      ? const Color.from(alpha: .1, red: 1, green: 1, blue: 1)
+      : const Color.from(alpha: .1, red: 0, green: 0, blue: 0);
   Color get secondaryLabel => _dark
       ? const Color.from(
           alpha: 0.6,

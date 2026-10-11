@@ -55,15 +55,14 @@ class LiquidPrismSwitch extends StatelessWidget {
                   left: 0,
                   width: 63,
                   height: 28,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      color: Color.lerp(
-                        inactiveColor ?? colors.tertiaryLabel,
-                        activeColor ?? colors.green,
-                        p,
-                      ),
-                    ),
+                  child: ControlTrack(
+                    color: Color.lerp(
+                      inactiveColor ?? colors.tertiaryLabel,
+                      activeColor ??
+                          LiquidPrismTheme.of(context).tint ??
+                          colors.green,
+                      p,
+                    )!,
                   ),
                 ),
                 Positioned(
@@ -78,10 +77,7 @@ class LiquidPrismSwitch extends StatelessWidget {
                       1 - stretch,
                       1,
                     ),
-                    child: ControlThumb(
-                      lift: lift,
-                      color: thumbColor ?? const Color(0xFFFFFFFF),
-                    ),
+                    child: ControlThumb(lift: lift, color: thumbColor),
                   ),
                 ),
               ],

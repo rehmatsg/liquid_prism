@@ -82,33 +82,23 @@ class LiquidPrismSlider extends StatelessWidget {
                       top: 19,
                       width: width,
                       height: 6,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: ColoredBox(
-                          color:
-                              inactiveColor ??
-                              (colors.brightness == Brightness.dark
-                                  ? const Color(0x33FFFFFF)
-                                  : const Color(0x1A000000)),
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: 0,
-                                bottom: 0,
-                                left: rtl ? null : 0,
-                                right: rtl ? 0 : null,
-                                width: fill,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(3),
-                                    color:
-                                        activeColor ??
-                                        LiquidPrismTheme.tintOf(context),
-                                  ),
-                                ),
+                      child: ControlTrack(
+                        color: inactiveColor ?? colors.sliderTrack,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: 0,
+                              bottom: 0,
+                              left: rtl ? null : 0,
+                              right: rtl ? 0 : null,
+                              width: fill,
+                              child: ControlTrack(
+                                color:
+                                    activeColor ??
+                                    LiquidPrismTheme.tintOf(context),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -127,7 +117,7 @@ class LiquidPrismSlider extends StatelessWidget {
                         child: ControlThumb(
                           restingShadow: true,
                           lift: lift,
-                          color: thumbColor ?? const Color(0xFFFFFFFF),
+                          color: thumbColor,
                         ),
                       ),
                     ),

@@ -38,7 +38,10 @@ tertiarySystemFill. Disabled native visual elements have alpha .5. The slider th
 layer shadow with opacity .14, radius 5 and offset (0, 1); the held lens adds
 opacity .06, radius 3 and offset (0, 7). Its filter ring shadow has width 4,
 radius 3, offset 8 and opacity .4 for small controls or .1 for the segmented pill. Slider tracks
-resolve to black at .1 in light appearance and white at .2 in dark appearance.
+resolve to black at .1 in light appearance and white at .1 in dark appearance.
+Control fills use the shared GlassColors palette. The switch defaults to the
+palette green and honors an explicit inherited tint, as does the slider. The resting fills, tracks,
+clips, lens optics and shadows all use the same continuous capsule contour.
 Segment labels use 13-point SF regular and medium, with native grade G3.
 
 Held lens materials retain the native vibrant highlight matrix, inner refraction
