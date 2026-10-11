@@ -109,8 +109,9 @@ LiquidPrismTabBar(
 )
 ```
 
-The parent owns selection. Taps move the pill with a spring; dragging previews a
-selection and commits on release. Icons accept any widget, with an optional
+The parent owns selection. Touching a tab lifts the pill into a glass lens and
+glides it there with the native spring; dragging makes the lens chase the finger,
+stretching with its speed, and commits the tab under the finger on release. Icons accept any widget, with an optional
 `selectedIcon`. Labels can be always visible, selected only, or hidden. Accessibility
 labels remain available. Place the bar inside a safe area with a bounded width.
 

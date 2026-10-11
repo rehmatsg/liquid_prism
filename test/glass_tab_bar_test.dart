@@ -88,6 +88,8 @@ void main() {
       await tester.pump();
       expect(changes, 2);
       expectSelection('Settings');
+      // The selected colour travels with the pill and lands when it settles.
+      await tester.pumpAndSettle();
       expect(textColor('Settings'), const Color(0xFFAA00CC));
       update(() => foreground = null);
       await tester.pump();
@@ -281,7 +283,7 @@ void _motionTests() {
   );
 
   testWidgets(
-    'drag previews without selecting and commits one projected destination on release',
+    'drag previews without selecting and commits the projected tab under the finger on release',
     (tester) async {
       final state = await _mountTabs(tester);
       state.update(() => state.motion = const GlassMotion(dragProjection: 0));
@@ -292,14 +294,16 @@ void _motionTests() {
       );
       await pointer.moveBy(const Offset(30, 0));
       await pointer.moveBy(const Offset(65, 0));
+      // The lens chases the finger through a spring rather than following 1:1.
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       expect(_pill(tester).center.dx, greaterThan(origin + 40));
       expect(state.requests, isEmpty);
       _expectSelected(tester, 0);
       await pointer.up();
       await tester.pumpAndSettle();
-      expect(state.requests, [1]);
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
+      expect(state.requests, [2]);
+      expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
       state.update(() {
         state.selected = 0;
         state.motion = const GlassMotion(dragProjection: .12);
@@ -311,7 +315,7 @@ void _motionTests() {
         1800,
       );
       await tester.pumpAndSettle();
-      expect(state.requests, [1, 2]);
+      expect(state.requests, [2, 2]);
       _expectSelected(tester, 2);
     },
   );

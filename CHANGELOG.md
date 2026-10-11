@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Match the measured iOS 27 interaction motion: tab pills lift into a glass
+  lens with bar and icon scaling, glide on touch, chase the finger through a
+  spring and stretch with speed; buttons use the native press and release
+  springs and glow timing. `GlassMotion` gains press and release bounce fields.
 - Remove the native plugin, platform views, and rendering-mode API.
 - Calibrate regular material colors against SwiftUI and share foreground/selection defaults across platforms.
 

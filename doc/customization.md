@@ -86,23 +86,38 @@ activates the focused tab. Hidden visual labels remain available to accessibilit
 
 ```dart
 const motion = GlassMotion(
-  response: Duration(milliseconds: 280),
-  bounce: 0.18,
-  pressResponse: Duration(milliseconds: 140),
-  pressScale: 1.08,
+  response: Duration(milliseconds: 380),
+  bounce: 0.15,
+  pressResponse: Duration(milliseconds: 290),
+  pressBounce: 0.35,
+  releaseResponse: Duration(milliseconds: 390),
+  releaseBounce: 0.48,
+  pressScale: 1.1126,
   dragProjection: 0.12,
 );
 ```
 
-Set this on a theme or an individual control. Defaults expand ordinary glass
-buttons by 10% and the tab pill horizontally by 8%. `pressScale: 1` disables that
-horizontal/ordinary-button scale response while retaining nonspatial touch feedback;
-the tab pill has a separate subtle vertical contact response.
+Set this on a theme or an individual control. The defaults are the springs
+and scales measured on iOS 27 system controls. `response` and `bounce` move
+the tab pill between tabs; `pressResponse`/`pressBounce` grow a held control
+and `releaseResponse`/`releaseBounce` let it go, with the native overshoot
+and undershoot. `pressScale` is the held size of an ordinary glass button; on
+the tab bar it scales the whole lift (lens inset, bar scale and item scale),
+and `pressScale: 1` disables that spatial response while retaining the glow.
 
-Reduce Motion removes spring travel, overshoot, and scale while preserving direct
-finger tracking and nonspatial feedback. There is no continuous animation after
-interaction settles. Null action callbacks disable activation; cancellation,
-removal, and scrolling takeover release feedback.
+The tab pill follows the native behaviour: touching any tab lifts the pill
+into a clear glass lens 8 pt larger on every side, scales the bar content by
+1.0516 and every icon by 1.16, and glides the lens to that tab at once, before
+release. During a drag the lens chases the finger through a spring, stretches
+along the direction of travel in proportion to its speed and thins across it,
+and bulges the other way when the finger stops. The selected tint is painted
+wherever the pill is, so it travels with the lens. Icons must not contain
+repaint boundaries because that window paints them a second time.
+
+Reduce Motion removes spring travel, overshoot, lift and scale while preserving
+direct finger tracking and nonspatial feedback. There is no continuous
+animation after interaction settles. Null action callbacks disable activation;
+cancellation, removal, and scrolling takeover release feedback.
 
 ## Advanced shader optics
 

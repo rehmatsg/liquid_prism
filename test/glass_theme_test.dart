@@ -399,7 +399,14 @@ void main() {
         tester.getCenter(find.byKey(const ValueKey('First'))),
       );
       await tester.pumpAndSettle();
-      expect(visibleWidth(tester, pill), closeTo(width * 1.15, .001));
+      // The held pill lifts into a lens 8 pt larger on every side inside the
+      // bar's 1.0516 hold scale at the measured default; pressScale scales both.
+      double lifted(double pressScale) {
+        final factor = (pressScale - 1) / (const GlassMotion().pressScale - 1);
+        return (width + 16 * factor) * (1 + .0516 * factor);
+      }
+
+      expect(visibleWidth(tester, pill), closeTo(lifted(1.15), .01));
       await pointer.cancel();
       await tester.pumpAndSettle();
       await tester.tap(
@@ -415,7 +422,7 @@ void main() {
         tester.getCenter(find.byKey(const ValueKey('First'))),
       );
       await tester.pumpAndSettle();
-      expect(visibleWidth(tester, pill), closeTo(width * 1.02, .001));
+      expect(visibleWidth(tester, pill), closeTo(lifted(1.02), .01));
       await pointer.cancel();
       await tester.pumpAndSettle();
       await tester.tap(

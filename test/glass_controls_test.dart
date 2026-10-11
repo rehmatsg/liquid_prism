@@ -48,7 +48,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
     expect(visibleWidth(tester, face), greaterThan(100));
     await tester.pumpAndSettle();
-    expect(visibleWidth(tester, face), closeTo(110, 0.1));
+    expect(
+      visibleWidth(tester, face),
+      closeTo(100 * const GlassMotion().pressScale, 0.1),
+    );
     await pointer.cancel();
     await tester.pumpAndSettle();
     expect(visibleWidth(tester, face), closeTo(100, 0.01));
@@ -125,11 +128,17 @@ void main() {
       final center = tester.getCenter(face);
       final first = await tester.startGesture(center, pointer: 1);
       await tester.pumpAndSettle();
-      expect(visibleWidth(tester, face), closeTo(110, 0.1));
+      expect(
+        visibleWidth(tester, face),
+        closeTo(100 * const GlassMotion().pressScale, 0.1),
+      );
       final second = await tester.startGesture(center, pointer: 2);
       await second.up();
       await tester.pumpAndSettle();
-      expect(visibleWidth(tester, face), closeTo(110, 0.1));
+      expect(
+        visibleWidth(tester, face),
+        closeTo(100 * const GlassMotion().pressScale, 0.1),
+      );
       expect(taps, 0);
       await first.up();
       await tester.pumpAndSettle();

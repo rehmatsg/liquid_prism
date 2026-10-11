@@ -64,8 +64,11 @@ class LiquidPrismPressable extends StatefulWidget {
 }
 
 class _LiquidPrismPressableState extends State<LiquidPrismPressable>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final _press = AnimationController.unbounded(vsync: this, value: 0);
+  // Glow is nonspatial: it reaches full strength within ~0.1 s of contact and
+  // decays after release independently of the scale spring's bounce.
+  late final _glow = AnimationController.unbounded(vsync: this, value: 0);
   bool _reduceMotion = false, _attached = true, _suppressTap = false;
   final _contacts = <int>{};
   int? _pointer;
@@ -78,6 +81,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
     if (_reduceMotion) {
       _press.value = _pointer == null || _suppressTap ? 0 : 1;
+      _glow.value = _press.value;
     }
   }
 
@@ -89,6 +93,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
       _downPosition = null;
       _suppressTap = true;
       _press.value = 0;
+      _glow.value = 0;
     }
   }
 
@@ -100,6 +105,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
     _downPosition = null;
     _suppressTap = true;
     _press.stop();
+    _glow.stop();
     super.deactivate();
   }
 
@@ -108,12 +114,14 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
     super.activate();
     _attached = true;
     _press.value = 0;
+    _glow.value = 0;
   }
 
   void _target(bool held) {
     if (!_attached || !mounted) return;
     if (_reduceMotion) {
       _press.value = held ? 1 : 0;
+      _glow.value = _press.value;
       return;
     }
     final motion =
@@ -123,7 +131,12 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
     springGlass(
       _press,
       held ? 1 : 0,
-      held ? motion.pressSpring : motion.spring,
+      held ? motion.pressSpring : motion.releaseSpring,
+    );
+    springGlass(
+      _glow,
+      held ? 1 : 0,
+      held ? NativeMotion.buttonGlowIn : NativeMotion.buttonGlowOut,
     );
   }
 
@@ -159,6 +172,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
   @override
   void dispose() {
     _press.dispose();
+    _glow.dispose();
     super.dispose();
   }
 
@@ -169,7 +183,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
         LiquidPrismTheme.of(context).motion ??
         const GlassMotion();
     final visual = AnimatedBuilder(
-      animation: _press,
+      animation: Listenable.merge([_press, _glow]),
       builder: (context, child) {
         final scale = _reduceMotion
             ? 1.0
@@ -178,7 +192,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
         // makes Impeller re-rasterize the captured backdrop every frame.
         if (widget._glass) {
           return LiquidPrismPressFeedback(
-            progress: _press.value.clamp(0, 1),
+            progress: _glow.value.clamp(0, 1) * NativeMotion.buttonGlowOpacity,
             scale: scale,
             child: child!,
           );
