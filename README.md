@@ -141,6 +141,50 @@ literal shared accent for ordinary buttons and selected tabs. Prominent buttons
 keep white text unless explicitly overridden. Material tint and foreground color
 are independent.
 
+## Native tint palette
+
+`GlassColors.of(context)` resolves the extracted iOS 27 source colors against
+`LiquidPrismTheme` brightness, falling back to platform brightness. Rebuild inside
+a `Builder` below your theme when the appearance changes:
+
+```dart
+final colors = GlassColors.of(context);
+LiquidPrism(
+  glass: Glass.regular.tint(colors.purple),
+  child: myContent,
+)
+```
+
+The accents are `blue`, `brown`, `cyan`, `green`, `indigo`, `mint`, `orange`,
+`pink`, `purple`, `red`, `teal`, and `yellow`. `colors.accents` is an immutable
+named map for pickers. `GlassColors.light` and `GlassColors.dark` provide explicit
+palettes without a context. Labels include `label`, `secondaryLabel`,
+`tertiaryLabel`, and `quaternaryLabel`; fills include `systemFill`,
+`secondarySystemFill`, `tertiarySystemFill`, and `quaternarySystemFill`.
+
+Regular glass uses the full extracted RGB tint matrices for all 12 accents in
+both appearances. Clear glass has separately extracted matrices for blue, green,
+orange, and pink. Other clear accents and arbitrary custom colors retain the
+package's custom-color approximation. The palette values are source colors;
+material fills and selected-pill matrices determine the composited appearance.
+
+Apple can change the glass body and pill appearance independently of the app.
+The exact switching rule was not recovered. For a known backdrop, choose the
+body/pill recipe explicitly while keeping source accents on the app appearance:
+
+```dart
+LiquidPrismTheme(
+  data: const LiquidPrismThemeData(
+    brightness: Brightness.dark,
+    materialBrightness: Brightness.light,
+  ),
+  child: myNavigation,
+)
+```
+
+See [native color provenance](doc/native_colors.md) for the extracted parameters
+and the limits of this rendering implementation.
+
 ## Rendering and customization
 
 | Renderer | Rendering |
@@ -204,7 +248,7 @@ contracts. Native code is confined to the separate research reference app.
 | Borders | Clear glass follows the inspected iOS 27 vertical key/fill highlights: a sharp 1-point rim, an 8-point diffuse lobe, and a thin dark exterior edge between bright regions. The dark edge uses a fitted opacity; native spread varies with size. Regular and custom materials retain the earlier diagonal lighting. Highlights grade backdrop color rather than drawing a uniform white stroke. |
 | Sampling | Display-resolution geometry, bilinear sampling, and integration over compressed pixel footprints reduce jagged refraction at the rim. Gaussian blur runs before refraction; foreground content stays sharp. |
 | Materials | Regular and clear glass have different face and highlight treatments. Regular surfaces and buttons use a luminance response measured against iOS 27; tab bars retain their separate role calibration. |
-| Tint | Light/dark blue, green, orange, and pink ramps came from native color matrices. Other colors use an approximate luminance response. |
+| Tint | All 12 named accents use full extracted regular-glass RGB matrices in light/dark appearances. Clear glass has separate matrices for blue, green, orange, and pink; unmeasured inputs retain the custom-color approximation. |
 | Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons and selected tabs share the measured iOS 27 resting palette on every platform, without foreground readback passes. |
 | Selection | The selected pill has its own color adjustment and an additional 2-point blur, including when bar blur is zero. The measured iOS 27 dark pill is darker than the iOS 26 treatment. |
 | Touch | A held native button expanded to about 1.10× its resting size. Springs were tuned by comparison; their timing was not extracted from Apple. |

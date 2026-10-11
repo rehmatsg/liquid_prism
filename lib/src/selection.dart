@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import 'theme.dart';
 import 'material.dart';
+import 'native_colors.dart';
 
 /// Native-style selected-tab material, with no rim or independent glass lens.
 /// Adds a small independent blur and grades the glass underneath, keeping
@@ -27,9 +28,10 @@ class LiquidPrismSelection extends StatelessWidget {
   final double blur;
   @override
   Widget build(BuildContext context) {
-    final dark = LiquidPrismTheme.brightnessOf(context) == Brightness.dark;
+    final dark =
+        LiquidPrismTheme.materialBrightnessOf(context) == Brightness.dark;
     if (!selected) return child;
-    final matrix = dark ? _dark : _light;
+    final matrix = dark ? nativeDarkSelection : nativeLightSelection;
     final fill = color;
     final content = fill != null
         ? BackdropFilter(
@@ -44,12 +46,7 @@ class LiquidPrismSelection extends StatelessWidget {
             ),
             child: child,
           );
-    return shape.isSmooth
-        ? ClipRSuperellipse(
-            borderRadius: BorderRadius.circular(shape.radius),
-            child: content,
-          )
-        : ClipRRect(clipper: _SelectionClipper(shape), child: content);
+    return ClipPath(clipper: GlassShapeClipper(shape), child: content);
   }
 
   @override
@@ -61,60 +58,3 @@ class LiquidPrismSelection extends StatelessWidget {
     properties.add(DoubleProperty('blur', blur));
   }
 }
-
-class _SelectionClipper extends CustomClipper<RRect> {
-  const _SelectionClipper(this.shape);
-  final GlassShape shape;
-  @override
-  RRect getClip(Size size) => shape.outline(size);
-  @override
-  bool shouldReclip(_SelectionClipper oldClipper) => shape != oldClipper.shape;
-}
-
-// Core Animation normalized offsets become Flutter's 0..255 color offsets.
-const _light = <double>[
-  1.185,
-  -.05,
-  -.005,
-  0,
-  -51,
-  -.015,
-  1.15,
-  -.005,
-  0,
-  -51,
-  -.015,
-  -.05,
-  1.195,
-  0,
-  -51,
-  0,
-  0,
-  0,
-  1,
-  0,
-];
-
-// Dark selected-tab color adjustment for iOS 27 and later.
-const _dark = <double>[
-  1.1298,
-  -.2361,
-  -.0237,
-  0,
-  -17.85,
-  -.0701,
-  .964,
-  -.0238,
-  0,
-  -17.85,
-  -.0702,
-  -.236,
-  1.1762,
-  0,
-  -17.85,
-  0,
-  0,
-  0,
-  1,
-  0,
-];

@@ -1,0 +1,297 @@
+{
+  "runtime": "iOS 27.0 Simulator",
+  "method": "Live model-layer filter inputs, no screenshot fitting",
+  "components": [
+    {
+      "component": "button",
+      "source": "_research/tint_extraction/raw/ios27/button-light-gray-default-1-06.json",
+      "sha256": "34f4a16a713e850271ba0452d3f715a7d9a19d43db2221074d99568c30253a6a",
+      "layers": [
+        {
+          "bounds": "{{0, 0}, {136.33333333333331, 50.333333333333314}}",
+          "inputs": {
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "component": "prominent",
+      "source": "_research/tint_extraction/raw/ios27/prominent-light-gray-default-1-06.json",
+      "sha256": "ed03e50fabfff43f6d0b18bac2c6f83ac3857a5609bc46cb86ec3ba1b35a1561",
+      "layers": [
+        {
+          "bounds": "{{0, 0}, {164, 50.333333333333314}}",
+          "inputs": {
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "component": "tabbar",
+      "source": "_research/tint_extraction/raw/ios27/tabbar-light-gray-default-1-06.json",
+      "sha256": "5eaf7cc18a8d9fd08dfa699ef20299defd8e4bcaee6943c921d53f1de506dd7c",
+      "layers": [
+        {
+          "bounds": "{{0, 0}, {402, 83}}",
+          "inputs": {
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "component": "toolbar",
+      "source": "_research/tint_extraction/raw/ios27/toolbar-light-gray-default-1-06.json",
+      "sha256": "053f960c005d700cfc68f48e0bb7d556dd8907239a0f6b545183fe92890ea522",
+      "layers": [
+        {
+          "bounds": "{{0, 0}, {370, 44}}",
+          "inputs": {
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "bounds": "{{16, 0}, {370, 44}}",
+          "inputs": {
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "bounds": "{{177, 736}, {48, 48}}",
+          "inputs": {
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "component": "searchtab",
+      "source": "_research/tint_extraction/raw/ios27/searchtab-light-gray-default-1-06.json",
+      "sha256": "1778d23cea55b7523f5bfeccf41275e209aaf8bf297903d7c49225c9f52308e3",
+      "layers": [
+        {
+          "bounds": "{{0, 0}, {402, 83}}",
+          "inputs": {
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "component": "slider",
+      "source": "_research/tint_extraction/raw/ios27/slider-light-gray-default-1-06.json",
+      "sha256": "798192b8d83c73a7ef942c3068f0d123aba4b80af33ac7a67866ff622ab41319",
+      "layers": []
+    },
+    {
+      "component": "toggle",
+      "source": "_research/tint_extraction/raw/ios27/toggle-light-gray-default-1-06.json",
+      "sha256": "d4e2a448409f66de2956626084dcd55054b128a0a724e330d421856502b1fa6f",
+      "layers": []
+    },
+    {
+      "component": "segmented",
+      "source": "_research/tint_extraction/raw/ios27/segmented-light-gray-default-1-06.json",
+      "sha256": "a4b19ad65b9097bbfea85231f487036d9ddfc887c3472ad07a1e8ad21dd636c9",
+      "layers": []
+    }
+  ]
+}

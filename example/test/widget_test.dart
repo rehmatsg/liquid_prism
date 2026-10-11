@@ -92,6 +92,33 @@ void main() {
     },
   );
 
+  testWidgets(
+    'native tint picker updates controls and resolves the new appearance',
+    (tester) async {
+      _phone(tester);
+      await tester.pumpWidget(const LiquidPrismExample());
+      await _press(tester, 'Use purple tint');
+      final selected = tester.widget<LiquidPrismButton>(
+        _button('Use purple tint'),
+      );
+      expect(selected.selected, isTrue);
+      expect(selected.glass?.tintColor, GlassColors.dark.purple);
+      var context = tester.element(_button('Add a prominent tap'));
+      expect(LiquidPrismTheme.tintOf(context), GlassColors.dark.purple);
+      await _press(tester, 'Toggle appearance');
+      context = tester.element(_button('Add a prominent tap'));
+      expect(LiquidPrismTheme.tintOf(context), GlassColors.light.purple);
+      expect(
+        tester
+            .widget<LiquidPrismButton>(_button('Use purple tint'))
+            .glass
+            ?.tintColor,
+        GlassColors.light.purple,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('compact large-text layout keeps the demo controls reachable', (
     tester,
   ) async {

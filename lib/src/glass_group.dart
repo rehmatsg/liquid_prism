@@ -90,7 +90,13 @@ class _GlassGroupLayer extends ContainerLayer {
     for (final member in data.prepared.keys) {
       final matrix = member.getTransformTo(renderBox);
       transforms[member] = matrix;
-      signature.addAll([member.shape, member.size, ...matrix.storage]);
+      signature.addAll([
+        member.shape,
+        member.size,
+        member.recipe.shadowStrength,
+        member.recipe.usesNativeControlShadow,
+        ...matrix.storage,
+      ]);
     }
     if (listEquals(_signature, signature)) return;
     _signature = signature;
@@ -100,7 +106,11 @@ class _GlassGroupLayer extends ContainerLayer {
     for (final entry in transforms.entries) {
       canvas.save();
       canvas.transform(entry.value.storage);
-      _ExteriorShadow(entry.key.shape).paint(canvas, entry.key.size);
+      _ExteriorShadow(
+        entry.key.shape,
+        strength: entry.key.recipe.shadowStrength,
+        nativeControl: entry.key.recipe.usesNativeControlShadow,
+      ).paint(canvas, entry.key.size);
       canvas.restore();
     }
     _shadows = recorder.endRecording();
@@ -278,12 +288,16 @@ class _GlassGroupData {
         for (final member in chunk) {
           final rect = bounds[member]!;
           final dpr = member.pixelRatio;
+          // Sixteen vec4 per lens: bounds, the eleven scalar uniform blocks after
+          // the texture size, then the four derived blocks after the contour.
+          final uniforms = member.uniforms(transforms[member]);
           values.addAll([
             rect.left * dpr,
             rect.top * dpr,
             rect.right * dpr,
             rect.bottom * dpr,
-            ...member.uniforms(transforms[member]).skip(2).take(36),
+            ...uniforms.skip(2).take(44),
+            ...uniforms.skip(46 + superellipseUniformCount).take(16),
           ]);
           prepared[member] = batch;
         }

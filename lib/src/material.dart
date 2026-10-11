@@ -44,11 +44,17 @@ final class GlassShape {
       isCircle = false,
       isSmooth = false,
       assert(cornerRadius >= 0 && cornerRadius <= 10000);
-  static const capsule = GlassShape._(10000, false);
+
+  /// Continuous corners with the radius clamped to half the shortest side.
+  /// Uses the same superellipse contour for optics, clipping and shadows.
+  static const capsule = GlassShape.rect(cornerRadius: 10000);
   static const circle = GlassShape._(10000, true);
   final double radius;
   final bool isCircle;
   final bool isSmooth;
+  @internal
+  double effectiveRadius(Size size) =>
+      radius.clamp(0, size.shortestSide / 2).toDouble();
   Rect rect(Size size) => isCircle
       ? Rect.fromCenter(
           center: size.center(Offset.zero),
@@ -59,8 +65,9 @@ final class GlassShape {
   RRect outline(Size size) =>
       RRect.fromRectAndRadius(rect(size), Radius.circular(radius)).scaleRadii();
   Path path(Size size) => isSmooth
-      ? RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(radius))
-            .getOuterPath(rect(size))
+      ? RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(effectiveRadius(size)),
+        ).getOuterPath(rect(size))
       : (Path()..addRRect(outline(size)));
   @override
   bool operator ==(Object other) =>

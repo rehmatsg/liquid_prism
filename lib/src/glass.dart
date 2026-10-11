@@ -201,7 +201,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
             : GlassShape.rect(cornerRadius: optics.cornerRadius));
     final recipe = GlassRecipe.resolve(
       _material,
-      LiquidPrismTheme.brightnessOf(context),
+      LiquidPrismTheme.materialBrightnessOf(context),
       widget.role,
       customOptics: optics != null,
     );
@@ -225,7 +225,13 @@ class _LiquidPrismState extends State<LiquidPrism> {
       optics?.tint ?? Color(recipe.dark ? 0x99000000 : 0x99FFFFFF),
     );
     final glass = CustomPaint(
-      painter: shader == null ? _ExteriorShadow(shape) : null,
+      painter: shader == null
+          ? _ExteriorShadow(
+              shape,
+              strength: recipe.shadowStrength,
+              nativeControl: recipe.usesNativeControlShadow,
+            )
+          : null,
       child: shader != null
           ? _GlassRenderWidget(
               shader: shader,
@@ -285,38 +291,72 @@ class _LiquidPrismState extends State<LiquidPrism> {
   }
 }
 
-/// Contact and soft shadows only darken pixels outside the glass.
+/// Contact, soft and ambient shadows only darken pixels outside the glass.
 class _ExteriorShadow extends CustomPainter {
-  const _ExteriorShadow(this.shape);
+  const _ExteriorShadow(
+    this.shape, {
+    required this.strength,
+    required this.nativeControl,
+  });
   final GlassShape shape;
+  final double strength;
+  final bool nativeControl;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final outline = shape.path(size);
+    // Geometry sets the shadow profile; mode scales opacity independently of blur.
+    final extent = shape.rect(size).shortestSide;
+    final sigma = nativeControl
+        ? NativeGlassShadow.control.radius * (2 / 3)
+        : math.min(extent * 0.1, 20.0);
+    final drop = nativeControl
+        ? NativeGlassShadow.offset
+        : math.min(extent * 0.1, 9.0);
+    final opacity = nativeControl
+        ? NativeGlassShadow.control.opacity * NativeGlassShadow.colorAlpha
+        : math.min(0.123 * math.pow(extent / 160, 2), 0.14);
     canvas.save();
     canvas.clipPath(
       Path()
         ..fillType = PathFillType.evenOdd
-        ..addRect(rect.inflate(48))
+        ..addRect(rect.inflate(math.max(48, drop + sigma * 3)))
         ..addPath(outline, Offset.zero),
     );
-    _drawOutline(
-      canvas,
-      rect,
-      const Offset(0, 1),
-      Paint()
-        ..color = const Color(0x06000000)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
-    );
-    _drawOutline(
-      canvas,
-      rect,
-      const Offset(0, 3),
-      Paint()
-        ..color = const Color(0x05000000)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
-    );
+    if (opacity > 0.002) {
+      _drawOutline(
+        canvas,
+        rect,
+        Offset(0, drop),
+        Paint()
+          ..color = Color.from(
+            alpha: opacity * strength,
+            red: 0,
+            green: 0,
+            blue: 0,
+          )
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, sigma),
+      );
+    }
+    if (!nativeControl) {
+      _drawOutline(
+        canvas,
+        rect,
+        const Offset(0, 1),
+        Paint()
+          ..color = Color(0x06000000).withValues(alpha: (6 / 255) * strength)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+      _drawOutline(
+        canvas,
+        rect,
+        const Offset(0, 3),
+        Paint()
+          ..color = Color(0x05000000).withValues(alpha: (5 / 255) * strength)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+    }
     canvas.restore();
   }
 
@@ -326,7 +366,8 @@ class _ExteriorShadow extends CustomPainter {
     final bounds = shape.rect(rect.size).shift(shift);
     if (shape.isSmooth && shape.radius > 0) {
       canvas.drawRSuperellipse(
-        BorderRadius.circular(shape.radius).toRSuperellipse(bounds),
+        BorderRadius.circular(shape.effectiveRadius(rect.size))
+            .toRSuperellipse(bounds),
         paint,
       );
     } else if (shape.isSmooth) {
@@ -343,7 +384,10 @@ class _ExteriorShadow extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ExteriorShadow oldDelegate) => shape != oldDelegate.shape;
+  bool shouldRepaint(_ExteriorShadow oldDelegate) =>
+      shape != oldDelegate.shape ||
+      strength != oldDelegate.strength ||
+      nativeControl != oldDelegate.nativeControl;
 }
 
 class _GlassRenderWidget extends SingleChildRenderObjectWidget {
@@ -396,7 +440,7 @@ class _RenderGlass extends RenderProxyBox {
     this.shader,
     this.style,
     this._shape,
-    this.recipe,
+    this._recipe,
     this.press,
     this._scale,
     this.pixelRatio,
@@ -406,7 +450,16 @@ class _RenderGlass extends RenderProxyBox {
   // frame does for this layer; only the shadow and clip geometry need a repaint.
   ui.FragmentShader shader;
   LiquidPrismStyle style;
-  GlassRecipe recipe;
+  GlassRecipe _recipe;
+  GlassRecipe get recipe => _recipe;
+  set recipe(GlassRecipe value) {
+    // Mode changes affect recorded exterior and inner shadow strength.
+    final shadowChanged =
+        value.kind != _recipe.kind || value.role != _recipe.role;
+    _recipe = value;
+    if (shadowChanged) markNeedsPaint();
+  }
+
   GlassShape _shape;
   GlassShape get shape => _shape;
   set shape(GlassShape value) {
@@ -492,10 +545,56 @@ class _RenderGlass extends RenderProxyBox {
       style.cornerRadius, pixelRatio, style.reflectionReach, style.brightness,
       ...recipe.uniforms,
       ..._contour,
+      ..._derivedUniforms(rect, m),
     ];
-    values[33] = press;
-    values[37] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
+    values[42] = press;
+    values[43] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
     return values;
+  }
+
+  /// Uniform-only terms of the optical shader (u_derived), computed once per
+  /// surface here instead of once per fragment. The layout is documented in
+  /// shaders/glass.frag; every expression mirrors the one the shader evaluated.
+  List<double> _derivedUniforms(Rect rect, List<double> m) {
+    final minExtent = math.min(rect.width, rect.height);
+    final edge = math.min(style.edgeWidth, minExtent * 0.49);
+    final displacement = math.min(style.refraction, minExtent * 0.55);
+    final dpr = pixelRatio;
+    final sigma = style.frost * dpr;
+    var broadEnd = 0.0;
+    var rimEnd = 0.0;
+    if (style.reflection > 0.001 && style.reflectionReach > 0.001) {
+      final invisible = 0.001965 / math.max(style.reflection, 0.0001);
+      broadEnd = 24 * (1 - math.sqrt(math.min(invisible / 0.32, 1)));
+      rimEnd = 4 * (1 - math.pow(math.min(invisible, 1), 2 / 3).toDouble());
+    }
+    final radius = math.min(style.cornerRadius, minExtent * 0.5);
+    // One device pixel in points, from the contour transform's scale. The
+    // smooth-corner field is bypassed only past the reflections, the lens band
+    // and the coverage ramp with its derivative quad, plus the 0.0181 r by
+    // which the round-corner depth can exceed the smooth-corner depth.
+    final det = (m[0] * m[5] - m[4] * m[1]).abs();
+    final pixel = 1 / (dpr * math.sqrt(math.max(det, 1e-8)));
+    final bypass =
+        math.max(math.max(24.0, 2.5 * pixel), edge) + 0.5 + 0.02 * radius;
+    return [
+      1 / math.max(edge, 0.001),
+      displacement,
+      style.dispersion * (2 + displacement * 0.12) * dpr,
+      0.2025 * style.frost * style.frost * dpr * dpr,
+      sigma,
+      math.max(2.25, 0.09 * sigma * sigma),
+      0.49 * sigma * sigma,
+      0,
+      broadEnd,
+      rimEnd,
+      style.frost * 0.85,
+      radius,
+      math.max(broadEnd, rimEnd),
+      1 / dpr,
+      rect.width / rect.height,
+      bypass,
+    ];
   }
 
   @override
@@ -508,7 +607,11 @@ class _RenderGlass extends RenderProxyBox {
       canvas.translate(offset.dx, offset.dy);
       final local = _scaleTransform;
       if (local != null) canvas.transform(local.storage);
-      _ExteriorShadow(shape).paint(canvas, size);
+      _ExteriorShadow(
+        shape,
+        strength: recipe.shadowStrength,
+        nativeControl: recipe.usesNativeControlShadow,
+      ).paint(canvas, size);
       canvas.restore();
     }, offset);
     // Frost runs as its own backdrop pass clipped to the contour. Composed under
@@ -556,6 +659,30 @@ class _RenderGlass extends RenderProxyBox {
       oldLayer: _clipLayer.layer,
     );
     final local = _scaleTransform;
+    if (recipe.kind != 0) {
+      final canvas = context.canvas;
+      canvas.save();
+      canvas.translate(offset.dx, offset.dy);
+      if (local != null) canvas.transform(local.storage);
+      canvas.clipPath(shape.path(size));
+      canvas.drawPath(
+        shape.path(size).shift(const Offset(0, NativeGlassShadow.offset)),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = NativeGlassShadow.ringWidth
+          ..color = Color.from(
+            alpha: NativeGlassShadow.ringOpacity * recipe.shadowStrength,
+            red: 0,
+            green: 0,
+            blue: 0,
+          )
+          ..maskFilter = const MaskFilter.blur(
+            BlurStyle.normal,
+            NativeGlassShadow.ringRadius,
+          ),
+      );
+      canvas.restore();
+    }
     if (local == null) {
       _contentLayer.layer = null;
       super.paint(context, offset);

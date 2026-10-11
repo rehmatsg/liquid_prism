@@ -20,21 +20,19 @@ final _points = [
 ];
 
 class _ReferenceClip extends CustomClipper<Path> {
-  const _ReferenceClip(this.smooth);
+  const _ReferenceClip(this.smooth, [this.radius = 30]);
+  final double radius;
   final bool smooth;
   @override
   Path getClip(Size size) => smooth
       ? (Path()..addRSuperellipse(
           ui.RSuperellipse.fromRectAndRadius(
             Offset.zero & size,
-            const Radius.circular(30),
+            Radius.circular(radius),
           ),
         ))
       : (Path()..addRRect(
-          RRect.fromRectAndRadius(
-            Offset.zero & size,
-            const Radius.circular(30),
-          ),
+          RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)),
         ));
   @override
   bool shouldReclip(_ReferenceClip oldClipper) => oldClipper.smooth != smooth;
@@ -95,6 +93,53 @@ void main() {
           }
         }
         expect(rectangle.last, square.last);
+      }
+    },
+  );
+
+  testWidgets(
+    'capsule glass and selected pill match the continuous SDK contour',
+    (tester) async {
+      final imageKey = GlobalKey();
+      Future<List<List<int>>> pixels(Widget child) async {
+        await tester.pumpWidget(
+          glassHarness(
+            imageKey: imageKey,
+            background: const Color(0xFF000000),
+            child: child,
+          ),
+        );
+        return pixelsAt(tester, imageKey, _points);
+      }
+
+      final reference = await pixels(
+        const ClipPath(clipper: _ReferenceClip(true, 40), child: _content),
+      );
+      final circular = await pixels(
+        const ClipPath(clipper: _ReferenceClip(false, 40), child: _content),
+      );
+      expect(GlassShape.capsule.isSmooth, isTrue);
+      expect(
+        reference,
+        isNot(circular),
+        reason: 'Samples distinguish the continuous capsule from circular ends',
+      );
+      for (final child in [
+        const LiquidPrism(shape: GlassShape.capsule, child: _content),
+        const LiquidPrismSelection(
+          selected: true,
+          color: Color(0x00000000),
+          blur: 0,
+          child: _content,
+        ),
+      ]) {
+        final actual = await pixels(child);
+        // Compare opaque foreground coverage: glass lighting affects only the background.
+        expect(
+          actual.map((v) => v[0] == 0 && v[1] == 255 && v[2] == 0),
+          reference.map((v) => v[0] == 0 && v[1] == 255 && v[2] == 0),
+          reason: child.runtimeType.toString(),
+        );
       }
     },
   );

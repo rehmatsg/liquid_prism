@@ -17,6 +17,7 @@ class LiquidPrismExample extends StatefulWidget {
 class _LiquidPrismExampleState extends State<LiquidPrismExample> {
   bool _dark = true, _labels = true, _clear = false, _favorite = false;
   int _selected = 0, _count = 0;
+  String _accent = 'blue';
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +29,7 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
       builder: (context, child) => LiquidPrismTheme(
         data: LiquidPrismThemeData(
           brightness: brightness,
+          tint: GlassColors(brightness).accents[_accent],
           glass: _clear ? Glass.clear : Glass.regular,
           tabBar: GlassTabBarStyle(
             labelBehavior: _labels
@@ -145,6 +147,26 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
                                         : CupertinoIcons.heart,
                                   ),
                                 ),
+                              ],
+                            ),
+                            const Text('Native tint palette'),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final entry in GlassColors.of(
+                                  context,
+                                ).accents.entries)
+                                  LiquidPrismButton(
+                                    label: 'Use ${entry.key} tint',
+                                    selected: _accent == entry.key,
+                                    glass: Glass.regular.tint(entry.value),
+                                    foregroundColor: GlassColors.of(context)
+                                        .label,
+                                    onPressed: () =>
+                                        setState(() => _accent = entry.key),
+                                    child: Text(entry.key),
+                                  ),
                               ],
                             ),
                             LiquidPrismButton(

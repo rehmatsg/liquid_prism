@@ -1,0 +1,1404 @@
+{
+  "runtime": "iOS 27.0 Simulator",
+  "method": "Owned SwiftUI fixture, live glassBackground filter inputs and CALayer model properties",
+  "captures": [
+    {
+      "source": "_research/shadow_extraction/button-light-white-06.json",
+      "sha256": "0ec171b0915a4151d83af5d3cc95f687924c6486ff94bbe8c543640d3e1ae474",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "button-light-white",
+        "scene": "button",
+        "tick": 6,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {136.33333333333331, 50.333333333333314}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/clear-shadows-light-white-06.json",
+      "sha256": "97186ecca36dc56935bf31bd75767e8ed01b568bccb092914381d82619cab6d6",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "clear-shadows-light-white",
+        "scene": "clear-shadows",
+        "tick": 6,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 160}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.3089969389957472,
+            "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+            "inputRingShadowBlurRadius": 0,
+            "inputRingShadowMask": 0,
+            "inputRingShadowOffset": 0,
+            "inputRingShadowOpacity": 0,
+            "inputRingShadowStrokeWidth": 0,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 75,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.10000000149011612
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1.2000000476837158,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 64,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0,
+            "inputShadowRadius": 0,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/2/0/1/0",
+          "bounds": "{{0, 0}, {180, 60}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.3089969389957472,
+            "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+            "inputRingShadowBlurRadius": 0,
+            "inputRingShadowMask": 0,
+            "inputRingShadowOffset": 0,
+            "inputRingShadowOpacity": 0,
+            "inputRingShadowStrokeWidth": 0,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 37.5,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.10000000149011612
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1.2000000476837158,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 24,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0,
+            "inputShadowRadius": 0,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/3/0/1/0",
+          "bounds": "{{0, 0}, {96, 96}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.3089969389957472,
+            "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+            "inputRingShadowBlurRadius": 0,
+            "inputRingShadowMask": 0,
+            "inputRingShadowOffset": 0,
+            "inputRingShadowOpacity": 0,
+            "inputRingShadowStrokeWidth": 0,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 60,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.10000000149011612
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1.2000000476837158,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 38.400000000000006,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0,
+            "inputShadowRadius": 0,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/shadows-dark-black-06.json",
+      "sha256": "c97e4db02411f3285475da665e1630701883505493d05b0a35cb0b77a62b58bf",
+      "configuration": {
+        "alpha": 1,
+        "background": "black",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "dark",
+        "run": "shadows-dark-black",
+        "scene": "shadows",
+        "tick": 6,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 160}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.3089969389957472,
+            "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.6000000238418579,
+            "inputShadowRadius": 24,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/2/0/1/0",
+          "bounds": "{{0, 0}, {180, 60}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.3089969389957472,
+            "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/3/0/1/0",
+          "bounds": "{{0, 0}, {96, 96}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.3089969389957472,
+            "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.226666659116745,
+            "inputShadowRadius": 10.666666666666666,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/shadows-light-gray-06.json",
+      "sha256": "9f79cb08e62cbfc7d441e6194aa641f3aea84905f01cbb1cb213604321ea6cd3",
+      "configuration": {
+        "alpha": 1,
+        "background": "gray",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "shadows-light-gray",
+        "scene": "shadows",
+        "tick": 6,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 160}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.4000000059604645,
+            "inputShadowRadius": 24,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/2/0/1/0",
+          "bounds": "{{0, 0}, {180, 60}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/3/0/1/0",
+          "bounds": "{{0, 0}, {96, 96}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.1599999964237213,
+            "inputShadowRadius": 10.666666666666666,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/shadows-light-white-06.json",
+      "sha256": "dad11b8a210b1bff2bf2bc710b3d244f6934c990334f3f4a55ec78e7576a3231",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "shadows-light-white",
+        "scene": "shadows",
+        "tick": 6,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 160}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.4000000059604645,
+            "inputShadowRadius": 24,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/2/0/1/0",
+          "bounds": "{{0, 0}, {180, 60}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        },
+        {
+          "path": "window0/0/0/0/3/0/1/0",
+          "bounds": "{{0, 0}, {96, 96}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.1599999964237213,
+            "inputShadowRadius": 10.666666666666666,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-100-02.json",
+      "sha256": "2e8a0103a5b9d157606e9ce0db2a2b67395c6a7c76de961f40d62c48562539d2",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-100",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 100}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.17500001192092896,
+            "inputShadowRadius": 11.5,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-120-02.json",
+      "sha256": "acd3d1befd4c73c274bcc6a88e6ff76f0ffc4657255ef1b3b9e147a7aafc4514",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-120",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 120}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.25,
+            "inputShadowRadius": 15.666666666666668,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-140-02.json",
+      "sha256": "911086cb4126dd6d86e3ceef0850ec21fab707cdbc1d6c242b048ae417975706",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-140",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 140}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.32500001788139343,
+            "inputShadowRadius": 19.833333333333332,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-160-02.json",
+      "sha256": "8eea1080a579e83c6f29816d401f4992f5119ad987b4de04f9c563aef49174ce",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-160",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 160}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.4000000059604645,
+            "inputShadowRadius": 24,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-200-02.json",
+      "sha256": "fd5577268f76681956a711ffeaf9a23de792cd8bc0f5801009bb0050945c7168",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-200",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 200}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.4000000059604645,
+            "inputShadowRadius": 24,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-32-02.json",
+      "sha256": "2e2c84b75ce872e335f91950e9b905d394ef270b89dd2983d898f38d3f173de5",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-32",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 32}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-44-02.json",
+      "sha256": "43df14cb29c279831d0d5fb37f03b88e807d62280ad7bb86c18437fa64c3ac46",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-44",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 44}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-64-02.json",
+      "sha256": "d2aa03978134d9f21e86e360359db0d528d988e4696ddcd2db57ff448af442d7",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-64",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 64}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-72-02.json",
+      "sha256": "bb964f21c472fa333c093d38308b0360294a5a13ad2748428a2faadf6d2e5f2a",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-72",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 72}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.07000000029802322,
+            "inputShadowRadius": 5.666666666666666,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-80-02.json",
+      "sha256": "41a25c0f7b38368fe37514b02fb01ab5356d14ac75420c0beb392dc67e9c5f13",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-80",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 80}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.10000000149011612,
+            "inputShadowRadius": 7.333333333333333,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-88-02.json",
+      "sha256": "411257006246f17ac78e159642cc4fcb8a5ae7c97bdf4a38df043e2d820c28c7",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-88",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 88}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.12999999523162842,
+            "inputShadowRadius": 9,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/size-96-02.json",
+      "sha256": "6c8567d10e08ca9eeb3d5c21f273685825b5a0a41e18bba81dec2106bc763537",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "size-96",
+        "scene": "shadow-size",
+        "tick": 2,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/0/0/0/1/0/1/0",
+          "bounds": "{{0, 0}, {260, 96}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.1599999964237213,
+            "inputShadowRadius": 10.666666666666666,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    },
+    {
+      "source": "_research/shadow_extraction/tabbar-light-white-06.json",
+      "sha256": "f15289d01ca7fda116ce00a2bba249ef6dd7fc4c1cc8173531fa32d91f616ac8",
+      "configuration": {
+        "alpha": 1,
+        "background": "white",
+        "disabled": false,
+        "extraction": "Live model-layer properties; no screenshot fitting",
+        "mode": "light",
+        "run": "tabbar-light-white",
+        "scene": "tabbar",
+        "tick": 6,
+        "tint": "default"
+      },
+      "layers": [
+        {
+          "path": "window0/1/0/0/0/0/1/0/1/0/0/0",
+          "bounds": "{{0, 0}, {402, 83}}",
+          "inputs": {
+            "inputKeyFillHighlightAmount": 0.4,
+            "inputKeyFillHighlightAngle": 1.5707963267948966,
+            "inputKeyFillHighlightColorBias": -0.3,
+            "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+            "inputKeyFillHighlightHeight": 0.5333333333333333,
+            "inputKeyFillHighlightSpread": 1.6755160819145565,
+            "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+            "inputRingShadowBlurRadius": 5,
+            "inputRingShadowMask": 1,
+            "inputRingShadowOffset": 8,
+            "inputRingShadowOpacity": 0.05999999865889549,
+            "inputRingShadowStrokeWidth": 4,
+            "inputSDRShadowOpacity": 0,
+            "inputShadowAmount": 0,
+            "inputShadowBlurRadius": 0,
+            "inputShadowColorMatrixBlack": 0,
+            "inputShadowColorMatrixFillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                0,
+                0,
+                0,
+                0.30000001192092896
+              ]
+            },
+            "inputShadowColorMatrixSaturation": 1,
+            "inputShadowColorMatrixWhite": 1,
+            "inputShadowDistanceOffset": 0,
+            "inputShadowHeight": 0,
+            "inputShadowOffset": {
+              "objCType": "{CGSize=dd}",
+              "value": "NSSize: {0, 8}"
+            },
+            "inputShadowOpacity": 0.03999999910593033,
+            "inputShadowRadius": 4,
+            "inputShadowVibrancyContribution": 0
+          }
+        }
+      ]
+    }
+  ]
+}

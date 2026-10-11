@@ -12,9 +12,13 @@ Put glass over content already painted in the same scene. A flat background cann
 show much refraction. Content inside the glass stays sharp. Avoid wrapping glass
 in an ancestor `Opacity` or `ImageFiltered` save layer: that can isolate its backdrop.
 
-Smooth rectangles use Flutter's continuous-corner clipping and scalar shader
-passes. Capsule and circle geometry retain their own contours. Selected pills apply
+Smooth rectangles and capsules use Flutter's continuous-corner clipping and
+scalar shader passes. Circles retain their circular contour. Selected pills apply
 an independent blur and color adjustment beneath sharp foreground content.
+
+Default regular glass also draws a separate inner ring and a negative edge
+highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
+mapping and its measured limits are described in [native shadows](native_shadows.md).
 
 ## Cost
 
@@ -32,17 +36,23 @@ moment-matched per-channel weights replace the five spectral bands. Each gate
 keeps the change below half an 8-bit step over the blurred backdrop; at zero
 frost the full paths run. The flat center skips the lens direction arithmetic,
 and highlights and reflections are evaluated only within their reach of the
-edge. Exterior shadows are drawn as rounded-rect or
+edge. The regular inner ring adds a blurred contour stroke. Exterior shadows are drawn as rounded-rect or
 rounded-superellipse primitives, so Impeller uses its analytic blur instead of
 tessellating a blurred path every frame. Press, tint and material changes update
 uniforms at composition without repainting the glass content.
 Smooth-corner distance bisects over the 64-chord arc whose vertices are computed
 once per geometry in Dart and passed as uniforms, so the search evaluates no
 `pow` or trigonometry per pixel. A terminal-segment test skips the search when
-its answer is already known, and pixels whose box depth proves they lie beyond
-every consumer of the field (26pt plus the corner slack) skip it entirely; the
-projected contour is unchanged. The circular corner sector compares against a
-precomputed cosine. Geometry and edge sampling stay at display resolution.
+its answer is already known, and pixels whose round-corner depth proves they
+lie beyond every consumer of the field (the reflections, the lens band and the
+coverage ramp) skip it entirely; the round-corner depth never exceeds the
+smooth-corner depth by more than 0.0181 of the radius, so the bound is exact
+and the projected contour is unchanged. The circular corner sector compares
+against a precomputed cosine. Terms that depend only on the surface (lens band,
+displacement, dispersion split and thresholds, frost thresholds, reflection
+ends, the smooth bypass depth) are computed once per surface in Dart and passed
+as uniforms rather than evaluated per fragment. Geometry and edge sampling stay
+at display resolution.
 
 Frost runs as its own backdrop pass clipped to the glass contour, followed by a
 shader-only optical pass. Impeller renders the input of a composed shader filter
@@ -62,7 +72,7 @@ The backdrop itself remains live: movement, scrolling, material changes and
 presses update the filter inputs during scene composition. Reusing a description
 does not eliminate the GPU work needed to filter a changing background.
 
-`LiquidPrismGroup` can share a shader pass among compatible regular capsules and
+`LiquidPrismGroup` can share a shader pass among compatible regular circular-corner shapes and
 circles:
 
 ```dart
@@ -93,10 +103,17 @@ calibrated against the iOS 27 reference. Both follow the existing contour.
 Explicit custom optics retain their diagonal lighting. This adds arithmetic to the
 optical pass without adding texture samples or a separate rendering pass.
 
-Light/dark material tint ramps come from the native reference. Regular surface
-and button luminance is calibrated over neutral backgrounds; separate light/dark
-chroma gains retain the backdrop color. Tab bars use their own material recipe. Ordinary buttons
-and selected tabs share a calibrated resting accent. Explicit foreground overrides
-remain literal; prominent buttons default to white. The shader does not reproduce
-Apple's complete backdrop-dependent adaptation or read its system blur setting.
-Use theme or widget `blur`, `optics`, and color overrides for app-owned appearance.
+The built-in regular surface, button and tab-bar face recipes use the extracted
+iOS 27 black/white levels, saturation and fill alpha. Clear glass uses its own
+extracted face values. Named material tints use full RGB matrices, and the tab
+pill uses the decoded native color matrix with normalized offsets converted to
+Flutter units. [Native color provenance](native_colors.md) records the source and
+scope. Ordinary buttons and selected tabs retain their separately calibrated
+resting foreground; explicit foreground overrides remain literal, and prominent
+buttons default to white.
+
+The shader does not reproduce Apple's complete compositor, backdrop-dependent
+appearance switching, or system blur preference. `materialBrightness` can select
+a body/pill appearance independently of the source palette. Custom optics bypass
+the built-in face recipe. Use theme or widget `blur`, `optics`, and color overrides
+for app-owned appearance.

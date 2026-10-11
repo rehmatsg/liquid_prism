@@ -13,6 +13,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   liquid_prism:
     path: ..
+  liquid_glass_easy: 4.3.0
 
 dev_dependencies:
   flutter_test:

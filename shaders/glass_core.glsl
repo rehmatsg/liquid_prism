@@ -26,8 +26,8 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
     // The frost kernel bounds the backdrop's curvature: box-integrating a width
     // under 0.3 sigma moves a channel below half an 8-bit step, and under
     // 0.7 sigma a +-1/4 pair matches the four-point rule to the same precision.
-    float sigma = u_optics.z * u_geometry.y;
-    if (stretch2 <= max(2.25, 0.09 * sigma * sigma)) return readScene(p);
+    float sigma = u_derived[1].x;
+    if (stretch2 <= u_derived[1].y) return readScene(p);
     vec2 major = dxx > dyy ? dx : dy;
     vec2 minor = dxx > dyy ? dy : dx;
     // Bound a grazing footprint while retaining subpixel integration at the rim.
@@ -36,7 +36,7 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
     // With a frost kernel of at least 2px and a short minor axis, the ±¼ pair
     // equals its midpoint well below 8-bit precision; one read covers each step.
     if (sigma >= 2. && dot(minor, minor) <= 4.) {
-        if (stretch2 <= 0.49 * sigma * sigma) {
+        if (stretch2 <= u_derived[1].z) {
             return (readScene(p - major * 0.25) + readScene(p + major * 0.25)) * 0.5;
         }
         for (int i = 0; i < 4; i++) {
@@ -55,18 +55,20 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
 #include "superellipse.glsl"
 
 // Distance, outward direction and its length for a rounded rectangle/capsule.
-// Beyond 26 points plus the corner's diagonal slack nothing reads the smooth
-// field (the profile, reflections and highlights all end within 24 points),
-// so the box depth stands in for it there.
+// Nothing reads the smooth field deeper than the reflections (24 points), the
+// lens band, or the coverage ramp and its derivative quad. The round-corner
+// depth of the same radius exceeds the smooth-corner depth by at most 0.0181 r
+// over the geometry table, so it proves that bound and its value stands in
+// beyond it; u_derived carries the resulting limit.
 vec4 shape(vec2 p) {
     vec2 rel = p - u_extent * 0.5;
-    if (u_tintBias.w > .5) {
-        vec2 qb = abs(rel) - u_extent*0.5;
-        float boxDepth = -max(qb.x,qb.y);
-        if (boxDepth > 26. + 0.4142136*min(u_geometry.x,min(u_extent.x,u_extent.y)*0.5)) return vec4(-boxDepth, 0., 0., 0.);
+    float radius = u_derived[2].w;
+    if (u_state.y > .5) {
+        vec2 qb = abs(rel) - u_extent*0.5 + radius;
+        float roundDepth = -(min(max(qb.x,qb.y),0.) + length(max(qb,0.)) - radius);
+        if (roundDepth > u_derived[3].w) return vec4(-roundDepth, 0., 0., 0.);
         return vec4(roundedSuperellipse(p), 1.);
     }
-    float radius = min(u_geometry.x, min(u_extent.x,u_extent.y) * 0.5);
     vec2 q = abs(rel) - u_extent * 0.5 + radius;
     float d = min(max(q.x,q.y),0.) + length(max(q,0.)) - radius;
     vec2 n;
@@ -126,20 +128,20 @@ void shadeGlass() {
     vec4 field = shape(local);
     float d = field.x;
     vec2 normal = field.yz;
-    float aa = 1. / u_geometry.y;
+    float aa = u_derived[3].y;
     float depth = max(-d,0.);
-    // Restrict the lens band to the available thickness to preserve a flat center.
-    float edge = min(u_optics.x,min(u_extent.x,u_extent.y)*0.49);
-    float t = clamp(1.+d/max(edge,0.001),0.,1.);
+    // The lens band is limited to the available thickness to preserve a flat
+    // center; its reciprocal and the displacement arrive precomputed.
+    float t = clamp(1.+d*u_derived[0].x,0.,1.);
     float profile = 1.-sqrt(max(1.-t*t,0.));
-    float displacement = min(u_optics.y, min(u_extent.x,u_extent.y)*0.55);
+    float displacement = u_derived[0].y;
     // The lens offset vanishes with the profile, so the flat center skips the
     // direction arithmetic. The branch follows the band contour, so SIMD groups
     // stay coherent away from its boundary.
     vec2 direction = vec2(0.);
     vec2 offset = vec2(0.);
     if (profile > 0.) {
-        vec2 centered = (local-u_extent*0.5)*vec2(1.,u_extent.x/u_extent.y);
+        vec2 centered = (local-u_extent*0.5)*vec2(1.,u_derived[3].z);
         vec2 radial = centered/max(length(centered),0.0001);
         direction = mix(normal,radial,u_finish.w);
         direction = direction/max(length(direction),0.0001)*min(field.w,1.);
@@ -163,17 +165,29 @@ void shadeGlass() {
         float outerCoverage = clamp(0.5-(d-0.533333)/aa,0.,1.);
         rimAlpha = clamp(side*u_finish.y*0.46,0.,1.)*max(outerCoverage-coverage,0.);
     }
+    // Native regular glassBackground negative key/fill highlight. The effect
+    // occupies the exterior 0.533333-point band; its -0.3 color bias darkens
+    // a white backdrop where the ordinary positive specular pass saturates.
+    if (u_material.x > .5 && u_material.x < 1.5 &&
+        u_finish.y > 0. && d > -0.5*aa) {
+        float spread = u_material.y > .5 ? 0.2588190451 : -0.2756373558;
+        float facing = clamp((abs(normal.x)-spread)/(1.-spread),0.,1.);
+        float side = facing/(1.+0.5*(1.-facing));
+        float outerCoverage = clamp(0.5-(d-0.5333333333)/aa,0.,1.);
+        rimAlpha = clamp(side*u_finish.y*0.3,0.,1.)*
+                   max(outerCoverage-coverage,0.);
+    }
     if (coverage < 0.001) { frag_color = vec4(0.,0.,0.,rimAlpha); return; }
     vec3 color;
     if (u_optics.w > 0.001 && profile > 0.001) {
         vec2 split = mat2(u_transform.x, u_transform.z, u_transform.y, u_transform.w)
-                   * (direction*(u_optics.w*(2.+displacement*0.12)*profile*u_geometry.y));
+                   * (direction*(u_derived[0].z*profile));
         // The outer bands are shared by both tap sets, so only the half-split
         // taps sit behind the divergent branch.
         vec3 outerA = filteredScene(samplePoint-split,dx,dy);
         vec3 center = filteredScene(samplePoint,dx,dy);
         vec3 outerB = filteredScene(samplePoint+split,dx,dy);
-        if (dot(split,split) <= 0.2025 * u_optics.z*u_optics.z*u_geometry.y*u_geometry.y) {
+        if (dot(split,split) <= u_derived[0].w) {
             // Over the frost kernel the five bands equal three taps whose per-channel
             // weights match the zeroth to second moments of each band kernel.
             color = outerA*vec3(0.3575,0.095,-0.0025)
@@ -193,11 +207,10 @@ void shadeGlass() {
     // radiance() moves a channel by at most w/(1+w). Past the depth where both
     // weights fall below half an 8-bit step (w < 0.001965) the terms are
     // invisible, so the reflection reads stop there instead of at 24/4 points.
-    // Both limits sit inside 24 points, so the depth test runs before their math.
-    if (depth < 24. && u_finish.z > 0.001 && u_geometry.z > 0.001) {
-        float invisible = 0.001965 / max(u_finish.z, 0.0001);
-        float broadEnd = 24. * (1. - sqrt(min(invisible / 0.32, 1.)));
-        float rimEnd = 4. * (1. - pow(min(invisible, 1.), 0.6666667));
+    // Dart derives both ends (zero without reflection or reach).
+    if (depth < u_derived[3].x) {
+        float broadEnd = u_derived[2].x;
+        float rimEnd = u_derived[2].y;
         vec2 boundary = local-normal*d;
         vec2 tangent = vec2(-normal.y,normal.x);
         float reach = u_geometry.z;
@@ -207,7 +220,7 @@ void shadeGlass() {
             // Reflection taps land outside the contour, where the backdrop is not
             // frosted; a cross of four taps one sigma apart stands in for it.
             vec2 tap = boundary+normal*(1.+depth*reach/12.);
-            float s = u_optics.z * 0.85;
+            float s = u_derived[2].z;
             vec3 reflected = s > 0.05
                 ? (sampleLocal(tap+normal*s) + sampleLocal(tap-normal*s)
                  + sampleLocal(tap+tangent*s) + sampleLocal(tap-tangent*s)) * 0.25
@@ -222,34 +235,25 @@ void shadeGlass() {
             color = radiance(color,diffuse,u_finish.z*fade*fade*0.32);
         }
     }
-    if (u_material.x > 0.5 && u_material.x < 1.5) {
-        bool dark = u_material.y > 0.5;
-        bool bar = u_material.z > 1.5 && u_material.z < 2.5;
-        float value = dot(color,vec3(0.2126,0.7152,0.0722));
-        float mapped;
-        if (bar) {
-            float black = dark ? 0.1870968 : 0.5741935;
-            float white = dark ? 0.8370968 : 1.03;
-            mapped = mix(black + value*(white-black),1.,dark ? 0. : 0.25);
-        } else {
-            // Resting regular surfaces and buttons, measured against SwiftUI
-            // over four neutral backdrops. Preserve chroma independently.
-            vec4 levels = dark ? vec4(56.,106.,151.,174.) / 255.
-                               : vec4(146.,177.,213.,241.) / 255.;
-            vec3 intervals = vec3(63.,77.,63.) / 255.;
-            vec3 slope = (levels.yzw-levels.xyz)/intervals;
-            float x = value-26./255.;
-            mapped = levels.x + slope.x*x
-                   + (slope.y-slope.x)*max(value-89./255.,0.)
-                   + (slope.z-slope.y)*max(value-166./255.,0.);
-        }
-        float saturation = bar ? (dark ? 1.3 : 1.1) : (dark ? 1.2 : 0.9);
-        float chroma = bar && !dark ? 0.75 : 1.;
-        color = clamp((color-vec3(value))*saturation*chroma + mapped,0.,1.);
+    if (u_material.x > .5) {
+        // Extracted iOS 27 gray-backdrop glassBackground face inputs. The
+        // optical/compositing implementation remains this package's renderer.
+        bool dark = u_material.y > .5;
+        bool clear = u_material.x > 1.5;
+        float value = dot(color,vec3(.2126,.7152,.0722));
+        float black = clear || dark ? .125 : .4000000059604645;
+        float white = clear ? 1.0800000429153442 :
+            (dark ? 1.100000023841858 : 1.0299999713897705);
+        float saturation = clear ? 1.059999942779541 :
+            (dark ? 1.399999976158142 : 1.2000000476837158);
+        color = (color-vec3(value))*saturation + mix(black,white,value);
+        float fill = clear || dark ? 0. : .20000000298023224;
+        color = clamp(mix(color,vec3(1.),fill),0.,1.);
     }
     if (u_material.w > 0.) {
-        float value = dot(color,vec3(0.2126,0.7152,0.0722));
-        vec3 tinted = clamp(u_tintBias.rgb + u_tintSlope.rgb * value,0.,1.);
+        vec4 inputColor = vec4(color,1.);
+        vec3 tinted = clamp(vec3(dot(u_tintRed,inputColor),
+            dot(u_tintGreen,inputColor),dot(u_tintBlue,inputColor)),0.,1.);
         color = mix(color,tinted,u_material.w);
     }
     // Vertical key/fill lighting has a sharp rim and a softer eight-point lobe.
@@ -267,11 +271,11 @@ void shadeGlass() {
         // Both matrices are mixed in by weight; at zero weight skip their arithmetic.
         if (light*u_finish.y > 0.) color = vibrantHighlight(color,light*u_finish.y);
     }
-    if (u_tintSlope.w > 0.) {
+    if (u_state.x > 0.) {
         vec3 pressed = vec3(dot(color,vec3(1.1575,-0.1431,-0.0144)),
             dot(color,vec3(-0.0425,1.0570,-0.0145)),
             dot(color,vec3(-0.0426,-0.1430,1.1856))) + 0.05;
-        color = mix(color,clamp(pressed,0.,1.),u_tintSlope.w * 0.9);
+        color = mix(color,clamp(pressed,0.,1.),u_state.x * 0.9);
     }
     frag_color = vec4(color*coverage,coverage+rimAlpha);
 }
