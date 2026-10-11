@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
 import 'controls_demo.dart';
+import 'sheet_demo.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -161,6 +162,15 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
                               child: const Text(
                                 'Switch, slider & segmented tabs',
                               ),
+                            ),
+                            LiquidPrismButton(
+                              label: 'Open sheet demo',
+                              onPressed: () => Navigator.of(context).push<void>(
+                                CupertinoPageRoute<void>(
+                                  builder: (_) => const SheetDemo(),
+                                ),
+                              ),
+                              child: const Text('Sheet'),
                             ),
                             const Text('Native tint palette'),
                             Wrap(

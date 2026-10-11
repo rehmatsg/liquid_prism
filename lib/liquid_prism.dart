@@ -19,3 +19,6 @@ export 'src/theme.dart'
 export "src/switch.dart" show LiquidPrismSwitch;
 export "src/slider.dart" show LiquidPrismSlider;
 export "src/segmented_control.dart" show LiquidPrismSegmentedControl;
+
+export 'src/sheet.dart'
+    show GlassSheetDetent, LiquidPrismSheetBuilder, showLiquidPrismSheet;

@@ -153,6 +153,35 @@ shader operators remain approximations. See [native measurements](doc/native_con
 The example gallery includes all three; `example/lib/controls_main.dart` opens
 them directly. Active/track/thumb colors can be overridden on the widgets.
 
+## Sheet
+
+```dart
+final result = await showLiquidPrismSheet<String>(
+  context: context,
+  detents: const [GlassSheetDetent.medium, GlassSheetDetent.large],
+  builder: (context, scrollController) => ListView(
+    controller: scrollController,
+    padding: const EdgeInsets.all(24),
+    children: [
+      const Text('Settings'),
+      LiquidPrismButton(
+        label: 'Done',
+        onPressed: () => Navigator.of(context).pop('Done'),
+        child: const Text('Done'),
+      ),
+    ],
+  ),
+);
+```
+
+Attach the provided controller to your body's scroll view, including for short
+content. The floating medium sheet expands to a full-width large detent and an
+opaque native palette background. Drag the handle or scroll the body to resize;
+tap outside, swipe down, use Back/Escape, or call `Navigator.pop` to dismiss.
+`isDismissible`, `enableDrag`, `showDragIndicator` and `initialDetent` configure
+interaction. Caller themes are captured across navigators; safe areas and the
+keyboard are handled by the sheet. See [native sheet measurements](doc/native_sheet_spec.md).
+
 ## App-wide appearance
 
 Wrap the app's routes or a subtree:
