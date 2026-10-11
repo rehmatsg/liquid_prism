@@ -1,0 +1,2609 @@
+{
+  "limitations": [
+    "Private glass/vibrancy kernels and localized highlights remain approximations.",
+    "Toolbar press/release timing reuses fitted button springs; the 16-point width gain is directly measured.",
+    "Search focus timing is fitted; intercepted keyboard timing is not proof of every field property binding.",
+    "Native symbol dimensions are stored; Flutter CupertinoIcons use different glyph assets.",
+    "Responsive, RTL and enlarged-text behavior are adaptive fallbacks, not separately measured native layouts."
+  ],
+  "profiles": {
+    "dark-search-filled": {
+      "content": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 28}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextField",
+          "editingRect": "{{40.333333333333329, 0}, {249.66666666666669, 28}}",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0",
+          "text": "Prism",
+          "textColor": {
+            "description": "kCGColorSpaceModelMonochrome 1 1",
+            "rgba": [
+              1.0000001192092896,
+              1.0000001192092896,
+              1.0000001192092896,
+              1
+            ]
+          },
+          "textRect": "{{40.333333333333329, 0}, {249.66666666666669, 28}}",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 491}, {326, 28}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{351, 486}, {38, 38}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.125,
+          "inputBleedColorMatrixSaturation": 1,
+          "inputBleedColorMatrixWhite": 0.5,
+          "inputBleedDarkenBlend": false,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0.8999999761581421,
+          "inputBlurFillLightenOpacity": 0,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.2427704334259033,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.125,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 0.6000000238418579,
+          "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+          "inputFaceColorMatrixSaturation": 1.399999976158142,
+          "inputFaceColorMatrixWhite": 1.100000023841858,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.3089969389957472,
+          "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 481}, {326, 48}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {48, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{346, 481}, {48, 48}}"
+        }
+      ]
+    },
+    "dark-search-focused": {
+      "content": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 28}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextField",
+          "editingRect": "{{40.333333333333329, 0}, {285.66666666666669, 28}}",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0",
+          "text": "",
+          "textColor": {
+            "description": "kCGColorSpaceModelMonochrome 1 1",
+            "rgba": [
+              1.0000001192092896,
+              1.0000001192092896,
+              1.0000001192092896,
+              1
+            ]
+          },
+          "textRect": "{{40.333333333333329, 0}, {285.66666666666669, 28}}",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 491}, {326, 28}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.921569 0.921569 0.960784 0.6",
+            "rgba": [
+              0.9215686274509803,
+              0.9215686274509803,
+              0.9607843137254902,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{48.333333333333329, 495}, {53.333333333333329, 20.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2/0",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.921569 0.921569 0.960784 0.6",
+            "rgba": [
+              0.9215686274509803,
+              0.9215686274509803,
+              0.9607843137254902,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{48.333333333333329, 495}, {53.333333333333329, 20.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{351, 486}, {38, 38}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.125,
+          "inputBleedColorMatrixSaturation": 1,
+          "inputBleedColorMatrixWhite": 0.5,
+          "inputBleedDarkenBlend": false,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0.8999999761581421,
+          "inputBlurFillLightenOpacity": 0,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.2427704334259033,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.125,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 0.6000000238418579,
+          "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+          "inputFaceColorMatrixSaturation": 1.399999976158142,
+          "inputFaceColorMatrixWhite": 1.100000023841858,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.3089969389957472,
+          "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 481}, {326, 48}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {48, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{346, 481}, {48, 48}}"
+        }
+      ]
+    },
+    "dark-search-rest": {
+      "content": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {346, 28}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextField",
+          "editingRect": "{{40.333333333333329, 0}, {305.66666666666669, 28}}",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0",
+          "text": "",
+          "textColor": {
+            "description": "kCGColorSpaceModelMonochrome 1 1",
+            "rgba": [
+              1.0000001192092896,
+              1.0000001192092896,
+              1.0000001192092896,
+              1
+            ]
+          },
+          "textRect": "{{40.333333333333329, 0}, {305.66666666666669, 28}}",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{28, 808}, {346, 28}}"
+        },
+        {
+          "accessibilityIdentifier": "magnifyingglass",
+          "bounds": "{{0, 0}, {20.333333333333332, 19.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{20.333333333333332, 19.333333333333332}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelMonochrome 1 1",
+            "rgba": [
+              1.0000001192092896,
+              1.0000001192092896,
+              1.0000001192092896,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{40, 812}, {20.333333333333329, 19.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.921569 0.921569 0.960784 0.6",
+            "rgba": [
+              0.9215686274509803,
+              0.9215686274509803,
+              0.9607843137254902,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{68.333333333333329, 812}, {53.333333333333329, 20.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2/0",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.921569 0.921569 0.960784 0.6",
+            "rgba": [
+              0.9215686274509803,
+              0.9215686274509803,
+              0.9607843137254902,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{68.333333333333329, 812}, {53.333333333333329, 20.333333333333371}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.125,
+          "inputBleedColorMatrixSaturation": 1,
+          "inputBleedColorMatrixWhite": 0.5,
+          "inputBleedDarkenBlend": false,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0.8999999761581421,
+          "inputBlurFillLightenOpacity": 0,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.2427704334259033,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.125,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 0.6000000238418579,
+          "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+          "inputFaceColorMatrixSaturation": 1.399999976158142,
+          "inputFaceColorMatrixWhite": 1.100000023841858,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.3089969389957472,
+          "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {346, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{28, 798}, {346, 48}}"
+        }
+      ]
+    },
+    "dark-toolbar-rest": {
+      "content": [
+        {
+          "accessibilityIdentifier": "favorite",
+          "bounds": "{{0, 0}, {42.333333333333336, 36}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{231, 66}, {42.333333333333314, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "share",
+          "bounds": "{{0, 0}, {38.666666666666664, 36}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/1/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{289.33333333333331, 66}, {38.666666666666686, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "more",
+          "bounds": "{{0, 0}, {38, 36}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/2/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{344, 66}, {38, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "back",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{33, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "forward",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/1/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{85, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "compose",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{331, 803}, {38, 38}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 15.399999999999999,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.125,
+          "inputBleedColorMatrixSaturation": 1,
+          "inputBleedColorMatrixWhite": 0.5,
+          "inputBleedDarkenBlend": false,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 15.399999999999999,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -22,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0.8999999761581421,
+          "inputBlurFillLightenOpacity": 0,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.2427704334259033,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.125,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 0.6000000238418579,
+          "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+          "inputFaceColorMatrixSaturation": 1.399999976158142,
+          "inputFaceColorMatrixWhite": 1.100000023841858,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -22,
+          "inputInnerRefractionHeight": 11,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.3089969389957472,
+          "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        },
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.125,
+          "inputBleedColorMatrixSaturation": 1,
+          "inputBleedColorMatrixWhite": 0.5,
+          "inputBleedDarkenBlend": false,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0.8999999761581421,
+          "inputBlurFillLightenOpacity": 0,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.2427704334259033,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.125,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 0.6000000238418579,
+          "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+          "inputFaceColorMatrixSaturation": 1.399999976158142,
+          "inputFaceColorMatrixWhite": 1.100000023841858,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.3089969389957472,
+          "inputKeyFillHighlightSpreadSDR": 1.3089969389957472,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {159, 44}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{227, 62}, {159, 44}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {100, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{28, 798}, {100, 48}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {48, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{326, 798}, {48, 48}}"
+        }
+      ]
+    },
+    "light-search-filled": {
+      "content": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 28}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextField",
+          "editingRect": "{{40.333333333333329, 0}, {249.66666666666669, 28}}",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0",
+          "text": "Prism",
+          "textColor": {
+            "description": "kCGColorSpaceModelMonochrome 0 1",
+            "rgba": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "textRect": "{{40.333333333333329, 0}, {249.66666666666669, 28}}",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 491}, {326, 28}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{351, 486}, {38, 38}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.8999999761581421,
+          "inputBleedColorMatrixSaturation": 1.2000000476837158,
+          "inputBleedColorMatrixWhite": 1,
+          "inputBleedDarkenBlend": true,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0,
+          "inputBlurFillLightenOpacity": 0.8999999761581421,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.0696101188659668,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.4000000059604645,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              1,
+              1,
+              1,
+              0.20000000298023224
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 1,
+          "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+          "inputFaceColorMatrixSaturation": 1.2000000476837158,
+          "inputFaceColorMatrixWhite": 1.0299999713897705,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.6755160819145565,
+          "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 481}, {326, 48}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {48, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{346, 481}, {48, 48}}"
+        }
+      ]
+    },
+    "light-search-focused": {
+      "content": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 28}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextField",
+          "editingRect": "{{40.333333333333329, 0}, {285.66666666666669, 28}}",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0",
+          "text": "",
+          "textColor": {
+            "description": "kCGColorSpaceModelMonochrome 0 1",
+            "rgba": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "textRect": "{{40.333333333333329, 0}, {285.66666666666669, 28}}",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 491}, {326, 28}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.235294 0.235294 0.262745 0.6",
+            "rgba": [
+              0.23529411764705882,
+              0.23529411764705882,
+              0.2627450980392157,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{48.333333333333329, 495}, {53.333333333333329, 20.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2/0",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.235294 0.235294 0.262745 0.6",
+            "rgba": [
+              0.23529411764705882,
+              0.23529411764705882,
+              0.2627450980392157,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{48.333333333333329, 495}, {53.333333333333329, 20.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{351, 486}, {38, 38}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.8999999761581421,
+          "inputBleedColorMatrixSaturation": 1.2000000476837158,
+          "inputBleedColorMatrixWhite": 1,
+          "inputBleedDarkenBlend": true,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0,
+          "inputBlurFillLightenOpacity": 0.8999999761581421,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.0696101188659668,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.4000000059604645,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              1,
+              1,
+              1,
+              0.20000000298023224
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 1,
+          "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+          "inputFaceColorMatrixSaturation": 1.2000000476837158,
+          "inputFaceColorMatrixWhite": 1.0299999713897705,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.6755160819145565,
+          "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {326, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{8, 481}, {326, 48}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {48, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{346, 481}, {48, 48}}"
+        }
+      ]
+    },
+    "light-search-rest": {
+      "content": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {346, 28}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextField",
+          "editingRect": "{{40.333333333333329, 0}, {305.66666666666669, 28}}",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0",
+          "text": "",
+          "textColor": {
+            "description": "kCGColorSpaceModelMonochrome 0 1",
+            "rgba": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "textRect": "{{40.333333333333329, 0}, {305.66666666666669, 28}}",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{28, 808}, {346, 28}}"
+        },
+        {
+          "accessibilityIdentifier": "magnifyingglass",
+          "bounds": "{{0, 0}, {20.333333333333332, 19.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{20.333333333333332, 19.333333333333332}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelMonochrome 0 1",
+            "rgba": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{40, 812}, {20.333333333333329, 19.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.235294 0.235294 0.262745 0.6",
+            "rgba": [
+              0.23529411764705882,
+              0.23529411764705882,
+              0.2627450980392157,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{68.333333333333329, 812}, {53.333333333333329, 20.333333333333371}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {53.333333333333336, 20.333333333333332}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UISearchBarTextFieldLabel",
+          "font": {
+            "name": ".SFUI-Regular",
+            "size": 17
+          },
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/2/0",
+          "text": "Search",
+          "textColor": {
+            "description": "kCGColorSpaceModelRGB 0.235294 0.235294 0.262745 0.6",
+            "rgba": [
+              0.23529411764705882,
+              0.23529411764705882,
+              0.2627450980392157,
+              0.6
+            ]
+          },
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{68.333333333333329, 812}, {53.333333333333329, 20.333333333333371}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.8999999761581421,
+          "inputBleedColorMatrixSaturation": 1.2000000476837158,
+          "inputBleedColorMatrixWhite": 1,
+          "inputBleedDarkenBlend": true,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0,
+          "inputBlurFillLightenOpacity": 0.8999999761581421,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.0696101188659668,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.4000000059604645,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              1,
+              1,
+              1,
+              0.20000000298023224
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 1,
+          "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+          "inputFaceColorMatrixSaturation": 1.2000000476837158,
+          "inputFaceColorMatrixWhite": 1.0299999713897705,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.6755160819145565,
+          "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {346, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{28, 798}, {346, 48}}"
+        }
+      ]
+    },
+    "light-toolbar-rest": {
+      "content": [
+        {
+          "accessibilityIdentifier": "favorite",
+          "bounds": "{{0, 0}, {42.333333333333336, 36}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{231, 66}, {42.333333333333314, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "share",
+          "bounds": "{{0, 0}, {38.666666666666664, 36}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/1/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{289.33333333333331, 66}, {38.666666666666686, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "more",
+          "bounds": "{{0, 0}, {38, 36}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/2/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{344, 66}, {38, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "back",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{33, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "forward",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/1/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{85, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "compose",
+          "bounds": "{{0, 0}, {38, 38}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_UIButtonBarButton",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{331, 803}, {38, 38}}"
+        }
+      ],
+      "glassBackgroundInputs": [
+        {
+          "inputBleedAmount": 15.399999999999999,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.8999999761581421,
+          "inputBleedColorMatrixSaturation": 1.2000000476837158,
+          "inputBleedColorMatrixWhite": 1,
+          "inputBleedDarkenBlend": true,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 15.399999999999999,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -22,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0,
+          "inputBlurFillLightenOpacity": 0.8999999761581421,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.0696101188659668,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.4000000059604645,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              1,
+              1,
+              1,
+              0.20000000298023224
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 1,
+          "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+          "inputFaceColorMatrixSaturation": 1.2000000476837158,
+          "inputFaceColorMatrixWhite": 1.0299999713897705,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -22,
+          "inputInnerRefractionHeight": 11,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.6755160819145565,
+          "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        },
+        {
+          "inputBleedAmount": 16.799999999999997,
+          "inputBleedBlurRadius": 0,
+          "inputBleedColorMatrixBlack": 0.8999999761581421,
+          "inputBleedColorMatrixSaturation": 1.2000000476837158,
+          "inputBleedColorMatrixWhite": 1,
+          "inputBleedDarkenBlend": true,
+          "inputBleedDistance0": 1,
+          "inputBleedDistance1": 0,
+          "inputBleedHeight": 16.799999999999997,
+          "inputBleedOpacity": 0,
+          "inputBlurDistance0": -24,
+          "inputBlurDistance1": -1,
+          "inputBlurDistance2": 0,
+          "inputBlurDistance3": 0,
+          "inputBlurFillBlurRadius": 8,
+          "inputBlurFillDarkenOpacity": 0,
+          "inputBlurFillLightenOpacity": 0.8999999761581421,
+          "inputBlurFillNormalOpacity": 0.5,
+          "inputBlurOpacity0": 0,
+          "inputBlurOpacity1": 0,
+          "inputBlurOpacity2": 0.5,
+          "inputBlurOpacity3": 1,
+          "inputBlurRadius": 5,
+          "inputClamp": 1.0696101188659668,
+          "inputClampPreserveHue": false,
+          "inputFaceColorMatrixBlack": 0.4000000059604645,
+          "inputFaceColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              1,
+              1,
+              1,
+              0.20000000298023224
+            ]
+          },
+          "inputFaceColorMatrixMaxLuma": 1,
+          "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+          "inputFaceColorMatrixSaturation": 1.2000000476837158,
+          "inputFaceColorMatrixWhite": 1.0299999713897705,
+          "inputFaceOpacity": 1,
+          "inputInnerRefractionAmount": -24,
+          "inputInnerRefractionHeight": 12,
+          "inputKeyFillHighlightAmount": 0.4,
+          "inputKeyFillHighlightAngle": 1.5707963267948966,
+          "inputKeyFillHighlightColorBias": -0.3,
+          "inputKeyFillHighlightEffectOffset": -0.5333333333333333,
+          "inputKeyFillHighlightHeight": 0.5333333333333333,
+          "inputKeyFillHighlightSpread": 1.6755160819145565,
+          "inputKeyFillHighlightSpreadSDR": 1.8500490071139892,
+          "inputMaxHeadroom": 9999,
+          "inputOuterRefractionAmount": 16,
+          "inputOuterRefractionHeight": 16,
+          "inputRefractionDistance0": -1,
+          "inputRefractionDistance1": 0,
+          "inputRefractionOpacity": 0.6000000238418579,
+          "inputRingShadowBlurRadius": 5,
+          "inputRingShadowMask": 1,
+          "inputRingShadowOffset": 8,
+          "inputRingShadowOpacity": 0.05999999865889549,
+          "inputRingShadowStrokeWidth": 4,
+          "inputSDRGradientDistance0": 0,
+          "inputSDRGradientDistance1": 0,
+          "inputSDRHoldingToneEnabled": false,
+          "inputSDRHoldingToneWhite": 1,
+          "inputSDRShadowOpacity": 0,
+          "inputShadowAmount": 0,
+          "inputShadowBlurRadius": 0,
+          "inputShadowColorMatrixBlack": 0,
+          "inputShadowColorMatrixFillColor": {
+            "colorSpace": "kCGColorSpaceExtendedSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              0.30000001192092896
+            ]
+          },
+          "inputShadowColorMatrixSaturation": 1,
+          "inputShadowColorMatrixWhite": 1,
+          "inputShadowDistanceOffset": 0,
+          "inputShadowHeight": 0,
+          "inputShadowOffset": {
+            "objCType": "{CGSize=dd}",
+            "value": "NSSize: {0, 8}"
+          },
+          "inputShadowOpacity": 0.03999999910593033,
+          "inputShadowRadius": 4,
+          "inputShadowVibrancyContribution": 0,
+          "inputSourceSublayerName": "@0"
+        }
+      ],
+      "surfaces": [
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {159, 44}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{227, 62}, {159, 44}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {100, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{28, 798}, {100, 48}}"
+        },
+        {
+          "accessibilityIdentifier": "",
+          "bounds": "{{0, 0}, {48, 48}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "_TtC5UIKitP33_F83AB3ECBB2C378B4FCEB681A4D7DB7430UIPlatformGlassInteractionView",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{326, 798}, {48, 48}}"
+        }
+      ]
+    }
+  },
+  "rawSHA256": {
+    "layers/chrome-dark-search-filled.json": "b8e5d9f0afc43b613321f3d504e1627c3c4eedc98f32f917f100208c3a478cbe",
+    "layers/chrome-dark-search-focused.json": "8b5beb75e53907ef002fbae4929227bc293978e11a5608781699f22732e71670",
+    "layers/chrome-dark-search-rest.json": "89a2e96fd2898c2d0c6aea9b6551aad283e7818b3c558b1b7f647c1da47d8cf6",
+    "layers/chrome-dark-toolbar-contact-10.377.json": "71bf68183023248de44ae84f247711fa21976e233f9474f2c3beb47914efcdc5",
+    "layers/chrome-dark-toolbar-contact-5.790.json": "fc32521e3dc116fad84bbb4e331dee7a1905288c458b0a6602fa84bdb188c5f3",
+    "layers/chrome-dark-toolbar-contact-5.838.json": "5fee154a7c89b5d441a6548b95e484c94267ab53e4167ec074f94383ebc59fa2",
+    "layers/chrome-dark-toolbar-contact-5.879.json": "eec69bcc8007212e7054f63d4ef096e0fd49eea8787becf00240797ecaa65ded",
+    "layers/chrome-dark-toolbar-contact-5.976.json": "d5b761083b449b40064bd6e4c5957b030744deb63aaa37453f4a25b665e31df5",
+    "layers/chrome-dark-toolbar-contact-8.055.json": "17041603b5f0be4a08f2c315303a7a9e4fba0da73410f07aceae05772eb42540",
+    "layers/chrome-dark-toolbar-contact-8.070.json": "1e3a647997b99855af653623b58ff564c87b2d98da316bc107e7f3659e934ccb",
+    "layers/chrome-dark-toolbar-contact-8.154.json": "3e1a72a610a4166da63e053a190163cce0f74cd7c1b2b957d2392da327da6225",
+    "layers/chrome-dark-toolbar-contact-8.240.json": "923d65cf0efd43e9ac0cfc511f61f18e4ef163c820af7a40ed06ed00950836e8",
+    "layers/chrome-dark-toolbar-rest.json": "5a7e3bb2ae8d1e3e991e1b0bf9a514eb0e518d951951c8b1ee0c935bea66a98f",
+    "layers/chrome-light-search-filled.json": "3e15cbe9e5ea7c06a42adca6edb289dd48eb5b795e89bd1188fd549ea2763229",
+    "layers/chrome-light-search-focused.json": "e283cc25be87ef1cef621c8f9df450fdc9a1d63120834f9d604ea9219d9b6e93",
+    "layers/chrome-light-search-rest.json": "1f6ac73edd041081604bc6b7cb9d3b397aa18995a5f457a13acef4ae78e97148",
+    "layers/chrome-light-toolbar-rest.json": "142a556ce9b99e5475356f97c34a0603343afbc3e2723dcffd66d57b557f9edf",
+    "specs/chrome-dark-search-focused.json": "c56332dfaf5895470d368ee8ce2557ba6ea5875e2ef61b08553ed32c77201342",
+    "specs/chrome-light-search-focused.json": "2cb29eb91f7dfe07a4f6e2dfc44d991bbb2df198028dfdca8f9186da60ba9769"
+  },
+  "reference": {
+    "device": "iPhone 17",
+    "runtime": "iOS 27.0 (24A5370g)",
+    "scale": 3,
+    "screenPoints": [
+      402,
+      874
+    ]
+  },
+  "searchTimingConstructors": [
+    {
+      "arguments": {
+        "duration": 0.3833,
+        "timing": {
+          "class": "UICubicTimingParameters",
+          "properties": {
+            "animationCurve": 6,
+            "controlPoint1": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.41999998688697815, 0}"
+            },
+            "controlPoint2": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.57999998331069946, 1}"
+            },
+            "cubicTimingParameters": "<UICubicTimingParameters (0x704ea3d830) timing function = <_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>>",
+            "timingCurveType": 1,
+            "timingFunction": "<_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>"
+          }
+        }
+      },
+      "method": "initWithDuration:timingParameters:",
+      "owner": "35  UIKitCore                           0x000000012856a460 -[_UISearchControllerInPlaceSearchBarAnimator animateTransition:]"
+    },
+    {
+      "arguments": {
+        "duration": 0.3833,
+        "timing": {
+          "class": "UICubicTimingParameters",
+          "properties": {
+            "animationCurve": 6,
+            "controlPoint1": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.41999998688697815, 0}"
+            },
+            "controlPoint2": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.57999998331069946, 1}"
+            },
+            "cubicTimingParameters": "<UICubicTimingParameters (0x704ea74ff0) timing function = <_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>>",
+            "timingCurveType": 1,
+            "timingFunction": "<_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>"
+          }
+        }
+      },
+      "method": "initWithDuration:timingParameters:",
+      "owner": "26  UIKitCore                           0x000000012856a460 -[_UISearchControllerInPlaceSearchBarAnimator animateTransition:]"
+    },
+    {
+      "arguments": {
+        "duration": 0.3833,
+        "timing": {
+          "class": "UICubicTimingParameters",
+          "properties": {
+            "animationCurve": 6,
+            "controlPoint1": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.41999998688697815, 0}"
+            },
+            "controlPoint2": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.57999998331069946, 1}"
+            },
+            "cubicTimingParameters": "<UICubicTimingParameters (0x704dc0fbd0) timing function = <_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>>",
+            "timingCurveType": 1,
+            "timingFunction": "<_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>"
+          }
+        }
+      },
+      "method": "initWithDuration:timingParameters:",
+      "owner": "35  UIKitCore                           0x0000000128642460 -[_UISearchControllerInPlaceSearchBarAnimator animateTransition:]"
+    },
+    {
+      "arguments": {
+        "duration": 0.3833,
+        "timing": {
+          "class": "UICubicTimingParameters",
+          "properties": {
+            "animationCurve": 6,
+            "controlPoint1": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.41999998688697815, 0}"
+            },
+            "controlPoint2": {
+              "objCType": "{CGPoint=dd}",
+              "value": "NSPoint: {0.57999998331069946, 1}"
+            },
+            "cubicTimingParameters": "<UICubicTimingParameters (0x704e5828b0) timing function = <_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>>",
+            "timingCurveType": 1,
+            "timingFunction": "<_UIViewCubicTimingFunction point1 = {0.41999998688697815, 0} point2 = {0.57999998331069946, 1}>"
+          }
+        }
+      },
+      "method": "initWithDuration:timingParameters:",
+      "owner": "26  UIKitCore                           0x0000000128642460 -[_UISearchControllerInPlaceSearchBarAnimator animateTransition:]"
+    }
+  ],
+  "toolbarHeldGeometry": {
+    "100x48": {
+      "bounds": [
+        100.0,
+        48.0
+      ],
+      "capture": "chrome-dark-toolbar-contact-8.154.json",
+      "heldSize": [
+        115.99999999999999,
+        55.67999999999999
+      ],
+      "scale": 1.16
+    },
+    "159x44": {
+      "bounds": [
+        159.0,
+        44.0
+      ],
+      "capture": "chrome-dark-toolbar-contact-5.790.json",
+      "heldSize": [
+        175.0,
+        48.42767295597484
+      ],
+      "scale": 1.10062893081761
+    },
+    "48x48": {
+      "bounds": [
+        48.0,
+        48.0
+      ],
+      "capture": "chrome-dark-toolbar-contact-10.377.json",
+      "heldSize": [
+        64.0,
+        64.0
+      ],
+      "scale": 1.3333333333333333
+    }
+  }
+}

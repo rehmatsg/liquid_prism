@@ -13,6 +13,8 @@ enum GlassRole {
   controlThumb,
   segmentLens,
   sheet,
+  toolbar,
+  searchField,
 }
 
 final class GlassRecipe {
@@ -59,7 +61,9 @@ final class GlassRecipe {
       ],
     ];
     return GlassRecipe(
-      role == GlassRole.sheet
+      (role == GlassRole.sheet ||
+              role == GlassRole.toolbar ||
+              role == GlassRole.searchField)
           ? (glass.variant == GlassVariant.clear ? 2 : 1)
           : role == GlassRole.controlThumb
           ? 4

@@ -182,6 +182,43 @@ tap outside, swipe down, use Back/Escape, or call `Navigator.pop` to dismiss.
 interaction. Caller themes are captured across navigators; safe areas and the
 keyboard are handled by the sheet. See [native sheet measurements](doc/native_sheet_spec.md).
 
+## Toolbar groups and search
+
+```dart
+LiquidPrismToolbarGroup(
+  items: [
+    GlassToolbarItem(
+      label: 'Previous',
+      icon: const Icon(CupertinoIcons.chevron_left),
+      onPressed: previous,
+    ),
+    GlassToolbarItem(
+      label: 'Next',
+      icon: const Icon(CupertinoIcons.chevron_right),
+      onPressed: next,
+    ),
+  ],
+);
+
+LiquidPrismSearchField(
+  controller: searchController,
+  onChanged: filterResults,
+  onSubmitted: runSearch,
+);
+```
+
+Toolbar items share a continuous capsule and lift together on hold. The default
+bottom size is 48 points; `GlassToolbarSize.navigation` uses 44. Place separate
+groups in a Row with gaps or spacers. Null callbacks disable individual actions;
+the group scrolls in narrow parents. Item widths can match a specific symbol.
+
+The search field includes clear and focused cancel actions, uses the shared
+palette, and supports caller-owned controllers/focus nodes. Give it a bounded
+width and handle keyboard avoidance in the containing layout. For the native
+bottom arrangement, use an 8-point parent inset and `restingInset: 20`.
+The gallery and `example/lib/chrome_main.dart` demonstrate both components.
+See [native measurements and remaining approximations](doc/native_chrome_spec.md).
+
 ## App-wide appearance
 
 Wrap the app's routes or a subtree:

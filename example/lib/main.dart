@@ -3,6 +3,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import 'controls_demo.dart';
 import 'sheet_demo.dart';
+import 'chrome_demo.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -173,6 +174,15 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
                               child: const Text('Sheet'),
                             ),
                             const Text('Native tint palette'),
+                            LiquidPrismButton(
+                              label: 'Open toolbar and search',
+                              onPressed: () => Navigator.of(context).push<void>(
+                                CupertinoPageRoute<void>(
+                                  builder: (_) => const ChromeDemo(),
+                                ),
+                              ),
+                              child: const Text('Toolbar & search'),
+                            ),
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,

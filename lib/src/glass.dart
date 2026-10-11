@@ -285,7 +285,9 @@ class _LiquidPrismState extends State<LiquidPrism> {
             ),
     );
     // The fallback blur tolerates a transform; the shader path scales itself.
-    return shader == null && pressScale != 1
+    // Keep the subtree stable at unity: removing this wrapper would cancel
+    // gestures and focus owned by controls inside a shared glass surface.
+    return shader == null
         ? Transform.scale(scale: pressScale, child: glass)
         : glass;
   }

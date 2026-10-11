@@ -1,0 +1,42 @@
+name: ChromeSpecs
+options:
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    CLANG_ENABLE_OBJC_ARC: YES
+    CODE_SIGNING_ALLOWED: NO
+targets:
+  ChromeSpecs:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.prism.chromespec
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Extractor.h
+  ChromeSpecsTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: ChromeSpecs
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.prism.chromespec.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  ChromeSpecs:
+    build:
+      targets:
+        ChromeSpecs: all
+        ChromeSpecsTests: [test]
+    test:
+      targets: [ChromeSpecsTests]

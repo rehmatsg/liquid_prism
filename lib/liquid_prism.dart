@@ -22,3 +22,6 @@ export "src/segmented_control.dart" show LiquidPrismSegmentedControl;
 
 export 'src/sheet.dart'
     show GlassSheetDetent, LiquidPrismSheetBuilder, showLiquidPrismSheet;
+export 'src/toolbar.dart'
+    show GlassToolbarSize, GlassToolbarItem, LiquidPrismToolbarGroup;
+export 'src/search_field.dart' show LiquidPrismSearchField;
