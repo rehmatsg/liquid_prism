@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
+import 'controls_demo.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LiquidPrism.preload();
@@ -148,6 +150,17 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
                                   ),
                                 ),
                               ],
+                            ),
+                            LiquidPrismButton(
+                              label: 'Open controls',
+                              onPressed: () => Navigator.of(context).push<void>(
+                                CupertinoPageRoute<void>(
+                                  builder: (_) => const ControlsDemo(),
+                                ),
+                              ),
+                              child: const Text(
+                                'Switch, slider & segmented tabs',
+                              ),
                             ),
                             const Text('Native tint palette'),
                             Wrap(

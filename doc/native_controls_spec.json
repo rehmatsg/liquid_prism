@@ -1,0 +1,2001 @@
+{
+  "colors": {
+    "dark": {
+      "segmentedTrackCenterPremultipliedRGBA": [
+        28,
+        28,
+        31,
+        61
+      ],
+      "sliderTrackLayers": [
+        {
+          "backgroundColor": {
+            "colorSpace": "kCGColorSpaceExtendedGray",
+            "components": [
+              1,
+              0.1
+            ]
+          },
+          "frame": "{{0, 0}, {300, 6}}"
+        },
+        {
+          "backgroundColor": {
+            "colorSpace": "kCGColorSpaceSRGB",
+            "components": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "frame": "{{0, 0}, {123.70000156760216, 6}}"
+        }
+      ]
+    },
+    "light": {
+      "segmentedTrackCenterPremultipliedRGBA": [
+        14,
+        14,
+        15,
+        31
+      ],
+      "sliderTrackLayers": [
+        {
+          "backgroundColor": {
+            "colorSpace": "kCGColorSpaceExtendedGray",
+            "components": [
+              0,
+              0.1
+            ]
+          },
+          "frame": "{{0, 0}, {300, 6}}"
+        },
+        {
+          "backgroundColor": {
+            "colorSpace": "kCGColorSpaceSRGB",
+            "components": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "frame": "{{0, 0}, {123.70000156760216, 6}}"
+        }
+      ]
+    }
+  },
+  "fluidSliderSettings": {
+    "class": "_UIFluidSliderSettings",
+    "properties": {
+      "defaultStretchAmount": 50,
+      "discreteButtonDriverSettings": {
+        "class": "_UIFluidSliderDiscreteButtonDriverSettings",
+        "properties": {
+          "acceleratedUpdate": {
+            "class": "_UISpringAnimationPrototypeSettings",
+            "properties": {
+              "dampingRatio": 1,
+              "response": 0.3
+            }
+          },
+          "horizontalVolumeDownScale": 0.96,
+          "horizontalVolumeUpScale": 1.03,
+          "minimumPressDuration": 0.25,
+          "repeatCadence": 0.041666666666666664,
+          "repeatDelay": 0.333,
+          "settle": {
+            "class": "_UISpringAnimationPrototypeSettings",
+            "properties": {
+              "dampingRatio": 1,
+              "response": 0.6
+            }
+          },
+          "update": {
+            "class": "_UISpringAnimationPrototypeSettings",
+            "properties": {
+              "dampingRatio": 1,
+              "response": 0.3
+            }
+          },
+          "verticalVolumeDownScale": 0.92,
+          "verticalVolumeUpScale": 1.06
+        }
+      },
+      "elasticPanDriverSettings": {
+        "class": "_UIFluidSliderElasticPanDriverSettings",
+        "properties": {
+          "acceleratedUpdate": {
+            "class": "_UISpringAnimationPrototypeSettings",
+            "properties": {
+              "dampingRatio": 1,
+              "response": 0.3
+            }
+          },
+          "projectionThreshold": 10,
+          "update": {
+            "class": "_UISpringAnimationPrototypeSettings",
+            "properties": {
+              "dampingRatio": 1,
+              "response": 0.4
+            }
+          }
+        }
+      },
+      "minSquishPoints": 4,
+      "pressScale": {
+        "class": "_UISpringAnimationPrototypeSettings",
+        "properties": {
+          "dampingRatio": 0.9,
+          "response": 0.8
+        }
+      },
+      "programmaticUpdate": {
+        "class": "_UISpringAnimationPrototypeSettings",
+        "properties": {
+          "dampingRatio": 0.8,
+          "response": 0.4
+        }
+      },
+      "sliderDriftFactor": 0.27,
+      "sliderStepCount": 16,
+      "squishFactor": 0.92
+    }
+  },
+  "limitations": [
+    "Private Core Animation glass filter kernels and SDF operators are not reproduced exactly.",
+    "Velocity-to-flex coupling is approximated; the scale spring settings are directly extracted.",
+    "Captured native font grade G3 is not exposed by Flutter system fonts.",
+    "Only default phone controls, light/dark, continuous slider and three text segments were captured."
+  ],
+  "profiles": {
+    "segmented": {
+      "flexVariant": 4,
+      "heldLens": {
+        "bounds": "{{0, 0}, {120, 44}}",
+        "frame": "{{90, -6}, {120, 44}}",
+        "transform": "[1, 0, 0, 1, 0, 0]"
+      },
+      "layerShadows": [
+        {
+          "frame": "{{0, 0}, {120, 44}}",
+          "shadowColor": {
+            "colorSpace": "kCGColorSpaceSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "shadowOffset": "{0, 7}",
+          "shadowOpacity": 0.05999999865889549,
+          "shadowRadius": 3
+        }
+      ],
+      "lensSpec": {
+        "class": "UIKit._UILiquidLensViewLargeVariantSpec",
+        "properties": {
+          "contentWrapperDisplacement": -17.5,
+          "innerShadowOffsetY": 7,
+          "innerShadowOpacity": 0.06,
+          "innerShadowRadius": 3,
+          "lensHangTime": 0.22,
+          "liftSpring": {
+            "class": "UIViewSpringAnimationBehaviorSettings",
+            "properties": {
+              "behaviorType": 2,
+              "dampingRatio": 1,
+              "dampingRatioSmoothing": 0,
+              "deceleration": 0,
+              "inertialProjectionDeceleration": 0,
+              "inertialTargetSmoothingRatio": 0,
+              "preferredFrameRateRange": {
+                "class": "PTFrameRateRangeSettings",
+                "properties": {
+                  "frameRateRange": {
+                    "objCType": "{CAFrameRateRange=fff}",
+                    "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                  },
+                  "highFrameRateReason": 0,
+                  "maximum": 0,
+                  "minimum": 0,
+                  "preferred": 0,
+                  "preset": 0,
+                  "reason": 0,
+                  "reasonComponent": 0
+                }
+              },
+              "response": 0.25,
+              "responseSmoothing": 0,
+              "retargetImpulse": 0,
+              "smoothingAndProjectionEnabled": false,
+              "trackingDampingRatio": 0.86,
+              "trackingDampingRatioSmoothing": 0,
+              "trackingResponse": 0.15,
+              "trackingResponseSmoothing": 0,
+              "trackingRetargetImpulse": 0
+            }
+          },
+          "liftedDisplacement": 9,
+          "tryMe": false,
+          "unLiftSpring": {
+            "class": "UIViewSpringAnimationBehaviorSettings",
+            "properties": {
+              "behaviorType": 2,
+              "dampingRatio": 1,
+              "dampingRatioSmoothing": 0,
+              "deceleration": 0,
+              "inertialProjectionDeceleration": 0,
+              "inertialTargetSmoothingRatio": 0,
+              "preferredFrameRateRange": {
+                "class": "PTFrameRateRangeSettings",
+                "properties": {
+                  "frameRateRange": {
+                    "objCType": "{CAFrameRateRange=fff}",
+                    "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                  },
+                  "highFrameRateReason": 0,
+                  "maximum": 0,
+                  "minimum": 0,
+                  "preferred": 0,
+                  "preset": 0,
+                  "reason": 0,
+                  "reasonComponent": 0
+                }
+              },
+              "response": 0.25,
+              "responseSmoothing": 0,
+              "retargetImpulse": 0,
+              "smoothingAndProjectionEnabled": false,
+              "trackingDampingRatio": 0.86,
+              "trackingDampingRatioSmoothing": 0,
+              "trackingResponse": 0.15,
+              "trackingResponseSmoothing": 0,
+              "trackingRetargetImpulse": 0
+            }
+          },
+          "unliftedBlurRadius": 0,
+          "unliftedDisplacement": 0
+        }
+      },
+      "materialLayers": [
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": 9,
+                "inputSourceSublayerName": "warpSDF"
+              },
+              "name": "displacementMap"
+            },
+            {
+              "class": "CAFilter",
+              "description": "gaussianBlur",
+              "inputs": {
+                "inputRadius": 0
+              },
+              "name": "gaussianBlur"
+            }
+          ],
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 36,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "warpSDF",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x7053dd6040>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0.5,
+            "hitTestsAsFill": false,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CALayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": -17.5,
+                "inputSourceSublayerName": "warpSDF"
+              },
+              "name": "displacementMap"
+            }
+          ],
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "_UILiquidLensView.ClearGlassView.liftedContentWarpWrapper"
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 11.2,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "warpSDF",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x7047d25d40>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0.5,
+            "hitTestsAsFill": false,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "glassBackground",
+              "inputs": {
+                "inputBleedAmount": 0,
+                "inputBleedBlurRadius": 0,
+                "inputBleedColorMatrixBlack": 0,
+                "inputBleedColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "inputBleedColorMatrixSaturation": 1,
+                "inputBleedColorMatrixWhite": 1,
+                "inputBleedDarkenBlend": false,
+                "inputBleedDistance0": 1,
+                "inputBleedDistance1": 0,
+                "inputBleedHeight": 0,
+                "inputBleedOpacity": 0,
+                "inputBlurDistance0": -10,
+                "inputBlurDistance1": 0,
+                "inputBlurDistance2": 0,
+                "inputBlurDistance3": 0,
+                "inputBlurFillBlurRadius": 0,
+                "inputBlurFillDarkenOpacity": 0,
+                "inputBlurFillLightenOpacity": 0,
+                "inputBlurFillNormalOpacity": 0,
+                "inputBlurOpacity0": 0,
+                "inputBlurOpacity1": 0,
+                "inputBlurOpacity2": 0,
+                "inputBlurOpacity3": 0,
+                "inputBlurRadius": 0,
+                "inputFaceColorMatrixBlack": 0,
+                "inputFaceColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    1,
+                    1,
+                    1,
+                    0
+                  ]
+                },
+                "inputFaceColorMatrixMaxLuma": 1,
+                "inputFaceColorMatrixMaxLumaSDR": 1,
+                "inputFaceColorMatrixSaturation": 1,
+                "inputFaceColorMatrixWhite": 1,
+                "inputFaceOpacity": 1,
+                "inputInnerRefractionAmount": -6.6,
+                "inputInnerRefractionHeight": 4.4,
+                "inputKeyFillHighlightAmount": 0.5,
+                "inputKeyFillHighlightAngle": 1.5707963267948966,
+                "inputKeyFillHighlightColorBias": -0.3,
+                "inputKeyFillHighlightEffectOffset": -0.6666666666666666,
+                "inputKeyFillHighlightHeight": 1,
+                "inputKeyFillHighlightSpread": 1.5707963267948966,
+                "inputKeyFillHighlightSpreadSDR": 2.0943951023931953,
+                "inputMaxHeadroom": 9999,
+                "inputOuterRefractionAmount": 0,
+                "inputOuterRefractionHeight": 0,
+                "inputRefractionDistance0": -1,
+                "inputRefractionDistance1": 0,
+                "inputRefractionOpacity": 0,
+                "inputRingShadowBlurRadius": 3,
+                "inputRingShadowMask": 0,
+                "inputRingShadowOffset": 8,
+                "inputRingShadowOpacity": 0.10000000149011612,
+                "inputRingShadowStrokeWidth": 4,
+                "inputSDRGradientDistance0": 0,
+                "inputSDRGradientDistance1": 0,
+                "inputSDRHoldingToneEnabled": false,
+                "inputSDRHoldingToneWhite": 1,
+                "inputSDRShadowOpacity": 0,
+                "inputShadowAmount": 11,
+                "inputShadowBlurRadius": 0,
+                "inputShadowColorMatrixBlack": 0,
+                "inputShadowColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    0,
+                    0,
+                    0,
+                    1
+                  ]
+                },
+                "inputShadowColorMatrixSaturation": 1,
+                "inputShadowColorMatrixWhite": 1,
+                "inputShadowDistanceOffset": 0,
+                "inputShadowHeight": 0,
+                "inputShadowOffset": {
+                  "objCType": "{CGSize=dd}",
+                  "value": "NSSize: {0, 7}"
+                },
+                "inputShadowOpacity": 0.0010000000474974513,
+                "inputShadowRadius": 8,
+                "inputShadowVibrancyContribution": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "glassBackground"
+            }
+          ],
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "maximum": 8.062464498613942,
+            "minimum": -10000
+          },
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFOutputEffect: 0x7053dc6b00>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {0, 0}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0,
+            "hitTestsAsFill": true,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CALayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": -8.8,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "displacementMap"
+            }
+          ],
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 7.04,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x7053dd4270>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "glassForeground",
+              "inputs": {
+                "inputAberrationAmount": 2.3157894611358643,
+                "inputAberrationAngle": -0.2617993877991494,
+                "inputAberrationHeight": 0,
+                "inputAberrationOffset": 24.44444465637207,
+                "inputEdgeEnd": 0,
+                "inputEdgeOpacityEnd": 0,
+                "inputEdgeOpacityStart": 1,
+                "inputEdgeStart": -8.800000190734863,
+                "inputRefractionAmount": 0,
+                "inputRefractionHeight": 0,
+                "inputRefractionOffset": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "glassForeground"
+            }
+          ],
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "maximum": 1,
+            "minimum": -10000
+          },
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFOutputEffect: 0x7053dc6da0>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "curvature": 0.75,
+            "diffuseAmountScale": 0.15000000596046448,
+            "diffuseHeightScale": 8,
+            "diffuseSpreadScale": 0.6499999761581421,
+            "fillAmount": 0.5,
+            "fillAngle": 3.141592653589793,
+            "fillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "fillHeight": 1,
+            "fillHeightOffset": 0,
+            "fillHeightScale": 1,
+            "fillSpread": 1.3962634015954636,
+            "fillSpreadOffset": 0,
+            "fillSpreadScale": 1,
+            "global": false,
+            "keyAmount": 0.5,
+            "keyAngle": 0,
+            "keyColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "keyHeight": 1,
+            "keyHeightOffset": 0,
+            "keyHeightScale": 1,
+            "keySpread": 1.3962634015954636,
+            "keySpreadOffset": 0,
+            "keySpreadScale": 1
+          },
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "vibrantColorMatrix",
+              "inputs": {
+                "inputClamp": 1,
+                "inputClampPreserveHue": false,
+                "inputColorMatrix": {
+                  "float32": [
+                    1.1201999187469482,
+                    -0.18940000236034393,
+                    -0.01899999938905239,
+                    0,
+                    0.14710000157356262,
+                    -0.056299999356269836,
+                    0.9870999455451965,
+                    -0.019099999219179153,
+                    0,
+                    0.14710000157356262,
+                    -0.056299999356269836,
+                    -0.18930000066757202,
+                    1.1574000120162964,
+                    0,
+                    0.14710000157356262,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0
+                  ],
+                  "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+                }
+              },
+              "name": "vibrantColorMatrix"
+            }
+          ],
+          "frame": "{{0, 0}, {120, 44}}",
+          "name": "SDF",
+          "sdfProperties": {
+            "effect": "<CASDFKeyFillHighlightEffect: 0x7047cc1680>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        }
+      ],
+      "restingLens": {
+        "bounds": "{{0, 0}, {96, 28}}",
+        "frame": "{{2, 2}, {96, 28}}",
+        "transform": "[1, 0, 0, 1, 0, 0]"
+      }
+    },
+    "slider": {
+      "flexVariant": 4,
+      "heldLens": {
+        "bounds": "{{0, 0}, {57.350000000000001, 37.200000000000003}}",
+        "frame": "{{95.02500156760216, -3.1000000000000014}, {57.350000000000001, 37.200000000000003}}",
+        "transform": "[1, 0, 0, 1, 0, 0]"
+      },
+      "layerShadows": [
+        {
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "shadowColor": {
+            "colorSpace": "kCGColorSpaceExtendedGray",
+            "components": [
+              0,
+              1
+            ]
+          },
+          "shadowOffset": "{0, 1}",
+          "shadowOpacity": 0.14000000059604645,
+          "shadowRadius": 5
+        },
+        {
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "shadowColor": {
+            "colorSpace": "kCGColorSpaceSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "shadowOffset": "{0, 7}",
+          "shadowOpacity": 0.05999999865889549,
+          "shadowRadius": 3
+        }
+      ],
+      "lensSpec": {
+        "class": "UIKit._UILiquidLensViewSmallVariantSpec",
+        "properties": {
+          "contentWrapperDisplacement": -17.5,
+          "innerShadowOffsetY": 7,
+          "innerShadowOpacity": 0.06,
+          "innerShadowRadius": 3,
+          "lensHangTime": 0.22,
+          "liftSpring": {
+            "class": "UIViewSpringAnimationBehaviorSettings",
+            "properties": {
+              "behaviorType": 2,
+              "dampingRatio": 0.625,
+              "dampingRatioSmoothing": 0,
+              "deceleration": 0,
+              "inertialProjectionDeceleration": 0,
+              "inertialTargetSmoothingRatio": 0,
+              "preferredFrameRateRange": {
+                "class": "PTFrameRateRangeSettings",
+                "properties": {
+                  "frameRateRange": {
+                    "objCType": "{CAFrameRateRange=fff}",
+                    "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                  },
+                  "highFrameRateReason": 0,
+                  "maximum": 0,
+                  "minimum": 0,
+                  "preferred": 0,
+                  "preset": 0,
+                  "reason": 0,
+                  "reasonComponent": 0
+                }
+              },
+              "response": 0.27,
+              "responseSmoothing": 0,
+              "retargetImpulse": 0.032,
+              "smoothingAndProjectionEnabled": false,
+              "trackingDampingRatio": 0.86,
+              "trackingDampingRatioSmoothing": 0,
+              "trackingResponse": 0.15,
+              "trackingResponseSmoothing": 0,
+              "trackingRetargetImpulse": 0
+            }
+          },
+          "liftedDisplacement": 9,
+          "tryMe": false,
+          "unLiftSpring": {
+            "class": "UIViewSpringAnimationBehaviorSettings",
+            "properties": {
+              "behaviorType": 2,
+              "dampingRatio": 0.7,
+              "dampingRatioSmoothing": 0,
+              "deceleration": 0,
+              "inertialProjectionDeceleration": 0,
+              "inertialTargetSmoothingRatio": 0,
+              "preferredFrameRateRange": {
+                "class": "PTFrameRateRangeSettings",
+                "properties": {
+                  "frameRateRange": {
+                    "objCType": "{CAFrameRateRange=fff}",
+                    "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                  },
+                  "highFrameRateReason": 0,
+                  "maximum": 0,
+                  "minimum": 0,
+                  "preferred": 0,
+                  "preset": 0,
+                  "reason": 0,
+                  "reasonComponent": 0
+                }
+              },
+              "response": 0.5,
+              "responseSmoothing": 0,
+              "retargetImpulse": 0.016,
+              "smoothingAndProjectionEnabled": false,
+              "trackingDampingRatio": 0.86,
+              "trackingDampingRatioSmoothing": 0,
+              "trackingResponse": 0.15,
+              "trackingResponseSmoothing": 0,
+              "trackingRetargetImpulse": 0
+            }
+          },
+          "unliftedBlurRadius": 6,
+          "unliftedDisplacement": 50
+        }
+      },
+      "materialLayers": [
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": 0,
+                "inputSourceSublayerName": "warpSDF"
+              },
+              "name": "displacementMap"
+            },
+            {
+              "class": "CAFilter",
+              "description": "gaussianBlur",
+              "inputs": {
+                "inputRadius": 0
+              },
+              "name": "gaussianBlur"
+            }
+          ],
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 36,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "warpSDF",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x704d450690>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0.5,
+            "hitTestsAsFill": false,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CALayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": -17.5,
+                "inputSourceSublayerName": "warpSDF"
+              },
+              "name": "displacementMap"
+            }
+          ],
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "_UILiquidLensView.ClearGlassView.liftedContentWarpWrapper"
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 11.2,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "warpSDF",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x70443dbd80>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0.5,
+            "hitTestsAsFill": false,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "glassBackground",
+              "inputs": {
+                "inputBleedAmount": 0,
+                "inputBleedBlurRadius": 0,
+                "inputBleedColorMatrixBlack": 0,
+                "inputBleedColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "inputBleedColorMatrixSaturation": 1,
+                "inputBleedColorMatrixWhite": 1,
+                "inputBleedDarkenBlend": false,
+                "inputBleedDistance0": 1,
+                "inputBleedDistance1": 0,
+                "inputBleedHeight": 0,
+                "inputBleedOpacity": 0,
+                "inputBlurDistance0": -10,
+                "inputBlurDistance1": 0,
+                "inputBlurDistance2": 0,
+                "inputBlurDistance3": 0,
+                "inputBlurFillBlurRadius": 0,
+                "inputBlurFillDarkenOpacity": 0,
+                "inputBlurFillLightenOpacity": 0,
+                "inputBlurFillNormalOpacity": 0,
+                "inputBlurOpacity0": 0,
+                "inputBlurOpacity1": 0,
+                "inputBlurOpacity2": 0,
+                "inputBlurOpacity3": 0,
+                "inputBlurRadius": 0,
+                "inputFaceColorMatrixBlack": 0.10000000149011612,
+                "inputFaceColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    1,
+                    1,
+                    1,
+                    0
+                  ]
+                },
+                "inputFaceColorMatrixMaxLuma": 1,
+                "inputFaceColorMatrixMaxLumaSDR": 1,
+                "inputFaceColorMatrixSaturation": 1,
+                "inputFaceColorMatrixWhite": 1,
+                "inputFaceOpacity": 1,
+                "inputInnerRefractionAmount": -11.1,
+                "inputInnerRefractionHeight": 6.660000000000001,
+                "inputKeyFillHighlightAmount": 0.5,
+                "inputKeyFillHighlightAngle": 1.5707963267948966,
+                "inputKeyFillHighlightColorBias": -0.3,
+                "inputKeyFillHighlightEffectOffset": -0.6666666666666666,
+                "inputKeyFillHighlightHeight": 1,
+                "inputKeyFillHighlightSpread": 1.5707963267948966,
+                "inputKeyFillHighlightSpreadSDR": 2.0943951023931953,
+                "inputMaxHeadroom": 9999,
+                "inputOuterRefractionAmount": 0,
+                "inputOuterRefractionHeight": 0,
+                "inputRefractionDistance0": -1,
+                "inputRefractionDistance1": 0,
+                "inputRefractionOpacity": 0,
+                "inputRingShadowBlurRadius": 3,
+                "inputRingShadowMask": 0,
+                "inputRingShadowOffset": 8,
+                "inputRingShadowOpacity": 0.4000000059604645,
+                "inputRingShadowStrokeWidth": 4,
+                "inputSDRGradientDistance0": 0,
+                "inputSDRGradientDistance1": 0,
+                "inputSDRHoldingToneEnabled": false,
+                "inputSDRHoldingToneWhite": 1,
+                "inputSDRShadowOpacity": 0,
+                "inputShadowAmount": 9.25,
+                "inputShadowBlurRadius": 0,
+                "inputShadowColorMatrixBlack": 0,
+                "inputShadowColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    0.3374999463558197,
+                    0.46544116735458374,
+                    0.5625,
+                    1
+                  ]
+                },
+                "inputShadowColorMatrixSaturation": 1,
+                "inputShadowColorMatrixWhite": 1,
+                "inputShadowDistanceOffset": 0,
+                "inputShadowHeight": 0,
+                "inputShadowOffset": {
+                  "objCType": "{CGSize=dd}",
+                  "value": "NSSize: {0, 7}"
+                },
+                "inputShadowOpacity": 0.0018000000854954123,
+                "inputShadowRadius": 8,
+                "inputShadowVibrancyContribution": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "glassBackground"
+            }
+          ],
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "maximum": 11.054983131294298,
+            "minimum": -10000
+          },
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFOutputEffect: 0x170122ae0>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {0, 0}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0,
+            "hitTestsAsFill": true,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CALayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "displacementMap"
+            }
+          ],
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 0,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x704e6e87b0>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "glassForeground",
+              "inputs": {
+                "inputAberrationAmount": 0,
+                "inputAberrationAngle": -0.2617993877991494,
+                "inputAberrationHeight": 0,
+                "inputAberrationOffset": 20.55555534362793,
+                "inputEdgeEnd": 0,
+                "inputEdgeOpacityEnd": 0,
+                "inputEdgeOpacityStart": 1,
+                "inputEdgeStart": -7.400000095367432,
+                "inputRefractionAmount": 0,
+                "inputRefractionHeight": 0,
+                "inputRefractionOffset": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "glassForeground"
+            }
+          ],
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "maximum": 1,
+            "minimum": -10000
+          },
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFOutputEffect: 0x170123760>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "curvature": 0.75,
+            "diffuseAmountScale": 0.15000000596046448,
+            "diffuseHeightScale": 8,
+            "diffuseSpreadScale": 0.6499999761581421,
+            "fillAmount": 0.5,
+            "fillAngle": 3.141592653589793,
+            "fillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "fillHeight": 1,
+            "fillHeightOffset": 0,
+            "fillHeightScale": 1,
+            "fillSpread": 1.3962634015954636,
+            "fillSpreadOffset": 0,
+            "fillSpreadScale": 1,
+            "global": false,
+            "keyAmount": 0.5,
+            "keyAngle": 0,
+            "keyColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "keyHeight": 1,
+            "keyHeightOffset": 0,
+            "keyHeightScale": 1,
+            "keySpread": 1.3962634015954636,
+            "keySpreadOffset": 0,
+            "keySpreadScale": 1
+          },
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "vibrantColorMatrix",
+              "inputs": {
+                "inputClamp": 1,
+                "inputClampPreserveHue": false,
+                "inputColorMatrix": {
+                  "float32": [
+                    1.1201999187469482,
+                    -0.18940000236034393,
+                    -0.01899999938905239,
+                    0,
+                    0.14710000157356262,
+                    -0.056299999356269836,
+                    0.9870999455451965,
+                    -0.019099999219179153,
+                    0,
+                    0.14710000157356262,
+                    -0.056299999356269836,
+                    -0.18930000066757202,
+                    1.1574000120162964,
+                    0,
+                    0.14710000157356262,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0
+                  ],
+                  "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+                }
+              },
+              "name": "vibrantColorMatrix"
+            }
+          ],
+          "frame": "{{0, 0}, {57.333333333333329, 37}}",
+          "name": "SDF",
+          "sdfProperties": {
+            "effect": "<CASDFKeyFillHighlightEffect: 0x1700c9440>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        }
+      ],
+      "restingLens": {
+        "bounds": "{{0, 0}, {37, 24}}",
+        "frame": "{{105, 4}, {37, 24}}",
+        "transform": "[1, 0, 0, 1, 0, 0]"
+      }
+    },
+    "switch": {
+      "flexVariant": 4,
+      "heldLens": {
+        "bounds": "{{0, 0}, {58, 38.333333333333336}}",
+        "frame": "{{13.666666666666664, -5.3333333333333321}, {58, 38.333333333333336}}",
+        "transform": "[1, 0, 0, 1, 0, 0]"
+      },
+      "layerShadows": [
+        {
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "shadowColor": {
+            "colorSpace": "kCGColorSpaceSRGB",
+            "components": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "shadowOffset": "{0, 7}",
+          "shadowOpacity": 0.05999999865889549,
+          "shadowRadius": 3
+        }
+      ],
+      "lensSpec": {
+        "class": "UIKit._UILiquidLensViewSmallVariantSpec",
+        "properties": {
+          "contentWrapperDisplacement": -17.5,
+          "innerShadowOffsetY": 7,
+          "innerShadowOpacity": 0.06,
+          "innerShadowRadius": 3,
+          "lensHangTime": 0.22,
+          "liftSpring": {
+            "class": "UIViewSpringAnimationBehaviorSettings",
+            "properties": {
+              "behaviorType": 2,
+              "dampingRatio": 0.625,
+              "dampingRatioSmoothing": 0,
+              "deceleration": 0,
+              "inertialProjectionDeceleration": 0,
+              "inertialTargetSmoothingRatio": 0,
+              "preferredFrameRateRange": {
+                "class": "PTFrameRateRangeSettings",
+                "properties": {
+                  "frameRateRange": {
+                    "objCType": "{CAFrameRateRange=fff}",
+                    "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                  },
+                  "highFrameRateReason": 0,
+                  "maximum": 0,
+                  "minimum": 0,
+                  "preferred": 0,
+                  "preset": 0,
+                  "reason": 0,
+                  "reasonComponent": 0
+                }
+              },
+              "response": 0.27,
+              "responseSmoothing": 0,
+              "retargetImpulse": 0.032,
+              "smoothingAndProjectionEnabled": false,
+              "trackingDampingRatio": 0.86,
+              "trackingDampingRatioSmoothing": 0,
+              "trackingResponse": 0.15,
+              "trackingResponseSmoothing": 0,
+              "trackingRetargetImpulse": 0
+            }
+          },
+          "liftedDisplacement": 9,
+          "tryMe": false,
+          "unLiftSpring": {
+            "class": "UIViewSpringAnimationBehaviorSettings",
+            "properties": {
+              "behaviorType": 2,
+              "dampingRatio": 0.7,
+              "dampingRatioSmoothing": 0,
+              "deceleration": 0,
+              "inertialProjectionDeceleration": 0,
+              "inertialTargetSmoothingRatio": 0,
+              "preferredFrameRateRange": {
+                "class": "PTFrameRateRangeSettings",
+                "properties": {
+                  "frameRateRange": {
+                    "objCType": "{CAFrameRateRange=fff}",
+                    "value": "{length = 12, bytes = 0x000000000000000000000000}"
+                  },
+                  "highFrameRateReason": 0,
+                  "maximum": 0,
+                  "minimum": 0,
+                  "preferred": 0,
+                  "preset": 0,
+                  "reason": 0,
+                  "reasonComponent": 0
+                }
+              },
+              "response": 0.5,
+              "responseSmoothing": 0,
+              "retargetImpulse": 0.016,
+              "smoothingAndProjectionEnabled": false,
+              "trackingDampingRatio": 0.86,
+              "trackingDampingRatioSmoothing": 0,
+              "trackingResponse": 0.15,
+              "trackingResponseSmoothing": 0,
+              "trackingRetargetImpulse": 0
+            }
+          },
+          "unliftedBlurRadius": 6,
+          "unliftedDisplacement": 50
+        }
+      },
+      "materialLayers": [
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": 9,
+                "inputSourceSublayerName": "warpSDF"
+              },
+              "name": "displacementMap"
+            },
+            {
+              "class": "CAFilter",
+              "description": "gaussianBlur",
+              "inputs": {
+                "inputRadius": 0
+              },
+              "name": "gaussianBlur"
+            }
+          ],
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 36,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "warpSDF",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x7050276c10>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0.5,
+            "hitTestsAsFill": false,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CALayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": -17.5,
+                "inputSourceSublayerName": "warpSDF"
+              },
+              "name": "displacementMap"
+            }
+          ],
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "_UILiquidLensView.ClearGlassView.liftedContentWarpWrapper"
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 11.2,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "warpSDF",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x70433d6a60>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0.5,
+            "hitTestsAsFill": false,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "glassBackground",
+              "inputs": {
+                "inputBleedAmount": 0,
+                "inputBleedBlurRadius": 0,
+                "inputBleedColorMatrixBlack": 0,
+                "inputBleedColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    0,
+                    0,
+                    0,
+                    0
+                  ]
+                },
+                "inputBleedColorMatrixSaturation": 1,
+                "inputBleedColorMatrixWhite": 1,
+                "inputBleedDarkenBlend": false,
+                "inputBleedDistance0": 1,
+                "inputBleedDistance1": 0,
+                "inputBleedHeight": 0,
+                "inputBleedOpacity": 0,
+                "inputBlurDistance0": -10,
+                "inputBlurDistance1": 0,
+                "inputBlurDistance2": 0,
+                "inputBlurDistance3": 0,
+                "inputBlurFillBlurRadius": 0,
+                "inputBlurFillDarkenOpacity": 0,
+                "inputBlurFillLightenOpacity": 0,
+                "inputBlurFillNormalOpacity": 0,
+                "inputBlurOpacity0": 0,
+                "inputBlurOpacity1": 0,
+                "inputBlurOpacity2": 0,
+                "inputBlurOpacity3": 0,
+                "inputBlurRadius": 0,
+                "inputFaceColorMatrixBlack": 0.10000000149011612,
+                "inputFaceColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    1,
+                    1,
+                    1,
+                    0
+                  ]
+                },
+                "inputFaceColorMatrixMaxLuma": 1,
+                "inputFaceColorMatrixMaxLumaSDR": 1,
+                "inputFaceColorMatrixSaturation": 1,
+                "inputFaceColorMatrixWhite": 1,
+                "inputFaceOpacity": 1,
+                "inputInnerRefractionAmount": -11.499999999999998,
+                "inputInnerRefractionHeight": 6.9,
+                "inputKeyFillHighlightAmount": 0.5,
+                "inputKeyFillHighlightAngle": 1.5707963267948966,
+                "inputKeyFillHighlightColorBias": -0.3,
+                "inputKeyFillHighlightEffectOffset": -0.6666666666666666,
+                "inputKeyFillHighlightHeight": 1,
+                "inputKeyFillHighlightSpread": 1.5707963267948966,
+                "inputKeyFillHighlightSpreadSDR": 2.0943951023931953,
+                "inputMaxHeadroom": 9999,
+                "inputOuterRefractionAmount": 0,
+                "inputOuterRefractionHeight": 0,
+                "inputRefractionDistance0": -1,
+                "inputRefractionDistance1": 0,
+                "inputRefractionOpacity": 0,
+                "inputRingShadowBlurRadius": 3,
+                "inputRingShadowMask": 0,
+                "inputRingShadowOffset": 8,
+                "inputRingShadowOpacity": 0.4000000059604645,
+                "inputRingShadowStrokeWidth": 4,
+                "inputSDRGradientDistance0": 0,
+                "inputSDRGradientDistance1": 0,
+                "inputSDRHoldingToneEnabled": false,
+                "inputSDRHoldingToneWhite": 1,
+                "inputSDRShadowOpacity": 0,
+                "inputShadowAmount": 9.583333333333332,
+                "inputShadowBlurRadius": 0,
+                "inputShadowColorMatrixBlack": 0,
+                "inputShadowColorMatrixFillColor": {
+                  "colorSpace": "kCGColorSpaceExtendedSRGB",
+                  "components": [
+                    0.37840908765792847,
+                    0.5215908885002136,
+                    0.4139821529388428,
+                    1
+                  ]
+                },
+                "inputShadowColorMatrixSaturation": 1,
+                "inputShadowColorMatrixWhite": 1,
+                "inputShadowDistanceOffset": 0,
+                "inputShadowHeight": 0,
+                "inputShadowOffset": {
+                  "objCType": "{CGSize=dd}",
+                  "value": "NSSize: {0, 7}"
+                },
+                "inputShadowOpacity": 0.0018000000854954123,
+                "inputShadowRadius": 8,
+                "inputShadowVibrancyContribution": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "glassBackground"
+            }
+          ],
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "maximum": 11.054983131294298,
+            "minimum": -10000
+          },
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFOutputEffect: 0x7050279220>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFElementLayer",
+          "frame": "{{0, 0}, {0, 0}}",
+          "name": "",
+          "sdfProperties": {
+            "contentsOneValueDistance": 1,
+            "contentsZeroValueDistance": 0,
+            "gradientOvalization": 0,
+            "hitTestsAsFill": true,
+            "mode": "bounds",
+            "operation": "union"
+          }
+        },
+        {
+          "class": "CALayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "displacementMap",
+              "inputs": {
+                "inputAmount": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "displacementMap"
+            }
+          ],
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "angle": 0,
+            "curvature": 1,
+            "height": 0,
+            "maskOffset": 0
+          },
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFGlassDisplacementEffect: 0x7050276670>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CABackdropLayer",
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "glassForeground",
+              "inputs": {
+                "inputAberrationAmount": 0,
+                "inputAberrationAngle": -0.2617993877991494,
+                "inputAberrationHeight": 0,
+                "inputAberrationOffset": 21.296297073364258,
+                "inputEdgeEnd": 0,
+                "inputEdgeOpacityEnd": 0,
+                "inputEdgeOpacityStart": 1,
+                "inputEdgeStart": -7.666666507720947,
+                "inputRefractionAmount": 0,
+                "inputRefractionHeight": 0,
+                "inputRefractionOffset": 0,
+                "inputSourceSublayerName": "@0"
+              },
+              "name": "glassForeground"
+            }
+          ],
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": ""
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "maximum": 1,
+            "minimum": -10000
+          },
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "@0",
+          "sdfProperties": {
+            "effect": "<CASDFOutputEffect: 0x7050279340>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        },
+        {
+          "class": "CASDFLayer",
+          "effect": {
+            "curvature": 0.75,
+            "diffuseAmountScale": 0.15000000596046448,
+            "diffuseHeightScale": 8,
+            "diffuseSpreadScale": 0.6499999761581421,
+            "fillAmount": 0.5,
+            "fillAngle": 3.141592653589793,
+            "fillColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "fillHeight": 1,
+            "fillHeightOffset": 0,
+            "fillHeightScale": 1,
+            "fillSpread": 1.3962634015954636,
+            "fillSpreadOffset": 0,
+            "fillSpreadScale": 1,
+            "global": false,
+            "keyAmount": 0.5,
+            "keyAngle": 0,
+            "keyColor": {
+              "colorSpace": "kCGColorSpaceExtendedSRGB",
+              "components": [
+                1,
+                1,
+                1,
+                1
+              ]
+            },
+            "keyHeight": 1,
+            "keyHeightOffset": 0,
+            "keyHeightScale": 1,
+            "keySpread": 1.3962634015954636,
+            "keySpreadOffset": 0,
+            "keySpreadScale": 1
+          },
+          "filters": [
+            {
+              "class": "CAFilter",
+              "description": "vibrantColorMatrix",
+              "inputs": {
+                "inputClamp": 1,
+                "inputClampPreserveHue": false,
+                "inputColorMatrix": {
+                  "float32": [
+                    1.1201999187469482,
+                    -0.18940000236034393,
+                    -0.01899999938905239,
+                    0,
+                    0.14710000157356262,
+                    -0.056299999356269836,
+                    0.9870999455451965,
+                    -0.019099999219179153,
+                    0,
+                    0.14710000157356262,
+                    -0.056299999356269836,
+                    -0.18930000066757202,
+                    1.1574000120162964,
+                    0,
+                    0.14710000157356262,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0
+                  ],
+                  "objCType": "{CAColorMatrix=ffffffffffffffffffff}"
+                }
+              },
+              "name": "vibrantColorMatrix"
+            }
+          ],
+          "frame": "{{0, 0}, {58, 38.333333333333329}}",
+          "name": "SDF",
+          "sdfProperties": {
+            "effect": "<CASDFKeyFillHighlightEffect: 0x70434c55c0>",
+            "effectOffset": 0,
+            "gaussianRadius": 0,
+            "mergeElements": false,
+            "smoothness": 0
+          }
+        }
+      ],
+      "restingLens": {
+        "bounds": "{{0, 0}, {37, 24}}",
+        "frame": "{{2, 2}, {37, 24}}",
+        "transform": "[1, 0, 0, 1, 0, 0]"
+      }
+    }
+  },
+  "provenance": {
+    "device": "iPhone 17",
+    "method": "UIView/CALayer model and presentation state, runtime settings, intercepted spring constructors",
+    "os": "Version 27.0 (Build 24A5370g)",
+    "rawSHA256": {
+      "layers/controls-light-contact-3.938.json": "0c951a511f112d002ec7996bccd2dfab445e73676ed7074456e54432fa685b57",
+      "layers/controls-light-model-end.json": "c00dfe7933d30e6b25de9afad9eda0dbdd896390693f25517cc9fdd60934abcc",
+      "layers/controls-light-model-start.json": "b0ab0797e7b89454954c5626635e015ab4ba157ba806b346de743904be8272b3",
+      "layers/native-colors-dark-model-end.json": "1a10a2bb26a43da247071e1d7b615d644234aecd932be95af3cfacdafbad2d71",
+      "layers/native-colors-dark-model-start.json": "21a2a083e1e55a4c2c4f27ad441db661248bc9e4652908e69e08dbf3b3736802",
+      "layers/native-colors-light-model-end.json": "e3b73e7c0c5be99ad60010d67b219bf73abe44081cc4f00c950b1885147c548a",
+      "layers/native-colors-light-model-start.json": "b066f6be53e9da3b317e61748b1cc65cefc9a7920c4b2ae956ecb78ab9334ded",
+      "layers/segments-dark-contact-3.671.json": "4f376eef0f8a832a837ecd83144aa32e69056421ba33bbdbbb82b990f1258148",
+      "layers/segments-dark-contact-7.003.json": "8e5af0cde02e53650733253cfca6c9655d3ac9f044b43a63c963edf033b6fb23",
+      "layers/segments-dark-model-end.json": "681aa0d2910e67c44467a5fab3042fa00ce38a1c9626b0c0fd6f96481ad1db1d",
+      "layers/segments-dark-model-start.json": "5467107ccfcc483065354574b80dd0318ff5a80ca3f011c77fb349cd9e6714d9",
+      "layers/slider-dark-contact-3.706.json": "e5b026ef95170bb237ed13d8eea0f848064e2831a5e2add59895e9f3a47afbfa",
+      "layers/slider-dark-model-end.json": "c2cafc2c6f35167a0f0c64d5b0e6d3f91a720dde940ade5faa3fcfd9aeeaadc7",
+      "layers/slider-dark-model-start.json": "f7a9243426d85a0b50453e305ab55497055ac726523769af8710e4be02482260",
+      "layers/switch-dark-contact-3.593.json": "2d47584dae7d018c790299522e85e6985febee03641d5e6d59d99c53d516685c",
+      "layers/switch-dark-contact-7.391.json": "e04758a67b63ff04926e7aa8cfcd0a28ddda4e6773dd024c71345770dc9f9d62",
+      "layers/switch-dark-model-end.json": "0dd4a4bb71c3e165079fbfd7eba29b89cf9c65d54f248e55ecac64656792adfc",
+      "layers/switch-dark-model-start.json": "3417077a17e948d3f8adaee5594735a63589ee512c594987c2fec25fde401d3e",
+      "specs/controls-light-contact-3.938.json": "a62e3de37bcefef6e032454e4774588c9cf9a184e694028f7e9e28c7d35645df",
+      "specs/controls-light-model-end.json": "7d69b4b7ec366993b0c4afdc1823772fe36531152be495dbc7c02b9db368a115",
+      "specs/controls-light-model-start.json": "b1624c352bc493708b77888db5e33eec045621f4f3d0558d1adc6b149ee6297d",
+      "specs/native-colors-dark-model-end.json": "7c8184f653712911a9279358495799d5c6cebb0b3b95536f98e60a775affdb88",
+      "specs/native-colors-dark-model-start.json": "7c8184f653712911a9279358495799d5c6cebb0b3b95536f98e60a775affdb88",
+      "specs/native-colors-light-model-end.json": "d654ac4b96bc8a2d3989bfbed8d9b849908b3852a41231dca431a1aab27f5b6b",
+      "specs/native-colors-light-model-start.json": "d654ac4b96bc8a2d3989bfbed8d9b849908b3852a41231dca431a1aab27f5b6b",
+      "specs/segments-dark-contact-3.671.json": "6054eadfaf48b1f60f3aa9ef1658855663cb0af7d48dc068b081062044d78822",
+      "specs/segments-dark-contact-7.003.json": "8f54b33edd4e6991105a7354722cb6d61c29cbb8931ef7686200de1196533d9a",
+      "specs/segments-dark-model-end.json": "132de503125bc1f67e86e47962a0b4fe724fb3b738b978c9ea39bba17ec5f62d",
+      "specs/segments-dark-model-start.json": "98b60f6512cba707a67acbc90d68e0d50400883390ef5a15f86a720ef5e507a1",
+      "specs/slider-dark-contact-3.706.json": "d3de77172a5eef86a8c2ec0741857fbcccccc10e57490cbe6cf63a01e66970f1",
+      "specs/slider-dark-model-end.json": "b1dbea7bfd53ffd1531b6bfdec3068842cf50b2dd0e1decdc309c66661598f5f",
+      "specs/slider-dark-model-start.json": "7ed07b98eff2cd983d8374c68154d4901500058b45f4c09142e8c3722c88b85d",
+      "specs/switch-dark-contact-3.593.json": "f54226ef43cb94ab746417e1af28359ca9f76583512fb66f88ff1e15ae9f354d",
+      "specs/switch-dark-contact-7.391.json": "8eeff310cee651a0d3840a926c0c925ed6c4445d60e573aed313eb1e2f14e55d",
+      "specs/switch-dark-model-end.json": "9995c2343fe7eda89d801d24c84198dd001f0b722e7f5a773a0d4a56e6a415fc",
+      "specs/switch-dark-model-start.json": "f7ac62cf47f545a99489afb985144f6f11995866ee327e76bc9ad36001ec3ae0"
+    },
+    "runtimeBuild": "24A5370g",
+    "screen": {
+      "bounds": "{{0, 0}, {402, 874}}",
+      "scale": 3
+    },
+    "sdkBuild": "24A430"
+  },
+  "smallLoupeFlex": {
+    "class": "UIKit._UIFlexInteractionSmallLoupeVariantSpec",
+    "properties": {
+      "associatedDimension": 37,
+      "bigGlowOpacity": 0,
+      "interactionPulseDriftRatio": 0,
+      "interactionPulseNormalizationFactor": 1,
+      "interactionPulseScalePtsX": 0,
+      "interactionPulseScalePtsY": 0,
+      "liftScalePoints": 0,
+      "littleGlowDissipationDistance": 0,
+      "littleGlowOpacity": 0,
+      "movementMaxScale": 1.1,
+      "movementMinScale": 0.9,
+      "movementNormalizationFactor": 2000,
+      "movementScalePts": 10,
+      "scaleDistanceThreshold": 6000,
+      "scaleSpring": {
+        "class": "UIViewSpringAnimationBehaviorSettings",
+        "properties": {
+          "behaviorType": 2,
+          "dampingRatio": 0.56,
+          "dampingRatioSmoothing": 0,
+          "deceleration": 0,
+          "inertialProjectionDeceleration": 0,
+          "inertialTargetSmoothingRatio": 0,
+          "preferredFrameRateRange": {
+            "class": "PTFrameRateRangeSettings",
+            "properties": {
+              "frameRateRange": {
+                "objCType": "{CAFrameRateRange=fff}",
+                "value": "{length = 12, bytes = 0x000000000000000000000000}"
+              },
+              "highFrameRateReason": 0,
+              "maximum": 0,
+              "minimum": 0,
+              "preferred": 0,
+              "preset": 0,
+              "reason": 0,
+              "reasonComponent": 0
+            }
+          },
+          "response": 0.444,
+          "responseSmoothing": 0,
+          "retargetImpulse": 0.032,
+          "smoothingAndProjectionEnabled": false,
+          "trackingDampingRatio": 0.56,
+          "trackingDampingRatioSmoothing": 0,
+          "trackingResponse": 0.444,
+          "trackingResponseSmoothing": 0,
+          "trackingRetargetImpulse": 0.032
+        }
+      }
+    }
+  },
+  "springConstructors": [
+    {
+      "arguments": {
+        "dampingRatio": 0.8,
+        "response": 0.4
+      },
+      "method": "UIViewSpringAnimationBehavior.init",
+      "owner": "_UIFluidSliderInteraction setConfiguration:]"
+    },
+    {
+      "arguments": {
+        "dampingRatio": 0.8,
+        "response": 0.4
+      },
+      "method": "UIViewSpringAnimationBehavior.init",
+      "owner": "_UIFluidSliderInteraction setValue:]"
+    },
+    {
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.4
+      },
+      "method": "UIViewSpringAnimationBehavior.init",
+      "owner": "UISegmentedControl _updateSelectionToSegment:highlight:shouldAnimate:sameSegment:]"
+    },
+    {
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.6
+      },
+      "method": "UIViewSpringAnimationBehavior.init",
+      "owner": "UISegmentedControl _updateSelectionToSegment:highlight:shouldAnimate:sameSegment:]"
+    },
+    {
+      "arguments": {
+        "dampingRatio": 1,
+        "response": 0.3
+      },
+      "method": "UIViewSpringAnimationBehavior.init",
+      "owner": "UISwitchModernVisualElement _transitionKnobToPressed:on:animated:]"
+    },
+    {
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.2
+      },
+      "method": "UIViewSpringAnimationBehavior.init",
+      "owner": "UISegmentedControl _updateSelectionToSegment:highlight:shouldAnimate:sameSegment:]"
+    },
+    {
+      "arguments": {
+        "dampingRatio": 0.85,
+        "response": 0.3
+      },
+      "method": "UIViewSpringAnimationBehavior.init",
+      "owner": "UISegmentedControl _updateSelectionToSegment:highlight:shouldAnimate:sameSegment:]"
+    }
+  ],
+  "switchSettings": {
+    "class": "_UISwitchSettings",
+    "properties": {
+      "feedbackEnabled": true,
+      "hapticDelay": 0,
+      "impactIntensity": 1,
+      "knobSpringAnimationDamping": 31.41592653589793,
+      "knobSpringAnimationDuration": 0.4880138408543766,
+      "knobSpringAnimationMass": 1,
+      "knobSpringAnimationStiffness": 438.6490844928604,
+      "knobSpringDampingAnimationTouchDown": 30,
+      "knobSpringDampingAnimationTouchUp": 26,
+      "knobSpringDurationAnimationTouchDown": 0.3,
+      "knobSpringDurationAnimationTouchUp": 0.5,
+      "knobSpringMassAnimationTouchDown": 1.2,
+      "knobSpringMassAnimationTouchUp": 1,
+      "knobSpringStiffnessAnimationTouchDown": 300,
+      "knobSpringStiffnessAnimationTouchUp": 350,
+      "knobTouchDownSpringAnimationDamping": 31.2364069556928,
+      "knobTouchDownSpringAnimationDuration": 0.5073965509413827,
+      "knobTouchDownSpringAnimationMass": 1,
+      "knobTouchDownSpringAnimationStiffness": 322.27279677026473,
+      "trackBorderGoingOffAnimationBeginTimeOffset": 0.025,
+      "trackBorderGoingOffAnimationDuration": 0.365,
+      "trackBorderGoingOnAnimationDuration": 0.39,
+      "trackColorAnimationDuration": 0.18,
+      "trackGoingOffSpringAnimationDamping": 18.47995678582231,
+      "trackGoingOffSpringAnimationDuration": 0.9994651737792357,
+      "trackGoingOffSpringAnimationMass": 1,
+      "trackGoingOffSpringAnimationStiffness": 85.37720070146501,
+      "trackGoingOnSpringAnimationDamping": 31.41592653589793,
+      "trackGoingOnSpringAnimationDuration": 0.5879206904583738,
+      "trackGoingOnSpringAnimationMass": 1,
+      "trackGoingOnSpringAnimationStiffness": 246.74011002723395
+    }
+  },
+  "typography": [
+    {
+      "bounds": "{{0, 0}, {46, 15.666666666666666}}",
+      "font": {
+        "ascender": 12.3779296875,
+        "capHeight": 9.15966796875,
+        "descender": -3.1357421875,
+        "lineHeight": 15.513671875,
+        "name": ".SFUI-RegularG3",
+        "size": 13,
+        "traits": {
+          "NSCTFontTraitsAttribute": {
+            "NSCTFontGradeTrait": 3
+          },
+          "NSCTFontUIUsageAttribute": "CTFontRegularUsage",
+          "NSFontSizeAttribute": 13
+        },
+        "xHeight": 6.8427734375
+      },
+      "frame": "{{27, 8.3333333333333357}, {46, 15.666666666666666}}",
+      "text": "Second"
+    },
+    {
+      "bounds": "{{0, 0}, {31.666666666666668, 15.666666666666666}}",
+      "font": {
+        "ascender": 12.3779296875,
+        "capHeight": 9.15966796875,
+        "descender": -3.1357421875,
+        "lineHeight": 15.513671875,
+        "name": ".SFUI-RegularG3",
+        "size": 13,
+        "traits": {
+          "NSCTFontTraitsAttribute": {
+            "NSCTFontGradeTrait": 3
+          },
+          "NSCTFontUIUsageAttribute": "CTFontRegularUsage",
+          "NSFontSizeAttribute": 13
+        },
+        "xHeight": 6.8427734375
+      },
+      "frame": "{{34.333333333333336, 8.3333333333333357}, {31.666666666666668, 15.666666666666666}}",
+      "text": "Third"
+    },
+    {
+      "bounds": "{{0, 0}, {27.666666666666668, 15.666666666666666}}",
+      "font": {
+        "ascender": 12.3779296875,
+        "capHeight": 9.15966796875,
+        "descender": -3.1357421875,
+        "lineHeight": 15.513671875,
+        "name": ".SFUI-MediumG3",
+        "size": 13,
+        "traits": {
+          "NSCTFontTraitsAttribute": {
+            "NSCTFontGradeTrait": 3
+          },
+          "NSCTFontUIUsageAttribute": "CTFontMediumUsage",
+          "NSFontSizeAttribute": 13
+        },
+        "xHeight": 6.8935546875
+      },
+      "frame": "{{36.333333333333336, 8.3333333333333357}, {27.666666666666668, 15.666666666666666}}",
+      "text": "First"
+    }
+  ]
+}

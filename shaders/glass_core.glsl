@@ -158,10 +158,14 @@ void shadeGlass() {
     // Sample farther out along the SDF normal, so the housing seen through
     // the lens is smaller. The tab foreground is painted after this pass.
     vec2 underlayOffset = vec2(0.);
-    if (u_material.x > 2.5) {
+    if (u_material.x > 2.5 && (u_material.x < 3.5 || u_material.x > 4.5)) {
         float underlayT = clamp(1.-depth/36.,0.,1.);
         float underlayProfile = 1.-sqrt(max(1.-underlayT*underlayT,0.));
-        underlayOffset = normal*displacement*underlayProfile;
+        // Segmented lens: 9-point underlay displacement, independent of its
+        // 6.6-point inner refraction. Tab lens retains its accepted profile.
+        float underlayAmount = u_material.x > 4.5
+            ? displacement*(9./6.6) : displacement;
+        underlayOffset = normal*underlayAmount*underlayProfile;
     }
     vec2 samplePoint = scenePoint(local+underlayOffset-offset);
     vec2 dx = vec2(1., 0.);
@@ -180,6 +184,13 @@ void shadeGlass() {
         float side = facing/(1.+0.5*(1.-facing));
         float outerCoverage = clamp(0.5-(d-0.533333)/aa,0.,1.);
         rimAlpha = clamp(side*u_finish.y*0.46,0.,1.)*max(outerCoverage-coverage,0.);
+    }
+    if (u_material.x > 3.5 && u_finish.y > 0. && d > -0.5*aa) {
+        // Small/segmented native glassBackground has a negative key/fill
+        // highlight at an exterior offset of 2/3 point. Approximate that
+        // private operator with a dark coverage band, independent of the face.
+        float outerCoverage = clamp(0.5-(d-0.6666667)/aa,0.,1.);
+        rimAlpha = max(rimAlpha,u_finish.y*max(outerCoverage-coverage,0.));
     }
     // Native regular glassBackground negative key/fill highlight. The effect
     // occupies the exterior 0.533333-point band; its -0.3 color bias darkens
@@ -265,6 +276,10 @@ void shadeGlass() {
         color = (color-vec3(value))*saturation + mix(black,white,value);
         float fill = clear || dark ? 0. : .20000000298023224;
         color = clamp(mix(color,vec3(1.),fill),0.,1.);
+    }
+    if (u_material.x > 3.5 && u_material.x < 4.5) {
+        // Small native lens face: black=.1, white=1, saturation=1.
+        color = mix(vec3(.1),vec3(1.),color);
     }
     if (u_material.w > 0.) {
         vec4 inputColor = vec4(color,1.);

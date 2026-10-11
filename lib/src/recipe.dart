@@ -5,7 +5,7 @@ import 'native_colors.dart';
 import 'style.dart';
 
 // Native RGB tint matrices; explicit custom colors retain the legacy fallback.
-enum GlassRole { surface, button, tabBar, tabLens }
+enum GlassRole { surface, button, tabBar, tabLens, controlThumb, segmentLens }
 
 final class GlassRecipe {
   const GlassRecipe(
@@ -27,7 +27,7 @@ final class GlassRecipe {
   // Regular/Clear balance applies to standalone surfaces.
   bool get usesNativeControlShadow => kind != 0 && role != GlassRole.surface;
   double get shadowStrength =>
-      usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1);
+      kind > 3.5 ? 0 : (usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1));
   static GlassRecipe resolve(
     Glass glass,
     Brightness brightness,
@@ -50,7 +50,11 @@ final class GlassRecipe {
       ],
     ];
     return GlassRecipe(
-      role == GlassRole.tabLens
+      role == GlassRole.controlThumb
+          ? 4
+          : role == GlassRole.segmentLens
+          ? 5
+          : role == GlassRole.tabLens
           ? 3
           : customOptics
           ? 0

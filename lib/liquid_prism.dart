@@ -15,3 +15,7 @@ export 'src/tab_bar.dart' show LiquidPrismTab, LiquidPrismTabBar;
 export 'src/tab_bar_style.dart' show GlassTabBarStyle, GlassTabLabelBehavior;
 export 'src/theme.dart'
     show LiquidPrismTheme, LiquidPrismThemeData, GlassColors;
+
+export "src/switch.dart" show LiquidPrismSwitch;
+export "src/slider.dart" show LiquidPrismSlider;
+export "src/segmented_control.dart" show LiquidPrismSegmentedControl;

@@ -1,6 +1,6 @@
 # Liquid Prism
 
-Liquid glass surfaces, buttons, and draggable tab bars for Flutter on iOS and Android.
+Liquid glass surfaces, buttons, switches, sliders, segmented controls, and draggable tab bars for Flutter on iOS and Android.
 
 - Flutter-rendered glass with colors calibrated against SwiftUI Liquid Glass.
 - A customizable Impeller shader for refraction, blur, lighting, and tint.
@@ -114,6 +114,44 @@ glides it there with the native spring; dragging makes the lens chase the finger
 stretching with its speed, and commits the tab under the finger on release. Icons accept any widget, with an optional
 `selectedIcon`. Labels can be always visible, selected only, or hidden. Accessibility
 labels remain available. Place the bar inside a safe area with a bounded width.
+
+## Switch, slider and segmented tabs
+
+```dart
+LiquidPrismSwitch(
+  label: 'Notifications',
+  value: notifications,
+  onChanged: (value) => setState(() => notifications = value),
+)
+
+LiquidPrismSlider(
+  label: 'Volume',
+  value: volume,
+  min: 0,
+  max: 100,
+  onChanged: (value) => setState(() => volume = value),
+  onChangeEnd: saveVolume,
+)
+
+LiquidPrismSegmentedControl<String>(
+  selectedValue: appearance,
+  onValueChanged: (value) => setState(() => appearance = value),
+  children: const {
+    'light': Text('Light'),
+    'dark': Text('Dark'),
+    'system': Text('System'),
+  },
+)
+```
+
+Hold and glide the capsule to reveal its glass lens. The parent owns all values;
+a null callback disables the control. Sliders report updates continuously and
+support optional `divisions`; switch and segmented drags commit on release.
+All three support RTL, keyboard input, accessibility and Reduce Motion. Their
+visible geometry and springs were extracted from native iOS controls; private
+shader operators remain approximations. See [native measurements](doc/native_controls_spec.md).
+The example gallery includes all three; `example/lib/controls_main.dart` opens
+them directly. Active/track/thumb colors can be overridden on the widgets.
 
 ## App-wide appearance
 
