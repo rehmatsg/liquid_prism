@@ -226,11 +226,22 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
       occlusions,
       reported: system != null,
     );
+    final railBottom = _ChromeLayout.railBottomOf(
+      media.size,
+      padding,
+      resolved,
+      occlusions,
+    );
+    // With horizontal bars, a status bar in a top corner shares the top bar's
+    // row, as on the unfolded iPhone Duo in portrait.
+    final corner = rail
+        ? null
+        : _ChromeLayout.topCorner(media.size, occlusions);
     final showTabBar = tabBar != null && !sidebar && (rail || !keyboard);
     final items =
         rail &&
             !_fitsRail(
-              media.size.height - actionsTop,
+              railBottom - actionsTop,
               tabs: showTabBar ? tabBar : null,
             )
         ? [LiquidPrismScaffold._overflow(widget.actions)]
@@ -251,6 +262,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
             sidebarToggle ||
             (!rail && widget.actions.isNotEmpty),
         actionsTop: actionsTop,
+        railBottom: railBottom,
+        corner: corner,
         sidebar: sidebar
             ? (sidebarLeft ? AxisDirection.left : AxisDirection.right)
             : null,
@@ -296,7 +309,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
               items: items,
               // Measured: a 44 pt navigation capsule in the top bar, a 48 pt
               // wide column in the rail.
-              size: rail
+              size: rail || corner != null
                   ? GlassToolbarSize.bottom
                   : GlassToolbarSize.navigation,
               axis: rail ? Axis.vertical : Axis.horizontal,
@@ -333,7 +346,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
       LiquidPrismTabBar(:final tabs) => 50.0 * tabs.length + 12,
       _ => 0.0,
     };
-    return actionsLength + _ChromeLayout._railGap + tabsLength + 24 <= height;
+    return actionsLength + _ChromeLayout._railGap + tabsLength <= height;
   }
 }
 
@@ -421,12 +434,17 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.iOS,
     required this.topBar,
     required this.actionsTop,
+    required this.railBottom,
+    required this.corner,
     required this.sidebar,
   });
 
   final GlassChromePlacement placement;
   final EdgeInsets viewPadding;
-  final double keyboard, actionsTop;
+  final double keyboard, actionsTop, railBottom;
+
+  /// A status bar region in a top corner, which the top bar's row avoids.
+  final Rect? corner;
   final TextDirection textDirection;
   final bool iOS, topBar;
 
@@ -453,6 +471,49 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     GlassChromePlacement.bottom => viewPadding,
   };
 
+  /// Where the rail's tab bar ends: above any system UI that UIKit reports in
+  /// the lower half of the rail (the closed iPhone Duo in landscape puts the
+  /// status bar and camera there), else 24 pt above the window's edge.
+  static double railBottomOf(
+    Size size,
+    EdgeInsets viewPadding,
+    GlassChromePlacement placement,
+    List<Rect> occlusions,
+  ) {
+    final column = _railColumn(size, viewPadding, placement);
+    final below = [
+      for (final region in occlusions)
+        if (region.overlaps(column) && region.center.dy >= size.height / 2)
+          region.top,
+    ];
+    return below.isEmpty ? size.height - _railEdge : below.reduce(math.min);
+  }
+
+  /// An occlusion touching the top edge in a corner, outside any rail.
+  static Rect? topCorner(Size size, List<Rect> occlusions) {
+    for (final region in occlusions) {
+      final touchesTop = region.top <= 1;
+      final corner = region.left <= 1 || (size.width - region.right).abs() <= 1;
+      if (touchesTop && corner && region.width < size.width / 2) {
+        return region;
+      }
+    }
+    return null;
+  }
+
+  static Rect _railColumn(
+    Size size,
+    EdgeInsets viewPadding,
+    GlassChromePlacement placement,
+  ) => placement == GlassChromePlacement.rightRail
+      ? Rect.fromLTRB(
+          size.width - viewPadding.right,
+          0,
+          size.width,
+          size.height,
+        )
+      : Rect.fromLTRB(0, 0, viewPadding.left, size.height);
+
   static double railActionsTop(
     Size size,
     EdgeInsets viewPadding,
@@ -460,15 +521,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     List<Rect> occlusions, {
     bool reported = false,
   }) {
-    final right = placement == GlassChromePlacement.rightRail;
-    final column = right
-        ? Rect.fromLTRB(
-            size.width - viewPadding.right,
-            0,
-            size.width,
-            size.height,
-          )
-        : Rect.fromLTRB(0, 0, viewPadding.left, size.height);
+    final column = _railColumn(size, viewPadding, placement);
     final inRail = [
       for (final region in occlusions)
         if (region.overlaps(column) && region.center.dy < size.height / 2)
@@ -503,7 +556,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     final right = placement == GlassChromePlacement.rightRail;
     // The top bar starts at the status bar's bottom; with the status bar in
     // the rail it keeps a 24 pt margin.
-    final top = math.max(viewPadding.top, _minimumTop);
+    final top = corner == null
+        ? math.max(viewPadding.top, _minimumTop)
+        : _minimumTop;
     final rtl = textDirection == TextDirection.rtl;
     // The rail sits inside the safe area; the bars and content sit beside
     // the sidebar too.
@@ -519,6 +574,13 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     var covered = EdgeInsets.only(
       top: topBar ? top + LiquidPrismScaffold.topBarHeight : top,
     );
+    // The top bar row ends where a corner status bar begins.
+    final barLeft = corner != null && corner!.left <= 1
+        ? math.max(contentLeft, corner!.right)
+        : contentLeft;
+    final barRight = corner != null && corner!.left > 1
+        ? math.min(contentRight, corner!.left)
+        : contentRight;
 
     if (hasChild(_Slot.sidebar)) {
       layoutChild(
@@ -540,8 +602,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       if (!hasChild(slot)) continue;
       final child = layoutChild(slot, BoxConstraints.loose(size));
       final x = rtl
-          ? contentRight - leadingOffset - child.width
-          : contentLeft + leadingOffset;
+          ? barRight - leadingOffset - child.width
+          : barLeft + leadingOffset;
       positionChild(
         slot,
         Offset(x, top + (LiquidPrismScaffold.topBarHeight - child.height) / 2),
@@ -559,14 +621,21 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       if (rail) {
         positionChild(_Slot.actions, Offset(railX(actions.width), actionsTop));
       } else {
+        // Beside a corner status bar the group meets its edge, as measured.
         final x = rtl
-            ? contentLeft + _edge
-            : contentRight - _edge - actions.width;
+            ? barLeft + (corner != null && barLeft > contentLeft ? 0 : _edge)
+            : barRight -
+                  (corner != null && barRight < contentRight ? 0 : _edge) -
+                  actions.width;
         positionChild(
           _Slot.actions,
           Offset(
             x,
-            top + (LiquidPrismScaffold.topBarHeight - actions.height) / 2,
+            top +
+                math.max(
+                  0,
+                  (LiquidPrismScaffold.topBarHeight - actions.height) / 2,
+                ),
           ),
         );
       }
@@ -576,13 +645,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       if (rail) {
         final bar = layoutChild(
           _Slot.tabBar,
-          BoxConstraints.loose(
-            Size(size.width, math.max(0, size.height - top - _railEdge)),
-          ),
+          BoxConstraints.loose(Size(size.width, math.max(0, railBottom - top))),
         );
         positionChild(
           _Slot.tabBar,
-          Offset(railX(bar.width), size.height - _railEdge - bar.height),
+          Offset(railX(bar.width), railBottom - bar.height),
         );
       } else {
         // Native floating housing sits 21 pt from the screen edge on iOS
@@ -623,5 +690,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       iOS != old.iOS ||
       topBar != old.topBar ||
       actionsTop != old.actionsTop ||
+      railBottom != old.railBottom ||
+      corner != old.corner ||
       sidebar != old.sidebar;
 }

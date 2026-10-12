@@ -19,6 +19,9 @@
 - Reserve the rail strip when UIKit reports a vertical bar edge without an
   inset, as for an app on the left of Split View. The showcase reflows its
   sections into two columns around a bent fold.
+- End the rail's tab bar above system UI at the rail's bottom (the closed
+  iPhone Duo in landscape), and put top actions beside a status bar in a top
+  corner (the unfolded iPhone Duo in portrait), as native bars do.
 - Add `axis` to `LiquidPrismTabBar` and `LiquidPrismToolbarGroup` for the
   measured vertical rail layout.
 - Present native menus in the Flutter view's own window and close them when

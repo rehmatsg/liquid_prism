@@ -107,6 +107,21 @@ Reported by the plugin while the showcase ran on the iPhone Duo simulator
 | Split View, right half | 469 × 669 | right | 84 | 385, 0, 84 × 120 | 0, 0, 13.5 × 669 |
 | Split View, left half | 455.5 × 669 | left | 0 | none | 455.5, 0, 13.5 × 669 |
 
+Native `TabView` frames in the same poses (the probe, kept open while the
+poses changed):
+
+| Pose | Trailing group | Tab bar |
+| --- | --- | --- |
+| Closed, landscape, bar on the right | x 606, y 24, 48 × 100 | x 606, y 172, 48 × 212: ends at y 384, the top of the status bar and camera region (594, 384, 84 × 82) at the rail's bottom |
+| Closed, landscape, bar on the left | x 24, y 82, 48 × 100: below the status bar region (0, 0, 84 × 82) | x 24, y 230, 48 × 212: ends 24 pt above the edge |
+| Open, portrait | x 431, y 24, 104 × 48: in the top row, ending at x 535 where the corner status bar region begins | Floating at the bottom, as on iPhone |
+| Split View, left half | x 24, y 24, 48 × 100 | x 24, y 433, 48 × 212 |
+| Split View, right half | x 397, y 120, 48 × 100 | x 397, y 433, 48 × 212 |
+
+The rail therefore runs from below any system region in its top half to above
+any in its bottom half. With horizontal bars, a status bar in a top corner
+shares the top bar's row.
+
 The open portrait pose keeps horizontal bars, as Apple describes. In Split View
 on the left, iOS puts the bar on the left edge but gives the window no left
 inset and no status bar: the inset comes from native bars, so

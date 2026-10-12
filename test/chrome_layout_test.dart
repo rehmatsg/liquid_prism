@@ -345,6 +345,52 @@ void main() {
       expect(padding.left, 84);
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
+    testWidgets('closed landscape stops the rail above the status bar', (
+      tester,
+    ) async {
+      // Native: the status bar and camera sit at the bottom of the rail and
+      // the tab bar ends at y 384, where they begin.
+      window(tester, (
+        size: const Size(678, 466),
+        padding: const FakeViewPadding(right: 84, bottom: 34),
+      ));
+      await report(tester, {
+        'verticalBarEdge': 'right',
+        'occlusions': [
+          [611.6, 399.6, 37.0, 37.0],
+          [594.0, 384.0, 84.0, 82.0],
+        ],
+      });
+      await tester.pumpWidget(const _App());
+      await tester.pump();
+      expect(tester.getRect(find.byType(LiquidPrismTabBar)).bottom, 384);
+      expect(tester.getRect(find.byType(LiquidPrismToolbarGroup)).top, 24);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('a corner status bar shares the top bar row', (tester) async {
+      // Native, unfolded in portrait: actions at y 24, 48 pt tall, ending
+      // where the status bar's region begins at x 535.
+      window(tester, (
+        size: const Size(669, 951),
+        padding: const FakeViewPadding(top: 82, bottom: 34),
+      ));
+      await report(tester, {
+        'verticalBarEdge': null,
+        'occlusions': [
+          [535.0, 0.0, 134.0, 82.0],
+        ],
+      });
+      await tester.pumpWidget(const _App());
+      await tester.pump();
+      final actions = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+      expect(actions.right, 535);
+      expect(actions.top, 24);
+      expect(actions.height, 48);
+      expect(tester.getRect(find.byType(LiquidPrismTabBar)).bottom, 951 - 21);
+      final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
+      expect(padding.top, 82);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
     testWidgets('rail actions start below the reported status bar region', (
       tester,
     ) async {
