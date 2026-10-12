@@ -163,7 +163,10 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
                     ),
                   ),
                   IconTheme.merge(
-                    data: IconThemeData(color: color, size: 22),
+                    // Native symbol image views enlarge their source images.
+                    // 22-point Cupertino glyphs leave too much visible space
+                    // between actions despite matching native item centers.
+                    data: IconThemeData(color: color, size: 25.5),
                     child: item.icon,
                   ),
                 ],

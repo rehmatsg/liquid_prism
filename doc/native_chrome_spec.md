@@ -13,6 +13,8 @@ appearances, including focused and filled search states.
 | Navigation outer inset / item gap | 4 / 16 |
 | Bottom toolbar capsule | 100 × 48 for two chevrons; 48 × 48 for compose |
 | Bottom visual item width / outer inset / gap | 38 / 5 / 14 |
+| Navigation symbol image views (star / share / ellipsis) | 28⅓ × 27 / 24⅔ × 30 / 24 × 8⅓ |
+| Bottom symbol image views (chevrons / compose) | 16 × 22⅔ / 26⅔ × 27 |
 | Held capsule widths | 175, 116, 64 respectively |
 | Held content | Whole group scales uniformly with the material |
 | Search glass | 48 high; 346 wide at rest, 326 while focused |
@@ -31,6 +33,13 @@ GlassColors and uses the existing calibrated accent foreground. Placeholder and
 disabled colors also come from the shared palette. Native backdrop-aware
 vibrancy differs from painting a literal foreground color; that compositor and
 CupertinoIcons glyphs remain approximations.
+
+Item gaps refer to button bounds, not visible glyph edges. Native image views
+enlarge their source symbols; using the source image size for a Flutter icon
+made the visible gaps too wide. The default toolbar icon size is now 25.5 points,
+bringing Cupertino glyph bounds closer to the rendered native symbols while
+preserving the measured button centers, capsule widths and touch regions.
+An explicit size on a caller-supplied icon still takes precedence.
 
 Three held widths directly establish the 16-point width increase, including
 the 48-point circle becoming 64 points wide. The whole shared material and its

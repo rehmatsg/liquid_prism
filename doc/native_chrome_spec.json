@@ -828,6 +828,33 @@
           "windowFrame": "{{231, 66}, {42.333333333333314, 36}}"
         },
         {
+          "accessibilityIdentifier": "star",
+          "bounds": "{{0, 0}, {28.333333333333332, 27}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{22, 20.666666666666664}",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{238, 70}, {28.333333333333314, 27}}"
+        },
+        {
           "accessibilityIdentifier": "share",
           "bounds": "{{0, 0}, {38.666666666666664, 36}}",
           "cornerCurve": "continuous",
@@ -852,6 +879,33 @@
             0
           ],
           "windowFrame": "{{289.33333333333331, 66}, {38.666666666666686, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "square.and.arrow.up",
+          "bounds": "{{0, 0}, {24.666666666666668, 30}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{19, 22.666666666666668}",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/1/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{296.33333333333331, 67.666666666666671}, {24.666666666666686, 30}}"
         },
         {
           "accessibilityIdentifier": "more",
@@ -880,6 +934,33 @@
           "windowFrame": "{{344, 66}, {38, 36}}"
         },
         {
+          "accessibilityIdentifier": "ellipsis",
+          "bounds": "{{0, 0}, {24, 8.3333333333333321}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{18.333333333333332, 6}",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{351, 80}, {24, 8.3333333333333286}}"
+        },
+        {
           "accessibilityIdentifier": "back",
           "bounds": "{{0, 0}, {38, 38}}",
           "cornerCurve": "continuous",
@@ -904,6 +985,33 @@
             0
           ],
           "windowFrame": "{{33, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "chevron.left",
+          "bounds": "{{0, 0}, {16, 22.666666666666668}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{12.666666666666666, 17.333333333333332}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{44, 811}, {16, 22.666666666666629}}"
         },
         {
           "accessibilityIdentifier": "forward",
@@ -932,6 +1040,33 @@
           "windowFrame": "{{85, 803}, {38, 38}}"
         },
         {
+          "accessibilityIdentifier": "chevron.right",
+          "bounds": "{{0, 0}, {16, 22.666666666666668}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{12.666666666666666, 17.333333333333332}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/1/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{96, 811}, {16, 22.666666666666629}}"
+        },
+        {
           "accessibilityIdentifier": "compose",
           "bounds": "{{0, 0}, {38, 38}}",
           "cornerCurve": "continuous",
@@ -956,6 +1091,33 @@
             0
           ],
           "windowFrame": "{{331, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "square.and.pencil",
+          "bounds": "{{0, 0}, {26.666666666666668, 27}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{21, 20.666666666666664}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.568627 1 1",
+            "rgba": [
+              0,
+              0.5686274509803921,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{336.33333333333331, 807.33333333333337}, {26.666666666666686, 27}}"
         }
       ],
       "glassBackgroundInputs": [
@@ -2044,6 +2206,33 @@
           "windowFrame": "{{231, 66}, {42.333333333333314, 36}}"
         },
         {
+          "accessibilityIdentifier": "star",
+          "bounds": "{{0, 0}, {28.333333333333332, 27}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{22, 20.666666666666664}",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{238, 70}, {28.333333333333314, 27}}"
+        },
+        {
           "accessibilityIdentifier": "share",
           "bounds": "{{0, 0}, {38.666666666666664, 36}}",
           "cornerCurve": "continuous",
@@ -2068,6 +2257,33 @@
             0
           ],
           "windowFrame": "{{289.33333333333331, 66}, {38.666666666666686, 36}}"
+        },
+        {
+          "accessibilityIdentifier": "square.and.arrow.up",
+          "bounds": "{{0, 0}, {24.666666666666668, 30}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{19, 22.666666666666668}",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/1/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{296.33333333333331, 67.666666666666671}, {24.666666666666686, 30}}"
         },
         {
           "accessibilityIdentifier": "more",
@@ -2096,6 +2312,33 @@
           "windowFrame": "{{344, 66}, {38, 36}}"
         },
         {
+          "accessibilityIdentifier": "ellipsis",
+          "bounds": "{{0, 0}, {24, 8.3333333333333321}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{18.333333333333332, 6}",
+          "path": "window0/0/0/0/0/0/1/1/0/2/0/0/0/0/0/2/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{351, 80}, {24, 8.3333333333333286}}"
+        },
+        {
           "accessibilityIdentifier": "back",
           "bounds": "{{0, 0}, {38, 38}}",
           "cornerCurve": "continuous",
@@ -2120,6 +2363,33 @@
             0
           ],
           "windowFrame": "{{33, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "chevron.left",
+          "bounds": "{{0, 0}, {16, 22.666666666666668}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{12.666666666666666, 17.333333333333332}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{44, 811}, {16, 22.666666666666629}}"
         },
         {
           "accessibilityIdentifier": "forward",
@@ -2148,6 +2418,33 @@
           "windowFrame": "{{85, 803}, {38, 38}}"
         },
         {
+          "accessibilityIdentifier": "chevron.right",
+          "bounds": "{{0, 0}, {16, 22.666666666666668}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{12.666666666666666, 17.333333333333332}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/0/1/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{96, 811}, {16, 22.666666666666629}}"
+        },
+        {
           "accessibilityIdentifier": "compose",
           "bounds": "{{0, 0}, {38, 38}}",
           "cornerCurve": "continuous",
@@ -2172,6 +2469,33 @@
             0
           ],
           "windowFrame": "{{331, 803}, {38, 38}}"
+        },
+        {
+          "accessibilityIdentifier": "square.and.pencil",
+          "bounds": "{{0, 0}, {26.666666666666668, 27}}",
+          "cornerCurve": "continuous",
+          "cornerRadius": 0,
+          "delegateClass": "UIImageView",
+          "imageSize": "{21, 20.666666666666664}",
+          "path": "window0/0/0/0/0/0/2/0/0/0/0/1/0/0/0/0/0/0",
+          "tintColor": {
+            "description": "kCGColorSpaceModelRGB 0 0.533333 1 1",
+            "rgba": [
+              0,
+              0.5333333333333333,
+              1,
+              1
+            ]
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "windowFrame": "{{336.33333333333331, 807.33333333333337}, {26.666666666666686, 27}}"
         }
       ],
       "glassBackgroundInputs": [

@@ -41,13 +41,20 @@ for mode in ['light', 'dark']:
                         if 'UIPlatformGlassInteractionView' in layer['delegateClass']
                         and layer.get('windowFrame') and not layer['hidden']]
             prefix = 'window0/0/0/0/0/0/'
+            image_paths = {layer['path'] for layer in layers
+                           if layer['delegateClass'] == 'UIImageView'
+                           and layer.get('accessibilityIdentifier')}
             content = [geometry(layer) for layer in layers
                        if layer['path'].startswith(prefix)
                        and (layer['delegateClass'] in ['_UIButtonBarButton',
                             'UISearchBarTextField', 'UISearchBarTextFieldLabel']
                             or (layer['delegateClass'] == 'UIImageView'
                                 and layer.get('accessibilityIdentifier')
-                                and not layer['path'].endswith('/0')))]
+                                # Retain the owning image view, not the
+                                # duplicate image delegate on its child layer.
+                                and (layer['path'].rsplit('/', 1)[0]
+                                     not in image_paths if component == 'toolbar'
+                                     else not layer['path'].endswith('/0'))))]
             filters = [f for layer in layers for f in layer.get('filters', [])
                        if f['name'] == 'glassBackground']
             profiles[f'{mode}-{component}-{state}'] = {
