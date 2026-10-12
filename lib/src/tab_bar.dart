@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 
 import 'control_lens.dart';
 import 'appearance.dart';
+import 'chrome_layout.dart';
 import 'superellipse.dart';
 import 'glass.dart';
 import 'foreground.dart';
@@ -47,6 +48,11 @@ final class LiquidPrismTab {
 /// tab; dragging makes the lens chase the finger and stretch with its speed.
 /// [onSelected] fires once on release. The parent's [selectedIndex] is
 /// authoritative, including rejected selections, and the pill settles back.
+///
+/// [axis] lays the tabs out in a row (the default) or a column. A vertical bar
+/// is the icon-only side rail that iOS uses beside a sensor bar on iPhone Duo;
+/// labels stay available to accessibility. Inside a [LiquidPrismScaffold] the
+/// axis follows the scaffold's resolved placement unless set here.
 class LiquidPrismTabBar extends StatefulWidget {
   const LiquidPrismTabBar({
     super.key,
@@ -58,6 +64,7 @@ class LiquidPrismTabBar extends StatefulWidget {
     this.optics,
     this.blur,
     this.motion,
+    this.axis,
   }) : assert(tabs.length > 1),
        assert(selectedIndex >= 0 && selectedIndex < tabs.length),
        assert(blur == null || (blur >= 0 && blur <= 12));
@@ -69,6 +76,10 @@ class LiquidPrismTabBar extends StatefulWidget {
   final LiquidPrismStyle? optics;
   final double? blur;
   final GlassMotion? motion;
+
+  /// Row or column layout. Null inherits [LiquidPrismScaffold]'s placement,
+  /// then defaults to [Axis.horizontal].
+  final Axis? axis;
   @override
   State<LiquidPrismTabBar> createState() => _LiquidPrismTabBarState();
   @override
@@ -82,6 +93,7 @@ class LiquidPrismTabBar extends StatefulWidget {
       ..add(DiagnosticsProperty<LiquidPrismStyle>('optics', optics))
       ..add(DoubleProperty('blur', blur))
       ..add(DiagnosticsProperty<GlassMotion>('motion', motion))
+      ..add(EnumProperty<Axis>('axis', axis, defaultValue: null))
       ..add(
         ObjectFlagProperty<ValueChanged<int>>.has('onSelected', onSelected),
       );
@@ -117,9 +129,12 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   /// committed tab: the icons under the lens are recoloured by position.
   final _window = ValueNotifier<bool>(false);
   bool _initialized = false, _rtl = false, _reduceMotion = false;
+  bool _vertical = false;
   bool _dragging = false, _cancelled = false, _committing = false;
   int? _pointer;
   final _contacts = <int>{};
+
+  /// Slot extent, bar extent and leading padding along the main axis.
   double _slotWidth = 1, _barWidth = 274, _padLeft = 0, _fingerSlot = 0;
   int _epoch = 0;
   final _focusNodes = <FocusNode>[];
@@ -165,17 +180,22 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         0.0,
         2.0,
       );
+
+  /// Columns run top to bottom in either text direction.
+  bool get _mirrored => _rtl && !_vertical;
   double _physical(int index) =>
-      (_rtl ? widget.tabs.length - 1 - index : index).toDouble();
+      (_mirrored ? widget.tabs.length - 1 - index : index).toDouble();
   int _logical(double position) {
     final slot = position.round().clamp(0, widget.tabs.length - 1);
-    return _rtl ? widget.tabs.length - 1 - slot : slot;
+    return _mirrored ? widget.tabs.length - 1 - slot : slot;
   }
 
+  double _main(Offset point) => _vertical ? point.dy : point.dx;
+
   /// Finger position in slot units, resisted past the end tabs.
-  double _slotAt(double dx) {
+  double _slotAt(Offset point) {
     final centre = _padLeft + _slotWidth * widget.tabs.length / 2;
-    final local = centre + (dx - centre) / _lensScale.value;
+    final local = centre + (_main(point) - centre) / _lensScale.value;
     return _resisted(
       (local - _padLeft) / _slotWidth - .5,
       (widget.tabs.length - 1).toDouble(),
@@ -235,9 +255,11 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final rtl = Directionality.of(context) == TextDirection.rtl;
+    final vertical = _resolveVertical();
     final reduced = MediaQuery.disableAnimationsOf(context);
-    if (!_initialized || rtl != _rtl) {
+    if (!_initialized || rtl != _rtl || vertical != _vertical) {
       _rtl = rtl;
+      _vertical = vertical;
       _reset();
     }
     _initialized = true;
@@ -255,12 +277,19 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     }
   }
 
+  bool _resolveVertical() =>
+      (widget.axis ?? LiquidPrismChrome.maybeOf(context)?.axis) ==
+      Axis.vertical;
+
   @override
   void didUpdateWidget(LiquidPrismTabBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     _syncFocus();
+    final vertical = _resolveVertical();
     if (widget.tabs.length != oldWidget.tabs.length ||
-        widget.onSelected == null) {
+        widget.onSelected == null ||
+        vertical != _vertical) {
+      _vertical = vertical;
       _reset();
     } else if (widget.selectedIndex != oldWidget.selectedIndex) {
       if (!_committing && _pointer != null) {
@@ -395,7 +424,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       });
     }
     // The pill glides to the touched tab on contact, before any release.
-    _fingerSlot = _slotAt(event.localPosition.dx);
+    _fingerSlot = _slotAt(event.localPosition);
     final slot = _fingerSlot.roundToDouble().clamp(
       0.0,
       (widget.tabs.length - 1).toDouble(),
@@ -431,7 +460,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     if (!_dragging) _feedback(true);
     _dragging = true;
     _trackingDeformation = true;
-    _fingerSlot = _slotAt(location.dx);
+    _fingerSlot = _slotAt(location);
     if (_reduceMotion) {
       _position.value = _fingerSlot;
     } else {
@@ -507,9 +536,18 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final selectedAccent = calibrated
         ? restingGlassAccent(accent, colors.brightness)
         : accent;
+    final vertical = _vertical;
+    // The native iPhone Duo rail: 44 x 58 pt buttons at a 50 pt pitch inside
+    // a 48 pt wide capsule, 2 pt across and 6 pt along the rail.
     final padding =
-        style.padding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 4);
-    final labels = style.labelBehavior ?? GlassTabLabelBehavior.always;
+        style.padding ??
+        (vertical
+            ? const EdgeInsets.symmetric(horizontal: 2, vertical: 6)
+            : const EdgeInsets.symmetric(horizontal: 8, vertical: 4));
+    // The rail is icon-only. Labels remain the accessible names.
+    final labels = vertical
+        ? GlassTabLabelBehavior.never
+        : style.labelBehavior ?? GlassTabLabelBehavior.always;
     final iconSize = style.iconSize ?? 25;
     final textStyle = const TextStyle(
       fontSize: 10,
@@ -518,12 +556,15 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final textHeight =
         MediaQuery.textScalerOf(context).scale(textStyle.fontSize ?? 10) *
         (textStyle.height ?? 1.2);
-    final height = math.max(
-      style.height ?? 54,
-      iconSize +
-          (labels == GlassTabLabelBehavior.never ? 0 : textHeight + 2) +
-          8,
-    );
+    // Cross-axis extent of one tab: its height in a row, width in a column.
+    final height = vertical
+        ? math.max(44.0, iconSize + 8)
+        : math.max(
+            style.height ?? 54,
+            iconSize +
+                (labels == GlassTabLabelBehavior.never ? 0 : textHeight + 2) +
+                8,
+          );
     final lensStyle =
         (LiquidPrismTheme.of(context).lens ?? const GlassLensStyle()).merge(
           style.lens,
@@ -551,28 +592,38 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     // 32 points of horizontal breathing room; measure in device pixels as UIKit
     // does. The housing keeps its outer padding, instead of consuming all space.
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final slot = math.max(
-      style.minimumTabWidth ?? 86.0,
-      (contentWidth * dpr).ceil() / dpr + (style.labelPadding ?? 32),
-    );
-    final preferredWidth = slot * widget.tabs.length + padding.horizontal;
+    final slot = vertical
+        ? math.max(50.0, iconSize + 25)
+        : math.max(
+            style.minimumTabWidth ?? 86.0,
+            (contentWidth * dpr).ceil() / dpr + (style.labelPadding ?? 32),
+          );
+    final mainPadding = vertical ? padding.vertical : padding.horizontal;
+    final preferredWidth = slot * widget.tabs.length + mainPadding;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final barWidth = style.expanded == true && constraints.hasBoundedWidth
+        final available = vertical
+            ? constraints.maxHeight
+            : constraints.maxWidth;
+        final barWidth =
+            !vertical && style.expanded == true && constraints.hasBoundedWidth
             ? constraints.maxWidth
-            : math.min(preferredWidth, constraints.maxWidth);
-        final width = (barWidth - padding.horizontal) / widget.tabs.length;
+            : math.min(preferredWidth, available);
+        final width = (barWidth - mainPadding) / widget.tabs.length;
         if (!width.isFinite || width <= 0) return const SizedBox.shrink();
-        _padLeft = padding.left;
+        _padLeft = vertical ? padding.top : padding.left;
         _barWidth = barWidth;
         if (width != _slotWidth) {
           _slotWidth = width;
           if (_pointer != null || _dragging) _reset();
         }
-        final barSize = Size(barWidth, height + padding.vertical);
+        final barSize = vertical
+            ? Size(height + padding.horizontal, barWidth)
+            : Size(barWidth, height + padding.vertical);
         final content = ValueListenableBuilder<bool>(
           valueListenable: _window,
-          builder: (context, window, _) => Row(
+          builder: (context, window, _) => Flex(
+            direction: vertical ? Axis.vertical : Axis.horizontal,
             children: [
               for (var index = 0; index < widget.tabs.length; index++)
                 Expanded(
@@ -586,11 +637,21 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                     selectedAccent,
                     style,
                     window: window,
+                    vertical: vertical,
                   ),
                 ),
             ],
           ),
         );
+        final selects = widget.onSelected != null;
+        void cancelDrag() {
+          if (_pointer == null && !_dragging) return;
+          _dragging = false;
+          _cancelled = true;
+          _feedback(false);
+          _settle();
+        }
+
         final surface = Listener(
           behavior: HitTestBehavior.opaque,
           onPointerDown: _pointerDown,
@@ -604,7 +665,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                 : (details) {
                     if (!_cancelled) {
                       _commit(
-                        _logical(_slotAt(details.localPosition.dx)),
+                        _logical(_slotAt(details.localPosition)),
                         velocity: _position.velocity,
                       );
                     }
@@ -615,20 +676,22 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                 _settle();
               }
             },
-            onHorizontalDragStart: widget.onSelected == null
-                ? null
-                : (details) => _drag(details.localPosition),
-            onHorizontalDragUpdate: widget.onSelected == null
-                ? null
-                : (details) => _drag(details.localPosition),
-            onHorizontalDragEnd: widget.onSelected == null ? null : _dragEnd,
-            onHorizontalDragCancel: () {
-              if (_pointer == null && !_dragging) return;
-              _dragging = false;
-              _cancelled = true;
-              _feedback(false);
-              _settle();
-            },
+            onHorizontalDragStart: selects && !vertical
+                ? (details) => _drag(details.localPosition)
+                : null,
+            onHorizontalDragUpdate: selects && !vertical
+                ? (details) => _drag(details.localPosition)
+                : null,
+            onHorizontalDragEnd: selects && !vertical ? _dragEnd : null,
+            onHorizontalDragCancel: vertical ? null : cancelDrag,
+            onVerticalDragStart: selects && vertical
+                ? (details) => _drag(details.localPosition)
+                : null,
+            onVerticalDragUpdate: selects && vertical
+                ? (details) => _drag(details.localPosition)
+                : null,
+            onVerticalDragEnd: selects && vertical ? _dragEnd : null,
+            onVerticalDragCancel: vertical ? cancelDrag : null,
             child: AnimatedBuilder(
               animation: Listenable.merge([
                 _position,
@@ -646,15 +709,17 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                 final lift = _lift.value.clamp(0.0, 1.0);
                 final deformation = _stretch.value.clamp(-.24, .24);
                 final inset = NativeMotion.lensInset * lift * _liftFactor;
-                final pillWidth = width + 8 + 2 * inset;
-                final pillHeight = height + 2 * inset;
+                final along = (width + 8 + 2 * inset) * (1 + deformation);
+                final across =
+                    (height + 2 * inset) *
+                    (1 + _crossStretch.value.clamp(-.3, .3));
+                final travel = _position.value * width + width / 2;
                 final pill = Rect.fromCenter(
-                  center: Offset(
-                    _position.value * width + width / 2,
-                    height / 2,
-                  ),
-                  width: pillWidth * (1 + deformation),
-                  height: pillHeight * (1 + _crossStretch.value.clamp(-.3, .3)),
+                  center: vertical
+                      ? Offset(height / 2, travel)
+                      : Offset(travel, height / 2),
+                  width: vertical ? across : along,
+                  height: vertical ? along : across,
                 );
                 final lensScale = _lensScale.value;
                 final barScale = lensScale;
@@ -797,6 +862,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     Color selectedAccent,
     GlassTabBarStyle style, {
     required bool window,
+    required bool vertical,
   }) {
     final selected = widget.selectedIndex == index;
     final enabled = widget.onSelected != null;
@@ -844,17 +910,25 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       onTap: enabled ? () => _commit(index) : null,
       child: CallbackShortcuts(
         bindings: {
-          const SingleActivator(LogicalKeyboardKey.arrowRight): () {
+          SingleActivator(
+            vertical
+                ? LogicalKeyboardKey.arrowDown
+                : LogicalKeyboardKey.arrowRight,
+          ): () {
             if (enabled) {
               _keyboardSelect(
-                (index + (_rtl ? -1 : 1)).clamp(0, widget.tabs.length - 1),
+                (index + (_mirrored ? -1 : 1)).clamp(0, widget.tabs.length - 1),
               );
             }
           },
-          const SingleActivator(LogicalKeyboardKey.arrowLeft): () {
+          SingleActivator(
+            vertical
+                ? LogicalKeyboardKey.arrowUp
+                : LogicalKeyboardKey.arrowLeft,
+          ): () {
             if (enabled) {
               _keyboardSelect(
-                (index + (_rtl ? 1 : -1)).clamp(0, widget.tabs.length - 1),
+                (index + (_mirrored ? 1 : -1)).clamp(0, widget.tabs.length - 1),
               );
             }
           },
@@ -871,7 +945,8 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ),
           },
           child: SizedBox(
-            height: height,
+            width: vertical ? height : null,
+            height: vertical ? null : height,
             child: Center(child: content),
           ),
         ),

@@ -34,7 +34,8 @@ let package = Package(
                 "MenuBuilder.swift",
                 "MenuModels.swift",
                 "MenuOverlayHost.swift",
-                "MenuPresenter.swift"
+                "MenuPresenter.swift",
+                "SystemChromeObserver.swift"
             ],
             resources: [
                 // Ships a privacy manifest declaring no data collection and no

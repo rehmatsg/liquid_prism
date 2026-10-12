@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Add `LiquidPrismScaffold` and `GlassChromePlacement`: floating glass chrome
+  that moves into the iPhone Duo sensor-bar rail and follows window resizes.
+  On iOS 27.1 it follows UIKit's `verticalBarEdge` and reserved regions,
+  collapses rail actions into an overflow menu when space runs out, and
+  exposes a partial fold as a display feature.
+- Add `axis` to `LiquidPrismTabBar` and `LiquidPrismToolbarGroup` for the
+  measured vertical rail layout.
+- Present native menus in the Flutter view's own window and close them when
+  it resizes.
+- Rebuild the showcase with native large titles, grouped lists and content
+  that scrolls under its glass chrome.
+
 - Add reusable component appearance styles and shared lens defaults through
   `LiquidPrismThemeData`, with partial inheritance and typed `copyWith`/`merge`.
 - Expose small-control springs, minimum lift, velocity deformation and decay

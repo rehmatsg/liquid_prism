@@ -15,30 +15,47 @@ public final class MenuOverlayHost {
   /// a window existed.
   public private(set) var hostView: UIView?
 
+  /// The window Flutter draws into, when the caller knows it. Preferred over
+  /// searching connected scenes, which can pick another window of the app.
+  public var preferredWindow: (@MainActor () -> UIWindow?)?
+
+  /// Called when the host's window changes size: resizing, folding or
+  /// rotation. A menu anchored in the old geometry should close, as UIKit's
+  /// own menus do.
+  public var onResize: (@MainActor () -> Void)?
+
   private var observersAdded = false
 
   private init() {}
 
-  /// Ensures the overlay is attached to the active window. Idempotent, and
+  /// Ensures the overlay is attached to Flutter's window. Idempotent, and
   /// safe to call before a window exists — it retries on the next runloop and
   /// on scene activation.
   @discardableResult
   public func ensureInstalled() -> Bool {
     addObserversIfNeeded()
-    guard hostView == nil else { return true }
-    guard let window = Self.activeWindow(), let root = window.rootViewController else {
+    let target = preferredWindow?() ?? Self.activeWindow()
+    if let host = hostView, host.window != nil, target == nil || host.window === target {
+      return true
+    }
+    guard let root = target?.rootViewController else {
+      if hostView != nil { return true }
       DispatchQueue.main.async { [weak self] in
         guard let self, self.hostView == nil else { return }
-        if Self.activeWindow()?.rootViewController != nil { self.ensureInstalled() }
+        if (self.preferredWindow?() ?? Self.activeWindow())?.rootViewController != nil {
+          self.ensureInstalled()
+        }
       }
       return false
     }
+    hostView?.removeFromSuperview()
     install(in: root)
     return true
   }
 
   private func install(in root: UIViewController) {
-    let host = UIView()
+    let host = MenuHostView()
+    host.onResize = { [weak self] in self?.onResize?() }
     host.isUserInteractionEnabled = false
     host.backgroundColor = .clear
     host.translatesAutoresizingMaskIntoConstraints = false
@@ -60,8 +77,8 @@ public final class MenuOverlayHost {
     superview.bringSubviewToFront(host)
   }
 
-  /// The window the overlay installs into: the foreground-active scene's key
-  /// window, with progressively looser fallbacks.
+  /// The fallback window when no preferred window is known: the
+  /// foreground-active scene's key window, with progressively looser fallbacks.
   public static func activeWindow() -> UIWindow? {
     let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
     let scene = windowScenes.first { $0.activationState == .foregroundActive }
@@ -83,6 +100,21 @@ public final class MenuOverlayHost {
         guard let self else { return }
         if self.hostView == nil { self.ensureInstalled() } else { self.bringToFront() }
       }
+    }
+  }
+}
+
+/// The overlay container. Reports size changes after its first layout.
+final class MenuHostView: UIView {
+  var onResize: (@MainActor () -> Void)?
+  private var laidOutSize: CGSize?
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    let size = bounds.size
+    defer { laidOutSize = size }
+    if let previous = laidOutSize, previous != size, previous != .zero {
+      onResize?()
     }
   }
 }

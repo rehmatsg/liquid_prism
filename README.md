@@ -188,6 +188,33 @@ LiquidPrismTabBar(
 )
 ```
 
+### App layout for every iPhone, including iPhone Duo
+
+`LiquidPrismScaffold` floats your tab bar and actions over scrolling content and
+puts them where iOS would. On iPhone, actions sit top-right and the tab bar floats
+at the bottom. Beside the iPhone Duo sensor bar, both move into a side rail and
+the tabs turn icon-only. The layout follows the window as it folds, rotates or
+resizes, and scroll views get padding to clear the glass.
+
+```dart
+LiquidPrismScaffold(
+  backgroundColor: const Color(0xFFF2F2F7),
+  actions: [
+    GlassToolbarItem(
+      icon: const Icon(CupertinoIcons.share),
+      label: 'Share',
+      onPressed: share,
+    ),
+  ],
+  tabBar: LiquidPrismTabBar(
+    selectedIndex: selectedTab,
+    onSelected: (next) => setState(() => selectedTab = next),
+    tabs: tabs,
+  ),
+  body: ListView(children: rows),
+)
+```
+
 ## Make it yours
 
 Set shared defaults around your app's routes:

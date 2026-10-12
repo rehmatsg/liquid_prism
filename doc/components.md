@@ -176,6 +176,44 @@ rim region (native defaults 14 displacement / 11.2 depth). Widget `motion` is
 `GlassMotion` for travel, press scale and projection; native lift/flex defaults
 remain calibrated separately. Safe-area positioning belongs to the parent.
 
+## Adaptive layout
+
+`LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and an optional
+`leading` control over a full-window `body`:
+
+| Window | Placement |
+| --- | --- |
+| iPhone, portrait or landscape | Actions in a 44 pt top bar, tab bar floating 21 pt above the bottom edge |
+| iPhone Duo beside its sensor bar, folded or unfolded | Actions and an icon-only tab bar stacked in a 48 pt rail inside that side's safe area |
+
+On iOS 27.1 and later the plugin reports where UIKit itself would put its
+bars: `UITraitCollection.verticalBarEdge` picks the rail and its edge
+(including the left edge for an app on the left of Split View, and horizontal
+bars on the inner display in portrait), and the status bar's reserved region
+sets where the rail's actions begin. Elsewhere, `GlassChromePlacement.resolve`
+picks the rail when one side's safe area is at least 48 pt deeper than the
+other. Pass `placement` to force one. The [adaptive layout
+measurements](native_adaptive_layout.md) record the native frames this follows.
+
+The body receives `MediaQuery.padding` that includes the space the chrome
+covers, so scroll views keep content clear while it still shows through the
+glass. When the device is partly folded, the fold reaches the body as a
+`MediaQuery.displayFeatures` entry; `DisplayFeatureSubScreen` keeps content out
+of it. Read `LiquidPrismScaffold.placementOf(context)` to adapt your own layout.
+
+When the rail is too short for both the actions and the tab bar, the actions
+collapse into one "More" item whose native menu lists them, as native bars do
+before compressing the tab bar.
+
+Inside the scaffold, `LiquidPrismTabBar` and the actions group adopt the
+placement's axis. Set `axis` on either widget to choose it yourself. A vertical
+tab bar is icon-only; labels remain the accessible names. Arrow up and down move
+between its tabs, and it reads top to bottom in both text directions.
+
+The scaffold hides a bottom tab bar while the keyboard is up and adds the
+keyboard height to the body's bottom padding. Native popup menus close when the
+window resizes, as UIKit menus do.
+
 ## Toolbar groups
 
 ```dart

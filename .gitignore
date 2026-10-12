@@ -34,3 +34,4 @@ __pycache__/
 # Swift package tooling.
 /.swiftpm/
 /.build/
+/ios/liquid_prism/.build/

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import 'chrome_layout.dart';
 import 'chrome_material.dart';
 import 'foreground.dart';
 import 'material.dart';
@@ -65,7 +66,10 @@ class GlassToolbarItem {
 
 /// Icon actions sharing one continuous glass capsule, with individual feedback.
 /// Place separate groups in a Row with a gap or Spacer. Narrow groups scroll
-/// horizontally without shrinking their icons or action regions.
+/// along their axis without shrinking their icons or action regions.
+///
+/// A vertical group stacks the same layout in a column, as in the iPhone Duo
+/// side rail: [GlassToolbarItem.width] becomes each item's height.
 class LiquidPrismToolbarGroup extends StatelessWidget {
   const LiquidPrismToolbarGroup({
     super.key,
@@ -77,6 +81,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
     this.blur,
     this.motion,
     this.foregroundColor,
+    this.axis,
   }) : size = size ?? GlassToolbarSize.bottom,
        _hasSize = size != null,
        assert(items.length > 0);
@@ -89,8 +94,14 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
   final double? blur;
   final GlassMotion? motion;
   final Color? foregroundColor;
+
+  /// Row or column layout. Null inherits [LiquidPrismScaffold]'s bar axis,
+  /// then defaults to [Axis.horizontal].
+  final Axis? axis;
   @override
   Widget build(BuildContext context) {
+    final vertical =
+        (axis ?? LiquidPrismChrome.maybeOf(context)?.axis) == Axis.vertical;
     final theme = LiquidPrismTheme.of(context),
         colors = GlassColors.of(context);
     final appearance = (theme.toolbar ?? const GlassToolbarStyle()).merge(
@@ -111,8 +122,8 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
         gap * (items.length - 1) +
         inset * 2;
     final capsule = SizedBox(
-      width: width,
-      height: height,
+      width: vertical ? height : width,
+      height: vertical ? width : height,
       child: ChromeMaterial(
         height: height,
         role: GlassRole.toolbar,
@@ -123,8 +134,9 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
         child: ClipPath(
           clipper: GlassShapeClipper(appearance.shape ?? GlassShape.capsule),
           child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+            scrollDirection: vertical ? Axis.vertical : Axis.horizontal,
+            child: Flex(
+              direction: vertical ? Axis.vertical : Axis.horizontal,
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (var i = 0; i < items.length; i++)
@@ -137,6 +149,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
                     colors,
                     foreground,
                     appearance,
+                    vertical,
                   ),
               ],
             ),
@@ -175,6 +188,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
     GlassColors colors,
     Color foreground,
     GlassToolbarStyle appearance,
+    bool vertical,
   ) {
     final left = index == 0 ? inset : gap / 2;
     final right = index == items.length - 1 ? inset : gap / 2;
@@ -201,16 +215,21 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
             final color = !item._isEnabled
                 ? colors.disabledLabel
                 : item.foregroundColor ?? foreground;
+            final extent = item.width + left + right;
             return SizedBox(
-              width: item.width + left + right,
-              height: height,
+              width: vertical ? height : extent,
+              height: vertical ? extent : height,
               child: Padding(
-                padding: EdgeInsetsDirectional.only(start: left, end: right),
+                padding: vertical
+                    ? EdgeInsets.only(top: left, bottom: right)
+                    : EdgeInsetsDirectional.only(start: left, end: right),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: inset),
+                      padding: vertical
+                          ? EdgeInsets.symmetric(horizontal: inset)
+                          : EdgeInsets.symmetric(vertical: inset),
                       child: ClipPath(
                         clipper: GlassShapeClipper(
                           appearance.itemShape ?? GlassShape.capsule,

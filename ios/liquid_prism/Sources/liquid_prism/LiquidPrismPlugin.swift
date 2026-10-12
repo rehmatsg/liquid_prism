@@ -26,6 +26,9 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     return created
   }
 
+  /// Streams the system's bar placement for the Flutter view.
+  private var systemChrome: SystemChromeStreamHandler?
+
   /// The menuId currently bound to `presenter` callbacks. A stale dismissal
   /// from a replaced menu must not be reported as the new menu's.
   private var currentMenuId: String?
@@ -37,9 +40,19 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     instance.methods = methods
     registrar.addMethodCallDelegate(instance, channel: methods)
     events.setStreamHandler(instance)
-    // Install the overlay eagerly so the first menu can anchor immediately.
+    let chrome = SystemChromeStreamHandler(registrar: registrar)
+    instance.systemChrome = chrome
+    FlutterEventChannel(name: "liquid_prism/system_chrome", binaryMessenger: registrar.messenger())
+      .setStreamHandler(chrome)
+    // Menus belong to the window showing this engine's Flutter view, and
+    // close when that window resizes, as UIKit menus do (iPhone Duo folds,
+    // Split View, Stage Manager).
     MainActor.assumeIsolated {
-      MenuOverlayHost.shared.ensureInstalled()
+      let host = MenuOverlayHost.shared
+      host.preferredWindow = { [weak registrar] in registrar?.viewController?.view.window }
+      host.onResize = { [weak instance] in instance?.presenter.dismiss() }
+      // Install the overlay eagerly so the first menu can anchor immediately.
+      host.ensureInstalled()
     }
   }
 
@@ -164,5 +177,52 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {
     eventSink = nil
     return nil
+  }
+}
+
+/// Streams [SystemChrome] for the engine's Flutter view on
+/// `liquid_prism/system_chrome`. The view may not exist when Dart listens, so
+/// attaching retries briefly.
+final class SystemChromeStreamHandler: NSObject, FlutterStreamHandler {
+  private weak var registrar: (any FlutterPluginRegistrar)?
+  private var sink: FlutterEventSink?
+  private var observer: SystemChromeObserver?
+
+  init(registrar: any FlutterPluginRegistrar) {
+    self.registrar = registrar
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
+    -> FlutterError?
+  {
+    sink = events
+    MainActor.assumeIsolated { attach(attempt: 0) }
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    sink = nil
+    MainActor.assumeIsolated {
+      observer?.detach()
+      observer = nil
+    }
+    return nil
+  }
+
+  @MainActor
+  private func attach(attempt: Int) {
+    guard sink != nil else { return }
+    guard let view = registrar?.viewController?.view else {
+      if attempt < 50 {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+          MainActor.assumeIsolated { self?.attach(attempt: attempt + 1) }
+        }
+      }
+      return
+    }
+    let observer = self.observer ?? SystemChromeObserver()
+    observer.onChange = { [weak self] chrome in self?.sink?(chrome.map) }
+    self.observer = observer
+    observer.attach(to: view)
   }
 }
