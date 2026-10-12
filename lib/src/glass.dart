@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'style.dart';
 import 'superellipse.dart';
 import 'material.dart';
+import 'glass_transition.dart';
 import 'theme.dart';
 import 'recipe.dart';
 import 'pressable.dart';
@@ -199,26 +200,58 @@ class _LiquidPrismState extends State<LiquidPrism> {
         (optics == null
             ? GlassShape.capsule
             : GlassShape.rect(cornerRadius: optics.cornerRadius));
+    // Presence fades the optical output and shadows through the recipe and
+    // grows the lens and frost from zero, so the backdrop stays live.
+    final presenceScope = LiquidPrismPresence.maybeData(context);
+    final presence = presenceScope == null
+        ? 1.0
+        : presenceScope.progress.value.clamp(0.0, 1.0);
+    final materialize = presenceScope?.materialize ?? false;
     final recipe = GlassRecipe.resolve(
       _material,
       LiquidPrismTheme.materialBrightnessOf(context),
       widget.role,
       customOptics: optics != null,
-    );
-    final style = (optics ?? recipe.optics(shape.radius)).copyWith(
+    ).withPresence(presence);
+    var style = (optics ?? recipe.optics(shape.radius)).copyWith(
       cornerRadius: shape.radius,
       frost:
           widget.blur ??
           (widget.optics != null ? widget.optics!.frost : theme.blur),
     );
+    if (materialize && presence < 1) {
+      // Lens, frost, light and shadow share one curve, so the outline never
+      // arrives ahead of the lens; the spring supplies the easing.
+      style = style.copyWith(
+        refraction: style.refraction * presence,
+        dispersion: style.dispersion * presence,
+        frost: style.frost * presence,
+      );
+    }
     final shader = _shader;
     final press = LiquidPrismPressFeedback.of(context);
     final pressScale = LiquidPrismPressFeedback.scaleOf(context);
     // Nested glass inherits the press highlight but not the scale, which this
     // surface already applies to its content.
+    // Content fades and sharpens with the material. The wrappers stay in the
+    // tree at full presence (no layers) so child state survives.
+    final contentBlur = materialize
+        ? (1 - presence) * presenceScope!.contentBlur
+        : 0.0;
     final content = LiquidPrismPressFeedback(
       progress: press,
-      child: widget.child ?? const SizedBox.shrink(),
+      child: Opacity(
+        opacity: presence,
+        child: ImageFiltered(
+          enabled: contentBlur > .05,
+          imageFilter: ui.ImageFilter.blur(
+            sigmaX: contentBlur,
+            sigmaY: contentBlur,
+            tileMode: ui.TileMode.decal,
+          ),
+          child: widget.child ?? const SizedBox.shrink(),
+        ),
+      ),
     );
     final fallbackTint = Color.alphaBlend(
       _material.tintColor ?? const Color(0x00000000),
@@ -288,7 +321,11 @@ class _LiquidPrismState extends State<LiquidPrism> {
     // Keep the subtree stable at unity: removing this wrapper would cancel
     // gestures and focus owned by controls inside a shared glass surface.
     return shader == null
-        ? Transform.scale(scale: pressScale, child: glass)
+        ? Transform.scale(
+            scale: pressScale,
+            // The frosted fallback has no optical inputs to fade.
+            child: Opacity(opacity: recipe.presence, child: glass),
+          )
         : glass;
   }
 }
@@ -455,9 +492,11 @@ class _RenderGlass extends RenderProxyBox {
   GlassRecipe _recipe;
   GlassRecipe get recipe => _recipe;
   set recipe(GlassRecipe value) {
-    // Mode changes affect recorded exterior and inner shadow strength.
+    // Mode and presence changes affect recorded exterior and inner shadows.
     final shadowChanged =
-        value.kind != _recipe.kind || value.role != _recipe.role;
+        value.kind != _recipe.kind ||
+        value.role != _recipe.role ||
+        value.presence != _recipe.presence;
     _recipe = value;
     if (shadowChanged) markNeedsPaint();
   }

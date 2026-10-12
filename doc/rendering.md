@@ -12,6 +12,12 @@ Put glass over content already painted in the same scene. A flat background cann
 show much refraction. Ordinary surface content stays sharp. The lifted tab pill separately refracts
 its selected icon/label near the rim. Avoid wrapping glass
 in an ancestor `Opacity` or `ImageFiltered` save layer: that can isolate its backdrop.
+Fade glass with `LiquidPrismPresence` instead. Presence travels in the recipe:
+shader slot `u_state.z` carries absence (1 − presence, so the zero default stays
+fully present) and premultiplies the output, shadows scale with it, and lens,
+dispersion and frost inputs grow with presence. Content fades and unblurs in
+the glass's own child wrappers. Glass nested inside the content of a fading
+surface sits under that content fade while it runs.
 
 Smooth rectangles and capsules use Flutter's continuous-corner clipping and
 scalar shader passes. Circles retain their circular contour. Selected pills apply

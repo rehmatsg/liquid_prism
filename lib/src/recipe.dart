@@ -28,8 +28,9 @@ final class GlassRecipe {
     this.dark,
     this.role,
     this.tintMatrix,
-    this.tintAlpha,
-  );
+    this.tintAlpha, [
+    this.presence = 1,
+  ]);
   final double kind;
   final bool dark;
   final GlassRole role;
@@ -38,11 +39,20 @@ final class GlassRecipe {
   final List<double> tintMatrix;
   final double tintAlpha;
 
+  /// How materialized the surface is, 0–1. Fades the optical output and
+  /// shadows; the caller scales lens and frost inputs.
+  final double presence;
+
+  GlassRecipe withPresence(double value) => value == presence
+      ? this
+      : GlassRecipe(kind, dark, role, tintMatrix, tintAlpha, value);
+
   // Native controls retain their captured profile. The requested half-strength
   // Regular/Clear balance applies to standalone surfaces.
   bool get usesNativeControlShadow => kind != 0 && role != GlassRole.surface;
   double get shadowStrength =>
-      kind == 3 ? 0 : (usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1));
+      presence *
+      (kind == 3 ? 0 : (usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1)));
   static GlassRecipe resolve(
     Glass glass,
     Brightness brightness,
@@ -105,7 +115,9 @@ final class GlassRecipe {
     role.shaderId,
     tintAlpha,
     ...tintMatrix,
-    0, 0, 0, 0, // Press progress, smooth contour flag, reserved.
+    // Press progress, smooth contour flag, absence (1 - presence), reserved.
+    // Absence keeps the zero default fully materialized.
+    0, 0, 1 - presence, 0,
   ];
 }
 

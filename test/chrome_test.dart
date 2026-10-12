@@ -131,8 +131,19 @@ void main() {
       final glass = find.byType(LiquidPrism).first;
       expect(tester.getSize(glass), const Size(346, 48));
       await tester.tap(find.byType(LiquidPrismSearchField));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 90));
+      // The cancel action enters whole, from the trailing side, while the
+      // field shortens; it is never a clipped sliver.
+      final field = find.byType(LiquidPrismSearchField);
+      final restingEnd = tester.getTopRight(field).dx - 48;
+      final entering = find.byType(LiquidPrism).last;
+      expect(tester.getSize(entering), const Size(48, 48));
+      expect(tester.getTopLeft(entering).dx, greaterThan(restingEnd));
+      expect(tester.getSize(glass).width, lessThan(346));
       await tester.pumpAndSettle();
       expect(node.hasFocus, isTrue);
+      expect(tester.getTopLeft(find.byType(LiquidPrism).last).dx, restingEnd);
       expect(tester.getSize(glass), const Size(326, 48));
       final cancelGlass = find.byType(LiquidPrism).last;
       final holdCancel = await tester.startGesture(
