@@ -22,6 +22,7 @@ class ControlInteraction extends StatefulWidget {
     required this.releaseSpring,
     this.onChangeStart,
     this.onChangeEnd,
+    this.onSelectionFeedback,
     this.steps,
     this.toggle = false,
     this.continuous = false,
@@ -31,6 +32,7 @@ class ControlInteraction extends StatefulWidget {
   });
   final double value, travel;
   final ValueChanged<double>? onChanged, onChangeStart, onChangeEnd;
+  final VoidCallback? onSelectionFeedback;
   final double Function(double x) positionAt;
   final Widget Function(
     BuildContext,
@@ -85,6 +87,7 @@ class _ControlInteractionState extends State<ControlInteraction>
       _rtl = false,
       _committing = false;
   double _downX = 0, _downValue = 0, _candidate = 0;
+  double _feedbackValue = 0;
   double? _lastEmitted;
   DateTime? _contactTime;
   bool get _enabled => widget.onChanged != null;
@@ -146,6 +149,7 @@ class _ControlInteractionState extends State<ControlInteraction>
     _downX = event.localPosition.dx;
     _downValue = _position.value;
     _candidate = widget.value;
+    _feedbackValue = widget.value;
     _focus.requestFocus();
     _release?.cancel();
     _animate(_lift, 1, widget.liftSpring);
@@ -192,6 +196,14 @@ class _ControlInteractionState extends State<ControlInteraction>
     }
   }
 
+  void _selectionFeedback(double value) {
+    if (widget.onSelectionFeedback == null) return;
+    final target = _quantize(value);
+    if (target == _feedbackValue) return;
+    _feedbackValue = target;
+    widget.onSelectionFeedback!();
+  }
+
   void _settle() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_dragging) {
@@ -203,6 +215,8 @@ class _ControlInteractionState extends State<ControlInteraction>
   void _activate(double value) {
     if (!_enabled) return;
     final target = _quantize(value);
+    _feedbackValue = widget.value;
+    _selectionFeedback(target);
     widget.onChangeStart?.call(widget.value);
     _animate(_position, target, widget.spring);
     _notify(target);
@@ -243,6 +257,7 @@ class _ControlInteractionState extends State<ControlInteraction>
     } else {
       _animate(_position, target, widget.trackingSpring);
     }
+    _selectionFeedback(_candidate);
     if (widget.continuous) _notify(target);
   }
 

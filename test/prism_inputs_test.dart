@@ -23,6 +23,96 @@ Widget host(Widget child, {bool rtl = false, bool reduced = false}) =>
     );
 
 void main() {
+  testWidgets(
+    'switch impacts follow toggles and drag boundaries without release duplicates',
+    (tester) async {
+      final impacts = <Object?>[];
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          impacts.add(call.arguments);
+        }
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      var value = false, enabled = true, haptics = true;
+      late StateSetter update;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return LiquidPrismSwitch(
+                value: value,
+                label: 'Power',
+                haptics: haptics,
+                onChanged: enabled
+                    ? (next) => setState(() => value = next)
+                    : null,
+              );
+            },
+          ),
+        ),
+      );
+      final control = find.byType(LiquidPrismSwitch);
+      await tester.tap(control);
+      await tester.pumpAndSettle();
+      expect(value, isTrue);
+      expect(impacts, ['HapticFeedbackType.lightImpact']);
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      await tester.pumpAndSettle();
+      expect(impacts, hasLength(1), reason: 'An unchanged state is silent.');
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      await tester.pumpAndSettle();
+      tester.semantics.tap(find.semantics.byLabel('Power'));
+      await tester.pumpAndSettle();
+      expect(impacts, hasLength(3));
+
+      update(() => value = false);
+      await tester.pumpAndSettle();
+      expect(impacts, hasLength(3), reason: 'External updates are silent.');
+      final start = tester.getCenter(control);
+      final drag = await tester.startGesture(start);
+      await drag.moveTo(start + const Offset(40, 0));
+      await tester.pump();
+      expect(impacts, hasLength(4));
+      await drag.moveTo(start + const Offset(45, 0));
+      await tester.pump();
+      expect(impacts, hasLength(4));
+      await drag.moveTo(start);
+      await tester.pump();
+      expect(impacts, hasLength(5));
+      await drag.up();
+      await tester.pumpAndSettle();
+      expect(value, isFalse);
+      expect(impacts, hasLength(5));
+
+      final held = await tester.startGesture(start);
+      await tester.pumpAndSettle();
+      await held.cancel();
+      await tester.pumpAndSettle();
+      expect(impacts, hasLength(5));
+      update(() => enabled = false);
+      await tester.pumpAndSettle();
+      await tester.tap(control);
+      await tester.pumpAndSettle();
+      expect(impacts, hasLength(5));
+      update(() {
+        enabled = true;
+        haptics = false;
+      });
+      await tester.pumpAndSettle();
+      await tester.tap(control);
+      await tester.pumpAndSettle();
+      expect(value, isTrue);
+      expect(impacts, hasLength(5));
+      expect(impacts.toSet(), {'HapticFeedbackType.lightImpact'});
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+
   testWidgets('switch tap, drag, controlled rejection and keyboard', (
     tester,
   ) async {

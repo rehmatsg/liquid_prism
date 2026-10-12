@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_interaction.dart';
@@ -15,11 +19,15 @@ class LiquidPrismSwitch extends StatelessWidget {
     this.activeColor,
     this.inactiveColor,
     this.thumbColor,
+    this.haptics = true,
   });
   final bool value;
   final ValueChanged<bool>? onChanged;
   final String? label;
   final Color? activeColor, inactiveColor, thumbColor;
+
+  /// Native light impact on iOS when a tap or drag changes the toggle state.
+  final bool haptics;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +42,10 @@ class LiquidPrismSwitch extends StatelessWidget {
         toggle: true,
         steps: 1,
         onChanged: onChanged == null ? null : (v) => onChanged!(v >= .5),
+        onSelectionFeedback:
+            haptics && defaultTargetPlatform == TargetPlatform.iOS
+            ? () => unawaited(HapticFeedback.lightImpact())
+            : null,
         label: label,
         travel: 22,
         positionAt: (x) => ((rtl ? 63 - x : x) - 20.5) / 22,

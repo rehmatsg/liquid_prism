@@ -80,6 +80,13 @@ physical axis. Reduce Motion removes lift/stretch and settles position immediate
 The slider also supports discrete divisions and arbitrary numeric ranges; those
 are package behavior, outside the captured continuous-slider reference.
 
+Switch feedback defaults on for iOS (`haptics: false` opts out). The extracted
+switch settings enable feedback with zero delay and impact intensity 1. The
+renderer uses Flutter's native light-impact bridge, also used by CupertinoSwitch:
+one pulse on a toggle, or at each on/off boundary crossed during a drag. Releasing
+or canceling a drag adds no pulse; disabled controls and external value updates
+are silent. Simulators cannot reproduce the physical vibration.
+
 ## Reproduce
 
 Use Xcode with the reference runtime installed and xcodegen. From
