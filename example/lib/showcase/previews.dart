@@ -205,17 +205,27 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                         : i == 2
                         ? Glass.regular.tint(m.tint.withValues(alpha: .3))
                         : Glass.identity,
-                    child: LiquidPrismSelection(
-                      selected: selectedSurface == i,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          ['Regular', 'Clear', 'Tinted', 'Identity'][i],
-                          style: const TextStyle(fontSize: 13),
-                        ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: selectedSurface == i
+                                ? const Icon(
+                                    CupertinoIcons.check_mark,
+                                    size: 14,
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            ['Regular', 'Clear', 'Tinted', 'Identity'][i],
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ],
                       ),
                     ),
                   ),
