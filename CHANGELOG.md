@@ -16,6 +16,9 @@
   native sidebar at regular width, with a hide and show toggle. Report UIKit's
   size classes as `GlassSystemChrome.horizontalSizeClass` and
   `verticalSizeClass`.
+- Reserve the rail strip when UIKit reports a vertical bar edge without an
+  inset, as for an app on the left of Split View. The showcase reflows its
+  sections into two columns around a bent fold.
 - Add `axis` to `LiquidPrismTabBar` and `LiquidPrismToolbarGroup` for the
   measured vertical rail layout.
 - Present native menus in the Flutter view's own window and close them when

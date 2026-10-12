@@ -319,6 +319,32 @@ void main() {
       expect(bar.width, greaterThan(bar.height));
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
+    testWidgets('Split View on the left reserves its own rail strip', (
+      tester,
+    ) async {
+      // Measured: the left app gets edge left but no left safe area, and no
+      // status bar, which belongs to the app on the right.
+      window(tester, (
+        size: const Size(455.5, 669),
+        padding: const FakeViewPadding(bottom: 34),
+      ));
+      await report(tester, {
+        'verticalBarEdge': 'left',
+        'divisions': [
+          [455.5, 0.0, 13.5, 669.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        ],
+      });
+      await tester.pumpWidget(const _App());
+      await tester.pump();
+      expect(tester.getRect(find.byType(LiquidPrismTabBar)).left, 24);
+      expect(
+        tester.getRect(find.byType(LiquidPrismToolbarGroup)).topLeft,
+        const Offset(24, 24),
+      );
+      final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
+      expect(padding.left, 84);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
     testWidgets('rail actions start below the reported status bar region', (
       tester,
     ) async {

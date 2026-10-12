@@ -92,6 +92,27 @@ with accent-colored icons and labels at x 74; the selected row is a capsule
 trailing group under the status bar and moves the bottom-bar items to its
 bottom (y 537 and 597); no tab bar remains in it.
 
+### Poses
+
+Reported by the plugin while the showcase ran on the iPhone Duo simulator
+(iOS 27.1), with the poses changed in DeviceHub. Regions are active only.
+
+| Pose | Window | Edge | Right inset | Status bar (occlusion) | Fold (division) |
+| --- | --- | --- | --- | --- | --- |
+| Closed, portrait | 466 × 678 | right | 84 | 382, 0, 84 × 170 | none |
+| Closed, landscape | 678 × 466 | left | 0 (left 84) | 0, 0, 82 × 84 | none |
+| Open, landscape | 951 × 669 | right | 84 | 867, 0, 84 × 120 | inactive at x 455.5 |
+| Open, portrait | 669 × 951 | none | 0 | 535, 0, 134 × 82 | inactive at y 455.5 |
+| Open, partly folded | 951 × 669 | right | 84 | 867, 0, 84 × 120 | 455.5, 0, 40 × 669, margins 20 |
+| Split View, right half | 469 × 669 | right | 84 | 385, 0, 84 × 120 | 0, 0, 13.5 × 669 |
+| Split View, left half | 455.5 × 669 | left | 0 | none | 455.5, 0, 13.5 × 669 |
+
+The open portrait pose keeps horizontal bars, as Apple describes. In Split View
+on the left, iOS puts the bar on the left edge but gives the window no left
+inset and no status bar: the inset comes from native bars, so
+`LiquidPrismScaffold` reserves the 84 pt strip itself and starts the actions at
+the 24 pt top margin.
+
 ## Fitted behavior
 
 - Without the system APIs (before iOS 27.1, or without the plugin), a rail is

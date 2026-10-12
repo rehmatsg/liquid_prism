@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show DisplayFeatureState;
 
 import 'package:flutter/cupertino.dart';
 import 'package:liquid_prism/liquid_prism.dart';
@@ -42,48 +43,103 @@ class LargeTitlePage extends StatelessWidget {
         .textTheme
         .navLargeTitleTextStyle
         .copyWith(color: colors.label);
-    return Stack(
-      children: [
-        ListView(
-          controller: controller,
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: EdgeInsets.fromLTRB(
-            padding.left + 20,
-            padding.top + 4,
-            padding.right + 20,
-            padding.bottom + 32,
+    final header = [
+      Text(title, key: ValueKey('page-title:$title'), style: titleStyle),
+      if (subtitle case final subtitle?) ...[
+        const SizedBox(height: 6),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.35,
+            color: colors.secondaryLabel,
           ),
+        ),
+      ],
+      const SizedBox(height: 20),
+    ];
+    // A bent iPhone Duo reports its fold as a display feature. Interactive
+    // content moves off the crease: the sections reflow into two columns.
+    final fold = MediaQuery.displayFeaturesOf(context)
+        .where(
+          (feature) =>
+              feature.state == DisplayFeatureState.postureHalfOpened &&
+              feature.bounds.height > feature.bounds.width,
+        )
+        .firstOrNull;
+    ListView column(
+      List<Widget> items, {
+      required EdgeInsets insets,
+      ScrollController? controller,
+    }) => ListView(
+      controller: controller,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: insets,
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: readableWidth),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: items,
+            ),
+          ),
+        ),
+      ],
+    );
+    final content = switch (fold) {
+      null => column(
+        [...header, ...children],
+        controller: controller,
+        insets: EdgeInsets.fromLTRB(
+          padding.left + 20,
+          padding.top + 4,
+          padding.right + 20,
+          padding.bottom + 32,
+        ),
+      ),
+      final fold => () {
+        final split = (children.length + 1) ~/ 2;
+        return Stack(
           children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: readableWidth),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      title,
-                      key: ValueKey('page-title:$title'),
-                      style: titleStyle,
-                    ),
-                    if (subtitle case final subtitle?) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.35,
-                          color: colors.secondaryLabel,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    ...children,
-                  ],
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: fold.bounds.left,
+              child: column(
+                [...header, ...children.take(split)],
+                controller: controller,
+                insets: EdgeInsets.fromLTRB(
+                  padding.left + 20,
+                  padding.top + 4,
+                  20,
+                  padding.bottom + 32,
+                ),
+              ),
+            ),
+            Positioned(
+              left: fold.bounds.right,
+              top: 0,
+              bottom: 0,
+              right: 0,
+              child: column(
+                children.skip(split).toList(),
+                insets: EdgeInsets.fromLTRB(
+                  20,
+                  padding.top + 4,
+                  padding.right + 20,
+                  padding.bottom + 32,
                 ),
               ),
             ),
           ],
-        ),
+        );
+      }(),
+    };
+    return Stack(
+      children: [
+        content,
         // The scroll edge effect: content fades out under the status bar and
         // top actions instead of colliding with them.
         Positioned(

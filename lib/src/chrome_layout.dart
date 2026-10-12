@@ -218,11 +218,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
       for (final region in system?.occlusions ?? const <GlassReservedRegion>[])
         if (region.active) region.frame,
     ];
+    final padding = _ChromeLayout.withRail(media.viewPadding, resolved);
     final actionsTop = _ChromeLayout.railActionsTop(
       media.size,
-      media.viewPadding,
+      padding,
       resolved,
       occlusions,
+      reported: system != null,
     );
     final showTabBar = tabBar != null && !sidebar && (rail || !keyboard);
     final items =
@@ -240,7 +242,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         placement: resolved,
-        viewPadding: media.viewPadding,
+        viewPadding: padding,
         keyboard: media.viewInsets.bottom,
         textDirection: Directionality.of(context),
         iOS: defaultTargetPlatform == TargetPlatform.iOS,
@@ -434,12 +436,30 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   /// Where rail actions start: below the system UI that UIKit reports in the
   /// rail (the status bar), else below the top safe area, else the measured
   /// Duo offsets for systems without reserved regions.
+  /// The window safe area with room for the rail. UIKit reserves the strip
+  /// when the status bar shares it; in Split View on the left the status bar
+  /// belongs to the other app and only native bars would add the inset, so
+  /// the scaffold reserves the measured 84 pt strip itself.
+  static EdgeInsets withRail(
+    EdgeInsets viewPadding,
+    GlassChromePlacement placement,
+  ) => switch (placement) {
+    GlassChromePlacement.leftRail => viewPadding.copyWith(
+      left: math.max(viewPadding.left, _railStrip),
+    ),
+    GlassChromePlacement.rightRail => viewPadding.copyWith(
+      right: math.max(viewPadding.right, _railStrip),
+    ),
+    GlassChromePlacement.bottom => viewPadding,
+  };
+
   static double railActionsTop(
     Size size,
     EdgeInsets viewPadding,
     GlassChromePlacement placement,
-    List<Rect> occlusions,
-  ) {
+    List<Rect> occlusions, {
+    bool reported = false,
+  }) {
     final right = placement == GlassChromePlacement.rightRail;
     final column = right
         ? Rect.fromLTRB(
@@ -455,7 +475,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           region.bottom,
     ];
     if (inRail.isNotEmpty) return inRail.reduce(math.max);
-    if (viewPadding.top > 0) return math.max(viewPadding.top, _minimumTop);
+    // UIKit reports nothing in this rail: no status bar shares it.
+    if (reported || viewPadding.top > 0) {
+      return math.max(viewPadding.top, _minimumTop);
+    }
     return size.width > size.height
         ? _railActionsTopLandscape
         : _railActionsTopPortrait;
@@ -467,6 +490,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   static const _bottomBarGap = 21.0;
   static const _railGap = 12.0;
   static const _railEdge = 24.0;
+  static const _railStrip = _railGap + 48 + _railEdge;
   // Without reserved regions: measured at y 170 in the folded (portrait)
   // window and y 120 in the unfolded (landscape) one, where the status bar's
   // occlusion region ends.

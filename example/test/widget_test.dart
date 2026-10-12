@@ -1,8 +1,11 @@
+import 'dart:ui' show DisplayFeature, DisplayFeatureState, DisplayFeatureType;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism_example/main.dart';
 import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/pages.dart' show ExploreHero;
 
 void main() {
   testWidgets(
@@ -55,6 +58,29 @@ void main() {
     await tab(tester, 'Library');
     expect(find.text('9 components'), findsOneWidget);
     await press(tester, 'Explore Tab Bars');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a bent iPhone Duo reflows sections off the fold', (
+    tester,
+  ) async {
+    phone(tester, size: const Size(951, 669));
+    tester.view
+      ..padding = const FakeViewPadding(right: 84, bottom: 34)
+      ..viewPadding = const FakeViewPadding(right: 84, bottom: 34)
+      ..displayFeatures = const [
+        DisplayFeature(
+          bounds: Rect.fromLTWH(455.5, 0, 40, 669),
+          type: DisplayFeatureType.fold,
+          state: DisplayFeatureState.postureHalfOpened,
+        ),
+      ];
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const LiquidPrismExample());
+    final hero = tester.getRect(find.byType(ExploreHero));
+    final section = tester.getRect(find.text('Try it'));
+    expect(hero.right, lessThanOrEqualTo(455.5));
+    expect(section.left, greaterThanOrEqualTo(495.5));
     expect(tester.takeException(), isNull);
   });
 

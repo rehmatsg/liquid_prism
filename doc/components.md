@@ -244,6 +244,11 @@ CupertinoApp(
   system's vertical bar and below the status bar.
 - `LiquidPrismSystemChrome.listenable` gives the same report outside widgets.
 - A `LiquidPrismScaffold` inside a sheet lays out its own rail too.
+- To keep interactive content off a bent fold, read
+  `MediaQuery.displayFeaturesOf(context)` for a feature in
+  `DisplayFeatureState.postureHalfOpened` and lay out on either side of its
+  bounds. The showcase's `LargeTitlePage` splits its sections into two columns
+  this way. Scrolling content may cross the fold.
 
 The report is null on other platforms, before iOS 27.1 and without the plugin.
 
