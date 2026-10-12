@@ -6,6 +6,29 @@ floating tab bars, toolbars and search. Popup menus use real UIKit menus on iOS.
 The defaults follow our SwiftUI reference. Use a few widget arguments for a local
 change, reusable styles for a component, or a theme for the whole app.
 
+## See it move
+
+Taps, holds and glides on white, plus glass over the Golden Gate Bridge.
+Recorded from Flutter at 1206 pixels wide and 60 fps; the switch is shown at 2×.
+
+<table>
+  <tr><th>Tab bar</th><th>Switch (2×)</th><th>Slider</th></tr>
+  <tr>
+    <td><video src="https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142" width="280" controls></video></td>
+    <td><video src="https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c" width="280" controls></video></td>
+    <td><video src="https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106" width="280" controls></video></td>
+  </tr>
+</table>
+
+<table>
+  <tr><th>Clear glass</th><th>Regular glass</th><th>Glass shapes</th></tr>
+  <tr>
+    <td><video src="https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a" width="280" controls></video></td>
+    <td><video src="https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271" width="280" controls></video></td>
+    <td><video src="https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170" width="280" controls></video></td>
+  </tr>
+</table>
+
 ## Install
 
 Requires **Flutter 3.47+ / Dart 3.13.3+**. The supported app targets are iOS and
