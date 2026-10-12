@@ -44,6 +44,13 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     instance.systemChrome = chrome
     FlutterEventChannel(name: "liquid_prism/system_chrome", binaryMessenger: registrar.messenger())
       .setStreamHandler(chrome)
+    FlutterMethodChannel(name: "liquid_prism/system", binaryMessenger: registrar.messenger())
+      .setMethodCallHandler { [weak chrome] call, result in
+        MainActor.assumeIsolated {
+          guard let chrome else { return result(FlutterMethodNotImplemented) }
+          chrome.handle(call, result: result)
+        }
+      }
     // Menus belong to the window showing this engine's Flutter view, and
     // close when that window resizes, as UIKit menus do (iPhone Duo folds,
     // Split View, Stage Manager).
@@ -181,7 +188,8 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 }
 
 /// Streams [SystemChrome] for the engine's Flutter view on
-/// `liquid_prism/system_chrome`. The view may not exist when Dart listens, so
+/// `liquid_prism/system_chrome`, and applies preferences sent on
+/// `liquid_prism/system`. The view may not exist when Dart listens, so
 /// attaching retries briefly.
 final class SystemChromeStreamHandler: NSObject, FlutterStreamHandler {
   private weak var registrar: (any FlutterPluginRegistrar)?
@@ -210,6 +218,27 @@ final class SystemChromeStreamHandler: NSObject, FlutterStreamHandler {
   }
 
   @MainActor
+  func handle(_ call: FlutterMethodCall, result: FlutterResult) {
+    switch call.method {
+    case "setVerticalBarBehavior":
+      // Applies only where UIKit has a vertical bar and the app opted into
+      // the view controller that can report a preference.
+      guard #available(iOS 27.1, *),
+        let controller = registrar?.viewController as? LiquidPrismViewController
+      else {
+        result(false)
+        return
+      }
+      let args = call.arguments as? [String: Any]
+      controller.verticalBarDisabled = (args?["behavior"] as? String) == "disabled"
+      observer?.refresh()
+      result(true)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  @MainActor
   private func attach(attempt: Int) {
     guard sink != nil else { return }
     guard let view = registrar?.viewController?.view else {
@@ -222,6 +251,9 @@ final class SystemChromeStreamHandler: NSObject, FlutterStreamHandler {
     }
     let observer = self.observer ?? SystemChromeObserver()
     observer.onChange = { [weak self] chrome in self?.sink?(chrome.map) }
+    observer.verticalBarDisabled = { [weak self] in
+      (self?.registrar?.viewController as? LiquidPrismViewController)?.verticalBarDisabled ?? false
+    }
     self.observer = observer
     observer.attach(to: view)
   }

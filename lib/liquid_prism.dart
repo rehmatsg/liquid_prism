@@ -6,6 +6,12 @@ library;
 
 export 'src/button.dart' show GlassButtonStyle, LiquidPrismButton;
 export 'src/chrome_layout.dart' show GlassChromePlacement, LiquidPrismScaffold;
+export 'src/system_chrome.dart'
+    show
+        GlassReservedRegion,
+        GlassSystemChrome,
+        GlassVerticalBarBehavior,
+        LiquidPrismSystemChrome;
 export 'src/glass.dart' show LiquidPrism, LiquidPrismGroup;
 export 'src/material.dart' show Glass, GlassVariant, GlassShape;
 export 'src/motion.dart' show GlassMotion, GlassSpring, GlassControlMotion;

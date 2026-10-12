@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show DisplayFeature;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -125,26 +126,41 @@ class LiquidPrismScaffold extends StatelessWidget {
   static const double topBarHeight = 44;
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<SystemChrome?>(
-    valueListenable: SystemChromeListener.instance.value,
-    builder: (context, system, _) => _build(context, system),
-  );
+  Widget build(BuildContext context) {
+    // An app-level LiquidPrismSystemChrome already added the fold to
+    // MediaQuery; otherwise listen directly and add it for the body.
+    if (LiquidPrismSystemChrome.scopeOf(context) case final scope?) {
+      return _build(context, scope.chrome, addFeatures: false);
+    }
+    return ValueListenableBuilder<GlassSystemChrome?>(
+      valueListenable: LiquidPrismSystemChrome.listenable,
+      builder: (context, system, _) =>
+          _build(context, system, addFeatures: true),
+    );
+  }
 
-  Widget _build(BuildContext context, SystemChrome? system) {
+  Widget _build(
+    BuildContext context,
+    GlassSystemChrome? system, {
+    required bool addFeatures,
+  }) {
     final media = MediaQuery.of(context);
     final resolved =
         placement ??
         switch (system) {
           null => GlassChromePlacement.resolve(media.viewPadding),
-          SystemChrome(verticalBarEdge: AxisDirection.left) =>
+          GlassSystemChrome(hasVerticalBar: false) =>
+            GlassChromePlacement.bottom,
+          GlassSystemChrome(verticalBarEdge: AxisDirection.left) =>
             GlassChromePlacement.leftRail,
-          SystemChrome(verticalBarEdge: AxisDirection.right) =>
-            GlassChromePlacement.rightRail,
-          _ => GlassChromePlacement.bottom,
+          _ => GlassChromePlacement.rightRail,
         };
     final rail = resolved.isRail;
     final keyboard = media.viewInsets.bottom > 0;
-    final occlusions = system?.occlusions ?? const <Rect>[];
+    final occlusions = [
+      for (final region in system?.occlusions ?? const <GlassReservedRegion>[])
+        if (region.active) region.frame,
+    ];
     final actionsTop = _ChromeLayout.railActionsTop(
       media.size,
       media.viewPadding,
@@ -154,7 +170,9 @@ class LiquidPrismScaffold extends StatelessWidget {
     final items = rail && !_fitsRail(media.size.height - actionsTop)
         ? [_overflow(actions)]
         : actions;
-    final features = system?.displayFeatures ?? const [];
+    final features = addFeatures
+        ? system?.displayFeatures ?? const []
+        : const <DisplayFeature>[];
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         placement: resolved,

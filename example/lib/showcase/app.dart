@@ -55,9 +55,13 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
                   : GlassTabLabelBehavior.never,
             ),
           ),
-          child: DefaultTextStyle(
-            style: CupertinoTheme.of(context).textTheme.textStyle,
-            child: child!,
+          // Publishes iPhone Duo bar placement and keeps dialogs out of the
+          // fold, for every route.
+          child: LiquidPrismSystemChrome(
+            child: DefaultTextStyle(
+              style: CupertinoTheme.of(context).textTheme.textStyle,
+              child: child!,
+            ),
           ),
         ),
         home: ShowcaseHome(model: model),

@@ -216,6 +216,19 @@ class StudioPage extends StatelessWidget {
                 onChanged: (v) => model.change(() => model.clear = v),
               ),
             ),
+            // Only where iOS has a vertical bar, such as iPhone Duo.
+            if (LiquidPrismSystemChrome.of(context)?.verticalBarEdge != null)
+              ListRow(
+                title: 'Side bar',
+                subtitle: 'Bars beside the content on iPhone Duo',
+                icon: CupertinoIcons.sidebar_right,
+                iconColor: colors.green,
+                trailing: LiquidPrismSwitch(
+                  label: 'Side bar',
+                  value: model.verticalBar,
+                  onChanged: model.setVerticalBar,
+                ),
+              ),
             ListRow(
               title: 'Tab labels',
               icon: CupertinoIcons.textformat,

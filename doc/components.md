@@ -214,6 +214,39 @@ The scaffold hides a bottom tab bar while the keyboard is up and adds the
 keyboard height to the body's bottom padding. Native popup menus close when the
 window resizes, as UIKit menus do.
 
+### Your own sheets, dialogs and bars
+
+`LiquidPrismSystemChrome` exposes what UIKit reports, so screens that don't use
+the scaffold can follow it too. Put it in your app's builder:
+
+```dart
+CupertinoApp(
+  builder: (context, child) => LiquidPrismSystemChrome(child: child!),
+  home: const Home(),
+)
+```
+
+- Dialogs, popup menus and modal sheets then avoid an active fold: it is added
+  to `MediaQuery.displayFeatures`, which Flutter's routes and
+  `DisplayFeatureSubScreen` already respect.
+- `LiquidPrismSystemChrome.of(context)` returns a `GlassSystemChrome`:
+  `verticalBarEdge` (left, right or null), `hasVerticalBar`, and the
+  `occlusions` (status bar, camera) and `divisions` (fold) as
+  `GlassReservedRegion`s with a frame, interactive margins and an `active`
+  flag. Use them to place custom bars or sheet controls on the same edge as the
+  system's vertical bar and below the status bar.
+- `LiquidPrismSystemChrome.listenable` gives the same report outside widgets.
+- A `LiquidPrismScaffold` inside a sheet lays out its own rail too.
+
+The report is null on other platforms, before iOS 27.1 and without the plugin.
+
+To keep horizontal bars for a screen better served by them, such as a
+full-screen video player, use `LiquidPrismViewController` as your Flutter view
+controller (in `Main.storyboard`, set the custom class) and call
+`LiquidPrismSystemChrome.setVerticalBarBehavior(GlassVerticalBarBehavior.disabled)`.
+It returns false where it can't apply. Apple asks that this be a stable choice,
+not one that changes as people navigate.
+
 ## Toolbar groups
 
 ```dart

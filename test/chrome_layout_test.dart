@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
-import 'package:liquid_prism/src/system_chrome.dart';
+import 'package:liquid_prism/src/system_chrome.dart' show SystemChromeListener;
 
 /// Window sizes and safe areas measured on iOS 27.1 simulators.
 const duo = (
@@ -284,14 +285,15 @@ void main() {
         ),
       );
       addTearDown(() {
+        // The stream mock stays installed so the asynchronous cancel that
+        // reset() starts still reaches a handler.
+        unawaited(SystemChromeListener.instance.reset());
         messenger.setMockMethodCallHandler(
           const MethodChannel('liquid_prism/menus'),
           null,
         );
-        messenger.setMockStreamHandler(SystemChromeListener.channel, null);
-        SystemChromeListener.instance.reset();
       });
-      SystemChromeListener.instance.reset();
+      unawaited(SystemChromeListener.instance.reset());
     }
 
     testWidgets('the vertical bar edge wins over safe-area insets', (
@@ -308,7 +310,6 @@ void main() {
       expect(tester.getRect(find.byType(LiquidPrismTabBar)).left, 84 - 12 - 48);
 
       // The system chose horizontal bars despite a one-sided inset.
-      SystemChromeListener.instance.reset();
       await report(tester, {'verticalBarEdge': null});
       window(tester, duo);
       await tester.pumpWidget(const SizedBox());

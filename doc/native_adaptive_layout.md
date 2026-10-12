@@ -76,6 +76,12 @@ the rail and bottom ones at its bottom, with the tab bar bottom-aligned; when
 the rail runs out of room, bar items collapse into an overflow menu before the
 tab bar compresses (`UIVerticalBarCompressionBehaviorAutomatic`).
 
+With the vertical bar disabled (`preferredVerticalBarBehavior = .disabled`)
+on the unfolded Duo, iOS 27.1 reported no edge, a right safe area of 0, and the
+status bar's occlusion region at x 817, y 0, 134 × 82 in the top-right corner.
+The header says the trait keeps reporting the preferred edge; the plugin also
+reports the app's own preference so either behavior resolves to horizontal bars.
+
 ## Fitted behavior
 
 - Without the system APIs (before iOS 27.1, or without the plugin), a rail is

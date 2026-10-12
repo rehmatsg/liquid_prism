@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
 class ShowcaseModel extends ChangeNotifier {
-  bool dark = false, clear = false, labels = true;
+  bool dark = false, clear = false, labels = true, verticalBar = true;
   String accent = 'blue';
   int wallpaper = 0;
   double frost = 4, refraction = 24;
@@ -16,6 +18,18 @@ class ShowcaseModel extends ChangeNotifier {
   void change(VoidCallback update) {
     update();
     notifyListeners();
+  }
+
+  /// Keeps bars in the iPhone Duo side bar, or asks iOS for horizontal bars.
+  void setVerticalBar(bool value) {
+    change(() => verticalBar = value);
+    unawaited(
+      LiquidPrismSystemChrome.setVerticalBarBehavior(
+        value
+            ? GlassVerticalBarBehavior.automatic
+            : GlassVerticalBarBehavior.disabled,
+      ),
+    );
   }
 
   void reset() => change(() {

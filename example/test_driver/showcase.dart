@@ -21,17 +21,44 @@ Future<void> main() async {
     enableTextEntryEmulation: false,
     handler: (message) async {
       final request = jsonDecode(message!);
+      if (request['op'] == 'vertical-bar') {
+        StatefulElement? home;
+        void locate(Element element) {
+          if (element.widget is showcase.ShowcaseHome) {
+            home = element as StatefulElement;
+          }
+          element.visitChildElements(locate);
+        }
+
+        locate(WidgetsBinding.instance.rootElement!);
+        (home!.widget as showcase.ShowcaseHome).model.setVerticalBar(
+          request['enabled'] == true,
+        );
+        return 'ok';
+      }
       if (request['op'] == 'system-chrome') {
         final chrome = SystemChromeListener.instance.value.value;
         return jsonEncode({
           'edge': chrome?.verticalBarEdge?.name,
+          'behavior': chrome?.verticalBarBehavior.name,
+          'safeRight': () {
+            final view = WidgetsBinding.instance.platformDispatcher.views.first;
+            return view.viewPadding.right / view.devicePixelRatio;
+          }(),
           'occlusions': [
-            for (final r in chrome?.occlusions ?? const <Rect>[])
-              [r.left, r.top, r.width, r.height],
+            for (final o in chrome?.occlusions ?? const [])
+              if (o.active)
+                [o.frame.left, o.frame.top, o.frame.width, o.frame.height],
           ],
           'divisions': [
             for (final d in chrome?.divisions ?? const [])
-              [d.frame.left, d.frame.top, d.frame.width, d.frame.height],
+              [
+                d.frame.left,
+                d.frame.top,
+                d.frame.width,
+                d.frame.height,
+                if (d.active) 1 else 0,
+              ],
           ],
         });
       }
