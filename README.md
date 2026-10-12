@@ -25,7 +25,7 @@ The package is not published on pub.dev yet.
 
 ## Your first glass surface
 
-<video src="https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271" controls></video>
+https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271
 
 ```dart
 import 'package:flutter/material.dart';
@@ -73,7 +73,7 @@ adds press feedback to a surface. Continuous rounded corners are the default.
 
 ### Clear glass
 
-<video src="https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a" controls></video>
+https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a
 
 ```dart
 LiquidPrism(
@@ -85,7 +85,7 @@ LiquidPrism(
 
 ### Glass shapes
 
-<video src="https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170" controls></video>
+https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170
 
 ```dart
 Wrap(
@@ -137,7 +137,7 @@ The videos were recorded from Flutter at 1206 pixels wide and 60 fps.
 
 This demo uses `GlassSwitchStyle(scale: 2)`.
 
-<video src="https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c" controls></video>
+https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c
 
 ```dart
 LiquidPrismSwitch(
@@ -150,7 +150,7 @@ LiquidPrismSwitch(
 
 ### Slider
 
-<video src="https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106" controls></video>
+https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106
 
 ```dart
 LiquidPrismSlider(
@@ -170,7 +170,7 @@ The tab bar is compact by default and grows for longer labels. Use
 layout needs it; the widget does not add safe-area margins. The icons below use
 `package:flutter/cupertino.dart`.
 
-<video src="https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142" controls></video>
+https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142
 
 ```dart
 LiquidPrismTabBar(
