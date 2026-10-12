@@ -109,6 +109,11 @@ LiquidPrismTabBar(
 )
 ```
 
+The floating bar sizes to its tabs by default, including longer labels, and
+centers within wider parents. It fits narrower constraints and works in an
+unbounded horizontal Row. Set `GlassTabBarStyle(expanded: true)` to fill the
+available width; null inherits the theme's setting.
+
 The parent owns selection. Touching a tab lifts the pill into a glass lens and
 glides it there with the native spring; dragging makes the lens chase the finger,
 stretching with its speed, and commits the tab under the finger on release. Icons accept any widget, with an optional

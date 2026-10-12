@@ -1,0 +1,372 @@
+{
+  "source": "Native SwiftUI TabView housing model bounds, iPhone 17 iOS 27.0 (24A5370g), 402x874 points at 3x",
+  "minimumSlot": 86,
+  "labelPadding": 32,
+  "outerPadding": 16,
+  "samples": [
+    {
+      "name": "two",
+      "labels": [
+        "A",
+        "B"
+      ],
+      "hidden": false,
+      "housing": [
+        107,
+        791,
+        188,
+        62
+      ],
+      "source": "two.json",
+      "sha256": "ec026da588146bdb58e47ce089648a72962333ad678cd6f23adfb02a58be1fb1"
+    },
+    {
+      "name": "three",
+      "labels": [
+        "Explore",
+        "Studio",
+        "Library"
+      ],
+      "hidden": false,
+      "housing": [
+        64,
+        791,
+        274,
+        62
+      ],
+      "source": "three.json",
+      "sha256": "0f756a2a9836f4c4146f54375420ac992e014bd5e3b898c5e8a504888bcecd00"
+    },
+    {
+      "name": "four",
+      "labels": [
+        "Playground",
+        "Lists",
+        "Gallery",
+        "Settings"
+      ],
+      "hidden": false,
+      "housing": [
+        21,
+        791,
+        360,
+        62
+      ],
+      "source": "four.json",
+      "sha256": "ee91b9d2a4a6081de2e1e6d35a161ba75c5dafec93018b80d71e98cbf1e384bb"
+    },
+    {
+      "name": "five",
+      "labels": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "hidden": false,
+      "housing": [
+        21,
+        791,
+        360,
+        62
+      ],
+      "source": "five.json",
+      "sha256": "5a0879c87b515a3d16be2a0e774afb135d4db7d61c8dec0749d9adeecc489b7e"
+    },
+    {
+      "name": "long",
+      "labels": [
+        "A very long title",
+        "Another longer tab title",
+        "Third"
+      ],
+      "hidden": false,
+      "housing": [
+        21,
+        791,
+        360,
+        62
+      ],
+      "source": "long.json",
+      "sha256": "91e61377c144ecc4436767fb8c09881d0bd9735f968759dad9ac0fda3e795ca8"
+    },
+    {
+      "name": "hidden-three",
+      "labels": [
+        "Explore",
+        "Studio",
+        "Library"
+      ],
+      "hidden": true,
+      "housing": [
+        64,
+        791,
+        274,
+        62
+      ],
+      "source": "hidden-three.json",
+      "sha256": "d35447a19c78785aedd0c3f5bad7c0b4828eaebdae382c9f86e282054b07446f"
+    },
+    {
+      "name": "hidden-four",
+      "labels": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "hidden": true,
+      "housing": [
+        21,
+        791,
+        360,
+        62
+      ],
+      "source": "hidden-four.json",
+      "sha256": "81f625411d1d1ee806371b839a29a17033595f4b2b3a126ddb955700704a41ef"
+    },
+    {
+      "name": "abcdefghij",
+      "labels": [
+        "abcdefghij",
+        "abcdefghij",
+        "abcdefghij"
+      ],
+      "hidden": false,
+      "housing": [
+        64,
+        791,
+        274,
+        62
+      ],
+      "labelFrames": [
+        [
+          88.66666666666667,
+          830,
+          53.000000000000014,
+          12
+        ],
+        [
+          174.66666666666669,
+          830,
+          53,
+          12
+        ],
+        [
+          260.6666666666667,
+          830,
+          53,
+          12
+        ],
+        [
+          89,
+          830,
+          52,
+          12
+        ],
+        [
+          175,
+          830,
+          52,
+          12
+        ],
+        [
+          261,
+          830,
+          52,
+          12
+        ]
+      ]
+    },
+    {
+      "name": "abcdefghijkl",
+      "labels": [
+        "abcdefghijkl",
+        "abcdefghijkl",
+        "abcdefghijkl"
+      ],
+      "hidden": false,
+      "housing": [
+        54,
+        791,
+        294,
+        62
+      ],
+      "labelFrames": [
+        [
+          77.33333333333333,
+          830,
+          61.999999999999986,
+          12
+        ],
+        [
+          170,
+          830,
+          62,
+          12
+        ],
+        [
+          262.66666666666663,
+          830,
+          62,
+          12
+        ],
+        [
+          78,
+          830,
+          60.66666666666666,
+          12
+        ],
+        [
+          170.66666666666669,
+          830,
+          60.66666666666666,
+          12
+        ],
+        [
+          263.3333333333333,
+          830,
+          60.666666666666686,
+          12
+        ]
+      ]
+    },
+    {
+      "name": "abcdefghijklmnop",
+      "labels": [
+        "abcdefghijklmnop",
+        "abcdefghijklmnop",
+        "abcdefghijklmnop"
+      ],
+      "hidden": false,
+      "housing": [
+        21,
+        791,
+        360,
+        62
+      ],
+      "labelFrames": [
+        [
+          41.333333333333336,
+          830,
+          90,
+          12
+        ],
+        [
+          156,
+          830,
+          90,
+          12
+        ],
+        [
+          270.6666666666667,
+          830,
+          90,
+          12
+        ],
+        [
+          42.33333333333334,
+          830,
+          88.33333333333334,
+          12
+        ],
+        [
+          157.00000000000003,
+          830,
+          88.33333333333334,
+          12
+        ],
+        [
+          271.6666666666667,
+          830,
+          88.33333333333331,
+          12
+        ]
+      ]
+    },
+    {
+      "name": "WWWWWWWW",
+      "labels": [
+        "WWWWWWWW",
+        "WWWWWWWW",
+        "WWWWWWWW"
+      ],
+      "hidden": false,
+      "housing": [
+        25.666666666666657,
+        791,
+        351,
+        62
+      ],
+      "labelFrames": [
+        [
+          49.33333333333332,
+          830,
+          80.66666666666669,
+          12
+        ],
+        [
+          161,
+          830,
+          80.66666666666669,
+          12
+        ],
+        [
+          272.66666666666663,
+          830,
+          80.66666666666669,
+          12
+        ],
+        [
+          49.66666666666666,
+          830,
+          79.66666666666666,
+          12
+        ],
+        [
+          161.33333333333334,
+          830,
+          79.66666666666666,
+          12
+        ],
+        [
+          273,
+          830,
+          79.66666666666669,
+          12
+        ]
+      ]
+    },
+    {
+      "name": "mixed-medium",
+      "labels": [
+        "abcdefghijkl",
+        "A",
+        "B"
+      ],
+      "hidden": false,
+      "housing": [
+        54,
+        791,
+        294,
+        62
+      ]
+    },
+    {
+      "name": "mixed-wide",
+      "labels": [
+        "WWWWWWWW",
+        "A",
+        "B"
+      ],
+      "hidden": false,
+      "housing": [
+        25.666666666666657,
+        791,
+        351,
+        62
+      ]
+    }
+  ]
+}

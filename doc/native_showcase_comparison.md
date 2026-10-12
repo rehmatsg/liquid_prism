@@ -33,9 +33,9 @@ compare the full near-endpoint curve in both directions. All four controls share
 the clear face, continuous contour and size-relative shadow. Tab deformation
 retains the early motion research's independent axes, tracking lag and recoil.
 
-There are still differences in the reference/app layout and renderer. Native
-TabView adapts to a roughly 274-point housing while the Flutter showcase uses its
-available 354-point width. Some system-font metrics, symbol glyphs, button padding,
+There are still differences in the reference/app layout and renderer. The earlier 354-point Flutter navigation housing has been corrected: both
+showcase implementations now use a compact 274 × 62-point three-tab housing.
+Additional native width probes are recorded in `native_tab_layout_spec.json`. Some system-font metrics, symbol glyphs, button padding,
 gradient compositing and resulting panel heights differ. Public native glass
 does not expose Flutter's frost/refraction parameters, and an inline UISearchBar
 has a different presentation context from navigation `.searchable`. Flutter's

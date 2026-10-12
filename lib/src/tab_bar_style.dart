@@ -21,6 +21,7 @@ class GlassTabBarStyle {
     this.shape,
     this.selectionShape,
     this.haptics,
+    this.expanded,
   }) : assert(height == null || height >= 44),
        assert(iconSize == null || iconSize > 0),
        assert(
@@ -38,6 +39,10 @@ class GlassTabBarStyle {
   final GlassShape? shape, selectionShape;
   final bool? haptics;
 
+  /// Fill the parent's available width. Defaults to false: the floating bar
+  /// sizes to its tabs and stays compact, even inside a wide or tight parent.
+  final bool? expanded;
+
   GlassTabBarStyle merge(GlassTabBarStyle? other) => other == null
       ? this
       : GlassTabBarStyle(
@@ -53,5 +58,6 @@ class GlassTabBarStyle {
           shape: other.shape ?? shape,
           selectionShape: other.selectionShape ?? selectionShape,
           haptics: other.haptics ?? haptics,
+          expanded: other.expanded ?? expanded,
         );
 }

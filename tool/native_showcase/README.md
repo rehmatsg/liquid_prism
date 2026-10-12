@@ -17,7 +17,8 @@ performs real holds, two-second glides and fast reversals on all four controls.
 
 Development inspection is opt-in: `--inspect` writes UIKit geometry, layer settings
 and SwiftUI layout preferences to Documents. `--screen sliders`, `--dark`,
-`--accent green` and `--scroll optics` select reference states. `--motion sliders`
+`--accent green` and `--scroll optics` select reference states. `--tab-labels "A|B|C"` opens an isolated native layout probe;
+`--hide-labels` measures its icon-only labels. `--motion sliders`
 records presentation-layer lens bounds/transforms at up to 60 Hz. None of these
 options change native component rendering. They are not linked into Flutter.
 

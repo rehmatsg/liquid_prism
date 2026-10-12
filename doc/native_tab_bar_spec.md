@@ -171,3 +171,22 @@ the researched motion above: its own lens velocity drives independent stretch
 and compression, including recoil as tracking settles. The slider alone opts out
 of broad underlay minification; its held bounds still grow by 1.55×. See
 `native_controls_spec.md` for the shared material's calibrated rendering limits.
+
+
+## Compact housing layout
+
+`native_tab_layout_spec.json` records direct SwiftUI TabView housing reads for
+two through five tabs, hidden labels, equal long labels and mixed label widths.
+Two ordinary tabs occupy 188 points and three occupy 274. Hiding labels retains
+the same minimum. A 12-character medium label grows the three-tab housing to
+294 points; eight W glyphs grow it to 351, including when only one tab is wide.
+The widest unselected label determines every slot's spacing; selection does not
+change the housing width.
+
+The recovered portrait rule uses 86-point minimum centre spacing, or the widest
+unselected label's pixel-rounded width plus 32 points, with 16 points of default
+outer padding. The result is capped to available space. Flutter now uses this
+compact sizing by default, centering the actual housing even in a tight parent.
+`GlassTabBarStyle.expanded` opts into the previous full-width layout. Label-font
+metrics and custom styles remain subject to the rendering engine's typography.
+The tab's researched lift, tracking and two-axis deformation remain unchanged.

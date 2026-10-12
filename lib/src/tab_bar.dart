@@ -520,18 +520,43 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
           8,
     );
     final selectionShape = style.selectionShape ?? GlassShape.capsule;
+    var contentWidth = iconSize;
+    if (labels != GlassTabLabelBehavior.never) {
+      final effectiveStyle = DefaultTextStyle.of(context).style.merge(
+        textStyle.copyWith(fontWeight: textStyle.fontWeight ?? FontWeight.w500),
+      );
+      final painter = TextPainter(
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: 1,
+      );
+      for (final tab in widget.tabs) {
+        painter.text = TextSpan(text: tab.label, style: effectiveStyle);
+        painter.layout();
+        contentWidth = math.max(contentWidth, painter.width);
+      }
+      painter.dispose();
+    }
+    // Native items have an 86-point minimum centre spacing. Wider labels add
+    // 32 points of horizontal breathing room; measure in device pixels as UIKit
+    // does. The housing keeps its outer padding, instead of consuming all space.
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final slot = math.max(86.0, (contentWidth * dpr).ceil() / dpr + 32);
+    final preferredWidth = slot * widget.tabs.length + padding.horizontal;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width =
-            (constraints.maxWidth - padding.horizontal) / widget.tabs.length;
+        final barWidth = style.expanded == true && constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : math.min(preferredWidth, constraints.maxWidth);
+        final width = (barWidth - padding.horizontal) / widget.tabs.length;
         if (!width.isFinite || width <= 0) return const SizedBox.shrink();
         _padLeft = padding.left;
-        _barWidth = constraints.maxWidth;
+        _barWidth = barWidth;
         if (width != _slotWidth) {
           _slotWidth = width;
           if (_pointer != null || _dragging) _reset();
         }
-        final barSize = Size(constraints.maxWidth, height + padding.vertical);
+        final barSize = Size(barWidth, height + padding.vertical);
         final content = ValueListenableBuilder<bool>(
           valueListenable: _window,
           builder: (context, window, _) => Row(
@@ -553,7 +578,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ],
           ),
         );
-        return Listener(
+        final surface = Listener(
           behavior: HitTestBehavior.opaque,
           onPointerDown: _pointerDown,
           onPointerUp: _pointerUp,
@@ -728,6 +753,11 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
               },
             ),
           ),
+        );
+        return Align(
+          widthFactor: 1,
+          heightFactor: 1,
+          child: SizedBox.fromSize(size: barSize, child: surface),
         );
       },
     );

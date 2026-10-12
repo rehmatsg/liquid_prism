@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/recipe.dart' show GlassRole;
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:liquid_prism_example/main.dart' as app;
 import 'package:liquid_prism_example/showcase/app.dart' as showcase;
@@ -137,6 +138,24 @@ Future<void> main() async {
               if (name == request['panel']) scrollTarget = element;
             }
             if (widget is LiquidPrism) {
+              // The compact bar may sit inside a tight parent. Its housing,
+              // rather than that parent's bounds, is the actual touch surface.
+              // ignore: invalid_use_of_internal_member
+              if (widget.role == GlassRole.tabBar) {
+                element.visitAncestorElements((ancestor) {
+                  if (ancestor.widget is LiquidPrismTabBar) {
+                    final navigation =
+                        ancestor.widget.key ==
+                        const ValueKey('showcase-navigation');
+                    geometry[navigation
+                            ? 'showcase-navigation'
+                            : 'component-tabs'] =
+                        frame;
+                    return false;
+                  }
+                  return true;
+                });
+              }
               String? owner;
               element.visitAncestorElements((ancestor) {
                 final w = ancestor.widget;

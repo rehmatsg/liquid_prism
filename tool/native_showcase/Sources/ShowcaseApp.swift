@@ -16,7 +16,12 @@ import SwiftUI
     }
     var body: some Scene {
         WindowGroup {
-            ShowcaseRoot().environment(model).tint(model.tint)
+            Group {
+                let args = ProcessInfo.processInfo.arguments
+                if let i = args.firstIndex(of: "--tab-labels"), args.count > i + 1 {
+                    TabLayoutProbe(labels: args[i + 1].components(separatedBy: "|"), hideLabels: args.contains("--hide-labels"))
+                } else { ShowcaseRoot() }
+            }.environment(model).tint(model.tint)
                 .preferredColorScheme(model.dark ? .dark : .light)
                 .font(showcaseFont(16)).foregroundStyle(model.ink)
                 .onPreferenceChange(GeometryKey.self) { frames in
