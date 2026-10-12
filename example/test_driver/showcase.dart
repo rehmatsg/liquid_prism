@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/src/recipe.dart' show GlassRole;
+import 'package:liquid_prism/src/system_chrome.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:liquid_prism_example/main.dart' as app;
 import 'package:liquid_prism_example/showcase/app.dart' as showcase;
@@ -20,6 +21,20 @@ Future<void> main() async {
     enableTextEntryEmulation: false,
     handler: (message) async {
       final request = jsonDecode(message!);
+      if (request['op'] == 'system-chrome') {
+        final chrome = SystemChromeListener.instance.value.value;
+        return jsonEncode({
+          'edge': chrome?.verticalBarEdge?.name,
+          'occlusions': [
+            for (final r in chrome?.occlusions ?? const <Rect>[])
+              [r.left, r.top, r.width, r.height],
+          ],
+          'divisions': [
+            for (final d in chrome?.divisions ?? const [])
+              [d.frame.left, d.frame.top, d.frame.width, d.frame.height],
+          ],
+        });
+      }
       if (request['op'] == 'scenario') {
         StatefulElement? home;
         void locate(Element element) {
@@ -50,9 +65,10 @@ Future<void> main() async {
         final screen = request['screen'] as String;
         final root = ['explore', 'studio', 'library'].indexOf(screen);
         final dynamic homeState = home!.state;
-        homeState.select(root < 0 ? 2 : root);
+        homeState.select(showcase.ShowcaseTab.values[root < 0 ? 2 : root]);
         await WidgetsBinding.instance.endOfFrame;
-        for (final controller in homeState.scroll as List<ScrollController>) {
+        final scrolls = homeState.scroll as Map<Object, ScrollController>;
+        for (final controller in scrolls.values) {
           if (controller.hasClients) controller.jumpTo(0);
         }
         if (root < 0) {
@@ -72,23 +88,15 @@ Future<void> main() async {
         state.ShowcaseModel? model;
         Element? scrollTarget;
         const panels = {
-          'Look & feel': 'look-feel',
-          'A color story': 'palette',
-          'The optics': 'optics',
-          'Behind the glass': 'artwork',
-          '01 / Controls': 'explore-controls',
+          'Appearance': 'look-feel',
+          'Accent': 'palette',
+          'Optics': 'optics',
+          'Artwork': 'artwork',
+          'Try it': 'explore-controls',
         };
         String? panelName(Element element) {
-          String? name;
-          void search(Element child) {
-            if (child.widget is design.Eyebrow) {
-              name ??= panels[(child.widget as design.Eyebrow).text];
-            }
-            child.visitChildElements(search);
-          }
-
-          search(element);
-          return name;
+          final widget = element.widget;
+          return widget is design.InsetSection ? panels[widget.header] : null;
         }
 
         void visit(Element element) {
@@ -114,10 +122,10 @@ Future<void> main() async {
                   ? 'showcase-navigation'
                   : 'component-tabs';
             }
-            if (widget is pages.HeroCanvas) name = 'hero-canvas';
+            if (widget is pages.ExploreHero) name = 'hero-canvas';
             if (widget is previews.LensPlayground) name = 'lens-canvas';
             if (widget is previews.ComponentPreview) name = 'preview';
-            if (widget is design.Panel) name = panelName(element);
+            if (widget is design.InsetSection) name = panelName(element);
             if (widget.key is ValueKey<String>) {
               final key = (widget.key as ValueKey<String>).value;
               if ([
@@ -129,8 +137,7 @@ Future<void> main() async {
                 name = key;
               }
             }
-            if (widget is Text &&
-                widget.data == 'A little glass.\nA lot of possibility.') {
+            if (widget.key == const ValueKey('page-title:Explore')) {
               name = 'explore-title';
             }
             if (name != null) {

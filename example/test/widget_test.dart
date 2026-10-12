@@ -33,35 +33,60 @@ void main() {
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
 
+  testWidgets('iPhone Duo places navigation in the sensor-bar rail', (
+    tester,
+  ) async {
+    phone(tester, size: const Size(466, 678));
+    tester.view.padding = const FakeViewPadding(right: 84, bottom: 34);
+    tester.view.viewPadding = const FakeViewPadding(right: 84, bottom: 34);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
+    await tester.pumpWidget(const LiquidPrismExample());
+    final navigation = tester.getRect(
+      find.byKey(const ValueKey('showcase-navigation')),
+    );
+    expect(navigation.left, 466 - 84 + 12);
+    expect(navigation.width, 48);
+    // Content keeps the full window height and stays clear of the rail.
+    final title = tester.getRect(
+      find.byKey(const ValueKey('page-title:Explore')),
+    );
+    expect(title.right, lessThanOrEqualTo(466 - 84));
+    await tab(tester, 'Library');
+    expect(find.text('9 components'), findsOneWidget);
+    await press(tester, 'Explore Tab Bars');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'library finds all components, filters, and restores after a route',
     (tester) async {
       phone(tester);
       await tester.pumpWidget(const LiquidPrismExample());
-      expect(
-        find.text('A little glass.\nA lot of possibility.'),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('page-title:Explore')), findsOneWidget);
       await tab(tester, 'Library');
-      expect(find.text('9 COMPONENTS'), findsOneWidget);
+      expect(find.text('9 components'), findsOneWidget);
       for (final info in components) {
         await press(tester, 'Explore ${info.title}');
         expect(
-          find.text('THE LIVE PREVIEW'),
+          find.text('LIVE PREVIEW'),
           info.kind == ComponentKind.surfaces ? findsNothing : findsOneWidget,
         );
-        expect(find.text(info.title), findsNWidgets(2));
+        expect(
+          find.byKey(ValueKey('page-title:${info.title}')),
+          findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
         await press(tester, 'Back to showcase');
       }
       await tester.ensureVisible(find.byType(CupertinoTextField));
       await tester.enterText(find.byType(CupertinoTextField), 'slider');
       await tester.pumpAndSettle();
-      expect(find.text('1 COMPONENT'), findsOneWidget);
+      expect(find.text('1 component'), findsOneWidget);
       expect(find.text('Buttons'), findsNothing);
       await press(tester, 'Explore Sliders');
       await press(tester, 'Back to showcase');
-      expect(find.text('1 COMPONENT'), findsOneWidget);
+      expect(find.text('1 component'), findsOneWidget);
       await tester.enterText(
         find.byType(CupertinoTextField),
         'not-a-component',
@@ -69,7 +94,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Nothing here just yet.'), findsOneWidget);
       await press(tester, 'Reset library search');
-      expect(find.text('9 COMPONENTS'), findsOneWidget);
+      expect(find.text('9 components'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

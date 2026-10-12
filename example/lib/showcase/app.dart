@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:liquid_prism/liquid_prism.dart';
 
+import 'component_page.dart';
 import 'model.dart';
 import 'pages.dart';
-import 'component_page.dart';
 import 'widgets.dart';
 
 class LiquidPrismExample extends StatefulWidget {
@@ -16,6 +15,7 @@ class LiquidPrismExample extends StatefulWidget {
 
 class _LiquidPrismExampleState extends State<LiquidPrismExample> {
   final model = ShowcaseModel();
+
   @override
   void dispose() {
     model.dispose();
@@ -25,38 +25,48 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: model,
-    builder: (context, _) => CupertinoApp(
-      title: 'Liquid Prism',
-      localizationsDelegates: const [DefaultMaterialLocalizations.delegate],
-      debugShowCheckedModeBanner: false,
-      theme: CupertinoThemeData(
-        brightness: model.brightness,
-        primaryColor: model.tint,
-        textTheme: CupertinoTextThemeData(
-          textStyle: TextStyle(
-            fontFamily: '.SF Pro Text',
-            fontSize: 16,
-            color: GlassColors(model.brightness).label,
-          ),
-        ),
-      ),
-      builder: (context, child) => LiquidPrismTheme(
-        data: LiquidPrismThemeData(
+    builder: (context, _) {
+      final colors = GlassColors(model.brightness);
+      return CupertinoApp(
+        title: 'Liquid Prism',
+        localizationsDelegates: const [DefaultMaterialLocalizations.delegate],
+        debugShowCheckedModeBanner: false,
+        theme: CupertinoThemeData(
           brightness: model.brightness,
-          tint: model.tint,
-          glass: model.glass,
-          tabBar: GlassTabBarStyle(
-            labelBehavior: model.labels
-                ? GlassTabLabelBehavior.always
-                : GlassTabLabelBehavior.never,
+          primaryColor: model.tint,
+          scaffoldBackgroundColor: colors.groupedBackground,
+          textTheme: CupertinoTextThemeData(
+            textStyle: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 17,
+              letterSpacing: -.41,
+              color: colors.label,
+            ),
           ),
         ),
-        child: child!,
-      ),
-      home: ShowcaseHome(model: model),
-    ),
+        builder: (context, child) => LiquidPrismTheme(
+          data: LiquidPrismThemeData(
+            brightness: model.brightness,
+            tint: model.tint,
+            glass: model.glass,
+            tabBar: GlassTabBarStyle(
+              labelBehavior: model.labels
+                  ? GlassTabLabelBehavior.always
+                  : GlassTabLabelBehavior.never,
+            ),
+          ),
+          child: DefaultTextStyle(
+            style: CupertinoTheme.of(context).textTheme.textStyle,
+            child: child!,
+          ),
+        ),
+        home: ShowcaseHome(model: model),
+      );
+    },
   );
 }
+
+enum ShowcaseTab { explore, studio, library }
 
 class ShowcaseHome extends StatefulWidget {
   const ShowcaseHome({super.key, required this.model});
@@ -66,159 +76,114 @@ class ShowcaseHome extends StatefulWidget {
 }
 
 class _ShowcaseHomeState extends State<ShowcaseHome> {
-  int tab = 0;
-  final scroll = List.generate(3, (_) => ScrollController());
+  var tab = ShowcaseTab.explore;
+  final scroll = {
+    for (final tab in ShowcaseTab.values) tab: ScrollController(),
+  };
   final search = TextEditingController();
   final searchFocus = FocusNode();
+
+  ShowcaseModel get model => widget.model;
+
   @override
   void dispose() {
-    for (final c in scroll) {
-      c.dispose();
+    for (final controller in scroll.values) {
+      controller.dispose();
     }
     search.dispose();
     searchFocus.dispose();
     super.dispose();
   }
 
-  void select(int value) {
+  void select(ShowcaseTab value) {
     searchFocus.unfocus();
+    if (value == tab && scroll[value]!.hasClients) {
+      // Tapping the current tab scrolls back to the top, as on iOS.
+      scroll[value]!.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
     setState(() => tab = value);
   }
 
-  void open(ComponentInfo info) => Navigator.of(context).push<void>(
-    CupertinoPageRoute(
-      builder: (_) => ComponentPage(info: info, model: widget.model),
-    ),
-  );
-  @override
-  Widget build(BuildContext context) => DefaultTextStyle(
-    style: CupertinoTheme.of(context).textTheme.textStyle
-        .copyWith(color: ink(context)),
-    child: ShowcaseBackdrop(
-      model: widget.model,
-      child: SafeArea(
-        bottom: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) => Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 10, 24, 14),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 33,
-                      height: 33,
-                      decoration: ShapeDecoration(
-                        color: ink(context),
-                        shape: RoundedSuperellipseBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Icon(
-                        CupertinoIcons.cube,
-                        color: widget.model.dark
-                            ? const Color(0xFF151B20)
-                            : const Color(0xFFF5F3ED),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        'liquid prism',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -.6,
-                        ),
-                      ),
-                    ),
-                    IconAction(
-                      icon: widget.model.dark
-                          ? CupertinoIcons.sun_max
-                          : CupertinoIcons.moon,
-                      label: 'Toggle appearance',
-                      onPressed: () => widget.model.change(
-                        () => widget.model.dark = !widget.model.dark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  key: ValueKey(tab),
-                  controller: scroll[tab],
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(24, 6, 24, 26),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 940),
-                      child: switch (tab) {
-                        0 => ExplorePage(
-                          model: widget.model,
-                          open: open,
-                          onStudio: () => select(1),
-                          onLibrary: () => select(2),
-                        ),
-                        1 => StudioPage(model: widget.model),
-                        _ => LibraryPage(
-                          model: widget.model,
-                          controller: search,
-                          focus: searchFocus,
-                          open: open,
-                        ),
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              if (MediaQuery.viewInsetsOf(context).bottom == 0)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    24,
-                    10,
-                    24,
-                    // Native floating housing sits 21 pt from the screen edge
-                    // (doc/native_tab_bar_spec.md), within the gesture inset.
-                    defaultTargetPlatform == TargetPlatform.iOS
-                        ? 21
-                        : MediaQuery.viewPaddingOf(context).bottom + 10,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 440),
-                      child: LiquidPrismTabBar(
-                        key: const ValueKey('showcase-navigation'),
-                        selectedIndex: tab,
-                        onSelected: select,
-                        tabs: const [
-                          LiquidPrismTab(
-                            label: 'Explore',
-                            icon: Icon(CupertinoIcons.sparkles),
-                          ),
-                          LiquidPrismTab(
-                            label: 'Studio',
-                            icon: Icon(CupertinoIcons.slider_horizontal_3),
-                          ),
-                          LiquidPrismTab(
-                            label: 'Library',
-                            icon: Icon(CupertinoIcons.square_grid_2x2),
-                            selectedIcon: Icon(
-                              CupertinoIcons.square_grid_2x2_fill,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              SizedBox(height: MediaQuery.viewInsetsOf(context).bottom),
-            ],
-          ),
-        ),
+  void open(ComponentInfo info) {
+    searchFocus.unfocus();
+    Navigator.of(context).push<void>(
+      CupertinoPageRoute(
+        builder: (_) => ComponentPage(info: info, model: model),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => LiquidPrismScaffold(
+    backgroundColor: GlassColors.of(context).groupedBackground,
+    actions: appearanceActions(model),
+    tabBar: LiquidPrismTabBar(
+      key: const ValueKey('showcase-navigation'),
+      selectedIndex: tab.index,
+      onSelected: (index) => select(ShowcaseTab.values[index]),
+      tabs: const [
+        LiquidPrismTab(label: 'Explore', icon: Icon(CupertinoIcons.sparkles)),
+        LiquidPrismTab(
+          label: 'Studio',
+          icon: Icon(CupertinoIcons.slider_horizontal_3),
+        ),
+        LiquidPrismTab(
+          label: 'Library',
+          icon: Icon(CupertinoIcons.square_grid_2x2),
+          selectedIcon: Icon(CupertinoIcons.square_grid_2x2_fill),
+        ),
+      ],
+    ),
+    body: KeyedSubtree(
+      key: ValueKey(tab),
+      child: switch (tab) {
+        ShowcaseTab.explore => ExplorePage(
+          model: model,
+          controller: scroll[tab],
+          open: open,
+          onStudio: () => select(ShowcaseTab.studio),
+        ),
+        ShowcaseTab.studio => StudioPage(model: model, controller: scroll[tab]),
+        ShowcaseTab.library => LibraryPage(
+          model: model,
+          controller: scroll[tab],
+          search: search,
+          focus: searchFocus,
+          open: open,
+        ),
+      },
     ),
   );
 }
+
+/// The appearance toggle and artwork menu shared by every screen.
+List<GlassToolbarItem> appearanceActions(ShowcaseModel model) => [
+  GlassToolbarItem(
+    icon: Icon(model.dark ? CupertinoIcons.sun_max : CupertinoIcons.moon),
+    label: 'Toggle appearance',
+    onPressed: () => model.change(() => model.dark = !model.dark),
+  ),
+  GlassToolbarItem.menu(
+    icon: const Icon(CupertinoIcons.photo),
+    label: 'Choose artwork',
+    menu: LiquidMenu(
+      title: 'Artwork',
+      children: [
+        for (var i = 0; i < Art.names.length; i++)
+          LiquidMenuAction<int>(
+            id: 'artwork-$i',
+            title: Art.names[i],
+            value: i,
+            state: model.wallpaper == i
+                ? MenuElementState.on
+                : MenuElementState.off,
+            onSelected: () => model.change(() => model.wallpaper = i),
+          ),
+      ],
+    ),
+  ),
+];

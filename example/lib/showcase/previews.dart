@@ -67,10 +67,18 @@ class _LensPlaygroundState extends State<LensPlayground> {
             variant: widget.model.wallpaper,
             child: Stack(
               children: [
-                const Positioned(
+                Positioned(
                   left: 20,
-                  top: 20,
-                  child: Eyebrow('Move / Discover', color: Color(0xFF314D47)),
+                  top: 18,
+                  child: Text(
+                    'DRAG THE GLASS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                      color: Art.inks[widget.model.wallpaper],
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: 12 + position.dx * travelX,
@@ -133,13 +141,15 @@ class _LensPlaygroundState extends State<LensPlayground> {
                     ),
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   right: 18,
                   bottom: 17,
                   child: Icon(
                     CupertinoIcons.move,
                     size: 19,
-                    color: Color(0xAA314D47),
+                    color: Art.inks[widget.model.wallpaper].withValues(
+                      alpha: .65,
+                    ),
                   ),
                 ),
               ],
@@ -149,14 +159,6 @@ class _LensPlaygroundState extends State<LensPlayground> {
       );
     },
   );
-}
-
-class CanvasClip extends CustomClipper<Path> {
-  const CanvasClip();
-  @override
-  Path getClip(Size size) => const GlassShape.rect(cornerRadius: 28).path(size);
-  @override
-  bool shouldReclip(CanvasClip old) => false;
 }
 
 class ComponentPreview extends StatefulWidget {
@@ -235,397 +237,413 @@ class _ComponentPreviewState extends State<ComponentPreview> {
         ],
       );
     }
-    return DefaultTextStyle.merge(
-      style: TextStyle(color: GlassColors.light.label),
-      child: ClipPath(
-        clipper: const CanvasClip(),
-        child: Art(
-          variant: m.wallpaper,
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Eyebrow('The live preview', color: Color(0xFF314D47)),
-                const SizedBox(height: 28),
-                ...switch (widget.kind) {
-                  ComponentKind.buttons => [
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        ActionButton(
-                          'Glass',
-                          label: 'Add a tap',
-                          onPressed: () => m.change(() => m.taps++),
-                        ),
-                        ActionButton(
-                          'Prominent',
-                          label: 'Add a prominent tap',
-                          onPressed: () => m.change(() => m.taps++),
-                          prominent: true,
-                        ),
-                        LiquidPrismButton(
-                          label: 'Favorite',
-                          selected: m.favorite,
-                          shape: GlassShape.circle,
-                          padding: const EdgeInsets.all(15),
-                          onPressed: () =>
-                              m.change(() => m.favorite = !m.favorite),
-                          child: Icon(
-                            m.favorite
-                                ? CupertinoIcons.heart_fill
-                                : CupertinoIcons.heart,
-                            size: 22,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 26),
-                    Text(
-                      '${m.taps} ${m.taps == 1 ? 'tap' : 'taps'}',
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Press and hold any button.',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ],
-                  ComponentKind.switches => [
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Let it glow',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        LiquidPrismSwitch(
-                          label: 'Let it glow',
-                          value: m.enabled,
-                          onChanged: (v) => m.change(() => m.enabled = v),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 28),
-                    Icon(
-                      m.enabled
-                          ? CupertinoIcons.sun_max_fill
-                          : CupertinoIcons.moon_fill,
-                      size: 52,
-                      color: GlassColors.light.label,
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Text(
-                        m.enabled
-                            ? 'A brighter outlook.'
-                            : 'A moment of quiet.',
-                        style: const TextStyle(fontSize: 15),
-                      ),
-                    ),
-                  ],
-                  ComponentKind.sliders => [
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Just the right amount.',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${(m.level * 100).round()}%',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 26),
-                    LiquidPrismSlider(
-                      key: const ValueKey('component-slider'),
-                      label: 'Intensity',
-                      value: m.level,
-                      onChanged: (v) => m.change(() => m.level = v),
-                    ),
-                    const SizedBox(height: 20),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(CupertinoIcons.sun_min, size: 19),
-                        Icon(CupertinoIcons.sun_max, size: 25),
-                      ],
-                    ),
-                  ],
-                  ComponentKind.segments => [
-                    LiquidPrismSegmentedControl<int>(
-                      label: 'Perspective',
-                      selectedValue: m.segment,
-                      onValueChanged: (v) => m.change(() => m.segment = v),
-                      children: const {
-                        0: Text('Day'),
-                        1: Text('Dusk'),
-                        2: Text('Night'),
-                      },
-                    ),
-                    const SizedBox(height: 30),
-                    Icon(
-                      [
-                        CupertinoIcons.sun_max,
-                        CupertinoIcons.sunset,
-                        CupertinoIcons.moon_stars,
-                      ][m.segment],
-                      size: 50,
-                      color: GlassColors.light.label,
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Text(
-                        [
-                          'Start with a little light.',
-                          'Take the scenic route.',
-                          'Find your quiet moment.',
-                        ][m.segment],
-                        style: const TextStyle(fontSize: 15),
-                      ),
-                    ),
-                  ],
-                  ComponentKind.tabs => [
-                    const Text(
-                      'Take a different path.',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      [
-                        'Discover something new.',
-                        'Keep what speaks to you.',
-                        'Make yourself at home.',
-                      ][selectedTab],
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(height: 34),
-                    LiquidPrismTabBar(
-                      selectedIndex: selectedTab,
-                      onSelected: (v) => setState(() => selectedTab = v),
-                      tabs: const [
-                        LiquidPrismTab(
-                          label: 'Discover',
-                          icon: Icon(CupertinoIcons.compass),
-                        ),
-                        LiquidPrismTab(
-                          label: 'Saved',
-                          icon: Icon(CupertinoIcons.bookmark),
-                        ),
-                        LiquidPrismTab(
-                          label: 'Home',
-                          icon: Icon(CupertinoIcons.house),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Hold the pill and glide between tabs.',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                  ComponentKind.toolbar => [
-                    const Text(
-                      'A little group effort.',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 26),
-                    Wrap(
-                      spacing: 14,
-                      runSpacing: 14,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        LiquidPrismToolbarGroup(
-                          key: const ValueKey('demo-toolbar'),
-                          size: GlassToolbarSize.navigation,
-                          items: [
-                            GlassToolbarItem(
-                              icon: const Icon(CupertinoIcons.star),
-                              label: 'Star',
-                              width: 42 + 1 / 3,
-                              onPressed: () => setState(() => actions++),
-                            ),
-                            GlassToolbarItem(
-                              icon: const Icon(CupertinoIcons.share),
-                              label: 'Share',
-                              width: 38 + 2 / 3,
-                              onPressed: () => setState(() => actions++),
-                            ),
-                            GlassToolbarItem.menu(
-                              icon: const Icon(CupertinoIcons.ellipsis),
-                              label: 'More',
-                              menu: _actionMenu(),
-                              onSelected: _menuSelected,
-                            ),
-                          ],
-                        ),
-                        LiquidPrismToolbarGroup(
-                          items: [
-                            GlassToolbarItem(
-                              icon: const Icon(CupertinoIcons.square_pencil),
-                              label: 'Compose',
-                              onPressed: () => setState(() => actions++),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: LiquidPrismToolbarGroup(
-                        items: [
-                          GlassToolbarItem(
-                            icon: const Icon(CupertinoIcons.chevron_left),
-                            label: 'Previous',
-                            onPressed: () => setState(() => actions++),
-                          ),
-                          GlassToolbarItem(
-                            icon: const Icon(CupertinoIcons.chevron_right),
-                            label: 'Next',
-                            onPressed: () => setState(() => actions++),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      '$actions actions. Hold an icon to lift its group.',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
-                  ComponentKind.menus => [
-                    const Text(
-                      'A familiar kind of magic.',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Your glass trigger. The system’s popup.',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      spacing: 14,
-                      runSpacing: 14,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        LiquidPrismButton.menu(
-                          key: const ValueKey('native-menu-button'),
-                          label: 'Open native menu',
-                          menu: _actionMenu(),
-                          buttonStyle: GlassButtonStyle.glassProminent,
-                          onSelected: _menuSelected,
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(child: Text('Choose an action')),
-                              SizedBox(width: 8),
-                              Icon(CupertinoIcons.chevron_down, size: 16),
-                            ],
-                          ),
-                        ),
-                        LiquidPrismToolbarGroup(
-                          items: [
-                            GlassToolbarItem.menu(
-                              key: const ValueKey('native-menu-toolbar'),
-                              icon: const Icon(CupertinoIcons.ellipsis),
-                              label: 'Open toolbar menu',
-                              menu: _actionMenu(),
-                              onSelected: _menuSelected,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 22),
-                    LiquidMenuRegion(
-                      key: const ValueKey('native-context-menu'),
-                      trigger: LiquidMenuTrigger.longPress,
-                      anchor: LiquidMenuAnchorMode.tapPoint,
-                      menu: _actionMenu(),
-                      onSelected: _menuSelected,
-                      child: LiquidPrism(
-                        shape: const GlassShape.rect(cornerRadius: 18),
-                        child: const Padding(
-                          padding: EdgeInsets.all(18),
-                          child: Row(
-                            children: [
-                              Icon(CupertinoIcons.hand_draw, size: 23),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Hold here for a context menu',
-                                  style: TextStyle(fontSize: 14),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(menuResult, style: const TextStyle(fontSize: 13)),
-                  ],
-                  ComponentKind.search => [
-                    const Text(
-                      'What’s on your mind?',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                    LiquidPrismSearchField(
-                      key: const ValueKey('demo-search'),
-                      placeholder: 'Search your ideas',
-                      onChanged: (v) => setState(() => query = v),
-                    ),
-                    const SizedBox(height: 22),
-                    Text(
-                      query.isEmpty
-                          ? 'Try typing “a fresh start”.'
-                          : 'Looking for “$query”',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                  ComponentKind.surfaces => <Widget>[],
-                },
-                const SizedBox(height: 12),
-              ],
+    return ArtCanvas(
+      variant: m.wallpaper,
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'LIVE PREVIEW',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
             ),
           ),
-        ),
+          const SizedBox(height: 24),
+          ...switch (widget.kind) {
+            ComponentKind.buttons => [
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  LiquidPrismButton(
+                    label: 'Add a tap',
+                    onPressed: () => m.change(() => m.taps++),
+                    child: const Text('Glass'),
+                  ),
+                  LiquidPrismButton(
+                    label: 'Add a prominent tap',
+                    buttonStyle: GlassButtonStyle.glassProminent,
+                    onPressed: () => m.change(() => m.taps++),
+                    child: const Text('Prominent'),
+                  ),
+                  LiquidPrismButton(
+                    label: 'Favorite',
+                    selected: m.favorite,
+                    shape: GlassShape.circle,
+                    padding: const EdgeInsets.all(15),
+                    onPressed: () => m.change(() => m.favorite = !m.favorite),
+                    child: Icon(
+                      m.favorite
+                          ? CupertinoIcons.heart_fill
+                          : CupertinoIcons.heart,
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 26),
+              Text(
+                '${m.taps} ${m.taps == 1 ? 'tap' : 'taps'}',
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Press and hold any button.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+            ComponentKind.switches => [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Let it glow',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  LiquidPrismSwitch(
+                    label: 'Let it glow',
+                    value: m.enabled,
+                    onChanged: (v) => m.change(() => m.enabled = v),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+              Icon(
+                m.enabled
+                    ? CupertinoIcons.sun_max_fill
+                    : CupertinoIcons.moon_fill,
+                size: 52,
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  m.enabled ? 'A brighter outlook.' : 'A moment of quiet.',
+                  style: const TextStyle(fontSize: 15),
+                ),
+              ),
+            ],
+            ComponentKind.sliders => [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Just the right amount.',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${(m.level * 100).round()}%',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 26),
+              LiquidPrismSlider(
+                key: const ValueKey('component-slider'),
+                label: 'Intensity',
+                value: m.level,
+                onChanged: (v) => m.change(() => m.level = v),
+              ),
+              const SizedBox(height: 20),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(CupertinoIcons.sun_min, size: 19),
+                  Icon(CupertinoIcons.sun_max, size: 25),
+                ],
+              ),
+            ],
+            ComponentKind.segments => [
+              LiquidPrismSegmentedControl<int>(
+                label: 'Perspective',
+                selectedValue: m.segment,
+                onValueChanged: (v) => m.change(() => m.segment = v),
+                children: const {
+                  0: Text('Day'),
+                  1: Text('Dusk'),
+                  2: Text('Night'),
+                },
+              ),
+              const SizedBox(height: 30),
+              Icon(
+                [
+                  CupertinoIcons.sun_max,
+                  CupertinoIcons.sunset,
+                  CupertinoIcons.moon_stars,
+                ][m.segment],
+                size: 50,
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: Text(
+                  [
+                    'Start with a little light.',
+                    'Take the scenic route.',
+                    'Find your quiet moment.',
+                  ][m.segment],
+                  style: const TextStyle(fontSize: 15),
+                ),
+              ),
+            ],
+            ComponentKind.tabs => [
+              const Text(
+                'Take a different path.',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                [
+                  'Discover something new.',
+                  'Keep what speaks to you.',
+                  'Make yourself at home.',
+                ][selectedTab],
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 30),
+              LiquidPrismTabBar(
+                selectedIndex: selectedTab,
+                onSelected: (v) => setState(() => selectedTab = v),
+                tabs: _demoTabs,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Beside the iPhone Duo sensor bar, the same tabs '
+                      'stack into an icon-only rail. Hold the pill and '
+                      'glide in either direction.',
+                      style: TextStyle(fontSize: 13, height: 1.35),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  LiquidPrismTabBar(
+                    key: const ValueKey('demo-rail'),
+                    axis: Axis.vertical,
+                    selectedIndex: selectedTab,
+                    onSelected: (v) => setState(() => selectedTab = v),
+                    tabs: _demoTabs,
+                  ),
+                ],
+              ),
+            ],
+            ComponentKind.toolbar => [
+              const Text(
+                'A little group effort.',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 26),
+              Wrap(
+                spacing: 14,
+                runSpacing: 14,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  LiquidPrismToolbarGroup(
+                    key: const ValueKey('demo-toolbar'),
+                    size: GlassToolbarSize.navigation,
+                    items: [
+                      GlassToolbarItem(
+                        icon: const Icon(CupertinoIcons.star),
+                        label: 'Star',
+                        width: 42 + 1 / 3,
+                        onPressed: () => setState(() => actions++),
+                      ),
+                      GlassToolbarItem(
+                        icon: const Icon(CupertinoIcons.share),
+                        label: 'Share',
+                        width: 38 + 2 / 3,
+                        onPressed: () => setState(() => actions++),
+                      ),
+                      GlassToolbarItem.menu(
+                        icon: const Icon(CupertinoIcons.ellipsis),
+                        label: 'More',
+                        menu: _actionMenu(),
+                        onSelected: _menuSelected,
+                      ),
+                    ],
+                  ),
+                  LiquidPrismToolbarGroup(
+                    items: [
+                      GlassToolbarItem(
+                        icon: const Icon(CupertinoIcons.square_pencil),
+                        label: 'Compose',
+                        onPressed: () => setState(() => actions++),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: LiquidPrismToolbarGroup(
+                  items: [
+                    GlassToolbarItem(
+                      icon: const Icon(CupertinoIcons.chevron_left),
+                      label: 'Previous',
+                      onPressed: () => setState(() => actions++),
+                    ),
+                    GlassToolbarItem(
+                      icon: const Icon(CupertinoIcons.chevron_right),
+                      label: 'Next',
+                      onPressed: () => setState(() => actions++),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$actions actions. Hold an icon to lift its '
+                      'group. In a side rail, groups stack vertically.',
+                      style: const TextStyle(fontSize: 13, height: 1.35),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  LiquidPrismToolbarGroup(
+                    axis: Axis.vertical,
+                    items: [
+                      GlassToolbarItem(
+                        icon: const Icon(CupertinoIcons.heart),
+                        label: 'Like',
+                        onPressed: () => setState(() => actions++),
+                      ),
+                      GlassToolbarItem(
+                        icon: const Icon(CupertinoIcons.bookmark),
+                        label: 'Bookmark',
+                        onPressed: () => setState(() => actions++),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+            ComponentKind.menus => [
+              const Text(
+                'A familiar kind of magic.',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Your glass trigger. The system’s popup.',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 14,
+                runSpacing: 14,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  LiquidPrismButton.menu(
+                    key: const ValueKey('native-menu-button'),
+                    label: 'Open native menu',
+                    menu: _actionMenu(),
+                    buttonStyle: GlassButtonStyle.glassProminent,
+                    onSelected: _menuSelected,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(child: Text('Choose an action')),
+                        SizedBox(width: 8),
+                        Icon(CupertinoIcons.chevron_down, size: 16),
+                      ],
+                    ),
+                  ),
+                  LiquidPrismToolbarGroup(
+                    items: [
+                      GlassToolbarItem.menu(
+                        key: const ValueKey('native-menu-toolbar'),
+                        icon: const Icon(CupertinoIcons.ellipsis),
+                        label: 'Open toolbar menu',
+                        menu: _actionMenu(),
+                        onSelected: _menuSelected,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              LiquidMenuRegion(
+                key: const ValueKey('native-context-menu'),
+                trigger: LiquidMenuTrigger.longPress,
+                anchor: LiquidMenuAnchorMode.tapPoint,
+                menu: _actionMenu(),
+                onSelected: _menuSelected,
+                child: LiquidPrism(
+                  shape: const GlassShape.rect(cornerRadius: 18),
+                  child: const Padding(
+                    padding: EdgeInsets.all(18),
+                    child: Row(
+                      children: [
+                        Icon(CupertinoIcons.hand_draw, size: 23),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Hold here for a context menu',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(menuResult, style: const TextStyle(fontSize: 13)),
+            ],
+            ComponentKind.search => [
+              const Text(
+                'What’s on your mind?',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 22),
+              LiquidPrismSearchField(
+                key: const ValueKey('demo-search'),
+                placeholder: 'Search your ideas',
+                onChanged: (v) => setState(() => query = v),
+              ),
+              const SizedBox(height: 22),
+              Text(
+                query.isEmpty
+                    ? 'Try typing “a fresh start”.'
+                    : 'Looking for “$query”',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+            ComponentKind.surfaces => <Widget>[],
+          },
+          const SizedBox(height: 8),
+        ],
       ),
     );
   }
+
+  static const _demoTabs = [
+    LiquidPrismTab(label: 'Discover', icon: Icon(CupertinoIcons.compass)),
+    LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+    LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+  ];
 
   void _menuSelected(Object? value) {
     if (mounted && value != null) {
