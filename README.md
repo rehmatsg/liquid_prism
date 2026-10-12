@@ -6,29 +6,6 @@ floating tab bars, toolbars and search. Popup menus use real UIKit menus on iOS.
 The defaults follow our SwiftUI reference. Use a few widget arguments for a local
 change, reusable styles for a component, or a theme for the whole app.
 
-## See it move
-
-Taps, holds and glides on white, plus glass over the Golden Gate Bridge.
-Recorded from Flutter at 1206 pixels wide and 60 fps; the switch is shown at 2×.
-
-<table>
-  <tr><th>Tab bar</th><th>Switch (2×)</th><th>Slider</th></tr>
-  <tr>
-    <td><video src="https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142" width="280" controls></video></td>
-    <td><video src="https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c" width="280" controls></video></td>
-    <td><video src="https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106" width="280" controls></video></td>
-  </tr>
-</table>
-
-<table>
-  <tr><th>Clear glass</th><th>Regular glass</th><th>Glass shapes</th></tr>
-  <tr>
-    <td><video src="https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a" width="280" controls></video></td>
-    <td><video src="https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271" width="280" controls></video></td>
-    <td><video src="https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170" width="280" controls></video></td>
-  </tr>
-</table>
-
 ## Install
 
 Requires **Flutter 3.47+ / Dart 3.13.3+**. The supported app targets are iOS and
@@ -47,6 +24,8 @@ Run `flutter pub get`. Pin `ref` to a reviewed commit for production apps.
 The package is not published on pub.dev yet.
 
 ## Your first glass surface
+
+<video src="https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271" controls></video>
 
 ```dart
 import 'package:flutter/material.dart';
@@ -92,6 +71,49 @@ Put glass above something visible. `Glass.regular`, `Glass.clear` and
 `Glass.identity` choose the material; `.tint(color)` adds a tint and `.interactive()`
 adds press feedback to a surface. Continuous rounded corners are the default.
 
+### Clear glass
+
+<video src="https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a" controls></video>
+
+```dart
+LiquidPrism(
+  glass: Glass.clear,
+  shape: const GlassShape.rect(cornerRadius: 30),
+  child: const SizedBox(width: 234, height: 150),
+)
+```
+
+### Glass shapes
+
+<video src="https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170" controls></video>
+
+```dart
+Wrap(
+  spacing: 16,
+  runSpacing: 16,
+  children: [
+    LiquidPrism(
+      glass: Glass.clear,
+      shape: const GlassShape.rect(cornerRadius: 30),
+      child: const SizedBox(width: 174, height: 138),
+    ),
+    LiquidPrism(
+      glass: Glass.clear,
+      shape: GlassShape.circle,
+      child: const SizedBox.square(dimension: 78, child: Icon(Icons.add)),
+    ),
+    LiquidPrism(
+      glass: Glass.clear,
+      shape: GlassShape.capsule,
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Text('Through a new lens.'),
+      ),
+    ),
+  ],
+)
+```
+
 ## Choose a component
 
 | You need | Use |
@@ -106,13 +128,31 @@ adds press feedback to a surface. Continuous rounded corners are the default.
 | Search with clear/cancel | `LiquidPrismSearchField` |
 | A native popup | `LiquidPrismButton.menu` / `GlassToolbarItem.menu` |
 
+You own the values in these examples. A null action callback disables a control.
+Sliders update continuously; switch and segmented drags commit on release.
+Controls support keyboard input, accessibility, RTL and Reduce Motion.
+The videos were recorded from Flutter at 1206 pixels wide and 60 fps.
+
+### Switch
+
+This demo uses `GlassSwitchStyle(scale: 2)`.
+
+<video src="https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c" controls></video>
+
 ```dart
 LiquidPrismSwitch(
   label: 'Notifications',
   value: notifications,
   onChanged: (next) => setState(() => notifications = next),
+  style: const GlassSwitchStyle(scale: 2),
 )
+```
 
+### Slider
+
+<video src="https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106" controls></video>
+
+```dart
 LiquidPrismSlider(
   label: 'Volume',
   value: volume,
@@ -123,13 +163,30 @@ LiquidPrismSlider(
 )
 ```
 
-You own the values. A null action callback disables a control. Sliders update
-continuously; switch and segmented drags commit on release. Controls support
-keyboard input, accessibility, RTL and Reduce Motion.
+### Tab bar
 
 The tab bar is compact by default and grows for longer labels. Use
 `GlassTabBarStyle(expanded: true)` for full-width navigation. Place it where your
-layout needs it; the widget does not add safe-area margins.
+layout needs it; the widget does not add safe-area margins. The icons below use
+`package:flutter/cupertino.dart`.
+
+<video src="https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142" controls></video>
+
+```dart
+LiquidPrismTabBar(
+  selectedIndex: selectedTab,
+  onSelected: (next) => setState(() => selectedTab = next),
+  tabs: const [
+    LiquidPrismTab(label: 'Explore', icon: Icon(CupertinoIcons.sparkles)),
+    LiquidPrismTab(label: 'Studio', icon: Icon(CupertinoIcons.slider_horizontal_3)),
+    LiquidPrismTab(label: 'Library', icon: Icon(CupertinoIcons.square_grid_2x2_fill)),
+  ],
+  style: const GlassTabBarStyle(
+    height: 62,
+    labelStyle: TextStyle(fontSize: 11),
+  ),
+)
+```
 
 ## Make it yours
 
