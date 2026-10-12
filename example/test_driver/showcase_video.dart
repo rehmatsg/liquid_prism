@@ -166,15 +166,17 @@ Future<void> main() async {
       await component('Sheets', () async {
         await tap('Open a sheet');
         await snapshot('sheet-medium');
-        await driver.scroll(
-          find.byType('ListView'),
-          0,
-          -340,
-          const Duration(milliseconds: 900),
-        );
+        await glide(find.bySemanticsLabel('Resize sheet'), 0, -340);
         await pause(1000);
         await snapshot('sheet-large');
-        await tap('Close sheet');
+        await driver.tap(
+          find.descendant(
+            of: find.byType('ListView'),
+            matching: find.byType('IconAction'),
+            firstMatchOnly: true,
+          ),
+        );
+        await pause();
       });
       await tap('Explore');
       await driver.scroll(scroller, 0, 1200, const Duration(milliseconds: 600));
