@@ -53,6 +53,7 @@ class LiquidPrismSwitch extends StatelessWidget {
         trackingSpring: NativeControl.switchTravel,
         liftSpring: NativeControl.smallLift,
         releaseSpring: NativeControl.smallRelease,
+        hangTime: NativeControl.switchHangTime,
         builder: (context, position, lift, stretch, activate) {
           final p = position.clamp(0.0, 1.0);
           final physical = rtl ? 1 - p : p;

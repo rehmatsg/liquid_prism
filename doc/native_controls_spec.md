@@ -100,6 +100,13 @@ captured travel spring still animates taps and external changes. Intercepting a
 drag spring constructor alone does not establish native per-sample scheduling.
 A null callback disables pointers, keys and semantic actions. RTL reverses the
 physical axis. Reduce Motion removes lift/stretch and settles position immediately.
+Quick switch taps retain the native **220 ms minimum lift window** before the
+existing .5 s / .7 unlift spring. Previously the switch omitted this setting and
+reversed lift immediately on touch-up, truncating the visible animation. The
+window starts at contact; a held or dragged switch that has already consumed it
+begins lowering on release. Recontact replaces the pending window, and cancel,
+disable, disposal and Reduce Motion clear it. Position still uses the native
+.3 s / 1 travel spring, and the value callback still fires on tap-up.
 The slider also supports discrete divisions and arbitrary numeric ranges; those
 are package behavior, outside the captured continuous-slider reference.
 
@@ -134,3 +141,5 @@ controls_video.dart against its VM service with PRISM_SIMULATOR_ID,
 PRISM_CONTROLS_OUT and DART_VM_SERVICE_URL set. The recording shows taps, stationary
 holds, slow drags both ways and releases for each component. Videos and raw native
 captures stay in the ignored artifacts/research directories.
+For a focused quick-tap comparison, run `SwitchTapTests` in the native showcase
+and `example/test_driver/switch_tap_video.dart` against the showcase Flutter VM.

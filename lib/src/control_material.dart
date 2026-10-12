@@ -17,6 +17,7 @@ abstract final class NativeControl {
         bounce: 1 - ratio,
       );
   static final switchTravel = spring(300, 1);
+  static const switchHangTime = Duration(milliseconds: 220);
   static final sliderTravel = spring(400, .8);
   static final sliderTracking = spring(400, 1);
   static final smallLift = spring(270, .625);

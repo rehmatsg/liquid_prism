@@ -24,6 +24,46 @@ Widget host(Widget child, {bool rtl = false, bool reduced = false}) =>
     );
 
 void main() {
+  testWidgets('quick switch tap completes lift before the native unlift', (
+    tester,
+  ) async {
+    var value = false;
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) => LiquidPrismSwitch(
+            value: value,
+            onChanged: (next) => setState(() => value = next),
+          ),
+        ),
+      ),
+    );
+    final thumb = find.byType(ControlThumb);
+    final finger = await tester.startGesture(tester.getCenter(thumb));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 67));
+    await finger.up();
+    await tester.pump();
+    expect(value, isTrue);
+    await tester.pump(const Duration(milliseconds: 133));
+    expect(tester.getSize(thumb).width, inInclusiveRange(58, 61));
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(tester.getSize(thumb).width, greaterThan(48));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(thumb), const Size(37, 24));
+
+    // The same minimum does not delay release after a deliberate hold.
+    final held = await tester.startGesture(tester.getCenter(thumb));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(thumb).width, 58);
+    await held.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(tester.getSize(thumb).width, lessThan(55));
+    await tester.pumpAndSettle();
+    expect(value, isFalse);
+  });
   for (final rtl in [false, true]) {
     testWidgets('held slider exposes a fully filled track at 100%, RTL=$rtl', (
       tester,

@@ -81,7 +81,7 @@ class _ControlInteractionState extends State<ControlInteraction>
   double _downX = 0, _downValue = 0, _candidate = 0;
   double _feedbackValue = 0;
   double? _lastEmitted;
-  DateTime? _contactTime;
+  bool _unliftPending = false;
   bool get _enabled => widget.onChanged != null;
   double _quantize(double value) {
     final bounded = value.clamp(0.0, 1.0);
@@ -138,26 +138,33 @@ class _ControlInteractionState extends State<ControlInteraction>
     }
     _pointer = event.pointer;
     _flex.begin(event);
-    _contactTime = DateTime.now();
     _downX = event.localPosition.dx;
     _downValue = _position.value;
     _candidate = widget.value;
     _feedbackValue = widget.value;
     _focus.requestFocus();
     _release?.cancel();
+    _unliftPending = false;
+    if (!_reduceMotion && widget.hangTime > Duration.zero) {
+      // Count the minimum lift from contact with a timer, so long holds have
+      // already consumed it. Recontact starts a fresh window. This uses the
+      // same clock as cancellation and works with Flutter's test scheduler.
+      _release = Timer(widget.hangTime, () {
+        _release = null;
+        if (_unliftPending && mounted) {
+          _unliftPending = false;
+          _animate(_lift, 0, widget.releaseSpring);
+        }
+      });
+    }
     _animate(_lift, 1, widget.liftSpring);
   }
 
   void _unlift() {
-    _release?.cancel();
-    final elapsed = DateTime.now().difference(_contactTime ?? DateTime.now());
-    final remaining = widget.hangTime - elapsed;
-    if (!_reduceMotion && remaining > Duration.zero) {
-      _release = Timer(
-        remaining,
-        () => _animate(_lift, 0, widget.releaseSpring),
-      );
+    if (!_reduceMotion && (_release?.isActive ?? false)) {
+      _unliftPending = true;
     } else {
+      _unliftPending = false;
       _animate(_lift, 0, widget.releaseSpring);
     }
   }
@@ -176,6 +183,7 @@ class _ControlInteractionState extends State<ControlInteraction>
     _dragging = false;
     _animate(_deformation, 0, _shapeSpring);
     _release?.cancel();
+    _unliftPending = false;
     _animate(_lift, 0, widget.releaseSpring);
     _animate(_position, widget.value, widget.spring);
     if (wasDragging) widget.onChangeEnd?.call(widget.value);
@@ -275,6 +283,7 @@ class _ControlInteractionState extends State<ControlInteraction>
   void deactivate() {
     _flex.stop();
     _release?.cancel();
+    _unliftPending = false;
     _pointer = null;
     _dragging = false;
     _position.stop();
