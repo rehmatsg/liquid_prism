@@ -37,6 +37,7 @@ enum ComponentKind {
   segments,
   tabs,
   toolbar,
+  menus,
   search,
   sheets,
 }
@@ -105,6 +106,13 @@ const components = [
     'A shared home for your actions.',
     CupertinoIcons.ellipsis,
     Color(0xFF8D6956),
+  ),
+  ComponentInfo(
+    ComponentKind.menus,
+    'Popup menus',
+    'Real native menus, right where you tap.',
+    CupertinoIcons.ellipsis_circle,
+    Color(0xFF6B7C80),
   ),
   ComponentInfo(
     ComponentKind.search,

@@ -11,6 +11,8 @@ import 'recipe.dart';
 import 'theme.dart';
 import 'style.dart';
 import 'motion.dart';
+import 'menu/menu.dart';
+import 'menu/menus.dart';
 
 enum GlassButtonStyle { glass, glassProminent }
 
@@ -33,7 +35,31 @@ class LiquidPrismButton extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
     this.selected = false,
     this.foregroundColor,
-  });
+  }) : menu = null,
+       onMenuSelected = null,
+       _menuEnabled = false;
+
+  /// A glass trigger for the native UIKit menu supplied by Liquid Menu.
+  /// The existing button owns touch, keyboard and accessibility activation.
+  const LiquidPrismButton.menu({
+    super.key,
+    required LiquidMenu this.menu,
+    required this.child,
+    required this.label,
+    ValueChanged<Object?>? onSelected,
+    bool enabled = true,
+    this.glass,
+    this.optics,
+    this.blur,
+    this.motion,
+    this.buttonStyle = GlassButtonStyle.glass,
+    this.shape,
+    this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+    this.selected = false,
+    this.foregroundColor,
+  }) : onPressed = null,
+       onMenuSelected = onSelected,
+       _menuEnabled = enabled;
   final FutureOr<void> Function()? onPressed;
   final Widget child;
   final String label;
@@ -46,13 +72,27 @@ class LiquidPrismButton extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final bool selected;
   final Color? foregroundColor;
+  final LiquidMenu? menu;
+  final ValueChanged<Object?>? onMenuSelected;
+  final bool _menuEnabled;
   @override
   Widget build(BuildContext context) {
     final theme = LiquidPrismTheme.of(context);
     final colors = LiquidPrismTheme.colorsOf(context);
     final tint = LiquidPrismTheme.tintOf(context);
     final prominent = buttonStyle == GlassButtonStyle.glassProminent;
-    final enabled = onPressed != null;
+    final enabled = menu == null ? onPressed != null : _menuEnabled;
+    final action = menu == null
+        ? onPressed
+        : !enabled
+        ? null
+        : () async {
+            final result = await liquidMenus.show<Object?>(
+              context: context,
+              menu: menu!,
+            );
+            if (context.mounted) onMenuSelected?.call(result);
+          };
     final explicitForeground =
         foregroundColor ?? (prominent ? null : theme.foregroundColor);
     final base = glass ?? theme.glass ?? Glass.regular;
@@ -69,7 +109,7 @@ class LiquidPrismButton extends StatelessWidget {
       label: label,
       motion: motion,
       selected: selected,
-      onPressed: onPressed,
+      onPressed: action,
       child: LiquidPrism(
         glass: material.interactive(false),
         shape: shape,

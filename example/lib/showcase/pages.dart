@@ -152,7 +152,7 @@ class ExplorePage extends StatelessWidget {
       const SizedBox(height: 14),
       FlowGrid(
         children: [
-          for (final info in [components[0], components[5], components[8]])
+          for (final info in [components[0], components[5], components.last])
             ComponentRow(info: info, onPressed: () => open(info)),
         ],
       ),
@@ -519,7 +519,7 @@ class _LibraryPageState extends State<LibraryPage> {
         ),
         const SizedBox(height: 10),
         const Note(
-          'Nine components. Endless possibilities.\nOpen one to get a feel for every detail.',
+          'Ten components. Endless possibilities.\nOpen one to get a feel for every detail.',
         ),
         const SizedBox(height: 22),
         LiquidPrismSearchField(

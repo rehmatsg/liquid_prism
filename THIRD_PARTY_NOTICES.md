@@ -24,3 +24,9 @@ The Flutter Authors, BSD-3-Clause; full terms in LICENSES/flutter-BSD-3-Clause.t
 The closest-point superellipse search derives from Inigo Quilez (2015), MIT; full
 terms in LICENSES/iquilez-MIT.txt. Flutter's native RoundedSuperellipseBorder owns
 foreground clipping and shadow paths.
+
+## Liquid Menu
+
+Native UIKit menu bridge, menu models, and platform fallback merged from
+https://github.com/rehmatsg/liquid_menu, commit 3f41d89.
+Copyright (c) 2026 rehmatsg, MIT. Full terms: LICENSE-liquid-menu.

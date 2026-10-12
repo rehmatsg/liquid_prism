@@ -25,3 +25,5 @@ export 'src/sheet.dart'
 export 'src/toolbar.dart'
     show GlassToolbarSize, GlassToolbarItem, LiquidPrismToolbarGroup;
 export 'src/search_field.dart' show LiquidPrismSearchField;
+
+export 'liquid_menu.dart';

@@ -1,0 +1,37 @@
+name: NativeMenuUI
+options:
+  deploymentTarget:
+    iOS: '15.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    CODE_SIGNING_ALLOWED: NO
+targets:
+  NativeMenuUIHost:
+    type: application
+    platform: iOS
+    sources: [Host]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.prism.native-menu-ui-host
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        TARGETED_DEVICE_FAMILY: '1'
+  NativeMenuUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: NativeMenuUIHost
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.prism.native-menu-ui-tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  NativeMenuUI:
+    build:
+      targets:
+        NativeMenuUIHost: all
+        NativeMenuUITests: [test]
+    test:
+      targets: [NativeMenuUITests]

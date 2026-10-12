@@ -1,5 +1,5 @@
 name: liquid_prism
-description: Liquid glass surfaces, buttons, and spring-driven tab bars with customizable Flutter shaders and iOS-inspired materials.
+description: Liquid glass components and native iOS popup menus, with customizable Flutter shaders and spring-driven controls.
 version: 0.1.0
 repository: https://github.com/rehmatsg/liquid_prism
 issue_tracker: https://github.com/rehmatsg/liquid_prism/issues
@@ -17,6 +17,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
   flutter_test:
@@ -24,6 +25,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
+  plugin:
+    platforms:
+      ios:
+        pluginClass: LiquidPrismPlugin
   shaders:
     - shaders/glass.frag
     - shaders/glass_batch.frag

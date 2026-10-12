@@ -310,6 +310,14 @@ See [customization](doc/customization.md) for precedence, shapes, motion, and
 advanced optics, and [rendering](doc/rendering.md) for performance and composition
 constraints.
 
+## Native popup menus
+
+Liquid Menu is now included in Liquid Prism. `LiquidPrismButton.menu` and
+`GlassToolbarItem.menu` open real UIKit menus on iOS 17.4+, with native SF
+Symbols, sections, submenus, checkmarks, and deferred content. The standard
+Flutter fallback from Liquid Menu remains available on other platforms.
+See [native menus](doc/native_menus.md) for the API and platform setup.
+
 ## Example and development
 
 ```sh
@@ -319,7 +327,7 @@ flutter pub get
 ```
 
 The example is a complete showcase with an Explore gallery, a live material
-Studio, and a searchable Library of all nine components. Try appearance and
+Studio, and a searchable Library of all ten components. Try appearance and
 palette changes, draggable glass, native controls, grouped toolbars, search,
 and expandable sheets over three original procedural canvases. See the
 [showcase guide](example/README.md) for its entry points and recording tools.

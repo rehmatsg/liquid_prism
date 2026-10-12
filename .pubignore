@@ -32,3 +32,6 @@ __pycache__/
 key.properties
 *.jks
 *.keystore
+
+/.swiftpm/
+/.build/

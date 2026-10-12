@@ -30,3 +30,7 @@ __pycache__/
 **/.symlinks/
 **/xcuserdata/
 *.xcresult/
+
+# Swift package tooling.
+/.swiftpm/
+/.build/

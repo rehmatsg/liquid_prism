@@ -170,6 +170,7 @@ class ComponentPreview extends StatefulWidget {
 class _ComponentPreviewState extends State<ComponentPreview> {
   int selectedTab = 0, selectedSurface = 0, actions = 0;
   String query = '', sheetResult = 'A little more room to explore.';
+  String menuResult = 'Choose something. See what happens.';
   ShowcaseModel get m => widget.model;
   @override
   Widget build(BuildContext context) {
@@ -464,10 +465,11 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                               width: 38 + 2 / 3,
                               onPressed: () => setState(() => actions++),
                             ),
-                            GlassToolbarItem(
+                            GlassToolbarItem.menu(
                               icon: const Icon(CupertinoIcons.ellipsis),
                               label: 'More',
-                              onPressed: () => setState(() => actions++),
+                              menu: _actionMenu(),
+                              onSelected: _menuSelected,
                             ),
                           ],
                         ),
@@ -505,6 +507,82 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                       '$actions actions. Hold an icon to lift its group.',
                       style: const TextStyle(fontSize: 13),
                     ),
+                  ],
+                  ComponentKind.menus => [
+                    const Text(
+                      'A familiar kind of magic.',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Your glass trigger. The system’s popup.',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 14,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        LiquidPrismButton.menu(
+                          key: const ValueKey('native-menu-button'),
+                          label: 'Open native menu',
+                          menu: _actionMenu(),
+                          buttonStyle: GlassButtonStyle.glassProminent,
+                          onSelected: _menuSelected,
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(child: Text('Choose an action')),
+                              SizedBox(width: 8),
+                              Icon(CupertinoIcons.chevron_down, size: 16),
+                            ],
+                          ),
+                        ),
+                        LiquidPrismToolbarGroup(
+                          items: [
+                            GlassToolbarItem.menu(
+                              key: const ValueKey('native-menu-toolbar'),
+                              icon: const Icon(CupertinoIcons.ellipsis),
+                              label: 'Open toolbar menu',
+                              menu: _actionMenu(),
+                              onSelected: _menuSelected,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    LiquidMenuRegion(
+                      key: const ValueKey('native-context-menu'),
+                      trigger: LiquidMenuTrigger.longPress,
+                      anchor: LiquidMenuAnchorMode.tapPoint,
+                      menu: _actionMenu(),
+                      onSelected: _menuSelected,
+                      child: LiquidPrism(
+                        shape: const GlassShape.rect(cornerRadius: 18),
+                        child: const Padding(
+                          padding: EdgeInsets.all(18),
+                          child: Row(
+                            children: [
+                              Icon(CupertinoIcons.hand_draw, size: 23),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Hold here for a context menu',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(menuResult, style: const TextStyle(fontSize: 13)),
                   ],
                   ComponentKind.search => [
                     const Text(
@@ -566,6 +644,84 @@ class _ComponentPreviewState extends State<ComponentPreview> {
       ),
     );
   }
+
+  void _menuSelected(Object? value) {
+    if (mounted && value != null) {
+      setState(() => menuResult = 'Selected: $value');
+    }
+  }
+
+  LiquidMenu _actionMenu() => LiquidMenu(
+    children: [
+      LiquidMenuAction<String>(
+        id: 'menu-favorite',
+        title: m.favorite ? 'Remove favorite' : 'Add to favorites',
+        value: 'Favorite',
+        icon: const LiquidMenuSfSymbol('heart'),
+        state: m.favorite ? MenuElementState.on : MenuElementState.off,
+        onSelected: () => m.change(() => m.favorite = !m.favorite),
+      ),
+      LiquidMenuAction<String>(
+        id: 'menu-new',
+        title: 'A new idea',
+        value: 'A new idea',
+        icon: const LiquidMenuSfSymbol('sparkles'),
+        onSelected: () => m.change(() => m.taps++),
+      ),
+      const LiquidMenuDivider(),
+      LiquidSubmenu(
+        title: 'Artwork',
+        icon: const LiquidMenuSfSymbol('photo'),
+        singleSelection: true,
+        children: [
+          for (var i = 0; i < 3; i++)
+            LiquidMenuAction<String>(
+              id: 'menu-art-$i',
+              title: ['Meadow', 'Dusk', 'Apricot'][i],
+              value: ['Meadow', 'Dusk', 'Apricot'][i],
+              state: m.wallpaper == i
+                  ? MenuElementState.on
+                  : MenuElementState.off,
+              onSelected: () => m.change(() => m.wallpaper = i),
+            ),
+        ],
+      ),
+      LiquidMenuSection(
+        title: 'On opening',
+        children: [
+          LiquidMenuDeferred(
+            id: 'menu-deferred',
+            loader: () async => [
+              LiquidMenuAction<String>(
+                id: 'menu-count',
+                title: '${m.taps} ideas so far',
+                value: 'Idea count',
+                icon: const LiquidMenuSfSymbol('lightbulb'),
+              ),
+            ],
+          ),
+        ],
+      ),
+      const LiquidMenuAction<String>(
+        id: 'menu-unavailable',
+        title: 'Coming soon',
+        enabled: false,
+        icon: LiquidMenuSfSymbol('clock'),
+      ),
+      const LiquidMenuDivider(),
+      LiquidMenuAction<String>(
+        id: 'menu-reset',
+        title: 'Reset this demo',
+        value: 'Demo reset',
+        destructive: true,
+        icon: const LiquidMenuSfSymbol('arrow.counterclockwise'),
+        onSelected: () => m.change(() {
+          m.taps = 0;
+          m.favorite = false;
+        }),
+      ),
+    ],
+  );
 
   Future<void> _openSheet(BuildContext context) async {
     final result = await showLiquidPrismSheet<String>(

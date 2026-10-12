@@ -10,6 +10,8 @@ import 'pressable.dart';
 import 'recipe.dart';
 import 'style.dart';
 import 'theme.dart';
+import 'menu/menu.dart';
+import 'menu/menus.dart';
 
 /// Native navigation bars use 44-point capsules; bottom toolbars use 48.
 enum GlassToolbarSize { navigation, bottom }
@@ -25,13 +27,35 @@ class GlassToolbarItem {
     this.selected = false,
     this.foregroundColor,
     this.width = 38,
-  }) : assert(width >= 36);
+  }) : menu = null,
+       onMenuSelected = null,
+       _menuEnabled = false,
+       assert(width >= 36);
+
+  const GlassToolbarItem.menu({
+    required this.icon,
+    required this.label,
+    required LiquidMenu this.menu,
+    ValueChanged<Object?>? onSelected,
+    bool enabled = true,
+    this.key,
+    this.selected = false,
+    this.foregroundColor,
+    this.width = 38,
+  }) : onPressed = null,
+       onMenuSelected = onSelected,
+       _menuEnabled = enabled,
+       assert(width >= 36);
   final Widget icon;
   final String label;
   final FutureOr<void> Function()? onPressed;
   final Key? key;
   final bool selected;
   final Color? foregroundColor;
+  final LiquidMenu? menu;
+  final ValueChanged<Object?>? onMenuSelected;
+  final bool _menuEnabled;
+  bool get _isEnabled => menu == null ? onPressed != null : _menuEnabled;
 
   /// Native item width depends on the symbol. The captured minimum is 38;
   /// callers can supply the measured width for wider or custom symbols.
@@ -99,7 +123,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
         ),
       ),
     );
-    if (items.every((item) => item.onPressed == null)) return capsule;
+    if (items.every((item) => !item._isEnabled)) return capsule;
     final customMotion = motion ?? theme.motion;
     return LiquidPrismPressable.feedback(
       motion: customMotion,
@@ -132,48 +156,60 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
   ) {
     final left = index == 0 ? inset : gap / 2;
     final right = index == items.length - 1 ? inset : gap / 2;
-    return LiquidPrismPressable.glass(
-      key: item.key,
-      label: item.label,
-      selected: item.selected,
-      motion: motion,
-      onPressed: item.onPressed,
-      child: Builder(
-        builder: (context) {
-          final press = LiquidPrismPressFeedback.of(context);
-          final color = item.onPressed == null
-              ? colors.disabledLabel
-              : item.foregroundColor ?? foreground;
-          return SizedBox(
-            width: item.width + left + right,
-            height: height,
-            child: Padding(
-              padding: EdgeInsetsDirectional.only(start: left, end: right),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: inset),
-                    child: ClipPath(
-                      clipper: const GlassShapeClipper(GlassShape.capsule),
-                      child: ColoredBox(
-                        color: colors.label.withValues(alpha: .12 * press),
-                        child: const SizedBox.expand(),
+    return Builder(
+      builder: (actionContext) => LiquidPrismPressable.glass(
+        key: item.key,
+        label: item.label,
+        selected: item.selected,
+        motion: motion,
+        onPressed: item.menu == null
+            ? item.onPressed
+            : !item._isEnabled
+            ? null
+            : () async {
+                final result = await liquidMenus.show<Object?>(
+                  context: actionContext,
+                  menu: item.menu!,
+                );
+                if (actionContext.mounted) item.onMenuSelected?.call(result);
+              },
+        child: Builder(
+          builder: (context) {
+            final press = LiquidPrismPressFeedback.of(context);
+            final color = !item._isEnabled
+                ? colors.disabledLabel
+                : item.foregroundColor ?? foreground;
+            return SizedBox(
+              width: item.width + left + right,
+              height: height,
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(start: left, end: right),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: inset),
+                      child: ClipPath(
+                        clipper: const GlassShapeClipper(GlassShape.capsule),
+                        child: ColoredBox(
+                          color: colors.label.withValues(alpha: .12 * press),
+                          child: const SizedBox.expand(),
+                        ),
                       ),
                     ),
-                  ),
-                  IconTheme.merge(
-                    // Native symbol image views enlarge their source images.
-                    // 22-point Cupertino glyphs leave too much visible space
-                    // between actions despite matching native item centers.
-                    data: IconThemeData(color: color, size: 25.5),
-                    child: item.icon,
-                  ),
-                ],
+                    IconTheme.merge(
+                      // Native symbol image views enlarge their source images.
+                      // 22-point Cupertino glyphs leave too much visible space
+                      // between actions despite matching native item centers.
+                      data: IconThemeData(color: color, size: 25.5),
+                      child: item.icon,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

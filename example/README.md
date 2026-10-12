@@ -4,7 +4,7 @@ A complete interactive gallery built with the public Liquid Prism API.
 
 - **Explore**: original artwork, live glass, interactive controls and collection highlights.
 - **Studio**: light/dark appearance, regular/clear glass, all 12 native accent colors, tab labels, three artwork palettes, adjustable frost and refraction, and a draggable lens.
-- **Library**: searchable examples for surfaces, buttons, switches, sliders, segmented controls, tab bars, grouped toolbar actions, search fields and sheets. Each example includes gesture guidance and, where relevant, disabled states.
+- **Library**: searchable examples for surfaces, buttons, switches, sliders, segmented controls, tab bars, grouped toolbar actions, search fields, native popup menus and sheets. Each example includes gesture guidance and, where relevant, disabled states.
 
 Appearance, material, accent and sample values follow you between pages. Layouts adapt to narrow phones, larger text and wider windows. Artwork is drawn in Dart; no external assets or network services are required. Pickers are intentionally excluded.
 

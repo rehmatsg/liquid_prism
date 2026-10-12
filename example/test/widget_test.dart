@@ -15,7 +15,7 @@ void main() {
         findsOneWidget,
       );
       await tab(tester, 'Library');
-      expect(find.text('9 COMPONENTS'), findsOneWidget);
+      expect(find.text('10 COMPONENTS'), findsOneWidget);
       for (final info in components) {
         await press(tester, 'Explore ${info.title}');
         expect(
@@ -41,7 +41,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Nothing here just yet.'), findsOneWidget);
       await press(tester, 'Reset library search');
-      expect(find.text('9 COMPONENTS'), findsOneWidget);
+      expect(find.text('10 COMPONENTS'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

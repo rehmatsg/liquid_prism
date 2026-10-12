@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
+import 'package:liquid_prism/liquid_prism.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:liquid_prism_example/main.dart' as app;
 
@@ -12,6 +13,12 @@ Future<void> main() async {
     enableTextEntryEmulation: false,
     handler: (message) async {
       final request = jsonDecode(message!);
+      if (request['op'] == 'menu-state') {
+        return jsonEncode({
+          'native': await liquidMenus.supportsNativeMenu,
+          'presented': liquidMenus.isPresented,
+        });
+      }
       if (request['op'] == 'text') {
         void fill(Element element) {
           if (element.widget is CupertinoTextField &&

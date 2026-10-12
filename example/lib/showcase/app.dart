@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:liquid_prism/liquid_prism.dart';
 
 import 'model.dart';
@@ -25,6 +26,7 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
     listenable: model,
     builder: (context, _) => CupertinoApp(
       title: 'Liquid Prism',
+      localizationsDelegates: const [DefaultMaterialLocalizations.delegate],
       debugShowCheckedModeBanner: false,
       theme: CupertinoThemeData(
         brightness: model.brightness,
