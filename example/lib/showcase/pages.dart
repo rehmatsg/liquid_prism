@@ -544,7 +544,7 @@ class _LibraryPageState extends State<LibraryPage> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
-                const Note('Try “glass”, “slider”, or “sheet”.'),
+                const Note('Try “glass”, “slider”, or “button”.'),
                 const SizedBox(height: 16),
                 ActionButton(
                   'Clear search',

@@ -51,7 +51,6 @@ Future<void> main() async {
     'toolbar',
     'menus',
     'search',
-    'sheets',
   ];
   final cases = <Map<String, Object>>[];
   for (final dark in [false, true]) {

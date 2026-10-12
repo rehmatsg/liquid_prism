@@ -1,8 +1,8 @@
 # Native showcase reference
 
 A standalone native iOS app mirroring the Flutter showcase's Explore, Studio,
-Library, ten component routes, artwork, palette, settings and interactive flows.
-Toggle, Slider, segmented Picker, Button/Menu, TabView and sheet use native
+Library, nine component routes, artwork, palette, settings and interactive flows.
+Toggle, Slider, segmented Picker, Button/Menu and TabView use native
 components. Inline toolbar/search/tab previews wrap their UIKit counterparts.
 There is no recreated native glass shader or popup renderer in this app.
 
@@ -12,7 +12,7 @@ development signing team; the project defaults to unsigned simulator builds.
 The configured bundle identifier updates the existing Prism Native reference app.
 
 `ShowcaseTests` exercises navigation, every route, filtering, native switch/slider/
-segmented actions, popup selection and sheet expansion/results. `LensMotionTests`
+segmented actions, popup selection. `LensMotionTests`
 performs real holds, two-second glides and fast reversals on all four controls.
 
 Development inspection is opt-in: `--inspect` writes UIKit geometry, layer settings

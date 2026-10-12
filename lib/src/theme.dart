@@ -32,14 +32,6 @@ final class GlassColors {
   Color get yellow => _dark ? const Color(0xFFFFD600) : const Color(0xFFFFCC00);
   Color get label => _dark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
 
-  /// Native modal dimming source, separated from the glass face.
-  Color get sheetBarrier =>
-      const Color(0xFF000000).withValues(alpha: _dark ? .48 : .2);
-
-  /// Native full-height sheet background.
-  Color get sheetBackground =>
-      _dark ? const Color(0xFF1C1C1E) : const Color(0xFFFFFFFF);
-
   /// Native small-control resting fill, independent of appearance.
   Color get controlThumb => const Color(0xFFFFFFFF);
 

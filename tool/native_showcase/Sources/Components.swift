@@ -43,8 +43,6 @@ struct ComponentPreview: View {
     @State private var actions = 0
     @State private var query = ""
     @State private var menuResult = "Choose something. See what happens."
-    @State private var sheetResult = "A little more room to explore."
-    @State private var presented = false
     var selectedGlass: Glass {
         switch selectedSurface {
         case 1: .clear
@@ -84,12 +82,6 @@ struct ComponentPreview: View {
                     .foregroundStyle(.black).background { Artwork(variant: model.wallpaper) }
                     .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
             }
-        }.sheet(isPresented: $presented, onDismiss: {
-            if sheetResult == "A little more room to explore." { sheetResult = "Back to the bigger picture." }
-        }) {
-            ShowcaseSheet(result: $sheetResult).environment(model)
-                .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
-                .preferredColorScheme(model.dark ? .dark : .light)
         }
     }
     @ViewBuilder private func surfaceLabel(_ text: String, selected: Bool) -> some View {
@@ -174,13 +166,6 @@ struct ComponentPreview: View {
                 NativeSearch(text: $query, placeholder: "Search your ideas").frame(height: 48).padding(.top, 22).measure("demo-search")
                 Text(query.isEmpty ? "Try typing “a fresh start”." : "Looking for “\(query)”").font(showcaseFont(14)).padding(.top, 22)
             }
-        case .sheets:
-            VStack(spacing: 0) {
-                Image(systemName: "rectangle.on.rectangle").font(showcaseFont(48)).frame(height: 48)
-                Text("Make room for more.").font(showcaseFont(24, .semibold)).tracking(-0.6).padding(.top, 16)
-                ActionButton(text: "Open a sheet", icon: "arrow.up", prominent: true) { presented = true }.padding(.top, 20)
-                Text(sheetResult).font(showcaseFont(13)).padding(.top, 18)
-            }.frame(maxWidth: .infinity)
         }
     }
     var toolbarActions: [ToolbarAction] {
@@ -230,28 +215,5 @@ struct DisabledPreview: View {
             default: EmptyView()
             }
         }.disabled(true)
-    }
-}
-
-struct ShowcaseSheet: View {
-    @Environment(ShowcaseModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
-    @Binding var result: String
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack { Eyebrow("A fresh perspective"); Spacer(); IconAction(icon: "xmark", label: "Close sheet") { dismiss() } }
-                Text("Good ideas\nneed a little space.").font(showcaseFont(32, .semibold)).tracking(-1.2).padding(.top, 18)
-                Note("Pull up to see more. Pull down when you’re done. The glass follows your lead.").padding(.top, 14)
-                Panel { HStack(spacing: 14) { Image(systemName: "sparkles").foregroundStyle(model.tint); Text("Something worth keeping.").fontWeight(.semibold) } }.padding(.top, 24)
-                ActionButton(text: "Keep this feeling", icon: "checkmark", prominent: true) { result = "A good feeling, saved."; dismiss() }.padding(.top, 22)
-                SectionTitle("A few small details").padding(.top, 30)
-                VStack(alignment: .leading, spacing: 22) {
-                    ForEach(["Two heights, one fluid gesture.", "Smooth corners, all the way around.", "Content that scrolls with you.", "A backdrop that becomes a canvas.", "A natural place to pause."], id: \.self) { text in
-                        HStack(spacing: 12) { Image(systemName: "checkmark.circle").font(showcaseFont(21)).foregroundStyle(model.tint); Text(text).font(showcaseFont(15)) }
-                    }
-                }.padding(.top, 18)
-            }.padding(.horizontal, 24).padding(.top, 12).padding(.bottom, 36)
-        }.foregroundStyle(.black).measure("sheet-content")
     }
 }

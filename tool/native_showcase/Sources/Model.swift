@@ -38,7 +38,7 @@ import UIKit
 }
 
 enum ComponentKind: String, CaseIterable, Identifiable {
-    case surfaces, buttons, switches, sliders, segments, tabs, toolbar, menus, search, sheets
+    case surfaces, buttons, switches, sliders, segments, tabs, toolbar, menus, search
     var id: String { rawValue }
     var title: String { entry.0 }
     var subtitle: String { entry.1 }
@@ -55,7 +55,6 @@ enum ComponentKind: String, CaseIterable, Identifiable {
         case .toolbar: ("Toolbars", "A shared home for your actions.", "ellipsis", 0x8D6956)
         case .menus: ("Popup menus", "Real native menus, right where you tap.", "ellipsis.circle", 0x6B7C80)
         case .search: ("Search fields", "Clear your mind. Find your thing.", "magnifyingglass", 0x56828B)
-        case .sheets: ("Sheets", "Room for the next idea.", "rectangle.on.rectangle", 0x8B6F87)
         }
     }
     var description: String {
@@ -69,7 +68,6 @@ enum ComponentKind: String, CaseIterable, Identifiable {
         case .toolbar: "Related actions share a single glass capsule. Each icon responds individually while the whole group lifts together."
         case .menus: "A glass button, a real native popup. Try sections, checkmarks, SF Symbols, submenus, and items loaded when the menu opens. UIKit handles the presentation."
         case .search: "A field that makes space when you need it. Type a thought, clear it, or cancel to return to the moment."
-        case .sheets: "A presentation that follows your hand. Open at half height, pull it up, scroll through, and glide it away."
         }
     }
     var hasDisabled: Bool { [.buttons, .switches, .sliders, .segments, .toolbar].contains(self) }

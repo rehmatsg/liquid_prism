@@ -1,13 +1,14 @@
 # Native showcase comparison — 2026-10-11
 
 The standalone reference app in `tool/native_showcase` mirrors Explore, Studio,
-Library and all ten component routes, using native SwiftUI components and UIKit
+Library and all nine component routes, using native SwiftUI components and UIKit
 inline chrome. Both release apps were installed on the connected iPhone. The
 reference's captions use the system font; the earlier invalid named-font fallback
 was corrected before the final device installation.
 
 Measurements and recordings use the same iPhone 17 simulator, 402 × 874 points
-at 3×, iOS 27.0 (24A5370g). Thirty-four matching states cover all routes and four
+at 3×, iOS 27.0 (24A5370g). The original 34-state capture includes the subsequently removed sheet route.
+The current comparison fixture covers 32 states across nine routes and four
 scrolled panels in light and dark appearances. Flutter render-box transforms and
 native UIKit/SwiftUI geometry are saved alongside the images. Native lens motion
 is sampled from presentation layers during genuine XCTest touch gestures.

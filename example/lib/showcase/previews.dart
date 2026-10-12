@@ -169,7 +169,7 @@ class ComponentPreview extends StatefulWidget {
 
 class _ComponentPreviewState extends State<ComponentPreview> {
   int selectedTab = 0, selectedSurface = 0, actions = 0;
-  String query = '', sheetResult = 'A little more room to explore.';
+  String query = '';
   String menuResult = 'Choose something. See what happens.';
   ShowcaseModel get m => widget.model;
   @override
@@ -616,34 +616,6 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                       style: const TextStyle(fontSize: 14),
                     ),
                   ],
-                  ComponentKind.sheets => [
-                    const Icon(CupertinoIcons.rectangle_on_rectangle, size: 48),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Make room for more.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -.6,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: ActionButton(
-                        'Open a sheet',
-                        onPressed: () => _openSheet(context),
-                        prominent: true,
-                        icon: CupertinoIcons.arrow_up,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      sheetResult,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
                   ComponentKind.surfaces => <Widget>[],
                 },
                 const SizedBox(height: 12),
@@ -732,96 +704,4 @@ class _ComponentPreviewState extends State<ComponentPreview> {
       ),
     ],
   );
-
-  Future<void> _openSheet(BuildContext context) async {
-    final result = await showLiquidPrismSheet<String>(
-      context: context,
-      semanticLabel: 'A fresh perspective',
-      builder: (context, scroll) => DefaultTextStyle(
-        style: CupertinoTheme.of(context).textTheme.textStyle
-            .copyWith(color: GlassColors.light.label),
-        child: ListView(
-          controller: scroll,
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 36),
-          children: [
-            Row(
-              children: [
-                const Expanded(child: Eyebrow('A fresh perspective')),
-                IconAction(
-                  icon: CupertinoIcons.xmark,
-                  label: 'Close sheet',
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            const Text(
-              'Good ideas\nneed a little space.',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -1.2,
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Note(
-              'Pull up to see more. Pull down when you’re done. The glass follows your lead.',
-            ),
-            const SizedBox(height: 24),
-            Panel(
-              child: Row(
-                children: [
-                  Icon(CupertinoIcons.sparkles, color: m.tint),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Text(
-                      'Something worth keeping.',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 22),
-            ActionButton(
-              'Keep this feeling',
-              onPressed: () =>
-                  Navigator.of(context).pop('A good feeling, saved.'),
-              prominent: true,
-              icon: CupertinoIcons.check_mark,
-            ),
-            const SizedBox(height: 30),
-            const SectionTitle('A few small details'),
-            const SizedBox(height: 18),
-            for (final text in [
-              'Two heights, one fluid gesture.',
-              'Smooth corners, all the way around.',
-              'Content that scrolls with you.',
-              'A backdrop that becomes a canvas.',
-              'A natural place to pause.',
-            ])
-              Padding(
-                padding: const EdgeInsets.only(bottom: 22),
-                child: Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.check_mark_circled,
-                      color: m.tint,
-                      size: 21,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(text, style: const TextStyle(fontSize: 15)),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (mounted) {
-      setState(() => sheetResult = result ?? 'Back to the bigger picture.');
-    }
-  }
 }

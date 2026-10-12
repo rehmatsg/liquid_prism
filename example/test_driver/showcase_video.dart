@@ -163,21 +163,6 @@ Future<void> main() async {
         await snapshot('search-focused');
         await tap('Cancel search');
       });
-      await component('Sheets', () async {
-        await tap('Open a sheet');
-        await snapshot('sheet-medium');
-        await glide(find.bySemanticsLabel('Resize sheet'), 0, -340);
-        await pause(1000);
-        await snapshot('sheet-large');
-        await driver.tap(
-          find.descendant(
-            of: find.byType('ListView'),
-            matching: find.byType('IconAction'),
-            firstMatchOnly: true,
-          ),
-        );
-        await pause();
-      });
       await tap('Explore');
       await pause(1200);
     });

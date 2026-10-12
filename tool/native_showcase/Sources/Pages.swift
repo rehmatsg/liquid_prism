@@ -47,7 +47,7 @@ struct ExplorePage: View {
             }.padding(.top, 16)
             SectionTitle("The collection").padding(.top, 30)
             VStack(spacing: 14) {
-                ForEach([ComponentKind.surfaces, .tabs, .sheets]) { kind in
+                ForEach([ComponentKind.surfaces, .tabs, .search]) { kind in
                     ComponentRow(kind: kind) { model.path.append(kind) }
                 }
             }.padding(.top, 14)
@@ -171,7 +171,7 @@ struct LibraryPage: View {
                 Panel {
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Nothing here just yet.").font(showcaseFont(20, .semibold))
-                        Note("Try “glass”, “slider”, or “sheet”.").padding(.top, 8)
+                        Note("Try “glass”, “slider”, or “button”.").padding(.top, 8)
                         ActionButton(text: "Clear search", label: "Reset library search") { model.query = "" }.padding(.top, 16)
                     }
                 }.padding(.top, 12)

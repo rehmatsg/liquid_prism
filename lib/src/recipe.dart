@@ -6,16 +6,19 @@ import 'style.dart';
 
 // Native RGB tint matrices; explicit custom colors retain the legacy fallback.
 enum GlassRole {
-  surface,
-  button,
-  tabBar,
-  tabLens,
-  controlThumb,
-  segmentLens,
-  sheet,
-  toolbar,
-  searchField,
-  sliderLens,
+  surface(0),
+  button(1),
+  tabBar(2),
+  tabLens(3),
+  controlThumb(4),
+  segmentLens(5),
+  toolbar(7),
+  searchField(8),
+  sliderLens(9);
+
+  // Preserve shader IDs when a component is removed from the enum.
+  const GlassRole(this.shaderId);
+  final double shaderId;
 }
 
 final class GlassRecipe {
@@ -36,8 +39,7 @@ final class GlassRecipe {
 
   // Native controls retain their captured profile. The requested half-strength
   // Regular/Clear balance applies to standalone surfaces.
-  bool get usesNativeControlShadow =>
-      kind != 0 && role != GlassRole.surface && role != GlassRole.sheet;
+  bool get usesNativeControlShadow => kind != 0 && role != GlassRole.surface;
   double get shadowStrength =>
       kind == 3 ? 0 : (usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1));
   static GlassRecipe resolve(
@@ -62,9 +64,7 @@ final class GlassRecipe {
       ],
     ];
     return GlassRecipe(
-      (role == GlassRole.sheet ||
-              role == GlassRole.toolbar ||
-              role == GlassRole.searchField)
+      (role == GlassRole.toolbar || role == GlassRole.searchField)
           ? (glass.variant == GlassVariant.clear ? 2 : 1)
           : (role == GlassRole.controlThumb ||
                 role == GlassRole.segmentLens ||
@@ -100,7 +100,7 @@ final class GlassRecipe {
   List<double> get uniforms => [
     kind,
     dark ? 1 : 0,
-    role.index.toDouble(),
+    role.shaderId,
     tintAlpha,
     ...tintMatrix,
     0, 0, 0, 0, // Press progress, smooth contour flag, reserved.

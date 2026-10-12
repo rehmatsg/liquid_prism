@@ -30,14 +30,14 @@ final class ShowcaseTests: XCTestCase {
         snapshot("slider-changed")
         app.buttons["Back to showcase"].tap()
         app.terminate()
-        for screen in ["surfaces", "buttons", "switches", "sliders", "segments", "tabs", "toolbar", "menus", "search", "sheets"] {
+        for screen in ["surfaces", "buttons", "switches", "sliders", "segments", "tabs", "toolbar", "menus", "search"] {
             let page = launch(screen)
             XCTAssertTrue(page.buttons["Back to showcase"].exists)
             snapshot("\(screen)-light")
             page.terminate()
         }
     }
-    func testNativeControlsMenusAndSheet() {
+    func testNativeControlsAndMenus() {
         var app = launch("switches")
         let toggle = app.switches["Let it glow"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 5))
@@ -55,16 +55,6 @@ final class ShowcaseTests: XCTestCase {
         snapshot("native-popup")
         action.tap()
         XCTAssertTrue(app.staticTexts["Selected: A new idea"].waitForExistence(timeout: 5))
-        app.terminate()
-        app = launch("sheets")
-        app.buttons["Open a sheet"].tap()
-        XCTAssertTrue(app.buttons["Close sheet"].waitForExistence(timeout: 5))
-        snapshot("sheet-medium")
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.52)).press(forDuration: 0.2,
-            thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)))
-        snapshot("sheet-large")
-        app.buttons["Keep this feeling"].tap()
-        XCTAssertTrue(app.staticTexts["A good feeling, saved."].waitForExistence(timeout: 5))
         app.terminate()
     }
 }

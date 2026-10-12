@@ -43,7 +43,7 @@ void main() {
         findsOneWidget,
       );
       await tab(tester, 'Library');
-      expect(find.text('10 COMPONENTS'), findsOneWidget);
+      expect(find.text('9 COMPONENTS'), findsOneWidget);
       for (final info in components) {
         await press(tester, 'Explore ${info.title}');
         expect(
@@ -55,11 +55,11 @@ void main() {
         await press(tester, 'Back to showcase');
       }
       await tester.ensureVisible(find.byType(CupertinoTextField));
-      await tester.enterText(find.byType(CupertinoTextField), 'sheet');
+      await tester.enterText(find.byType(CupertinoTextField), 'slider');
       await tester.pumpAndSettle();
       expect(find.text('1 COMPONENT'), findsOneWidget);
       expect(find.text('Buttons'), findsNothing);
-      await press(tester, 'Explore Sheets');
+      await press(tester, 'Explore Sliders');
       await press(tester, 'Back to showcase');
       expect(find.text('1 COMPONENT'), findsOneWidget);
       await tester.enterText(
@@ -69,7 +69,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Nothing here just yet.'), findsOneWidget);
       await press(tester, 'Reset library search');
-      expect(find.text('10 COMPONENTS'), findsOneWidget);
+      expect(find.text('9 COMPONENTS'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -109,23 +109,6 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-
-  testWidgets('sheet expands and returns its action result', (tester) async {
-    phone(tester);
-    await tester.pumpWidget(const LiquidPrismExample());
-    await tab(tester, 'Library');
-    await press(tester, 'Explore Sheets');
-    await press(tester, 'Open a sheet');
-    expect(find.text('Good ideas\nneed a little space.'), findsOneWidget);
-    await tester.drag(
-      find.text('Good ideas\nneed a little space.'),
-      const Offset(0, -300),
-    );
-    await tester.pumpAndSettle();
-    await press(tester, 'Keep this feeling');
-    expect(find.text('A good feeling, saved.'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
 
   for (final size in [const Size(320, 640), const Size(1024, 768)]) {
     testWidgets('showcase and every preview fit $size with larger text', (

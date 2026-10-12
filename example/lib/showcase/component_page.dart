@@ -19,7 +19,6 @@ class ComponentPage extends StatelessWidget {
     ComponentKind.toolbar: 'Related actions share a single glass capsule. Each icon responds individually while the whole group lifts together.',
     ComponentKind.menus: 'A glass button, a real native popup. Try sections, checkmarks, SF Symbols, submenus, and items loaded when the menu opens. UIKit handles the presentation.',
     ComponentKind.search: 'A field that makes space when you need it. Type a thought, clear it, or cancel to return to the moment.',
-    ComponentKind.sheets: 'A presentation that follows your hand. Open at half height, pull it up, scroll through, and glide it away.',
   };
   @override
   Widget build(BuildContext context) => ListenableBuilder(

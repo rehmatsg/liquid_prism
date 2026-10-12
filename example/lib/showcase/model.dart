@@ -39,7 +39,6 @@ enum ComponentKind {
   toolbar,
   menus,
   search,
-  sheets,
 }
 
 class ComponentInfo {
@@ -120,12 +119,5 @@ const components = [
     'Clear your mind. Find your thing.',
     CupertinoIcons.search,
     Color(0xFF56828B),
-  ),
-  ComponentInfo(
-    ComponentKind.sheets,
-    'Sheets',
-    'Room for the next idea.',
-    CupertinoIcons.rectangle_on_rectangle,
-    Color(0xFF8B6F87),
   ),
 ];

@@ -158,35 +158,6 @@ shader operators remain approximations. See [native measurements](doc/native_con
 The example gallery includes all three; `example/lib/controls_main.dart` opens
 them directly. Active/track/thumb colors can be overridden on the widgets.
 
-## Sheet
-
-```dart
-final result = await showLiquidPrismSheet<String>(
-  context: context,
-  detents: const [GlassSheetDetent.medium, GlassSheetDetent.large],
-  builder: (context, scrollController) => ListView(
-    controller: scrollController,
-    padding: const EdgeInsets.all(24),
-    children: [
-      const Text('Settings'),
-      LiquidPrismButton(
-        label: 'Done',
-        onPressed: () => Navigator.of(context).pop('Done'),
-        child: const Text('Done'),
-      ),
-    ],
-  ),
-);
-```
-
-Attach the provided controller to your body's scroll view, including for short
-content. The floating medium sheet expands to a full-width large detent and an
-opaque native palette background. Drag the handle or scroll the body to resize;
-tap outside, swipe down, use Back/Escape, or call `Navigator.pop` to dismiss.
-`isDismissible`, `enableDrag`, `showDragIndicator` and `initialDetent` configure
-interaction. Caller themes are captured across navigators; safe areas and the
-keyboard are handled by the sheet. See [native sheet measurements](doc/native_sheet_spec.md).
-
 ## Toolbar groups and search
 
 ```dart
@@ -332,9 +303,9 @@ flutter pub get
 ```
 
 The example is a complete showcase with an Explore gallery, a live material
-Studio, and a searchable Library of all ten components. Try appearance and
-palette changes, draggable glass, native controls, grouped toolbars, search,
-and expandable sheets over three original procedural canvases. See the
+Studio, and a searchable Library of all nine components. Try appearance and
+palette changes, draggable glass, native controls, grouped toolbars, search and
+native popup menus over three original procedural canvases. See the
 [showcase guide](example/README.md) for its entry points and recording tools.
 
 Run `./tool/check.sh` from the repository root for formatting, analysis, and tests.
