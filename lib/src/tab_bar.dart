@@ -696,6 +696,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                   lens.center,
                                   NativeMotion.haloDiameter * haloScale,
                                   NativeMotion.haloOpacity * haloLevel,
+                                  NativeMotion.haloBlurRadius * haloScale,
                                 ),
                               ),
                             ),
@@ -962,23 +963,21 @@ class _RenderSelectionWindow extends RenderProxyBox {
 }
 
 class _LensHalo extends CustomPainter {
-  const _LensHalo(this.centre, this.diameter, this.opacity);
+  const _LensHalo(this.centre, this.diameter, this.opacity, this.blurRadius);
   final Offset centre;
-  final double diameter, opacity;
+  final double diameter, opacity, blurRadius;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromCircle(center: centre, radius: diameter / 2);
     canvas.drawCircle(
       centre,
       diameter / 2,
       Paint()
-        ..shader = RadialGradient(
-          colors: [
-            Color.from(alpha: opacity, red: 1, green: 1, blue: 1),
-            const Color(0x00FFFFFF),
-          ],
-        ).createShader(rect),
+        // Native LittleGlow is a circle's broad Gaussian shadow, rather than
+        // a gradient that concentrates all its brightness at the touch point.
+        // Its blur grows with the release ripple's contour.
+        ..color = Color.from(alpha: opacity, red: 1, green: 1, blue: 1)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurRadius),
     );
   }
 
@@ -986,5 +985,6 @@ class _LensHalo extends CustomPainter {
   bool shouldRepaint(_LensHalo old) =>
       centre != old.centre ||
       diameter != old.diameter ||
-      opacity != old.opacity;
+      opacity != old.opacity ||
+      blurRadius != old.blurRadius;
 }

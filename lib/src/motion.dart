@@ -94,6 +94,7 @@ abstract final class NativeMotion {
 
   /// A radial halo centred on the lens; on release it fades while growing.
   static const haloDiameter = 93.0;
+  static const haloBlurRadius = 46.5;
   static const haloOpacity = 0.284;
   static const haloReleaseScale = 4.0;
   static const haloRelease = Duration(milliseconds: 500);

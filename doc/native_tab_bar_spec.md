@@ -110,6 +110,15 @@ are not asserted to be the active settings for either view.
 | smallLoupe | 0 | 10 | 2000 | 0.444 s / 0.56 |
 
 Full tracking settings, clamps, glow and pulse settings are in the JSON.
+The original light/dark presentation captures both contain a 93 pt
+`_UIFlexInteraction.LittleGlow` circle at opacity 0.28448, with a white shadow
+at radius 46.5 pt. Flutter now paints a Gaussian-blurred circle and scales both
+its contour and blur on release. The previous radial gradient concentrated
+white at the contact and stopped at the circle's edge, causing a conspicuous
+bright spot in dark mode. The native dark hold/drag is reproducible with
+`tool/native_showcase/record_motion.py SIM OUTPUT --dark-tabs`; Flutter's
+matching fixture uses `PRISM_LENS_DARK=true PRISM_LENS_CASES=tabs`.
+The Gaussian rendering remains an approximation of Core Animation's kernel.
 The live trace directly reads targets rather than reconstructing them from
 visible bounds. In this drag, lens X targets span approximately 0.6167–1.2227
 and Y targets 0.6474–1.2833. Presentation values differ as the animation engine

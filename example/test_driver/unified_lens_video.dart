@@ -6,6 +6,10 @@ import 'package:flutter_driver/flutter_driver.dart';
 /// Hold, slow glide, fast reversal and release for all four lifted controls.
 Future<void> main() async {
   final simulator = Platform.environment['PRISM_SIMULATOR_ID']!;
+  final dark = Platform.environment['PRISM_LENS_DARK'] == 'true';
+  final cases =
+      Platform.environment['PRISM_LENS_CASES']?.split(',') ??
+      ['switches', 'sliders', 'segments', 'tabs'];
   final out = Directory(Platform.environment['PRISM_LENS_OUT']!)
     ..createSync(recursive: true);
   Future<ProcessResult> simctl(List<String> args) => Process.run(
@@ -26,11 +30,12 @@ Future<void> main() async {
   final manifest = <Map<String, Object?>>[];
   try {
     await driver.runUnsynchronized(() async {
-      for (final name in ['switches', 'sliders', 'segments', 'tabs']) {
+      for (final name in cases) {
         await driver.requestData(
           jsonEncode({
             'op': 'scenario',
             'screen': name == 'tabs' ? 'explore' : name,
+            'dark': dark,
           }),
         );
         await wait(1400);

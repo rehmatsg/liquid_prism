@@ -14,10 +14,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("simulator")
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--dark-tabs", action="store_true", help="Record only a dark-mode tab hold and drag"
+    )
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     env = {**os.environ, "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"}
     root = Path(__file__).resolve().parent
+    tests = (
+        ["-only-testing:NativeShowcaseTests/LensMotionTests/testTabsDark"]
+        if args.dark_tabs else [
+            "-only-testing:NativeShowcaseTests/LensMotionTests",
+            "-skip-testing:NativeShowcaseTests/LensMotionTests/testTabsDark",
+        ]
+    )
     recording = subprocess.Popen([
         "xcrun", "simctl", "io", args.simulator, "recordVideo", "--codec=h264",
         str(args.output / "native-raw.mp4"),
@@ -37,7 +47,7 @@ def main():
                 "xcodebuild", "test-without-building", "-project", "NativeShowcase.xcodeproj",
                 "-scheme", "NativeShowcase", "-destination", f"platform=iOS Simulator,id={args.simulator}",
                 "-derivedDataPath", "build", "-parallel-testing-enabled", "NO",
-                "-only-testing:NativeShowcaseTests/LensMotionTests",
+                *tests,
                 "-resultBundlePath", str(args.output / "native-motion.xcresult"), "CODE_SIGNING_ALLOWED=NO",
             ], cwd=root, env=env, stdout=stream, stderr=subprocess.STDOUT)
     finally:
@@ -61,10 +71,10 @@ def main():
         shutil.copyfile(motion, args.output / f"{name}-native-motion.json")
         manifest.append({"name": name, "start": float(start) - epoch, "end": float(end[1]) - epoch,
                          "centerY": float(ay), "fromX": float(ax), "toX": float(bx)})
-    if len(manifest) != 4:
-        raise SystemExit("Expected four native gesture captures")
+    if len(manifest) != (1 if args.dark_tabs else 4):
+        raise SystemExit("Missing native gesture captures")
     (args.output / "native-manifest.json").write_text(json.dumps(manifest, indent=2))
-    print("Captured native holds, slow drags and fast reversals for all four controls.")
+    print("Captured native holds, slow drags and fast reversals.")
 
 
 if __name__ == "__main__":

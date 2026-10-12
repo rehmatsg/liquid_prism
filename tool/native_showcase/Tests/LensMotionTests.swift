@@ -1,10 +1,11 @@
 import XCTest
 
 final class LensMotionTests: XCTestCase {
-    private func exercise(_ name: String) {
+    private func exercise(_ name: String, dark: Bool = false) {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--inspect", "--motion", name, "--screen", name == "tabs" ? "explore" : name]
+        if dark { app.launchArguments.append("--dark") }
         app.launch()
         XCTAssertTrue(app.buttons["Toggle appearance"].waitForExistence(timeout: 10))
         let a: XCUICoordinate, b: XCUICoordinate
@@ -38,4 +39,5 @@ final class LensMotionTests: XCTestCase {
     func testSlider() { exercise("sliders") }
     func testSegments() { exercise("segments") }
     func testTabs() { exercise("tabs") }
+    func testTabsDark() { exercise("tabs", dark: true) }
 }

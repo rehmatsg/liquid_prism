@@ -227,6 +227,47 @@ void _expectSelected(WidgetTester tester, int selected) {
 }
 
 void _motionTests() {
+  testWidgets('dark held tab highlight has no concentrated white hotspot', (
+    tester,
+  ) async {
+    final imageKey = GlobalKey();
+    await tester.pumpWidget(
+      glassHarness(
+        imageKey: imageKey,
+        background: const Color(0xFF151B20),
+        child: LiquidPrismTabBar(
+          tabs: const [
+            LiquidPrismTab(label: 'A', icon: SizedBox(width: 22, height: 22)),
+            LiquidPrismTab(label: 'B', icon: SizedBox(width: 22, height: 22)),
+            LiquidPrismTab(label: 'C', icon: SizedBox(width: 22, height: 22)),
+          ],
+          style: const GlassTabBarStyle(
+            labelBehavior: GlassTabLabelBehavior.never,
+            haptics: false,
+          ),
+          selectedIndex: 0,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+    final finger = await tester.startGesture(
+      tester.getCenter(find.bySemanticsLabel('A')),
+    );
+    await tester.pumpAndSettle();
+    final centre =
+        _pill(tester).center - tester.getTopLeft(find.byKey(imageKey));
+    final pixels = await pixelsAt(tester, imageKey, [
+      centre,
+      centre + const Offset(24, 0),
+    ]);
+    // Blank icons isolate the halo. Native's broad blur changes gently across
+    // the face; a white gradient at the contact produces a steep bright spot.
+    for (var channel = 0; channel < 3; channel++) {
+      expect((pixels[0][channel] - pixels[1][channel]).abs(), lessThan(12));
+    }
+    await finger.up();
+    await tester.pumpAndSettle();
+  });
   testWidgets('fast tab drag retains the researched stretch and stop recoil', (
     tester,
   ) async {
