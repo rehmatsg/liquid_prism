@@ -6,6 +6,34 @@ import 'package:liquid_prism_example/showcase/model.dart';
 
 void main() {
   testWidgets(
+    'iOS navigation matches the native screen margin across bottom insets',
+    (tester) async {
+      phone(tester);
+      addTearDown(tester.view.resetPadding);
+      addTearDown(tester.view.resetViewPadding);
+      addTearDown(tester.view.resetViewInsets);
+      tester.view.padding = const FakeViewPadding(top: 62, bottom: 34);
+      tester.view.viewPadding = const FakeViewPadding(top: 62, bottom: 34);
+      await tester.pumpWidget(const LiquidPrismExample());
+      final navigation = find.byKey(const ValueKey('showcase-navigation'));
+      expect(tester.getBottomRight(navigation).dy, 874 - 21);
+
+      tester.view.padding = const FakeViewPadding(top: 62);
+      tester.view.viewPadding = const FakeViewPadding(top: 62);
+      await tester.pumpAndSettle();
+      expect(tester.getBottomRight(navigation).dy, 874 - 21);
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pumpAndSettle();
+      expect(navigation, findsNothing);
+      tester.view.resetViewInsets();
+      await tester.pumpAndSettle();
+      expect(tester.getBottomRight(navigation).dy, 874 - 21);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+
+  testWidgets(
     'library finds all components, filters, and restores after a route',
     (tester) async {
       phone(tester);

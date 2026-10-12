@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart' show DefaultMaterialLocalizations;
 import 'package:liquid_prism/liquid_prism.dart';
 
@@ -179,7 +180,11 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
                     24,
                     10,
                     24,
-                    MediaQuery.viewPaddingOf(context).bottom + 10,
+                    // Native floating housing sits 21 pt from the screen edge
+                    // (doc/native_tab_bar_spec.md), within the gesture inset.
+                    defaultTargetPlatform == TargetPlatform.iOS
+                        ? 21
+                        : MediaQuery.viewPaddingOf(context).bottom + 10,
                   ),
                   child: Center(
                     child: ConstrainedBox(
