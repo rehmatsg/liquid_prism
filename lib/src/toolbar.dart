@@ -10,11 +10,12 @@ import 'pressable.dart';
 import 'recipe.dart';
 import 'style.dart';
 import 'theme.dart';
+import 'appearance.dart';
 import 'menu/menu.dart';
 import 'menu/menus.dart';
 
 /// Native navigation bars use 44-point capsules; bottom toolbars use 48.
-enum GlassToolbarSize { navigation, bottom }
+export 'appearance.dart' show GlassToolbarSize;
 
 /// One icon action in a shared toolbar capsule.
 @immutable
@@ -69,15 +70,20 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
   const LiquidPrismToolbarGroup({
     super.key,
     required this.items,
-    this.size = GlassToolbarSize.bottom,
+    GlassToolbarSize? size,
+    this.style,
     this.glass,
     this.optics,
     this.blur,
     this.motion,
     this.foregroundColor,
-  }) : assert(items.length > 0);
+  }) : size = size ?? GlassToolbarSize.bottom,
+       _hasSize = size != null,
+       assert(items.length > 0);
   final List<GlassToolbarItem> items;
   final GlassToolbarSize size;
+  final bool _hasSize;
+  final GlassToolbarStyle? style;
   final Glass? glass;
   final LiquidPrismStyle? optics;
   final double? blur;
@@ -85,14 +91,19 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
   final Color? foregroundColor;
   @override
   Widget build(BuildContext context) {
-    final navigation = size == GlassToolbarSize.navigation;
-    final height = navigation ? 44.0 : 48.0;
-    final inset = navigation ? 4.0 : 5.0;
-    final gap = navigation ? 16.0 : 14.0;
     final theme = LiquidPrismTheme.of(context),
         colors = GlassColors.of(context);
+    final appearance = (theme.toolbar ?? const GlassToolbarStyle()).merge(
+      style,
+    );
+    final placement = _hasSize ? size : appearance.size ?? size;
+    final navigation = placement == GlassToolbarSize.navigation;
+    final height = appearance.height ?? (navigation ? 44.0 : 48.0);
+    final inset = appearance.inset ?? (navigation ? 4.0 : 5.0);
+    final gap = appearance.spacing ?? (navigation ? 16.0 : 14.0);
     final foreground =
         foregroundColor ??
+        appearance.foregroundColor ??
         theme.foregroundColor ??
         restingGlassAccent(LiquidPrismTheme.tintOf(context), colors.brightness);
     final width =
@@ -105,18 +116,28 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
       child: ChromeMaterial(
         height: height,
         role: GlassRole.toolbar,
-        glass: glass,
-        optics: optics,
-        blur: blur,
+        glass: glass ?? appearance.glass,
+        optics: optics ?? appearance.optics,
+        blur: blur ?? appearance.blur,
+        shape: appearance.shape,
         child: ClipPath(
-          clipper: const GlassShapeClipper(GlassShape.capsule),
+          clipper: GlassShapeClipper(appearance.shape ?? GlassShape.capsule),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (var i = 0; i < items.length; i++)
-                  _action(items[i], i, height, inset, gap, colors, foreground),
+                  _action(
+                    items[i],
+                    i,
+                    height,
+                    inset,
+                    gap,
+                    colors,
+                    foreground,
+                    appearance,
+                  ),
               ],
             ),
           ),
@@ -124,7 +145,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
       ),
     );
     if (items.every((item) => !item._isEnabled)) return capsule;
-    final customMotion = motion ?? theme.motion;
+    final customMotion = motion ?? appearance.motion ?? theme.motion;
     return LiquidPrismPressable.feedback(
       motion: customMotion,
       child: Builder(
@@ -153,6 +174,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
     double gap,
     GlassColors colors,
     Color foreground,
+    GlassToolbarStyle appearance,
   ) {
     final left = index == 0 ? inset : gap / 2;
     final right = index == items.length - 1 ? inset : gap / 2;
@@ -161,7 +183,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
         key: item.key,
         label: item.label,
         selected: item.selected,
-        motion: motion,
+        motion: motion ?? appearance.motion,
         onPressed: item.menu == null
             ? item.onPressed
             : !item._isEnabled
@@ -190,9 +212,18 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: inset),
                       child: ClipPath(
-                        clipper: const GlassShapeClipper(GlassShape.capsule),
+                        clipper: GlassShapeClipper(
+                          appearance.itemShape ?? GlassShape.capsule,
+                        ),
                         child: ColoredBox(
-                          color: colors.label.withValues(alpha: .12 * press),
+                          color:
+                              (appearance.pressedColor ??
+                                      colors.label.withValues(alpha: .12))
+                                  .withValues(
+                                    alpha:
+                                        (appearance.pressedColor?.a ?? .12) *
+                                        press,
+                                  ),
                           child: const SizedBox.expand(),
                         ),
                       ),
@@ -201,7 +232,10 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
                       // Native symbol image views enlarge their source images.
                       // 22-point Cupertino glyphs leave too much visible space
                       // between actions despite matching native item centers.
-                      data: IconThemeData(color: color, size: 25.5),
+                      data: IconThemeData(
+                        color: color,
+                        size: appearance.iconSize ?? 25.5,
+                      ),
                       child: item.icon,
                     ),
                   ],

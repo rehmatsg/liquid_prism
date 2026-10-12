@@ -18,3 +18,10 @@ Use `flutter devices` to find a simulator or device. Dart changes support hot re
 The separate `controls_main.dart` and `chrome_main.dart` entry points retain the focused native-comparison fixtures.
 
 To record the showcase, launch `flutter run -t test_driver/showcase.dart -d <device-id>`, then run `test_driver/showcase_video.dart` with `DART_VM_SERVICE_URL`, `PRISM_SIMULATOR_ID` and `PRISM_SHOWCASE_OUT` set. Videos and screenshots are local artifacts.
+
+## Customization example
+
+Run `flutter run -t lib/api_main.dart -d <device-id>` for a smaller, fully runnable
+example of shared themes, local styles, lens overrides, icon buttons and editor
+options. Its state stays in the app; controls only propose updates. See
+[components](../doc/components.md) and [customization](../doc/customization.md).

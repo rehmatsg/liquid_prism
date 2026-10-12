@@ -10,6 +10,7 @@ uniform vec4 u_shapeB;
 uniform vec4 u_shapeC;
 uniform vec4 u_shapeD;
 uniform vec4 u_curve[65];
+uniform vec2 u_effect; // Foreground displacement magnitude and SDF depth.
 uniform sampler2D u_content;
 out vec4 frag_color;
 
@@ -45,8 +46,8 @@ void main() {
     // Pull source samples inward near the rim: glyphs bulge across the contour
     // while the flat center keeps its ordinary size. This pass never samples
     // or grades the page/housing below the foreground.
-    float t = clamp(1.+field.x/11.2,0.,1.);
+    float t = clamp(1.+field.x/u_effect.y,0.,1.);
     float profile = 1.-sqrt(max(1.-t*t,0.));
-    vec2 displaced = pixel-field.yz*(14.*u_geometry.y*profile*u_geometry.x);
+    vec2 displaced = pixel-field.yz*(u_effect.x*u_geometry.y*profile*u_geometry.x);
     frag_color = readContent(displaced);
 }

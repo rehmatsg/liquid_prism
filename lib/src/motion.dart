@@ -5,6 +5,97 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 
+/// A reusable spring expressed as duration and bounce.
+@immutable
+class GlassSpring {
+  const GlassSpring({
+    this.response = const Duration(milliseconds: 400),
+    this.bounce = .15,
+  }) : physics = null,
+       assert(bounce >= 0 && bounce < 1);
+
+  /// Use Flutter's mass/stiffness/damping model directly.
+  const GlassSpring.physical(SpringDescription this.physics)
+    : response = const Duration(milliseconds: 400),
+      bounce = .15;
+  final SpringDescription? physics;
+  final Duration response;
+  final double bounce;
+  SpringDescription get description =>
+      physics ??
+      SpringDescription.withDurationAndBounce(
+        duration: response,
+        bounce: bounce,
+      );
+  GlassSpring copyWith({Duration? response, double? bounce}) =>
+      response == null && bounce == null
+      ? this
+      : GlassSpring(
+          response: response ?? this.response,
+          bounce: bounce ?? this.bounce,
+        );
+}
+
+/// Partial motion overrides for switches, sliders and segmented controls.
+/// Null retains each component's captured native timing.
+@immutable
+class GlassControlMotion {
+  const GlassControlMotion({
+    this.travel,
+    this.tracking,
+    this.lift,
+    this.release,
+    this.flex,
+    this.minimumLiftDuration,
+    this.flexStrength,
+    this.maxStretch,
+    this.velocityDecay,
+  }) : assert(flexStrength == null || flexStrength >= 0),
+       assert(maxStretch == null || (maxStretch >= 0 && maxStretch < 1));
+  final GlassSpring? travel, tracking, lift, release, flex;
+  final Duration? minimumLiftDuration, velocityDecay;
+
+  /// Displacement per point/second. Native fit defaults to .018.
+  final double? flexStrength;
+
+  /// Maximum fractional axis deformation. Defaults to .1.
+  final double? maxStretch;
+  GlassControlMotion copyWith({
+    GlassSpring? travel,
+    GlassSpring? tracking,
+    GlassSpring? lift,
+    GlassSpring? release,
+    GlassSpring? flex,
+    Duration? minimumLiftDuration,
+    double? flexStrength,
+    double? maxStretch,
+    Duration? velocityDecay,
+  }) => GlassControlMotion(
+    travel: travel ?? this.travel,
+    tracking: tracking ?? this.tracking,
+    lift: lift ?? this.lift,
+    release: release ?? this.release,
+    flex: flex ?? this.flex,
+    minimumLiftDuration: minimumLiftDuration ?? this.minimumLiftDuration,
+    flexStrength: flexStrength ?? this.flexStrength,
+    maxStretch: maxStretch ?? this.maxStretch,
+    velocityDecay: velocityDecay ?? this.velocityDecay,
+  );
+  GlassControlMotion merge(GlassControlMotion? other) => other == null
+      ? this
+      : copyWith(
+          travel: other.travel,
+          tracking: other.tracking,
+          lift: other.lift,
+          release: other.release,
+          flex: other.flex,
+          minimumLiftDuration: other.minimumLiftDuration,
+          flexStrength: other.flexStrength,
+          maxStretch: other.maxStretch,
+          velocityDecay: other.velocityDecay,
+        );
+}
+
 /// Spatial motion shared by glass buttons and navigation controls.
 ///
 /// Defaults use a spring intercepted during iOS 27 tab selection and fitted button
@@ -30,6 +121,26 @@ class GlassMotion {
        assert(dragProjection >= 0 && dragProjection <= 0.3);
   final Duration response, pressResponse, releaseResponse;
   final double bounce, pressBounce, releaseBounce, pressScale, dragProjection;
+
+  GlassMotion copyWith({
+    Duration? response,
+    double? bounce,
+    Duration? pressResponse,
+    double? pressBounce,
+    Duration? releaseResponse,
+    double? releaseBounce,
+    double? pressScale,
+    double? dragProjection,
+  }) => GlassMotion(
+    response: response ?? this.response,
+    bounce: bounce ?? this.bounce,
+    pressResponse: pressResponse ?? this.pressResponse,
+    pressBounce: pressBounce ?? this.pressBounce,
+    releaseResponse: releaseResponse ?? this.releaseResponse,
+    releaseBounce: releaseBounce ?? this.releaseBounce,
+    pressScale: pressScale ?? this.pressScale,
+    dragProjection: dragProjection ?? this.dragProjection,
+  );
 
   /// Travel between tabs, and the settle after a tab selection.
   SpringDescription get spring => SpringDescription.withDurationAndBounce(

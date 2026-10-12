@@ -5,6 +5,7 @@ import 'material.dart';
 import 'style.dart';
 import 'motion.dart';
 import 'tab_bar_style.dart';
+import 'appearance.dart';
 
 /// Native iOS 27 semantic source colors, resolved for the current appearance.
 /// These are tint inputs, not the final composited glass pixel colors.
@@ -168,6 +169,14 @@ class LiquidPrismThemeData {
     this.shape,
     this.motion,
     this.tabBar,
+    this.lens,
+    this.button,
+    this.switchStyle,
+    this.slider,
+    this.segmentedControl,
+    this.toolbar,
+    this.search,
+    this.controlMotion,
   }) : assert(blur == null || (blur >= 0 && blur <= 12));
   final Brightness? brightness;
 
@@ -187,6 +196,55 @@ class LiquidPrismThemeData {
   final GlassShape? shape;
   final GlassMotion? motion;
   final GlassTabBarStyle? tabBar;
+  final GlassLensStyle? lens;
+  final GlassButtonAppearance? button;
+  final GlassSwitchStyle? switchStyle;
+  final GlassSliderStyle? slider;
+  final GlassSegmentedStyle? segmentedControl;
+  final GlassToolbarStyle? toolbar;
+  final GlassSearchStyle? search;
+  final GlassControlMotion? controlMotion;
+
+  /// Return an updated theme. Null arguments keep existing values.
+  LiquidPrismThemeData copyWith({
+    Brightness? brightness,
+    Brightness? materialBrightness,
+    Color? tint,
+    Color? foregroundColor,
+    Glass? glass,
+    LiquidPrismStyle? optics,
+    double? blur,
+    GlassShape? shape,
+    GlassMotion? motion,
+    GlassTabBarStyle? tabBar,
+    GlassLensStyle? lens,
+    GlassButtonAppearance? button,
+    GlassSwitchStyle? switchStyle,
+    GlassSliderStyle? slider,
+    GlassSegmentedStyle? segmentedControl,
+    GlassToolbarStyle? toolbar,
+    GlassSearchStyle? search,
+    GlassControlMotion? controlMotion,
+  }) => LiquidPrismThemeData(
+    brightness: brightness ?? this.brightness,
+    materialBrightness: materialBrightness ?? this.materialBrightness,
+    tint: tint ?? this.tint,
+    foregroundColor: foregroundColor ?? this.foregroundColor,
+    glass: glass ?? this.glass,
+    optics: optics ?? this.optics,
+    blur: blur ?? this.blur,
+    shape: shape ?? this.shape,
+    motion: motion ?? this.motion,
+    tabBar: tabBar ?? this.tabBar,
+    lens: lens ?? this.lens,
+    button: button ?? this.button,
+    switchStyle: switchStyle ?? this.switchStyle,
+    slider: slider ?? this.slider,
+    segmentedControl: segmentedControl ?? this.segmentedControl,
+    toolbar: toolbar ?? this.toolbar,
+    search: search ?? this.search,
+    controlMotion: controlMotion ?? this.controlMotion,
+  );
 
   LiquidPrismThemeData merge(LiquidPrismThemeData other) =>
       LiquidPrismThemeData(
@@ -200,6 +258,19 @@ class LiquidPrismThemeData {
         shape: other.shape ?? shape,
         motion: other.motion ?? motion,
         tabBar: (tabBar ?? const GlassTabBarStyle()).merge(other.tabBar),
+        lens: (lens ?? const GlassLensStyle()).merge(other.lens),
+        button: (button ?? const GlassButtonAppearance()).merge(other.button),
+        switchStyle: (switchStyle ?? const GlassSwitchStyle()).merge(
+          other.switchStyle,
+        ),
+        slider: (slider ?? const GlassSliderStyle()).merge(other.slider),
+        segmentedControl: (segmentedControl ?? const GlassSegmentedStyle())
+            .merge(other.segmentedControl),
+        toolbar: (toolbar ?? const GlassToolbarStyle()).merge(other.toolbar),
+        search: (search ?? const GlassSearchStyle()).merge(other.search),
+        controlMotion: (controlMotion ?? const GlassControlMotion()).merge(
+          other.controlMotion,
+        ),
       );
 }
 

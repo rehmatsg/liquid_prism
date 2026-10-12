@@ -3,18 +3,19 @@
 Liquid Prism draws glass entirely in Flutter. Impeller's shader filters provide
 live backdrop refraction; `LiquidPrism.isShaderSupported` reports that capability.
 Unsupported renderers use a frosted fallback retaining content and interaction.
-There are no platform views, native plugins, or OS-version-dependent renderer
-switches. Web and desktop support is outside this package's contract.
+Glass does not use platform views or an OS-native glass renderer. The separate
+iOS plugin presents popup menus using UIKit. Web and desktop support is outside this package's contract.
 
 ## Composition
 
 Put glass over content already painted in the same scene. A flat background cannot
-show much refraction. Content inside the glass stays sharp. Avoid wrapping glass
+show much refraction. Ordinary surface content stays sharp. The lifted tab pill separately refracts
+its selected icon/label near the rim. Avoid wrapping glass
 in an ancestor `Opacity` or `ImageFiltered` save layer: that can isolate its backdrop.
 
 Smooth rectangles and capsules use Flutter's continuous-corner clipping and
 scalar shader passes. Circles retain their circular contour. Selected pills apply
-an independent blur and color adjustment beneath sharp foreground content.
+an independent blur and color adjustment beneath foreground content; held tabs additionally use the glyph refraction pass.
 
 Default regular glass also draws a separate inner ring and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
@@ -24,8 +25,8 @@ mapping and its measured limits are described in [native shadows](native_shadows
 
 Blur cost depends on the affected pixel area, device, overlap, and moving backdrop.
 Prefer small control surfaces, bounded blur radii, and static materials during
-interaction. The built-in springs animate transforms rather than blur or layout
-size. An idle component has no repeating ticker.
+interaction. The built-in springs update transforms and lifted bounds; they do not animate
+frost blur. An idle component has no repeating ticker.
 
 The optical shader skips reflection samples where their weight falls below half
 an 8-bit step, and skips the highlight and press color matrices at zero weight.

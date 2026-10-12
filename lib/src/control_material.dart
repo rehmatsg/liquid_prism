@@ -6,6 +6,7 @@ import 'control_lens.dart';
 import 'material.dart';
 import 'recipe.dart';
 import 'theme.dart';
+import 'appearance.dart';
 
 /// Direct layer/timing captures in doc/native_controls_spec.json.
 abstract final class NativeControl {
@@ -37,10 +38,12 @@ class ControlThumb extends StatelessWidget {
     this.restingShadow = false,
     this.minifyUnderlay = true,
     this.color,
+    this.style,
   });
   final double lift;
   final bool small, restingShadow, minifyUnderlay;
   final Color? color;
+  final GlassLensStyle? style;
   @override
   Widget build(BuildContext context) => ControlLens(
     lift: lift,
@@ -51,17 +54,24 @@ class ControlThumb extends StatelessWidget {
         : GlassRole.sliderLens,
     restingColor: color ?? GlassColors.of(context).controlThumb,
     restingShadow: restingShadow,
+    style: style,
   );
 }
 
 /// Uses the same continuous capsule contour as control optics and shadows.
 class ControlTrack extends StatelessWidget {
-  const ControlTrack({super.key, required this.color, this.child});
+  const ControlTrack({
+    super.key,
+    required this.color,
+    this.child,
+    this.shape = GlassShape.capsule,
+  });
   final Color color;
   final Widget? child;
+  final GlassShape shape;
   @override
   Widget build(BuildContext context) => ClipPath(
-    clipper: const GlassShapeClipper(GlassShape.capsule),
+    clipper: GlassShapeClipper(shape),
     child: ColoredBox(color: color, child: child),
   );
 }

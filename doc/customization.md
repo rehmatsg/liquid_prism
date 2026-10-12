@@ -27,11 +27,25 @@ inscribed in the available rectangle without changing layout dimensions.
 ## Defaults and precedence
 
 `LiquidPrismThemeData` accepts `brightness`, `glass`, `tint`, `foregroundColor`,
-`optics`, `blur`, `shape`, `motion`, and `tabBar`.
+`optics`, `blur`, `shape`, `motion`, and component styles: `button`, `switchStyle`,
+`slider`, `segmentedControl`, `tabBar`, `toolbar`, `search`, shared `lens` and
+`controlMotion`.
 
-1. Explicit widget arguments override their corresponding theme fields.
-2. Nested themes merge each non-null field; omitted values inherit.
-3. `LiquidPrismTheme(inherit: false, ...)` starts from package defaults.
+1. Explicit widget arguments override the corresponding local style fields.
+2. Local styles merge over the component theme; omitted fields inherit.
+3. Nested themes merge non-null fields, including nested styles and lenses.
+4. Native defaults apply to fields still unspecified.
+
+`LiquidPrismTheme(inherit: false, ...)` starts from package defaults. Style
+`copyWith` retains a field when an argument is null; to remove an existing override,
+construct a new style. Styles' `merge` combines nullable fields individually;
+`TextStyle` and nested lenses merge too. Optical packets replace as a whole.
+Theme `copyWith` replaces a supplied component style; theme `merge` combines it.
+
+Explicit false and zero count as overrides. For example, `haptics: true` on a
+switch beats a theme that disables haptics, and search `restingInset: 0` beats an
+inherited inset. When an older constructor has a default argument, omission still
+allows its component style to supply the value.
 
 For optics, an explicit widget `blur` wins, then its explicit `optics.frost`,
 then inherited blur and optical defaults. Shape precedence is explicit `shape`,
@@ -39,6 +53,56 @@ explicit `optics.cornerRadius`, inherited `shape`, inherited optical corner radi
 then capsule. Zero blur and `Glass.identity` are explicit choices.
 
 Let child icons and text inherit the ambient style for consistent semantic colors.
+
+## Reusable component styles
+
+```dart
+const softLens = GlassLensStyle(shadowOpacity: .06, ringOpacity: .03);
+const appDefaults = LiquidPrismThemeData(
+  lens: softLens,
+  slider: GlassSliderStyle(trackHeight: 8, heldScale: 1.6),
+  toolbar: GlassToolbarStyle(spacing: 2),
+  search: GlassSearchStyle(showCancelButton: false),
+);
+
+// A local lens override keeps the shared shadow settings.
+LiquidPrismSlider(
+  value: level,
+  onChanged: changeLevel,
+  style: const GlassSliderStyle(
+    width: 240,
+    lens: GlassLensStyle(minifyUnderlay: false),
+  ),
+)
+```
+
+`level` and `changeLevel` above belong to your app. Wrap controls in
+`LiquidPrismTheme(data: appDefaults, child: ...)` to apply shared defaults.
+The [style reference](style_reference.md) lists every field with its default.
+Use [the runnable example](../example/lib/api_main.dart) for complete state/layout.
+
+| Component | Local configuration | Theme field |
+| --- | --- | --- |
+| Button | `style: GlassButtonAppearance(...)` | `button` |
+| Switch | `style: GlassSwitchStyle(...)` | `switchStyle` |
+| Slider | `style: GlassSliderStyle(...)` | `slider` |
+| Segmented control | `style: GlassSegmentedStyle(...)` | `segmentedControl` |
+| Tab bar | `style: GlassTabBarStyle(...)` | `tabBar` |
+| Toolbar | `style: GlassToolbarStyle(...)` | `toolbar` |
+| Search | `appearance: GlassSearchStyle(...)` | `search` |
+| All lifted lenses | component style's `lens` | `lens` |
+| Small-control motion | widget's `motion: GlassControlMotion(...)` | `controlMotion` |
+
+Search's existing `style` argument remains a `TextStyle`; it overrides
+`appearance.textStyle`. Style objects configure geometry, colors, contours,
+material and optics. Geometry is in logical pixels; `scale` multiplies the
+switch/slider/segment dimensions. Text sizing and lens minification are separate.
+Parent constraints can limit preferred widths; lifted lenses paint beyond the
+resting footprint. Keep room around them and avoid clipping ancestors.
+
+Use `GlassColors.of(context)` for appearance-aware palette values. Callback,
+focus/controller ownership, disabled state and input-formatting choices remain
+on the widgets. The [component guide](components.md) lists these independently.
 
 ## Foreground and tint
 
@@ -97,13 +161,11 @@ const motion = GlassMotion(
 );
 ```
 
-Set this on a theme or an individual control. The defaults combine intercepted tab selection spring parameters with fitted
-button motion. `response` and `bounce` move
-the tab pill between tabs; `pressResponse`/`pressBounce` grow a held control
-and `releaseResponse`/`releaseBounce` let it go, with the native overshoot
-and undershoot. `pressScale` is the held size of an ordinary glass button; on
-the tab bar it controls the lens lift and housing expansion,
-and `pressScale: 1` disables that spatial response while retaining the glow.
+Set `GlassMotion` on buttons, toolbar groups, tab bars, or the theme's `motion`.
+It controls button press/release and tab travel. Small controls instead accept
+`GlassControlMotion` so travel, tracking, lift, release, flex and minimum lift
+can be overridden independently. See [motion and lenses](motion_and_lenses.md)
+for the scope of each field and physical spring support.
 
 The tab pill uses the native large-lens lift and release settings: a 250 ms
 response with damping ratio 1, plus the extracted 220 ms hang-time parameter. The lens

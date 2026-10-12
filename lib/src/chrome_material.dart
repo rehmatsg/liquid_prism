@@ -16,6 +16,7 @@ class ChromeMaterial extends StatelessWidget {
     this.glass,
     this.optics,
     this.blur,
+    this.shape,
   });
   final double height;
   final GlassRole role;
@@ -23,14 +24,15 @@ class ChromeMaterial extends StatelessWidget {
   final Glass? glass;
   final LiquidPrismStyle? optics;
   final double? blur;
+  final GlassShape? shape;
   @override
   Widget build(BuildContext context) {
     final theme = LiquidPrismTheme.of(context);
     return LiquidPrism(
       glass: (glass ?? theme.glass ?? Glass.regular).interactive(false),
-      shape: GlassShape.capsule,
+      shape: shape ?? GlassShape.capsule,
       role: role,
-      blur: blur ?? theme.blur ?? 5,
+      blur: blur ?? optics?.frost ?? theme.blur ?? theme.optics?.frost ?? 5,
       optics:
           optics ??
           theme.optics ??

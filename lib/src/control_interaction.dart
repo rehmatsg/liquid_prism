@@ -30,6 +30,8 @@ class ControlInteraction extends StatefulWidget {
     this.hangTime = Duration.zero,
     this.label,
     this.semanticValue,
+    this.semanticFormatter,
+    this.motion = const GlassControlMotion(),
   });
   final double value, travel;
   final ValueChanged<double>? onChanged, onChangeStart, onChangeEnd;
@@ -48,6 +50,8 @@ class ControlInteraction extends StatefulWidget {
   final bool toggle, continuous;
   final Duration hangTime;
   final String? label, semanticValue;
+  final String Function(double)? semanticFormatter;
+  final GlassControlMotion motion;
 
   @override
   State<ControlInteraction> createState() => _ControlInteractionState();
@@ -59,7 +63,8 @@ class _ControlInteractionState extends State<ControlInteraction>
     ..value = widget.value;
   late final _lift = RetargetableGlassSpring(vsync: this);
   late final _deformation = RetargetableGlassSpring(vsync: this);
-  static final _shapeSpring = ControlLensMotion.spring;
+  SpringDescription get _shapeSpring =>
+      widget.motion.flex?.description ?? ControlLensMotion.spring;
   late final _flex = ControlLensMotion((stretch, impulse) {
     if (mounted && _dragging && !_reduceMotion) {
       springGlass(
@@ -69,7 +74,7 @@ class _ControlInteractionState extends State<ControlInteraction>
         velocity: _deformation.velocity + impulse,
       );
     }
-  });
+  }, settings: () => widget.motion);
 
   final _focus = FocusNode();
   Timer? _release;
@@ -322,10 +327,12 @@ class _ControlInteractionState extends State<ControlInteraction>
       slider: widget.continuous,
       value: widget.semanticValue,
       increasedValue: widget.continuous
-          ? '${((widget.value + step).clamp(0, 1) * 100).round()}%'
+          ? widget.semanticFormatter?.call(_quantize(widget.value + step)) ??
+                '${((widget.value + step).clamp(0, 1) * 100).round()}%'
           : null,
       decreasedValue: widget.continuous
-          ? '${((widget.value - step).clamp(0, 1) * 100).round()}%'
+          ? widget.semanticFormatter?.call(_quantize(widget.value - step)) ??
+                '${((widget.value - step).clamp(0, 1) * 100).round()}%'
           : null,
       onIncrease: widget.continuous && _enabled ? () => advance(step) : null,
       onDecrease: widget.continuous && _enabled ? () => advance(-step) : null,

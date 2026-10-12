@@ -8,7 +8,8 @@ import 'motion.dart';
 /// Finger-driven flex for small controls, independent of their
 /// position spring. In particular, direct slider tracking has no spring velocity.
 class ControlLensMotion {
-  ControlLensMotion(this.onStretch);
+  ControlLensMotion(this.onStretch, {this.settings});
+  final GlassControlMotion Function()? settings;
   final void Function(double target, double impulse) onStretch;
   Duration? _lastTime;
   double _lastX = 0, _target = 0;
@@ -47,15 +48,24 @@ class ControlLensMotion {
     // Start with the researched displacement per speed, normalized to a held
     // small lens. This keeps brief flicks visible instead of attenuating their
     // target before the shape spring has time to respond.
-    _emit((NativeMotion.stretchPerSpeed * _speed / 57.35).clamp(0.0, .1));
+    final motion = settings?.call() ?? const GlassControlMotion();
+    _emit(
+      ((motion.flexStrength ?? NativeMotion.stretchPerSpeed) * _speed / 57.35)
+          .clamp(0.0, motion.maxStretch ?? .1),
+    );
     _idle?.cancel();
     // No new samples means a stationary finger, even while the control remains
     // held. Preserve shape momentum as it settles back to its lifted bounds.
-    _idle = Timer(const Duration(milliseconds: 120), () => _emit(0));
+    _idle = Timer(
+      motion.velocityDecay ?? const Duration(milliseconds: 120),
+      () => _emit(0),
+    );
   }
 
   void _emit(double target) {
-    final impulse = (target - _target) * spring.stiffness / spring.mass * .032;
+    final response = settings?.call().flex?.description ?? spring;
+    final impulse =
+        (target - _target) * response.stiffness / response.mass * .032;
     _target = target;
     onStretch(target, impulse);
   }

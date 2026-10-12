@@ -9,12 +9,14 @@ class _SelectionWindow extends StatefulWidget {
     required this.lens,
     required this.lift,
     required this.shape,
+    required this.refraction,
+    required this.depth,
     required this.child,
   });
   final Path? path;
   final Color color;
   final Rect lens;
-  final double lift;
+  final double lift, refraction, depth;
   final GlassShape shape;
   final Widget child;
 
@@ -83,6 +85,8 @@ class _SelectionWindowState extends State<_SelectionWindow> {
     lift: widget.lift,
     shape: widget.shape,
     shader: _shader,
+    refraction: widget.refraction,
+    depth: widget.depth,
     pixelRatio: MediaQuery.devicePixelRatioOf(context),
     child: widget.child,
   );

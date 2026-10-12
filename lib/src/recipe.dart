@@ -14,7 +14,8 @@ enum GlassRole {
   segmentLens(5),
   toolbar(7),
   searchField(8),
-  sliderLens(9);
+  sliderLens(9),
+  controlLensUnminified(10);
 
   // Preserve shader IDs when a component is removed from the enum.
   const GlassRole(this.shaderId);
@@ -69,7 +70,8 @@ final class GlassRecipe {
           : (role == GlassRole.controlThumb ||
                 role == GlassRole.segmentLens ||
                 role == GlassRole.tabLens ||
-                role == GlassRole.sliderLens)
+                role == GlassRole.sliderLens ||
+                role == GlassRole.controlLensUnminified)
           ? 3
           : customOptics
           ? 0

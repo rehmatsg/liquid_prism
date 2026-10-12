@@ -1,15 +1,26 @@
+# Changelog
+
 ## Unreleased
+
+- Add reusable component appearance styles and shared lens defaults through
+  `LiquidPrismThemeData`, with partial inheritance and typed `copyWith`/`merge`.
+- Expose small-control springs, minimum lift, velocity deformation and decay
+  through `GlassControlMotion` and `GlassSpring`.
+- Add circular icon buttons, search editor options, typed input-phase callbacks,
+  slider accessibility formatting and configurable tab foreground refraction.
+- Preserve native geometry, motion, palette and controlled-value defaults.
+- Add a runnable API example, component/style guides and agent implementation docs.
 
 - Match the measured iOS 27 interaction motion: tab pills lift into a glass
   lens with bar and icon scaling, glide on touch, chase the finger through a
   spring and stretch with speed; buttons use the native press and release
   springs and glow timing. `GlassMotion` gains press and release bounce fields.
-- Remove the native plugin, platform views, and rendering-mode API.
+- Remove the former native glass-rendering plugin, platform views, and rendering-mode API. Popup menus use the separate UIKit bridge.
 - Calibrate regular material colors against SwiftUI and share foreground/selection defaults across platforms.
 
 - Fix the fallback circle border in non-square layouts.
 - Simplify renderer dispatch and batch grouping without changing the public API.
-- Document the research, source projects, and rendering limitations in the README.
+- Document research, source projects and rendering limitations in dedicated guides; keep the README focused on usage.
 
 ## 0.1.0
 

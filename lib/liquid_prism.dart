@@ -7,7 +7,16 @@ library;
 export 'src/button.dart' show GlassButtonStyle, LiquidPrismButton;
 export 'src/glass.dart' show LiquidPrism, LiquidPrismGroup;
 export 'src/material.dart' show Glass, GlassVariant, GlassShape;
-export 'src/motion.dart' show GlassMotion;
+export 'src/motion.dart' show GlassMotion, GlassSpring, GlassControlMotion;
+export 'src/appearance.dart'
+    show
+        GlassLensStyle,
+        GlassButtonAppearance,
+        GlassSwitchStyle,
+        GlassSliderStyle,
+        GlassSegmentedStyle,
+        GlassToolbarStyle,
+        GlassSearchStyle;
 export 'src/pressable.dart' show LiquidPrismPressable;
 export 'src/selection.dart' show LiquidPrismSelection;
 export 'src/style.dart' show LiquidPrismStyle;

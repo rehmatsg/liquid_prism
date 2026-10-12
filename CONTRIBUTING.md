@@ -24,3 +24,8 @@ package archives. Keep required third-party notices and license texts in distrib
 
 An API or renderer change should be exercised on a real mobile renderer. Headless
 widget tests use the fallback path and cannot certify shader output. Report device/build mode and remaining validation gaps.
+
+Read [AGENTS.md](AGENTS.md) and the [implementation guides](doc/agents/README.md)
+for ownership rules, API precedence, shader ABI and native comparison workflows.
+The [API example](example/lib/api_main.dart) should remain runnable using only
+public exports. Keep README usage concise; put implementation detail in the guides.

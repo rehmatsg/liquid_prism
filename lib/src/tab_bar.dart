@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_lens.dart';
+import 'appearance.dart';
 import 'superellipse.dart';
 import 'glass.dart';
 import 'foreground.dart';
@@ -148,6 +149,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 
   GlassMotion get _motion =>
       widget.motion ??
+      _style.motion ??
       LiquidPrismTheme.of(context).motion ??
       const GlassMotion();
   GlassTabBarStyle get _style =>
@@ -522,7 +524,12 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
           (labels == GlassTabLabelBehavior.never ? 0 : textHeight + 2) +
           8,
     );
-    final selectionShape = style.selectionShape ?? GlassShape.capsule;
+    final lensStyle =
+        (LiquidPrismTheme.of(context).lens ?? const GlassLensStyle()).merge(
+          style.lens,
+        );
+    final selectionShape =
+        style.selectionShape ?? lensStyle.shape ?? GlassShape.capsule;
     var contentWidth = iconSize;
     if (labels != GlassTabLabelBehavior.never) {
       final effectiveStyle = DefaultTextStyle.of(context).style.merge(
@@ -544,7 +551,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     // 32 points of horizontal breathing room; measure in device pixels as UIKit
     // does. The housing keeps its outer padding, instead of consuming all space.
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final slot = math.max(86.0, (contentWidth * dpr).ceil() / dpr + 32);
+    final slot = math.max(
+      style.minimumTabWidth ?? 86.0,
+      (contentWidth * dpr).ceil() / dpr + (style.labelPadding ?? 32),
+    );
     final preferredWidth = slot * widget.tabs.length + padding.horizontal;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -679,9 +689,9 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                             _glow.value.clamp(0, 1) * NativeMotion.glowOpacity,
                         scale: barScale,
                         child: LiquidPrism(
-                          glass: widget.glass,
-                          optics: widget.optics,
-                          blur: widget.blur,
+                          glass: widget.glass ?? style.glass,
+                          optics: widget.optics ?? style.optics,
+                          blur: widget.blur ?? style.blur,
                           shape: style.shape,
                           role: GlassRole.tabBar,
                           child: SizedBox.fromSize(size: barSize),
@@ -717,6 +727,9 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 lift: lift,
                                 shape: selectionShape,
                                 role: GlassRole.tabLens,
+                                style: lensStyle.copyWith(
+                                  shape: selectionShape,
+                                ),
                               ),
                             ),
                           ),
@@ -749,6 +762,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                               lens: foregroundPill,
                               lift: lift,
                               shape: selectionShape,
+                              refraction: style.refractContent == false
+                                  ? 0
+                                  : style.contentRefraction ?? 14,
+                              depth: style.contentDepth ?? 11.2,
                               child: child!,
                             ),
                           ),
@@ -879,18 +896,20 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     required this.shape,
     required this.shader,
     required this.pixelRatio,
+    required this.refraction,
+    required this.depth,
     required super.child,
   });
   final Path? path;
   final Color color;
   final Rect lens;
-  final double lift, pixelRatio;
+  final double lift, pixelRatio, refraction, depth;
   final GlassShape shape;
   final ui.FragmentShader? shader;
   @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderSelectionWindow(path, color)
-        ..configure(shader, lens, lift, shape, pixelRatio);
+        ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth);
   @override
   void updateRenderObject(
     BuildContext context,
@@ -899,7 +918,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     renderObject
       ..path = path
       ..color = color
-      ..configure(shader, lens, lift, shape, pixelRatio);
+      ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth);
   }
 }
 
@@ -923,7 +942,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
 
   ui.FragmentShader? _shader;
   Rect _lens = Rect.zero;
-  double _lift = 0, _pixelRatio = 1;
+  double _lift = 0, _pixelRatio = 1, _refraction = 14, _depth = 11.2;
   GlassShape _shape = GlassShape.capsule;
   void configure(
     ui.FragmentShader? shader,
@@ -931,12 +950,16 @@ class _RenderSelectionWindow extends RenderProxyBox {
     double lift,
     GlassShape shape,
     double pixelRatio,
+    double refraction,
+    double depth,
   ) {
     if (shader == _shader &&
         lens == _lens &&
         lift == _lift &&
         shape == _shape &&
-        pixelRatio == _pixelRatio) {
+        pixelRatio == _pixelRatio &&
+        refraction == _refraction &&
+        depth == _depth) {
       return;
     }
     _shader = shader;
@@ -944,6 +967,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _lift = lift;
     _shape = shape;
     _pixelRatio = pixelRatio;
+    _refraction = refraction;
+    _depth = depth;
     markNeedsPaint();
   }
 
@@ -952,7 +977,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
   List<double> _contour = [];
   ui.ImageFilter? _contentFilter() {
     final shader = _shader;
-    if (shader == null || _lift < .001) return null;
+    if (shader == null || _lift < .001 || _refraction == 0) return null;
     final contour = _shape.rect(_lens.size).shift(_lens.topLeft);
     if (_contourSize != contour.size || _contourShape != _shape) {
       _contourSize = contour.size;
@@ -973,6 +998,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
       _shape.radius,
       _shape.isSmooth ? 1.0 : 0.0,
       ..._contour,
+      _refraction,
+      _depth,
     ];
     for (var i = 0; i < values.length; i++) {
       shader.setFloat(i + 2, values[i]);
