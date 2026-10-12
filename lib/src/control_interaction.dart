@@ -235,7 +235,14 @@ class _ControlInteractionState extends State<ControlInteraction>
     final delta = (x - _downX) / widget.travel * (_rtl ? -1 : 1);
     _candidate = (_downValue + delta).clamp(0.0, 1.0);
     final target = widget.continuous ? _quantize(_candidate) : _candidate;
-    _animate(_position, target, widget.trackingSpring);
+    if (widget.continuous) {
+      // A grabbed slider follows the contact on the next frame. The captured
+      // spring constructor describes animation, not a delay on every sample.
+      // Taps, external updates and release still use the native travel spring.
+      _position.value = target;
+    } else {
+      _animate(_position, target, widget.trackingSpring);
+    }
     if (widget.continuous) _notify(target);
   }
 

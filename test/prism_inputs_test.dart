@@ -118,6 +118,41 @@ void main() {
     expect(ends.length, 3);
   });
 
+  for (final rtl in [false, true]) {
+    testWidgets('slider thumb follows contact each frame, RTL=$rtl', (
+      tester,
+    ) async {
+      var value = .5;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => LiquidPrismSlider(
+              value: value,
+              onChanged: (next) => setState(() => value = next),
+            ),
+          ),
+          rtl: rtl,
+        ),
+      );
+      final thumb = find.descendant(
+        of: find.byType(LiquidPrismSlider),
+        matching: find.byType(LiquidPrism),
+      );
+      final start = tester.getCenter(thumb);
+      final contact = await tester.startGesture(start);
+      await tester.pumpAndSettle();
+      for (final offset in [40.0, -50.0, 90.0, 0.0]) {
+        await contact.moveTo(start + Offset(offset, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(tester.getCenter(thumb).dx, closeTo(start.dx + offset, .01));
+        expect(value, closeTo(.5 + offset / 263 * (rtl ? -1 : 1), .0001));
+      }
+      await contact.up();
+      await tester.pumpAndSettle();
+      expect(tester.getCenter(thumb), start);
+    });
+  }
+
   testWidgets('segmented tabs commit once on release and expose selection', (
     tester,
   ) async {

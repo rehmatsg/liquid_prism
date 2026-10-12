@@ -179,7 +179,8 @@ void shadeGlass() {
     float coverage = clamp(0.5-d/aa,0.,1.);
     // The narrow exterior lobe darkens the sides between vertical highlights.
     float rimAlpha = 0.;
-    if (u_material.x > 1.5 && u_finish.y > 0. && d > -0.5*aa) {
+    if (u_material.x > 1.5 && u_material.x < 3.5 &&
+        u_finish.y > 0. && d > -0.5*aa) {
         float facing = clamp((abs(normal.x)-0.258819)/0.741181,0.,1.);
         float side = facing/(1.+0.5*(1.-facing));
         float outerCoverage = clamp(0.5-(d-0.533333)/aa,0.,1.);
@@ -188,9 +189,10 @@ void shadeGlass() {
     if (u_material.x > 3.5 && u_finish.y > 0. && d > -0.5*aa) {
         // Small/segmented native glassBackground has a negative key/fill
         // highlight at an exterior offset of 2/3 point. Approximate that
-        // private operator with a dark coverage band, independent of the face.
+        // private operator with a subtle coverage band, independent of the
+        // face. Its native negative color bias is not an opaque black stroke.
         float outerCoverage = clamp(0.5-(d-0.6666667)/aa,0.,1.);
-        rimAlpha = max(rimAlpha,u_finish.y*max(outerCoverage-coverage,0.));
+        rimAlpha = 0.24*u_finish.y*max(outerCoverage-coverage,0.);
     }
     // Native regular glassBackground negative key/fill highlight. The effect
     // occupies the exterior 0.533333-point band; its -0.3 color bias darkens

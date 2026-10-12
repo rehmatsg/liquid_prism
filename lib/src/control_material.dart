@@ -48,7 +48,9 @@ class ControlThumb extends StatelessWidget {
       builder: (context, constraints) {
         final height = constraints.maxHeight;
         return CustomPaint(
-          painter: _ControlShadow(
+          // Paint after the optical pass: a lens must not refract its own
+          // exterior shadow mask into a second, sharply bounded capsule.
+          foregroundPainter: _ControlShadow(
             progress,
             small: small,
             restingShadow: restingShadow,
@@ -113,11 +115,12 @@ class _ControlShadow extends CustomPainter {
         ..addRect((Offset.zero & size).inflate(40))
         ..addPath(outline, Offset.zero),
     );
-    if (restingShadow) {
+    if (restingShadow && progress < 1) {
       canvas.drawPath(
         outline.shift(const Offset(0, 1)),
         Paint()
-          ..color = const Color(0xFF000000).withValues(alpha: .14)
+          ..color = const Color(0xFF000000)
+              .withValues(alpha: .14 * (1 - progress))
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10 / 3),
       );
     }
@@ -134,8 +137,10 @@ class _ControlShadow extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 4
           ..color = const Color(0xFF000000)
-              .withValues(alpha: (small ? .4 : .1) * progress)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+              .withValues(alpha: (small ? .18 : .07) * progress)
+          // Core Animation's ring filter is not a solid stroked outline.
+          // Spread our approximation to avoid a dense lower contour.
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
       );
     }
     canvas.restore();

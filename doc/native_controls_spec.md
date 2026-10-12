@@ -61,9 +61,20 @@ an approximate velocity input. Flutter's system font does not expose grade G3.
 This is a calibrated reproduction, not a claim that private native rendering is
 bit-for-bit identical on every background or OS release.
 
+The small-control exterior rim uses a reduced negative highlight weight; mapping
+the native filter's color bias to black alpha directly produced a heavy outline.
+Held ring shadows use a softer stroke approximation (.18 small / .07 segmented,
+sigma 3), and the resting slider shadow fades as the lens lifts. Shadows paint
+after the lens so refraction cannot sample their exterior mask and reveal a
+second capsule inside the segmented selection. These are renderer calibrations,
+not changes to the extracted native inputs.
+
 Touch targets have a 44-point height; the visible track retains its native height.
 Slider values are reported continuously; switch and segmented drags commit on
 release. Parents own values, including rejected changes and external updates.
+During a slider drag, the thumb follows each contact sample directly; the
+captured travel spring still animates taps and external changes. Intercepting a
+drag spring constructor alone does not establish native per-sample scheduling.
 A null callback disables pointers, keys and semantic actions. RTL reverses the
 physical axis. Reduce Motion removes lift/stretch and settles position immediately.
 The slider also supports discrete divisions and arbitrary numeric ranges; those
