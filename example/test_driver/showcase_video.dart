@@ -179,12 +179,6 @@ Future<void> main() async {
         await pause();
       });
       await tap('Explore');
-      await driver.scroll(
-        find.byValueKey(0),
-        0,
-        1200,
-        const Duration(milliseconds: 600),
-      );
       await pause(1200);
     });
   } finally {
