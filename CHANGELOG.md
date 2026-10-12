@@ -12,6 +12,10 @@
   your own sheets, dialogs and bars, with the fold added to
   `MediaQuery.displayFeatures` app-wide. `LiquidPrismViewController` and
   `setVerticalBarBehavior` let an app opt out of the vertical bar.
+- Add `GlassTabBarPlacement.sidebar` to `LiquidPrismScaffold`: the measured
+  native sidebar at regular width, with a hide and show toggle. Report UIKit's
+  size classes as `GlassSystemChrome.horizontalSizeClass` and
+  `verticalSizeClass`.
 - Add `axis` to `LiquidPrismTabBar` and `LiquidPrismToolbarGroup` for the
   measured vertical rail layout.
 - Present native menus in the Flutter view's own window and close them when

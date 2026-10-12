@@ -82,6 +82,16 @@ status bar's occlusion region at x 817, y 0, 134 × 82 in the top-right corner.
 The header says the trait keeps reporting the preferred edge; the plugin also
 reports the app's own preference so either behavior resolves to horizontal bars.
 
+### Sidebar
+
+`TabView` with `.defaultTabBarPlacement(.sidebar)` on the unfolded Duo shows a
+280 pt opaque sidebar along the leading edge (light #EAEFF2, dark #181D20). A
+48 pt glass toggle sits at x 212, y 24. Rows are 240 × 44 at x 20 from y 81,
+with accent-colored icons and labels at x 74; the selected row is a capsule
+(light #D6DBDE, dark #2C3134). Content starts at x 280. The rail keeps the
+trailing group under the status bar and moves the bottom-bar items to its
+bottom (y 537 and 597); no tab bar remains in it.
+
 ## Fitted behavior
 
 - Without the system APIs (before iOS 27.1, or without the plugin), a rail is

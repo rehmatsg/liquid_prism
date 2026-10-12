@@ -372,6 +372,62 @@ void main() {
     expect(find.byType(LiquidPrismTabBar), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  group('sidebar placement', () {
+    Widget app({required ValueChanged<int> onSelected, int selected = 0}) =>
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            tabBarPlacement: GlassTabBarPlacement.sidebar,
+            tabBar: LiquidPrismTabBar(
+              selectedIndex: selected,
+              onSelected: onSelected,
+              tabs: _tabs,
+            ),
+            body: const SizedBox.expand(key: _body),
+          ),
+        );
+
+    testWidgets('lists the tabs beside content at regular width', (
+      tester,
+    ) async {
+      window(tester, duoUnfolded);
+      var selected = 0;
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) => app(
+            selected: selected,
+            onSelected: (index) => setState(() => selected = index),
+          ),
+        ),
+      );
+      // Native: a 280 pt sidebar; rows 240 x 44 at x 20 under the toggle.
+      expect(find.byType(LiquidPrismTabBar), findsNothing);
+      expect(tester.getRect(find.text('Saved')).left, 20 + 54);
+      final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
+      expect(padding.left, 280);
+      expect(padding.right, 84);
+
+      await tester.tap(find.text('Search'));
+      await tester.pump();
+      expect(selected, 2);
+
+      // Hidden, the tabs go back to the rail and a toggle brings it back.
+      await tester.tap(find.bySemanticsLabel('Hide sidebar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved'), findsNothing);
+      expect(tester.getRect(find.byType(LiquidPrismTabBar)).width, 48);
+      await tester.tap(find.bySemanticsLabel('Show sidebar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved'), findsOneWidget);
+    });
+
+    testWidgets('keeps the tab bar at compact width', (tester) async {
+      window(tester, duo);
+      await tester.pumpWidget(app(onSelected: (_) {}));
+      expect(find.byType(LiquidPrismTabBar), findsOneWidget);
+      expect(find.bySemanticsLabel('Hide sidebar'), findsNothing);
+    });
+  });
 }
 
 const _body = ValueKey('body');

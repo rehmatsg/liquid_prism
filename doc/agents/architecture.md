@@ -18,7 +18,7 @@ under `lib/src/` are not a consumer contract.
 | `switch.dart`, `slider.dart`, `segmented_control.dart` | Per-component layout, logical value mapping and native defaults |
 | `tab_bar.dart`, `tab_content_lens.dart` | Compact navigation layout, independent tab motion and foreground filter |
 | `toolbar.dart`, `chrome_material.dart`, `search_field.dart` | Grouped action layout and owned/borrowed search resources |
-| `chrome_layout.dart` | Scaffold placement (bottom bar or side rail), chrome axis scope and body padding |
+| `chrome_layout.dart`, `sidebar.dart` | Scaffold placement (bottom bar, side rail or sidebar), chrome axis scope and body padding |
 | `system_chrome.dart`, `ios/.../SystemChromeObserver.swift` | iOS 27.1 vertical bar edge and reserved regions, streamed on `liquid_prism/system_chrome` |
 | `menu/`, `ios/Classes/` | Menu models, platform interface, fallback and UIKit presentation |
 | `shaders/` | Impeller glass, batched surfaces and tab glyph refraction |

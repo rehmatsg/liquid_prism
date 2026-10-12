@@ -230,6 +230,17 @@ class StudioPage extends StatelessWidget {
                 ),
               ),
             ListRow(
+              title: 'Sidebar',
+              subtitle: 'Tabs in a sidebar on wide windows',
+              icon: CupertinoIcons.sidebar_left,
+              iconColor: colors.purple,
+              trailing: LiquidPrismSwitch(
+                label: 'Sidebar',
+                value: model.sidebar,
+                onChanged: (v) => model.change(() => model.sidebar = v),
+              ),
+            ),
+            ListRow(
               title: 'Tab labels',
               icon: CupertinoIcons.textformat,
               iconColor: colors.orange,

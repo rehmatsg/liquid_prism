@@ -6,9 +6,11 @@ library;
 
 export 'src/button.dart' show GlassButtonStyle, LiquidPrismButton;
 export 'src/chrome_layout.dart' show GlassChromePlacement, LiquidPrismScaffold;
+export 'src/sidebar.dart' show GlassTabBarPlacement;
 export 'src/system_chrome.dart'
     show
         GlassReservedRegion,
+        GlassSizeClass,
         GlassSystemChrome,
         GlassVerticalBarBehavior,
         LiquidPrismSystemChrome;

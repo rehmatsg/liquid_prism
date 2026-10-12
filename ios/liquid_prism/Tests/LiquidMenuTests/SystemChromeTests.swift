@@ -17,6 +17,7 @@ final class SystemChromeTests: XCTestCase {
     let map = chrome.map
     XCTAssertEqual(map["supported"] as? Bool, true)
     XCTAssertEqual(map["verticalBarEdge"] as? String, "right")
+    XCTAssertTrue(map["horizontalSizeClass"] is NSNull)
     XCTAssertEqual(map["occlusions"] as? [[Double]], [[867, 0, 84, 120, 0, 0, 0, 0, 1]])
     XCTAssertEqual(map["divisions"] as? [[Double]], [[455.5, 0, 40, 669, 20, 0, 20, 0, 0]])
   }

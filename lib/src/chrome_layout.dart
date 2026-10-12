@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 import 'menu/menu.dart';
 import 'menu/menu_elements.dart';
+import 'sidebar.dart';
 import 'system_chrome.dart';
 import 'tab_bar.dart';
 import 'toolbar.dart';
@@ -86,7 +87,7 @@ class LiquidPrismChrome extends InheritedWidget {
 /// Its [MediaQueryData.padding] includes the space the chrome covers, which
 /// scroll views apply automatically. Use [SafeArea] or read the padding for
 /// anything else that must stay clear.
-class LiquidPrismScaffold extends StatelessWidget {
+class LiquidPrismScaffold extends StatefulWidget {
   const LiquidPrismScaffold({
     super.key,
     required this.body,
@@ -95,6 +96,7 @@ class LiquidPrismScaffold extends StatelessWidget {
     this.tabBar,
     this.placement,
     this.backgroundColor,
+    this.tabBarPlacement = GlassTabBarPlacement.automatic,
   });
 
   /// Full-window content. Usually a scroll view.
@@ -118,12 +120,44 @@ class LiquidPrismScaffold extends StatelessWidget {
   /// Painted behind [body]. Null leaves the window transparent.
   final Color? backgroundColor;
 
+  /// [GlassTabBarPlacement.sidebar] lists a [LiquidPrismTabBar]'s tabs in a
+  /// leading sidebar while the window has regular width, as on the unfolded
+  /// iPhone Duo. People can hide it; the tabs then return to the tab bar.
+  final GlassTabBarPlacement tabBarPlacement;
+
   /// The placement of the nearest scaffold, or null outside one.
   static GlassChromePlacement? placementOf(BuildContext context) =>
       LiquidPrismChrome.maybeOf(context)?.placement;
 
   /// The top bar's measured height: 44 pt navigation capsules.
   static const double topBarHeight = 44;
+
+  @override
+  State<LiquidPrismScaffold> createState() => _LiquidPrismScaffoldState();
+
+  /// One "More" item whose native menu holds every action.
+  static GlassToolbarItem _overflow(List<GlassToolbarItem> actions) =>
+      GlassToolbarItem.menu(
+        icon: const _Ellipsis(),
+        label: 'More',
+        menu: LiquidMenu(
+          children: [
+            for (final item in actions)
+              if (item.menu case final menu?)
+                LiquidSubmenu(title: item.label, children: menu.children)
+              else
+                LiquidMenuAction<void>(
+                  title: item.label,
+                  enabled: item.onPressed != null,
+                  onSelected: () => item.onPressed?.call(),
+                ),
+          ],
+        ),
+      );
+}
+
+class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
+  bool _sidebarHidden = false;
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +180,7 @@ class LiquidPrismScaffold extends StatelessWidget {
   }) {
     final media = MediaQuery.of(context);
     final resolved =
-        placement ??
+        widget.placement ??
         switch (system) {
           null => GlassChromePlacement.resolve(media.viewPadding),
           GlassSystemChrome(hasVerticalBar: false) =>
@@ -157,6 +191,29 @@ class LiquidPrismScaffold extends StatelessWidget {
         };
     final rail = resolved.isRail;
     final keyboard = media.viewInsets.bottom > 0;
+
+    // The sidebar replaces the tab bar at regular width when requested. Use
+    // UIKit's size class where reported; elsewhere, a width fallback.
+    final regular = switch (system?.horizontalSizeClass) {
+      GlassSizeClass.regular => true,
+      GlassSizeClass.compact => false,
+      null => media.size.width >= 700,
+    };
+    final tabBar = widget.tabBar;
+    final sidebarTabs =
+        widget.tabBarPlacement == GlassTabBarPlacement.sidebar &&
+            regular &&
+            tabBar is LiquidPrismTabBar
+        ? tabBar
+        : null;
+    final sidebar = sidebarTabs != null && !_sidebarHidden;
+    final sidebarToggle = sidebarTabs != null && _sidebarHidden;
+    // Native: leading, unless the vertical bar already holds that edge.
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final sidebarLeft = resolved == GlassChromePlacement.leftRail
+        ? false
+        : !rtl;
+
     final occlusions = [
       for (final region in system?.occlusions ?? const <GlassReservedRegion>[])
         if (region.active) region.frame,
@@ -167,12 +224,19 @@ class LiquidPrismScaffold extends StatelessWidget {
       resolved,
       occlusions,
     );
-    final items = rail && !_fitsRail(media.size.height - actionsTop)
-        ? [_overflow(actions)]
-        : actions;
+    final showTabBar = tabBar != null && !sidebar && (rail || !keyboard);
+    final items =
+        rail &&
+            !_fitsRail(
+              media.size.height - actionsTop,
+              tabs: showTabBar ? tabBar : null,
+            )
+        ? [LiquidPrismScaffold._overflow(widget.actions)]
+        : widget.actions;
     final features = addFeatures
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
+    final top = math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         placement: resolved,
@@ -180,8 +244,14 @@ class LiquidPrismScaffold extends StatelessWidget {
         keyboard: media.viewInsets.bottom,
         textDirection: Directionality.of(context),
         iOS: defaultTargetPlatform == TargetPlatform.iOS,
-        topBar: leading != null || (!rail && actions.isNotEmpty),
+        topBar:
+            widget.leading != null ||
+            sidebarToggle ||
+            (!rail && widget.actions.isNotEmpty),
         actionsTop: actionsTop,
+        sidebar: sidebar
+            ? (sidebarLeft ? AxisDirection.left : AxisDirection.right)
+            : null,
       ),
       children: [
         LayoutId(
@@ -194,11 +264,28 @@ class LiquidPrismScaffold extends StatelessWidget {
                   : media.copyWith(
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
-              child: body,
+              child: widget.body,
             ),
           ),
         ),
-        if (leading case final leading?)
+        if (sidebar)
+          LayoutId(
+            id: _Slot.sidebar,
+            child: GlassSidebar(
+              tabBar: sidebarTabs,
+              top: top,
+              onHide: () => setState(() => _sidebarHidden = true),
+            ),
+          ),
+        if (sidebarToggle)
+          LayoutId(
+            id: _Slot.sidebarToggle,
+            child: SidebarToggle(
+              label: 'Show sidebar',
+              onPressed: () => setState(() => _sidebarHidden = false),
+            ),
+          ),
+        if (widget.leading case final leading?)
           LayoutId(id: _Slot.leading, child: leading),
         if (items.isNotEmpty)
           LayoutId(
@@ -214,7 +301,7 @@ class LiquidPrismScaffold extends StatelessWidget {
             ),
           ),
         // A bottom tab bar would sit under the keyboard; native hides it too.
-        if (tabBar case final tabBar? when rail || !keyboard)
+        if (showTabBar)
           LayoutId(
             id: _Slot.tabBar,
             child: LiquidPrismChrome(
@@ -225,47 +312,27 @@ class LiquidPrismScaffold extends StatelessWidget {
           ),
       ],
     );
-    return switch (backgroundColor) {
+    return switch (widget.backgroundColor) {
       final color? => ColoredBox(color: color, child: layout),
       null => layout,
     };
   }
 
-  /// Whether the actions and tab bar both fit a rail of [height] below the
+  /// Whether the actions and [tabs] both fit a rail of [height] below the
   /// actions' top, with the measured gaps.
-  bool _fitsRail(double height) {
+  bool _fitsRail(double height, {required Widget? tabs}) {
+    final actions = widget.actions;
     if (actions.length < 2) return true;
     final actionsLength =
         actions.fold<double>(0, (sum, item) => sum + item.width) +
         14 * (actions.length - 1) +
         10;
-    final tabs = switch (tabBar) {
+    final tabsLength = switch (tabs) {
       LiquidPrismTabBar(:final tabs) => 50.0 * tabs.length + 12,
-      null => 0.0,
       _ => 0.0,
     };
-    return actionsLength + _ChromeLayout._railGap + tabs + 24 <= height;
+    return actionsLength + _ChromeLayout._railGap + tabsLength + 24 <= height;
   }
-
-  /// One "More" item whose native menu holds every action.
-  static GlassToolbarItem _overflow(List<GlassToolbarItem> actions) =>
-      GlassToolbarItem.menu(
-        icon: const _Ellipsis(),
-        label: 'More',
-        menu: LiquidMenu(
-          children: [
-            for (final item in actions)
-              if (item.menu case final menu?)
-                LiquidSubmenu(title: item.label, children: menu.children)
-              else
-                LiquidMenuAction<void>(
-                  title: item.label,
-                  enabled: item.onPressed != null,
-                  onSelected: () => item.onPressed?.call(),
-                ),
-          ],
-        ),
-      );
 }
 
 /// Three dots in the icon theme's size and color: the overflow symbol,
@@ -301,7 +368,7 @@ class _Ellipsis extends StatelessWidget {
   }
 }
 
-enum _Slot { body, leading, actions, tabBar }
+enum _Slot { body, sidebar, sidebarToggle, leading, actions, tabBar }
 
 /// Body constraints that also carry the chrome's coverage, the technique
 /// Flutter's own Scaffold uses to hand layout-time sizes to its body.
@@ -352,6 +419,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.iOS,
     required this.topBar,
     required this.actionsTop,
+    required this.sidebar,
   });
 
   final GlassChromePlacement placement;
@@ -359,6 +427,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final double keyboard, actionsTop;
   final TextDirection textDirection;
   final bool iOS, topBar;
+
+  /// The physical edge of a visible sidebar.
+  final AxisDirection? sidebar;
 
   /// Where rail actions start: below the system UI that UIKit reports in the
   /// rail (the status bar), else below the top safe area, else the measured
@@ -410,30 +481,54 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     // the rail it keeps a 24 pt margin.
     final top = math.max(viewPadding.top, _minimumTop);
     final rtl = textDirection == TextDirection.rtl;
-    final contentLeft = viewPadding.left;
-    final contentRight = size.width - viewPadding.right;
+    // The rail sits inside the safe area; the bars and content sit beside
+    // the sidebar too.
+    final railLeft = viewPadding.left;
+    final railRight = size.width - viewPadding.right;
+    final sidebarWidth = NativeSidebar.width;
+    final contentLeft = sidebar == AxisDirection.left
+        ? math.max(railLeft, sidebarWidth)
+        : railLeft;
+    final contentRight = sidebar == AxisDirection.right
+        ? math.min(railRight, size.width - sidebarWidth)
+        : railRight;
     var covered = EdgeInsets.only(
       top: topBar ? top + LiquidPrismScaffold.topBarHeight : top,
     );
 
-    if (hasChild(_Slot.leading)) {
-      final leading = layoutChild(_Slot.leading, BoxConstraints.loose(size));
-      final x = rtl
-          ? contentRight - _edge - leading.width
-          : contentLeft + _edge;
+    if (hasChild(_Slot.sidebar)) {
+      layoutChild(
+        _Slot.sidebar,
+        BoxConstraints.tight(Size(sidebarWidth, size.height)),
+      );
       positionChild(
-        _Slot.leading,
+        _Slot.sidebar,
         Offset(
-          x,
-          top + (LiquidPrismScaffold.topBarHeight - leading.height) / 2,
+          sidebar == AxisDirection.right ? size.width - sidebarWidth : 0,
+          0,
         ),
       );
     }
 
-    // Rail column: 48 pt wide, 12 pt outside the content edge.
+    // Top-leading controls: the sidebar toggle, then the leading widget.
+    var leadingOffset = _edge;
+    for (final slot in [_Slot.sidebarToggle, _Slot.leading]) {
+      if (!hasChild(slot)) continue;
+      final child = layoutChild(slot, BoxConstraints.loose(size));
+      final x = rtl
+          ? contentRight - leadingOffset - child.width
+          : contentLeft + leadingOffset;
+      positionChild(
+        slot,
+        Offset(x, top + (LiquidPrismScaffold.topBarHeight - child.height) / 2),
+      );
+      leadingOffset += child.width + 8;
+    }
+
+    // Rail column: 48 pt wide, 12 pt outside the safe area's edge.
     double railX(double width) => right
-        ? contentRight + _railGap + (48 - width) / 2
-        : contentLeft - _railGap - 48 + (48 - width) / 2;
+        ? railRight + _railGap + (48 - width) / 2
+        : railLeft - _railGap - 48 + (48 - width) / 2;
 
     if (hasChild(_Slot.actions)) {
       final actions = layoutChild(_Slot.actions, BoxConstraints.loose(size));
@@ -488,8 +583,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
     covered = covered.copyWith(
       bottom: math.max(covered.bottom, keyboard),
-      left: viewPadding.left,
-      right: viewPadding.right,
+      left: contentLeft,
+      right: size.width - contentRight,
     );
     layoutChild(_Slot.body, _BodyConstraints(size, covered));
     positionChild(_Slot.body, Offset.zero);
@@ -503,5 +598,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       textDirection != old.textDirection ||
       iOS != old.iOS ||
       topBar != old.topBar ||
-      actionsTop != old.actionsTop;
+      actionsTop != old.actionsTop ||
+      sidebar != old.sidebar;
 }

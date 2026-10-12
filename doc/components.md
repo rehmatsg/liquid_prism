@@ -214,6 +214,13 @@ The scaffold hides a bottom tab bar while the keyboard is up and adds the
 keyboard height to the body's bottom padding. Native popup menus close when the
 window resizes, as UIKit menus do.
 
+Set `tabBarPlacement: GlassTabBarPlacement.sidebar` to list a
+`LiquidPrismTabBar`'s tabs in a leading sidebar while the window has regular
+width, such as the unfolded iPhone Duo. Apple suggests it for
+information-dense apps. A toggle hides it; the tabs then return to the tab bar
+or rail, and a toggle in the top bar brings the sidebar back. Regular width
+comes from UIKit's size class on iOS 27.1, or a 700 pt window elsewhere.
+
 ### Your own sheets, dialogs and bars
 
 `LiquidPrismSystemChrome` exposes what UIKit reports, so screens that don't use

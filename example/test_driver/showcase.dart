@@ -86,6 +86,7 @@ Future<void> main() async {
           model.segment = 0;
           model.taps = 0;
           model.favorite = false;
+          model.sidebar = request['sidebar'] == true;
         });
         final navigator = Navigator.of(home!);
         navigator.popUntil((route) => route.isFirst);

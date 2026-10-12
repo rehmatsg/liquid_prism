@@ -26,6 +26,10 @@ public struct SystemChrome: Equatable, Sendable {
   public var verticalBarEdge: UIRectEdge?
   /// Whether the app opted out with `LiquidPrismViewController`.
   public var verticalBarDisabled = false
+  /// The view's size classes, which an iPhone app on iPhone Duo can combine
+  /// in any way.
+  public var horizontalSizeClass: UIUserInterfaceSizeClass = .unspecified
+  public var verticalSizeClass: UIUserInterfaceSizeClass = .unspecified
   /// Regions covered by system UI, such as the status bar in the rail or the
   /// camera. Inactive regions are included with `active == false`.
   public var occlusions: [Region]
@@ -38,6 +42,8 @@ public struct SystemChrome: Equatable, Sendable {
   @MainActor
   public init(view: UIView, verticalBarDisabled: Bool = false) {
     self.verticalBarDisabled = verticalBarDisabled
+    horizontalSizeClass = view.traitCollection.horizontalSizeClass
+    verticalSizeClass = view.traitCollection.verticalSizeClass
     guard #available(iOS 27.1, *) else {
       supported = false
       verticalBarEdge = nil
@@ -73,6 +79,14 @@ public struct SystemChrome: Equatable, Sendable {
     self.divisions = divisions
   }
 
+  private static func name(_ sizeClass: UIUserInterfaceSizeClass) -> Any {
+    switch sizeClass {
+    case .compact: "compact"
+    case .regular: "regular"
+    default: NSNull()
+    }
+  }
+
   /// The channel payload: regions are `[x, y, width, height, marginLeft,
   /// marginTop, marginRight, marginBottom, active]`.
   public var map: [String: Any] {
@@ -92,6 +106,8 @@ public struct SystemChrome: Equatable, Sendable {
       "supported": supported,
       "verticalBarEdge": edgeName,
       "verticalBarBehavior": verticalBarDisabled ? "disabled" : "automatic",
+      "horizontalSizeClass": Self.name(horizontalSizeClass),
+      "verticalSizeClass": Self.name(verticalSizeClass),
       "occlusions": occlusions.map(encode),
       "divisions": divisions.map(encode),
     ]

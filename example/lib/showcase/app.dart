@@ -124,6 +124,9 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
   @override
   Widget build(BuildContext context) => LiquidPrismScaffold(
     backgroundColor: GlassColors.of(context).groupedBackground,
+    tabBarPlacement: model.sidebar
+        ? GlassTabBarPlacement.sidebar
+        : GlassTabBarPlacement.automatic,
     actions: appearanceActions(model),
     tabBar: LiquidPrismTabBar(
       key: const ValueKey('showcase-navigation'),

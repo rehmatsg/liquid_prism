@@ -5,6 +5,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 class ShowcaseModel extends ChangeNotifier {
   bool dark = false, clear = false, labels = true, verticalBar = true;
+  bool sidebar = false;
   String accent = 'blue';
   int wallpaper = 0;
   double frost = 4, refraction = 24;

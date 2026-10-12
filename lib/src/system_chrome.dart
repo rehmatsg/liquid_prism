@@ -16,6 +16,10 @@ enum GlassVerticalBarBehavior {
   disabled,
 }
 
+/// A UIKit size class. On iPhone Duo an iPhone app can have any combination:
+/// compact width outside, regular width and height inside.
+enum GlassSizeClass { compact, regular }
+
 /// A region of the Flutter view reserved by the system
 /// (`UIView.ReservedRegion`), in logical coordinates.
 @immutable
@@ -63,6 +67,8 @@ class GlassSystemChrome {
   const GlassSystemChrome({
     this.verticalBarEdge,
     this.verticalBarBehavior = GlassVerticalBarBehavior.automatic,
+    this.horizontalSizeClass,
+    this.verticalSizeClass,
     this.occlusions = const [],
     this.divisions = const [],
   });
@@ -92,6 +98,11 @@ class GlassSystemChrome {
           in (value as List<Object?>? ?? const []).cast<List<Object?>>())
         region(values),
     ];
+    GlassSizeClass? sizeClass(Object? value) => switch (value) {
+      'compact' => GlassSizeClass.compact,
+      'regular' => GlassSizeClass.regular,
+      _ => null,
+    };
     return GlassSystemChrome(
       verticalBarEdge: switch (map['verticalBarEdge']) {
         'left' => AxisDirection.left,
@@ -101,6 +112,8 @@ class GlassSystemChrome {
       verticalBarBehavior: map['verticalBarBehavior'] == 'disabled'
           ? GlassVerticalBarBehavior.disabled
           : GlassVerticalBarBehavior.automatic,
+      horizontalSizeClass: sizeClass(map['horizontalSizeClass']),
+      verticalSizeClass: sizeClass(map['verticalSizeClass']),
       occlusions: regions(map['occlusions']),
       divisions: regions(map['divisions']),
     );
@@ -115,6 +128,9 @@ class GlassSystemChrome {
   /// The app's preference, set with
   /// [LiquidPrismSystemChrome.setVerticalBarBehavior].
   final GlassVerticalBarBehavior verticalBarBehavior;
+
+  /// The Flutter view's size classes. Choose layouts by these, not by device.
+  final GlassSizeClass? horizontalSizeClass, verticalSizeClass;
 
   /// Whether bars sit in a vertical bar on [verticalBarEdge] right now.
   bool get hasVerticalBar =>
@@ -146,6 +162,8 @@ class GlassSystemChrome {
       other is GlassSystemChrome &&
       other.verticalBarEdge == verticalBarEdge &&
       other.verticalBarBehavior == verticalBarBehavior &&
+      other.horizontalSizeClass == horizontalSizeClass &&
+      other.verticalSizeClass == verticalSizeClass &&
       listEquals(other.occlusions, occlusions) &&
       listEquals(other.divisions, divisions);
 
@@ -153,6 +171,8 @@ class GlassSystemChrome {
   int get hashCode => Object.hash(
     verticalBarEdge,
     verticalBarBehavior,
+    horizontalSizeClass,
+    verticalSizeClass,
     Object.hashAll(occlusions),
     Object.hashAll(divisions),
   );
