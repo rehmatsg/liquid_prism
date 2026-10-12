@@ -318,8 +318,11 @@ flutter pub get
 ../tool/run_example.sh <device-id>
 ```
 
-The example demonstrates surfaces, tint, buttons, dark/light appearance, and
-interactive tabs over an original procedural background.
+The example is a complete showcase with an Explore gallery, a live material
+Studio, and a searchable Library of all nine components. Try appearance and
+palette changes, draggable glass, native controls, grouped toolbars, search,
+and expandable sheets over three original procedural canvases. See the
+[showcase guide](example/README.md) for its entry points and recording tools.
 
 Run `./tool/check.sh` from the repository root for formatting, analysis, and tests.
 See [contributing](CONTRIBUTING.md) for mobile build checks.

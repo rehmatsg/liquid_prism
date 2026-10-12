@@ -1,312 +1,162 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism_example/main.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
 
 void main() {
   testWidgets(
-    'button actions and favorite survive appearance and material changes',
+    'library finds all components, filters, and restores after a route',
     (tester) async {
-      _phone(tester);
+      phone(tester);
       await tester.pumpWidget(const LiquidPrismExample());
-      await _press(tester, 'Add a tap');
-      await _press(tester, 'Add a prominent tap');
-      expect(find.text('2 taps'), findsOneWidget);
-      await _press(tester, 'Favorite');
-      expect(_favorite(tester), ui.Tristate.isTrue);
-      expect(find.byIcon(CupertinoIcons.heart_fill), findsOneWidget);
-      await _press(tester, 'Toggle appearance');
-      expect(find.text('Light'), findsOneWidget);
       expect(
-        CupertinoTheme.of(tester.element(_button('Toggle appearance')))
-            .brightness,
-        Brightness.light,
-      );
-      await _press(tester, 'Toggle glass material');
-      expect(find.text('Clear'), findsOneWidget);
-      expect(
-        LiquidPrismTheme.of(tester.element(_button('Toggle glass material')))
-            .glass,
-        Glass.clear,
-      );
-      expect(find.text('2 taps'), findsOneWidget);
-      expect(_favorite(tester), ui.Tristate.isTrue);
-      await _press(tester, 'Add a tap');
-      expect(find.text('3 taps'), findsOneWidget);
-      await _press(tester, 'Favorite');
-      expect(_favorite(tester), ui.Tristate.isFalse);
-      expect(find.byIcon(CupertinoIcons.heart), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
-    'tabs commit visible content on tap and drag with accessible hidden labels',
-    (tester) async {
-      _phone(tester);
-      await tester.pumpWidget(const LiquidPrismExample());
-      expect(_title('Explore'), findsOneWidget);
-      await tester.tap(_tab('Saved'));
-      await tester.pumpAndSettle();
-      expect(_title('Saved'), findsOneWidget);
-      _expectSelection(tester, 'Saved');
-      final held = await tester.startGesture(tester.getCenter(_tab('Saved')));
-      await tester.pump(const Duration(milliseconds: 120));
-      await held.moveTo(tester.getCenter(_tab('Explore')));
-      await tester.pump(const Duration(milliseconds: 120));
-      expect(
-        _title('Saved'),
+        find.text('A little glass.\nA lot of possibility.'),
         findsOneWidget,
-        reason: 'Dragging only previews until the consumer accepts on release',
       );
-      await held.up();
-      await tester.pumpAndSettle();
-      expect(_title('Explore'), findsOneWidget);
-      _expectSelection(tester, 'Explore');
-      await _press(tester, 'Toggle tab labels');
-      for (final label in ['Explore', 'Saved', 'Settings']) {
+      await tab(tester, 'Library');
+      expect(find.text('9 COMPONENTS'), findsOneWidget);
+      for (final info in components) {
+        await press(tester, 'Explore ${info.title}');
         expect(
-          find.descendant(
-            of: find.byType(LiquidPrismTabBar),
-            matching: find.text(label),
-          ),
-          findsNothing,
+          find.text('THE LIVE PREVIEW'),
+          info.kind == ComponentKind.surfaces ? findsNothing : findsOneWidget,
         );
-        expect(tester.getSemantics(_tab(label)).label, label);
+        expect(find.text(info.title), findsNWidgets(2));
+        expect(tester.takeException(), isNull);
+        await press(tester, 'Back to showcase');
       }
-      tester.semantics.tap(find.semantics.byLabel('Settings'));
+      await tester.ensureVisible(find.byType(CupertinoTextField));
+      await tester.enterText(find.byType(CupertinoTextField), 'sheet');
       await tester.pumpAndSettle();
-      expect(_title('Settings'), findsOneWidget);
-      _expectSelection(tester, 'Settings');
-      await _press(tester, 'Toggle tab labels');
-      expect(
-        find.descendant(
-          of: find.byType(LiquidPrismTabBar),
-          matching: find.text('Settings'),
-        ),
-        findsOneWidget,
+      expect(find.text('1 COMPONENT'), findsOneWidget);
+      expect(find.text('Buttons'), findsNothing);
+      await press(tester, 'Explore Sheets');
+      await press(tester, 'Back to showcase');
+      expect(find.text('1 COMPONENT'), findsOneWidget);
+      await tester.enterText(
+        find.byType(CupertinoTextField),
+        'not-a-component',
       );
+      await tester.pumpAndSettle();
+      expect(find.text('Nothing here just yet.'), findsOneWidget);
+      await press(tester, 'Reset library search');
+      expect(find.text('9 COMPONENTS'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets(
-    'native tint picker updates controls and resolves the new appearance',
+    'studio settings propagate to routes and reset without losing interactions',
     (tester) async {
-      _phone(tester);
+      phone(tester);
       await tester.pumpWidget(const LiquidPrismExample());
-      await _press(tester, 'Use purple tint');
-      final selected = tester.widget<LiquidPrismButton>(
-        _button('Use purple tint'),
+      await tab(tester, 'Studio');
+      await input(tester, 'Dark appearance');
+      await input(tester, 'Clear material');
+      await press(tester, 'Use purple tint');
+      await tab(tester, 'Library');
+      await press(tester, 'Explore Buttons');
+      final button = find.byWidgetPredicate(
+        (w) => w is LiquidPrismButton && w.label == 'Add a prominent tap',
       );
-      expect(selected.selected, isTrue);
-      expect(selected.glass?.tintColor, GlassColors.dark.purple);
-      var context = tester.element(_button('Add a prominent tap'));
+      final context = tester.element(button);
+      expect(LiquidPrismTheme.brightnessOf(context), Brightness.dark);
       expect(LiquidPrismTheme.tintOf(context), GlassColors.dark.purple);
-      await _press(tester, 'Toggle appearance');
-      context = tester.element(_button('Add a prominent tap'));
-      expect(LiquidPrismTheme.tintOf(context), GlassColors.light.purple);
+      expect(LiquidPrismTheme.of(context).glass, Glass.clear);
+      await press(tester, 'Add a prominent tap');
+      await press(tester, 'Favorite');
+      expect(find.text('1 tap'), findsOneWidget);
+      await press(tester, 'Back to showcase');
+      await tab(tester, 'Studio');
+      await press(tester, 'Restore defaults');
+      await tab(tester, 'Library');
+      await press(tester, 'Explore Buttons');
+      expect(find.text('1 tap'), findsOneWidget);
+      expect(find.byIcon(CupertinoIcons.heart_fill), findsOneWidget);
       expect(
-        tester
-            .widget<LiquidPrismButton>(_button('Use purple tint'))
-            .glass
-            ?.tintColor,
-        GlassColors.light.purple,
+        LiquidPrismTheme.tintOf(tester.element(button)),
+        GlassColors.light.blue,
       );
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('compact large-text layout keeps the demo controls reachable', (
-    tester,
-  ) async {
-    _phone(tester, size: const Size(320, 640));
-    tester.platformDispatcher.textScaleFactorTestValue = 2;
-    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  testWidgets('sheet expands and returns its action result', (tester) async {
+    phone(tester);
     await tester.pumpWidget(const LiquidPrismExample());
-    expect(tester.takeException(), isNull);
-    await _press(tester, 'Add a prominent tap');
-    await tester.ensureVisible(find.text('1 taps'));
+    await tab(tester, 'Library');
+    await press(tester, 'Explore Sheets');
+    await press(tester, 'Open a sheet');
+    expect(find.text('Good ideas\nneed a little space.'), findsOneWidget);
+    await tester.drag(
+      find.text('Good ideas\nneed a little space.'),
+      const Offset(0, -300),
+    );
     await tester.pumpAndSettle();
-    expect(find.text('1 taps').hitTestable(), findsOneWidget);
-    await _press(tester, 'Toggle appearance');
-    await _press(tester, 'Toggle glass material');
-    await _press(tester, 'Toggle tab labels');
-    await tester.tap(_tab('Saved'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(_title('Saved'));
-    await tester.pumpAndSettle();
-    expect(_title('Saved').hitTestable(), findsOneWidget);
-    _expectSelection(tester, 'Saved');
-    await _press(tester, 'Open another page');
-    expect(find.text('Another page'), findsOneWidget);
-    await tester.ensureVisible(find.text('Another page'));
-    await tester.pumpAndSettle();
-    expect(find.text('Another page').hitTestable(), findsOneWidget);
-    await _press(tester, 'Back to gallery');
-    expect(find.text('Another page'), findsNothing);
-    _expectSelection(tester, 'Saved');
+    await press(tester, 'Keep this feeling');
+    expect(find.text('A good feeling, saved.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'pushed routes inherit settings and cancel or complete swipe-back without losing home state',
-    (tester) async {
-      _phone(tester);
+  for (final size in [const Size(320, 640), const Size(1024, 768)]) {
+    testWidgets('showcase and every preview fit $size with larger text', (
+      tester,
+    ) async {
+      phone(tester, size: size);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await tester.pumpWidget(const LiquidPrismExample());
-      await _press(tester, 'Add a tap');
-      await _press(tester, 'Favorite');
-      await tester.tap(_tab('Saved'));
-      await tester.pumpAndSettle();
-
-      Future<double> openDetail() async {
-        final open = _button('Open another page');
-        await tester.ensureVisible(open);
-        await tester.pumpAndSettle();
-        final offset = _scrollOffset(tester);
-        await tester.tap(open);
-        await tester.pumpAndSettle();
-        expect(find.text('Another page'), findsOneWidget);
-        expect(open, findsNothing);
-        return offset;
-      }
-
-      void expectDetailTheme(Brightness brightness, Glass glass) {
-        final context = tester.element(_button('Back to gallery'));
-        final theme = LiquidPrismTheme.of(context);
-        expect(theme.brightness, brightness);
-        expect(CupertinoTheme.of(context).brightness, brightness);
-        expect(theme.glass, glass);
-      }
-
-      Future<void> expectHome(double scrollOffset) async {
-        expect(find.text('Another page'), findsNothing);
-        expect(_scrollOffset(tester), closeTo(scrollOffset, .01));
-        expect(find.text('1 taps'), findsOneWidget);
-        expect(_title('Saved'), findsOneWidget);
-        _expectSelection(tester, 'Saved');
-        await tester.ensureVisible(_button('Favorite'));
-        await tester.pumpAndSettle();
-        expect(_favorite(tester), ui.Tristate.isTrue);
-      }
-
-      final firstOffset = await openDetail();
-      expectDetailTheme(Brightness.dark, Glass.regular);
-      await _press(tester, 'Back to gallery');
-      await expectHome(firstOffset);
-
-      await _press(tester, 'Toggle appearance');
-      await _press(tester, 'Toggle glass material');
-      final secondOffset = await openDetail();
-      expectDetailTheme(Brightness.light, Glass.clear);
-      final restingTitle = tester.getTopLeft(find.text('Another page'));
-      final cancelled = await tester.startGesture(const Offset(1, 300));
-      await cancelled.moveTo(
-        const Offset(41, 300),
-        timeStamp: const Duration(milliseconds: 120),
-      );
-      await tester.pump();
-      await cancelled.moveTo(
-        const Offset(81, 300),
-        timeStamp: const Duration(milliseconds: 240),
-      );
-      await tester.pump();
-      expect(
-        tester.getTopLeft(find.text('Another page')).dx,
-        greaterThan(restingTitle.dx + 10),
-        reason: 'The edge gesture must visibly control the route before cancellation',
-      );
-      // A stationary sample removes fling velocity; distance controls release.
-      await cancelled.moveTo(
-        const Offset(81, 300),
-        timeStamp: const Duration(milliseconds: 600),
-      );
-      await cancelled.up(timeStamp: const Duration(milliseconds: 800));
-      await tester.pumpAndSettle();
-      expect(find.text('Another page'), findsOneWidget);
-      expect(tester.getTopLeft(find.text('Another page')), restingTitle);
-      expectDetailTheme(Brightness.light, Glass.clear);
-
-      final completed = await tester.startGesture(const Offset(1, 300));
-      await completed.moveTo(
-        const Offset(151, 300),
-        timeStamp: const Duration(milliseconds: 200),
-      );
-      await tester.pump();
-      await completed.moveTo(
-        const Offset(331, 300),
-        timeStamp: const Duration(milliseconds: 400),
-      );
-      await tester.pump();
-      await completed.moveTo(
-        const Offset(331, 300),
-        timeStamp: const Duration(milliseconds: 650),
-      );
-      await completed.up(timeStamp: const Duration(milliseconds: 800));
-      await tester.pumpAndSettle();
-      await expectHome(secondOffset);
-      expect(find.text('Light'), findsOneWidget);
-      expect(find.text('Clear'), findsOneWidget);
       expect(tester.takeException(), isNull);
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
-  );
+      await tab(tester, 'Studio');
+      expect(tester.takeException(), isNull);
+      await tab(tester, 'Library');
+      for (final info in components) {
+        await press(tester, 'Explore ${info.title}');
+        expect(tester.takeException(), isNull, reason: info.title);
+        await press(tester, 'Back to showcase');
+      }
+      tester.view.physicalSize = const Size(600, 900);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
 
-double _scrollOffset(WidgetTester tester) => tester
-    .state<ScrollableState>(
-      find.descendant(
-        of: find.byType(SingleChildScrollView),
-        matching: find.byType(Scrollable),
-      ),
-    )
-    .position
-    .pixels;
-
-void _phone(WidgetTester tester, {Size size = const Size(402, 874)}) {
+void phone(WidgetTester tester, {Size size = const Size(402, 874)}) {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = size;
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetPhysicalSize);
 }
 
-Finder _button(String label) => find.byWidgetPredicate(
-  (widget) => widget is LiquidPrismButton && widget.label == label,
+Finder action(String label) => find.byWidgetPredicate(
+  (w) => w is LiquidPrismPressable && w.label == label,
 );
-
-Finder _tab(String label) => find.descendant(
-  of: find.byType(LiquidPrismTabBar),
-  matching: find.byWidgetPredicate(
-    (widget) => widget is Semantics && widget.properties.label == label,
-  ),
-);
-
-Finder _title(String label) => find.descendant(
-  of: find.byType(SingleChildScrollView),
-  matching: find.text(label),
-);
-
-Future<void> _press(WidgetTester tester, String label) async {
-  final control = _button(label);
-  await tester.ensureVisible(control);
+Future<void> press(WidgetTester tester, String label) async {
+  final target = action(label);
+  await tester.ensureVisible(target);
   await tester.pumpAndSettle();
-  await tester.tap(control);
+  await tester.tap(target);
   await tester.pumpAndSettle();
 }
 
-ui.Tristate _favorite(WidgetTester tester) =>
-    tester.getSemantics(_button('Favorite')).flagsCollection.isSelected;
+Future<void> input(WidgetTester tester, String label) async {
+  final target = find.byWidgetPredicate(
+    (w) => w is LiquidPrismSwitch && w.label == label,
+  );
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
+  await tester.tap(target);
+  await tester.pumpAndSettle();
+}
 
-void _expectSelection(WidgetTester tester, String selected) {
-  for (final label in ['Explore', 'Saved', 'Settings']) {
-    final node = tester.getSemantics(_tab(label));
-    expect(node.label, label);
-    expect(node.flagsCollection.isButton, isTrue);
-    expect(
-      node.flagsCollection.isSelected,
-      label == selected ? ui.Tristate.isTrue : ui.Tristate.isFalse,
-    );
-  }
+Future<void> tab(WidgetTester tester, String label) async {
+  await tester.tap(
+    find.descendant(
+      of: find.byKey(const ValueKey('showcase-navigation')),
+      matching: find.bySemanticsLabel(label),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
