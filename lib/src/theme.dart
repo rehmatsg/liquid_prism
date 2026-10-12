@@ -1,3 +1,5 @@
+import 'glass_transition.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -177,6 +179,7 @@ class LiquidPrismThemeData {
     this.toolbar,
     this.search,
     this.controlMotion,
+    this.transition,
   }) : assert(blur == null || (blur >= 0 && blur <= 12));
   final Brightness? brightness;
 
@@ -205,6 +208,9 @@ class LiquidPrismThemeData {
   final GlassSearchStyle? search;
   final GlassControlMotion? controlMotion;
 
+  /// Default enter/exit timing for [LiquidPrismVisibility].
+  final GlassTransitionStyle? transition;
+
   /// Return an updated theme. Null arguments keep existing values.
   LiquidPrismThemeData copyWith({
     Brightness? brightness,
@@ -225,6 +231,7 @@ class LiquidPrismThemeData {
     GlassToolbarStyle? toolbar,
     GlassSearchStyle? search,
     GlassControlMotion? controlMotion,
+    GlassTransitionStyle? transition,
   }) => LiquidPrismThemeData(
     brightness: brightness ?? this.brightness,
     materialBrightness: materialBrightness ?? this.materialBrightness,
@@ -244,6 +251,7 @@ class LiquidPrismThemeData {
     toolbar: toolbar ?? this.toolbar,
     search: search ?? this.search,
     controlMotion: controlMotion ?? this.controlMotion,
+    transition: transition ?? this.transition,
   );
 
   LiquidPrismThemeData merge(LiquidPrismThemeData other) =>
@@ -270,6 +278,9 @@ class LiquidPrismThemeData {
         search: (search ?? const GlassSearchStyle()).merge(other.search),
         controlMotion: (controlMotion ?? const GlassControlMotion()).merge(
           other.controlMotion,
+        ),
+        transition: (transition ?? const GlassTransitionStyle()).merge(
+          other.transition,
         ),
       );
 }

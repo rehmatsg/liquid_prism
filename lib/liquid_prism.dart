@@ -15,6 +15,12 @@ export 'src/system_chrome.dart'
         GlassVerticalBarBehavior,
         LiquidPrismSystemChrome;
 export 'src/glass.dart' show LiquidPrism, LiquidPrismGroup;
+export 'src/glass_transition.dart'
+    show
+        GlassTransition,
+        GlassTransitionStyle,
+        LiquidPrismPresence,
+        LiquidPrismVisibility;
 export 'src/material.dart' show Glass, GlassVariant, GlassShape;
 export 'src/motion.dart' show GlassMotion, GlassSpring, GlassControlMotion;
 export 'src/appearance.dart'

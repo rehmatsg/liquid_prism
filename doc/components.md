@@ -45,6 +45,27 @@ blur. An explicit `blur` overrides its frost. `GlassShape.rect` has continuous
 corners; `roundedRect` uses circular arcs. `circle` is inscribed in its bounds.
 `LiquidPrismGroup` can share compatible captures; see [rendering](rendering.md).
 
+### Enter and exit
+
+```dart
+LiquidPrismVisibility(
+  visible: isEditing,
+  child: LiquidPrismButton(onPressed: save, child: const Text('Done')),
+)
+```
+
+`LiquidPrismVisibility` materializes glass in and out, like SwiftUI's
+`glassEffectTransition(.materialize)`. The lens, frost, light and shadows grow
+from the live backdrop while content fades in and sharpens. The child stays
+mounted through its exit, ignores pointers and leaves semantics while hidden,
+and is then removed. `GlassTransition.identity` switches instantly; Reduce Motion
+uses a short fade. `GlassTransitionStyle` (widget `style` or theme `transition`)
+sets `enterSpring`, `exitSpring` and `contentBlur`.
+
+To drive presence yourself (a scroll, a drag), wrap the glass in
+`LiquidPrismPresence(progress: animation, child: ...)`. Nested presences multiply.
+Never fade glass with an ancestor `Opacity`: it cuts the lens off its backdrop.
+
 ## Buttons
 
 ```dart

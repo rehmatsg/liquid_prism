@@ -127,11 +127,22 @@ label, callback/menu, key and optional foreground. Group spacing is independent.
 | `iconSize`, `clearWidth` | 20⅓ / 36 |
 | `cancelWidth`, `cancelSpacing` | 48 / 12; cancellation hides if it cannot fit |
 | `shape`, `glass`, `optics`, `blur` | Capsule and component material overrides |
-| `focusSpring` | 250 ms with zero bounce |
+| `focusSpring` | 380 ms with zero bounce; field focus, shortening and cancel exit |
+| `cancelSpring` | 520 ms with 0.22 bounce; cancel slides in, scales up and fades in |
 
 Apply this through search `appearance` or theme `search`. Search `style` remains
 its direct editor `TextStyle`. Input configuration, custom prefix/suffix and
 controller/focus ownership stay on the widget. A custom suffix replaces clearing.
+
+## Transitions: `GlassTransitionStyle`
+
+| Fields | Default / meaning |
+| --- | --- |
+| `enterSpring` / `exitSpring` | 450 ms / 300 ms, zero bounce |
+| `contentBlur` | 8; content blur at zero presence, 0 fades only |
+
+Defaults are fitted by eye; native materialize timing has not been captured.
+Apply through `LiquidPrismVisibility.style` or theme `transition`.
 
 ## Motion
 

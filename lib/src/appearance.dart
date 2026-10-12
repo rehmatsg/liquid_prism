@@ -612,6 +612,7 @@ class GlassSearchStyle {
     this.optics,
     this.blur,
     this.focusSpring,
+    this.cancelSpring,
   }) : assert(height == null || height >= 44),
        assert(restingInset == null || restingInset >= 0),
        assert(iconSize == null || iconSize > 0),
@@ -639,8 +640,14 @@ class GlassSearchStyle {
   final LiquidPrismStyle? optics;
   final double? blur;
 
-  /// Focus and cancel-action expansion spring. Defaults to 250 ms, zero bounce.
+  /// Field focus spring: the inset dissolves and the field shortens to make
+  /// room for cancellation. Also hides the cancel action. Defaults to 380 ms,
+  /// zero bounce, matching the native 0.3833 s search transition.
   final GlassSpring? focusSpring;
+
+  /// Spring that slides, scales and fades the cancel action in after focus.
+  /// Defaults to 520 ms with 0.22 bounce.
+  final GlassSpring? cancelSpring;
 
   /// Keep existing fields when an argument is null.
   GlassSearchStyle copyWith({
@@ -662,6 +669,7 @@ class GlassSearchStyle {
     LiquidPrismStyle? optics,
     double? blur,
     GlassSpring? focusSpring,
+    GlassSpring? cancelSpring,
   }) => GlassSearchStyle(
     height: height ?? this.height,
     restingInset: restingInset ?? this.restingInset,
@@ -681,6 +689,7 @@ class GlassSearchStyle {
     optics: optics ?? this.optics,
     blur: blur ?? this.blur,
     focusSpring: focusSpring ?? this.focusSpring,
+    cancelSpring: cancelSpring ?? this.cancelSpring,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -707,5 +716,6 @@ class GlassSearchStyle {
           optics: other.optics ?? optics,
           blur: other.blur ?? blur,
           focusSpring: other.focusSpring ?? focusSpring,
+          cancelSpring: other.cancelSpring ?? cancelSpring,
         );
 }

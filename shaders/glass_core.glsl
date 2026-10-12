@@ -198,7 +198,10 @@ void shadeGlass() {
         rimAlpha = clamp(side*u_finish.y*0.3,0.,1.)*
                    max(outerCoverage-coverage,0.);
     }
-    if (coverage < 0.001) { frag_color = vec4(0.,0.,0.,rimAlpha); return; }
+    // u_state.z is absence, so the reserved zero default stays fully present.
+    // A premultiplied fade composites the glass over the live backdrop.
+    float presence = clamp(1.-u_state.z,0.,1.);
+    if (coverage < 0.001) { frag_color = vec4(0.,0.,0.,rimAlpha*presence); return; }
     vec3 color;
     if (u_optics.w > 0.001 && profile > 0.001) {
         vec2 split = mat2(u_transform.x, u_transform.z, u_transform.y, u_transform.w)
@@ -306,5 +309,5 @@ void shadeGlass() {
             dot(color,vec3(-0.0426,-0.1430,1.1856))) + 0.05;
         color = mix(color,clamp(pressed,0.,1.),u_state.x * 0.9);
     }
-    frag_color = vec4(color*coverage,coverage+rimAlpha);
+    frag_color = vec4(color*coverage,coverage+rimAlpha)*presence;
 }
