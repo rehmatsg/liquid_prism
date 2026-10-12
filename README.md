@@ -341,7 +341,7 @@ contracts. Native code is confined to the separate research reference app.
 | Sampling | Display-resolution geometry, bilinear sampling, and integration over compressed pixel footprints reduce jagged refraction at the rim. Gaussian blur runs before refraction; foreground content stays sharp. |
 | Materials | Regular and clear glass have different face and highlight treatments. Regular surfaces and buttons use a luminance response measured against iOS 27; tab bars retain their separate role calibration. |
 | Tint | All 12 named accents use full extracted regular-glass RGB matrices in light/dark appearances. Clear glass has separate matrices for blue, green, orange, and pink; unmeasured inputs retain the custom-color approximation. |
-| Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons and selected tabs share the measured iOS 27 resting palette on every platform, without foreground readback passes. |
+| Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons and selected tabs share the measured iOS 27 resting palette. The lifted tab pill refracts selected icons and labels in a separate GPU pass; content outside it stays sharp. |
 | Selection | The selected pill has its own color adjustment and an additional 2-point blur, including when bar blur is zero. The measured iOS 27 dark pill is darker than the iOS 26 treatment. |
 | Touch | A held native button expanded to about 1.10× its resting size. Springs were tuned by comparison; their timing was not extracted from Apple. |
 | Rendering cost | Simulator profiling motivated sharing compatible optical passes. Nearby, overlapping, clipped, scaled, or fractionally positioned surfaces retain separate passes to preserve their appearance. |

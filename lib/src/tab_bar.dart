@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_lens.dart';
+import 'superellipse.dart';
 import 'glass.dart';
 import 'foreground.dart';
 import 'material.dart';
@@ -19,6 +20,8 @@ import 'style.dart';
 import 'selection.dart';
 import 'tab_bar_style.dart';
 import 'theme.dart';
+
+part 'tab_content_lens.dart';
 
 @immutable
 final class LiquidPrismTab {
@@ -703,7 +706,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                           ),
                         ),
                       // Capture only the bar and its backdrop, then paint the
-                      // selection and crisp foreground above the refracting rim.
+                      // rest selection and separately refracted foreground.
                       if (lift > .001)
                         Positioned.fromRect(
                           rect: lens,
@@ -743,6 +746,9 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                             child: _SelectionWindow(
                               path: window,
                               color: selectedAccent,
+                              lens: foregroundPill,
+                              lift: lift,
+                              shape: selectionShape,
                               child: child!,
                             ),
                           ),
@@ -864,17 +870,27 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 
 /// Paints its child once, then again clipped to [path] with every pixel
 /// recoloured to [color]: the selected tint shows wherever the pill is.
-class _SelectionWindow extends SingleChildRenderObjectWidget {
-  const _SelectionWindow({
+class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
+  const _SelectionWindowPaint({
     required this.path,
     required this.color,
+    required this.lens,
+    required this.lift,
+    required this.shape,
+    required this.shader,
+    required this.pixelRatio,
     required super.child,
   });
   final Path? path;
   final Color color;
+  final Rect lens;
+  final double lift, pixelRatio;
+  final GlassShape shape;
+  final ui.FragmentShader? shader;
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderSelectionWindow(path, color);
+      _RenderSelectionWindow(path, color)
+        ..configure(shader, lens, lift, shape, pixelRatio);
   @override
   void updateRenderObject(
     BuildContext context,
@@ -882,7 +898,8 @@ class _SelectionWindow extends SingleChildRenderObjectWidget {
   ) {
     renderObject
       ..path = path
-      ..color = color;
+      ..color = color
+      ..configure(shader, lens, lift, shape, pixelRatio);
   }
 }
 
@@ -904,6 +921,66 @@ class _RenderSelectionWindow extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  ui.FragmentShader? _shader;
+  Rect _lens = Rect.zero;
+  double _lift = 0, _pixelRatio = 1;
+  GlassShape _shape = GlassShape.capsule;
+  void configure(
+    ui.FragmentShader? shader,
+    Rect lens,
+    double lift,
+    GlassShape shape,
+    double pixelRatio,
+  ) {
+    if (shader == _shader &&
+        lens == _lens &&
+        lift == _lift &&
+        shape == _shape &&
+        pixelRatio == _pixelRatio) {
+      return;
+    }
+    _shader = shader;
+    _lens = lens;
+    _lift = lift;
+    _shape = shape;
+    _pixelRatio = pixelRatio;
+    markNeedsPaint();
+  }
+
+  Size? _contourSize;
+  GlassShape? _contourShape;
+  List<double> _contour = [];
+  ui.ImageFilter? _contentFilter() {
+    final shader = _shader;
+    if (shader == null || _lift < .001) return null;
+    final contour = _shape.rect(_lens.size).shift(_lens.topLeft);
+    if (_contourSize != contour.size || _contourShape != _shape) {
+      _contourSize = contour.size;
+      _contourShape = _shape;
+      _contour = superellipseUniforms(contour.size, _shape.radius);
+    }
+    // Impeller crops the selected portal's input to its output clip. Express
+    // the lens relative to that crop, rather than the full foreground row.
+    final source = (Offset.zero & size).intersect(_path!.getBounds());
+    if (source.isEmpty) return null;
+    final values = [
+      contour.left - source.left,
+      contour.top - source.top,
+      contour.width,
+      contour.height,
+      _pixelRatio * getTransformTo(null).getMaxScaleOnAxis(),
+      _lift,
+      _shape.radius,
+      _shape.isSmooth ? 1.0 : 0.0,
+      ..._contour,
+    ];
+    for (var i = 0; i < values.length; i++) {
+      shader.setFloat(i + 2, values[i]);
+    }
+    return ui.ImageFilter.shader(shader);
+  }
+
+  final _warp = LayerHandle<ImageFilterLayer>();
   final _clip = LayerHandle<ClipPathLayer>();
   final _outsideClip = LayerHandle<ClipPathLayer>();
   final _filter = LayerHandle<ColorFilterLayer>();
@@ -919,6 +996,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
       _clip.layer = null;
       _outsideClip.layer = null;
       _filter.layer = null;
+      _warp.layer = null;
       return;
     }
     // The selected and unselected copies occupy complementary regions.
@@ -942,12 +1020,35 @@ class _RenderSelectionWindow extends RenderProxyBox {
       path.getBounds(),
       path,
       (context, offset) {
-        _filter.layer = context.pushColorFilter(
-          offset,
-          ui.ColorFilter.mode(_color, BlendMode.srcIn),
-          (context, offset) => context.paintChild(child, offset),
-          oldLayer: _filter.layer,
-        );
+        void selected(PaintingContext context, Offset offset) {
+          _filter.layer = context.pushColorFilter(
+            offset,
+            ui.ColorFilter.mode(_color, BlendMode.srcIn),
+            (context, offset) => context.paintChild(child, offset),
+            oldLayer: _filter.layer,
+          );
+        }
+
+        final filter = _contentFilter();
+        if (filter == null) {
+          _warp.layer = null;
+          selected(context, offset);
+        } else {
+          final layer = _warp.layer ??= ImageFilterLayer();
+          layer.offset = offset;
+          layer.imageFilter = filter;
+          context.pushLayer(layer, (context, _) {
+            // Establish the full foreground source extent. Glyph-only ink
+            // bounds otherwise shift the shader's lens coordinate system.
+            context.canvas.drawRect(
+              Offset.zero & size,
+              Paint()
+                ..color = const Color(0x00000000)
+                ..blendMode = BlendMode.src,
+            );
+            selected(context, Offset.zero);
+          }, offset);
+        }
       },
       oldLayer: _clip.layer,
     );
@@ -958,6 +1059,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _clip.layer = null;
     _outsideClip.layer = null;
     _filter.layer = null;
+    _warp.layer = null;
     super.dispose();
   }
 }

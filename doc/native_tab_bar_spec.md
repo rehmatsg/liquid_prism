@@ -167,6 +167,19 @@ using the captured 9 pt displacement and 36 pt SDF height. Its profile is
 implemented with the package's existing circular optical approximation;
 it does not claim to reproduce the private QuartzCore operator exactly.
 
+The selected icon/label copy now has its own transparent GPU filter using the
+captured ContentLensingView displacement **−14** and SDF height **11.2**. The
+filter pulls glyph samples inward near the moving pill's rim, while the flat
+center retains normal size. Tint is applied to the source before warping; the
+unselected copy is painted separately, outside the pill. This avoids applying
+the housing's broad underlay minification to the icons and labels. The source
+extent and Impeller's clip crop are accounted for so refraction tracks the lens
+throughout a glide. Bilinear sampling softens warped antialiasing. Its circular
+profile approximates the native SDF operator; the separate −17.5 content-wrapper
+operator and selected-source 1.16× enlargement are not reproduced by this pass.
+Use `PRISM_LENS_CASES=tabs PRISM_LENS_MIDPOINT_HOLD=true` with the Flutter lens
+recorder to capture a stationary hold between adjacent icons and labels.
+
 Still approximate: adaptive overlapping layout, selected portal weight/scale/
 warping, SF Symbols, position tracking, two-axis flex target generation,
 housing spring timing, glow and optical operators. The existing sampled

@@ -114,16 +114,24 @@ animation calls; the exact behavior-to-property mapping remains unresolved.
 
 Tracking, deformation, housing spring timing and glow still use fitted
 approximations. The native implementation has separate medium and semibold
-foreground copies and magnifies the selected portal while held; the current
-single-row selection window does not reproduce those details. See
+foreground copies and magnifies the selected portal while held. Our selection
+window now refracts its foreground separately, while the exact native source
+weight/scale transition remains approximate. See
 [native tab bar spec](native_tab_bar_spec.md) for exact extracted values,
 fixture geometry, optical passes and remaining differences.
 
-The lens captures the backdrop and bar before the foreground is painted, so
-icons and labels stay sharp. A broad outward sampling warp, using the captured
+The housing lens captures the backdrop and bar before the foreground is painted.
+A broad outward sampling warp, using the captured
 9 pt underlay displacement and 36 pt SDF height, makes the housing visible
 through the lifted lens smaller. This is separate from its narrow rim;
-the displacement profile still uses this renderer's approximation.
+the displacement profile still uses this renderer's approximation. A separate
+transparent foreground filter uses the native ContentLensingView's −14 pt
+displacement and 11.2 pt SDF depth to bend icons and labels near the pill's rim.
+Only the selected region is filtered; the flat center retains normal content
+size, and the foreground outside the pill remains unchanged. Source bounds,
+density, continuous contour and movement are accounted for independently from
+the housing's minification. Unsupported shader backends retain the crisp tint
+window fallback.
 Its rim uses the native lens highlight matrix
 without the housing's face grading. The selected tint is painted
 wherever the pill is, so it travels with the lens. Icons must not contain

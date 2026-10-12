@@ -70,7 +70,9 @@ ring blur scale with the current lens height; they replace the fixed, dense ring
 approximation. Their Gaussian conversion and opacity remain renderer calibrations.
 
 The shared broad underlay field minifies the switch, segmented track and tab
-housing while the foreground stays sharp at its normal size. The slider opts out
+housing while the foreground retains its normal size. The tab's selected icons
+and labels additionally refract near the rim through a separate foreground pass.
+The slider opts out
 of that broad field: **the knob still grows to 1.55× on hold, but the track seen
 through it keeps its normal thickness**. Its rim refraction, clear face and shadow
 still use the shared material. This matches the distinction in the isolated

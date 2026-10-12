@@ -32,3 +32,4 @@ flutter:
   shaders:
     - shaders/glass.frag
     - shaders/glass_batch.frag
+    - shaders/tab_content.frag

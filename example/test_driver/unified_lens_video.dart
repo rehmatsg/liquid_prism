@@ -7,6 +7,8 @@ import 'package:flutter_driver/flutter_driver.dart';
 Future<void> main() async {
   final simulator = Platform.environment['PRISM_SIMULATOR_ID']!;
   final dark = Platform.environment['PRISM_LENS_DARK'] == 'true';
+  final midpointHold =
+      Platform.environment['PRISM_LENS_MIDPOINT_HOLD'] == 'true';
   final cases =
       Platform.environment['PRISM_LENS_CASES']?.split(',') ??
       ['switches', 'sliders', 'segments', 'tabs'];
@@ -126,7 +128,22 @@ Future<void> main() async {
             '${out.path}/$name-flutter-held.png',
           ]);
           phase('Slow glide');
-          await glide(start, end, 2000);
+          if (name == 'tabs' && midpointHold) {
+            final midpoint = start + (end - start) / 4;
+            await glide(start, midpoint, 1000);
+            phase('Hold between tabs');
+            await hold(1000);
+            await simctl([
+              'io',
+              simulator,
+              'screenshot',
+              '${out.path}/tabs-midpoint.png',
+            ]);
+            phase('Slow glide');
+            await glide(midpoint, end, 1000);
+          } else {
+            await glide(start, end, 2000);
+          }
           phase('Stationary hold');
           await hold(1000);
           phase('Fast reversal');

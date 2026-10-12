@@ -856,6 +856,14 @@ void _motionTests() {
     rebuild(() => customized = false);
     await tester.pump();
     expect(creations, {0: 1, 1: 1, 2: 1});
+    final held = await tester.startGesture(tester.getCenter(_tab('Gallery')));
+    await tester.pumpAndSettle();
+    await held.moveBy(const Offset(86, 0));
+    await tester.pumpAndSettle();
+    expect(creations, {0: 1, 1: 1, 2: 1});
+    await held.up();
+    await tester.pumpAndSettle();
+    expect(creations, {0: 1, 1: 1, 2: 1});
     expect(tester.getSemantics(_tab('Gallery')).label, 'Gallery');
   });
 }
