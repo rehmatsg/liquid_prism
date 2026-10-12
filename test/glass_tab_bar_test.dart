@@ -226,6 +226,41 @@ void _expectSelected(WidgetTester tester, int selected) {
 }
 
 void _motionTests() {
+  testWidgets('fast tab drag retains the researched stretch and stop recoil', (
+    tester,
+  ) async {
+    final state = await _mountTabs(tester);
+    state.update(() {
+      state.width = 274;
+    });
+    await tester.pump();
+    final start = tester.getCenter(_tab('Gallery'));
+    final finger = await tester.startGesture(start);
+    await tester.pumpAndSettle();
+    final held = _pill(tester).size;
+    var widest = held.width, shortest = held.height;
+    for (var i = 1; i <= 10; i++) {
+      await finger.moveTo(start + Offset(16.0 * i, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+      final size = _pill(tester).size;
+      if (size.width > widest) widest = size.width;
+      if (size.height < shortest) shortest = size.height;
+    }
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final size = _pill(tester).size;
+      if (size.width > widest) widest = size.width;
+      if (size.height < shortest) shortest = size.height;
+    }
+    expect(widest, greaterThan(held.width + 10));
+    expect(shortest, lessThan(held.height - 10));
+    await tester.pumpAndSettle();
+    expect(_pill(tester).width, closeTo(held.width, .1));
+    expect(_pill(tester).height, closeTo(held.height, .1));
+    await finger.cancel();
+    await tester.pumpAndSettle();
+    expect(state.requests, isEmpty);
+  });
   testWidgets('held lens matches the native 94 to 110 point lift', (
     tester,
   ) async {

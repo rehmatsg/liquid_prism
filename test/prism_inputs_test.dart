@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/control_material.dart';
 
 Widget host(Widget child, {bool rtl = false, bool reduced = false}) =>
     Directionality(
@@ -23,6 +24,81 @@ Widget host(Widget child, {bool rtl = false, bool reduced = false}) =>
     );
 
 void main() {
+  for (final rtl in [false, true]) {
+    testWidgets('held slider exposes a fully filled track at 100%, RTL=$rtl', (
+      tester,
+    ) async {
+      var value = .5;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => LiquidPrismSlider(
+              value: value,
+              onChanged: (v) => setState(() => value = v),
+            ),
+          ),
+          rtl: rtl,
+        ),
+      );
+      final start = tester.getCenter(find.byType(LiquidPrism));
+      final finger = await tester.startGesture(start);
+      await tester.pumpAndSettle();
+      await finger.moveTo(start + Offset(rtl ? -400 : 400, 0));
+      await tester.pump();
+      expect(value, 1);
+      final track = tester.getRect(find.byType(ControlTrack).first);
+      final fill = tester.getRect(find.byType(ControlTrack).last);
+      expect(fill.left, closeTo(track.left, .01));
+      expect(fill.right, closeTo(track.right, .01));
+      await finger.moveTo(start + Offset(rtl ? 400 : -400, 0));
+      await tester.pump();
+      expect(value, 0);
+      expect(tester.getSize(find.byType(ControlTrack).last).width, 0);
+      await finger.up();
+      await tester.pumpAndSettle();
+    });
+  }
+  testWidgets(
+    'brief fast slider flick produces flex while contact remains held',
+    (tester) async {
+      var value = .5;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => LiquidPrismSlider(
+              value: value,
+              onChanged: (v) => setState(() => value = v),
+            ),
+          ),
+        ),
+      );
+      final lens = find.byType(LiquidPrism);
+      final start = tester.getCenter(lens);
+      var clock = const Duration(seconds: 1);
+      final finger = await tester.createGesture();
+      await finger.down(start, timeStamp: clock);
+      await tester.pumpAndSettle();
+      final held = tester.getRect(lens).size;
+      for (var i = 1; i <= 6; i++) {
+        clock += const Duration(milliseconds: 8);
+        await finger.moveTo(start + Offset(i * 12.0, 0), timeStamp: clock);
+        await tester.pump(const Duration(milliseconds: 8));
+      }
+      var widest = tester.getRect(lens).width;
+      var shortest = tester.getRect(lens).height;
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        final rect = tester.getRect(lens);
+        if (rect.width > widest) widest = rect.width;
+        if (rect.height < shortest) shortest = rect.height;
+      }
+      expect(widest, greaterThan(held.width * 1.08));
+      expect(shortest, lessThan(held.height * .92));
+      await finger.cancel();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets(
     'switch impacts follow toggles and drag boundaries without release duplicates',
     (tester) async {
@@ -242,6 +318,80 @@ void main() {
       expect(tester.getCenter(thumb), start);
     });
   }
+
+  testWidgets(
+    'slider flex follows finger speed both ways and relaxes while held',
+    (tester) async {
+      var value = .5;
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) => LiquidPrismSlider(
+              value: value,
+              onChanged: (next) => setState(() => value = next),
+            ),
+          ),
+        ),
+      );
+      final thumb = find.byType(LiquidPrism);
+      final origin = tester.getCenter(thumb);
+      var clock = const Duration(seconds: 1);
+      final finger = await tester.createGesture();
+      await finger.down(origin, timeStamp: clock);
+      await tester.pumpAndSettle();
+      final held = tester.getRect(thumb).size;
+      expect(
+        held.width,
+        closeTo(57.35, .01),
+        reason: 'The knob itself retains its captured 1.55-times held lift.',
+      );
+      expect(held.height, closeTo(37.2, .01));
+      Future<Size> glide(double from, double to, int milliseconds) async {
+        for (var i = 1; i <= 8; i++) {
+          clock += Duration(milliseconds: milliseconds);
+          await finger.moveTo(
+            origin + Offset(from + (to - from) * i / 8, 0),
+            timeStamp: clock,
+          );
+          await tester.pump(Duration(milliseconds: milliseconds));
+          if (from != 0 || i >= 4) {
+            expect(
+              tester.getCenter(thumb).dx,
+              closeTo(origin.dx + from + (to - from) * i / 8, .01),
+            );
+          }
+        }
+        return tester.getRect(thumb).size;
+      }
+
+      final slow = await glide(0, 40, 40);
+      await tester.pumpAndSettle();
+      final fast = await glide(40, -40, 16);
+      expect(fast.width, greaterThan(slow.width + 1));
+      expect(
+        fast.width,
+        greaterThan(held.width * 1.07),
+        reason: 'A brief fast reversal must produce a visible size change.',
+      );
+      expect(fast.height, lessThan(slow.height));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(thumb).width,
+        closeTo(held.width, .01),
+        reason: 'A stationary hold must release speed-induced deformation.',
+      );
+      final reversed = await glide(-40, 40, 16);
+      expect(
+        reversed.width,
+        greaterThan(held.width + 1),
+        reason: 'Flex depends on speed, so both directions stretch the lens.',
+      );
+      await finger.cancel();
+      await tester.pumpAndSettle();
+      expect(tester.getSize(thumb), const Size(37, 24));
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('segmented tabs commit once on release and expose selection', (
     tester,

@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_lens.dart';
 import 'glass.dart';
 import 'foreground.dart';
 import 'material.dart';
@@ -683,17 +684,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                           child: IgnorePointer(
                             child: LiquidPrismPressFeedback(
                               progress: 0,
-                              child: LiquidPrism(
-                                glass: Glass.clear,
-                                optics: _lensOptics.copyWith(
-                                  refraction: _lensOptics.refraction * lift,
-                                  reflection: _lensOptics.reflection * lift,
-                                  light: _lensOptics.light * lift,
-                                ),
-                                blur: 0,
+                              child: ControlLens(
+                                lift: lift,
                                 shape: selectionShape,
                                 role: GlassRole.tabLens,
-                                child: const SizedBox.expand(),
                               ),
                             ),
                           ),
@@ -836,19 +830,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 /// the proportions of the native 110 x 70 pt lens (edge from -14, displacement
 /// 9 on the backdrop) rather than the package's default clear optics whose
 /// wide band would mirror the icons inside a lens this small.
-const _lensOptics = LiquidPrismStyle(
-  edgeWidth: 12,
-  refraction: 9,
-  frost: 0,
-  dispersion: 0.3,
-  brightness: 0,
-  tint: Color(0x00000000),
-  saturation: 1,
-  reflection: 0.04,
-  reflectionReach: 20,
-  splay: 0.1,
-  cornerRadius: 10000,
-);
 
 /// Paints its child once, then again clipped to [path] with every pixel
 /// recoloured to [color]: the selected tint shows wherever the pill is.

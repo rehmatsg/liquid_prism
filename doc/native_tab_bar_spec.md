@@ -163,3 +163,11 @@ warping, SF Symbols, position tracking, two-axis flex target generation,
 housing spring timing, glow and optical operators. The existing sampled
 launch deformation remains a fit. Further changes should use property-linked
 instrumentation and the captured pipeline without labelling fits exact.
+
+
+The shared held-lens renderer now supplies the tab, switch, slider and segmented
+selection's clear face, continuous rim and size-relative shadow. The tab retains
+the researched motion above: its own lens velocity drives independent stretch
+and compression, including recoil as tracking settles. The slider alone opts out
+of broad underlay minification; its held bounds still grow by 1.55×. See
+`native_controls_spec.md` for the shared material's calibrated rendering limits.

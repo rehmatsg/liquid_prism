@@ -158,13 +158,13 @@ void shadeGlass() {
     // Sample farther out along the SDF normal, so the housing seen through
     // the lens is smaller. The tab foreground is painted after this pass.
     vec2 underlayOffset = vec2(0.);
-    if (u_material.x > 2.5 && (u_material.x < 3.5 || u_material.x > 4.5)) {
+    if (u_material.x > 2.5 && u_material.x < 3.5 && u_material.z < 8.5) {
         float underlayT = clamp(1.-depth/36.,0.,1.);
         float underlayProfile = 1.-sqrt(max(1.-underlayT*underlayT,0.));
-        // Segmented lens: 9-point underlay displacement, independent of its
-        // 6.6-point inner refraction. Tab lens retains its accepted profile.
-        float underlayAmount = u_material.x > 4.5
-            ? displacement*(9./6.6) : displacement;
+        // All selection lenses share this field. The slider (role 9) opts out:
+        // its knob grows, but the track inside keeps its normal thickness.
+        // Labels/icons are painted after the lens at their normal size.
+        float underlayAmount = displacement;
         underlayOffset = normal*underlayAmount*underlayProfile;
     }
     vec2 samplePoint = scenePoint(local+underlayOffset-offset);
@@ -185,14 +185,6 @@ void shadeGlass() {
         float side = facing/(1.+0.5*(1.-facing));
         float outerCoverage = clamp(0.5-(d-0.533333)/aa,0.,1.);
         rimAlpha = clamp(side*u_finish.y*0.46,0.,1.)*max(outerCoverage-coverage,0.);
-    }
-    if (u_material.x > 3.5 && u_finish.y > 0. && d > -0.5*aa) {
-        // Small/segmented native glassBackground has a negative key/fill
-        // highlight at an exterior offset of 2/3 point. Approximate that
-        // private operator with a subtle coverage band, independent of the
-        // face. Its native negative color bias is not an opaque black stroke.
-        float outerCoverage = clamp(0.5-(d-0.6666667)/aa,0.,1.);
-        rimAlpha = 0.24*u_finish.y*max(outerCoverage-coverage,0.);
     }
     // Native regular glassBackground negative key/fill highlight. The effect
     // occupies the exterior 0.533333-point band; its -0.3 color bias darkens
@@ -279,10 +271,6 @@ void shadeGlass() {
         float fill = clear || dark ? 0. : .20000000298023224;
         color = clamp(mix(color,vec3(1.),fill),0.,1.);
     }
-    if (u_material.x > 3.5 && u_material.x < 4.5) {
-        // Small native lens face: black=.1, white=1, saturation=1.
-        color = mix(vec3(.1),vec3(1.),color);
-    }
     if (u_material.w > 0.) {
         vec4 inputColor = vec4(color,1.);
         vec3 tinted = clamp(vec3(dot(u_tintRed,inputColor),
@@ -303,6 +291,14 @@ void shadeGlass() {
         }
         // Both matrices are mixed in by weight; at zero weight skip their arithmetic.
         if (light*u_finish.y > 0.) color = vibrantHighlight(color,light*u_finish.y);
+    }
+    if (u_material.x > 2.5 && u_material.x < 3.5) {
+        float faceScale = u_extent.y/70.;
+        float shadeDepth = 16.*faceScale;
+        float top = max(-normal.y,0.);
+        float inner = smoothstep(1.*faceScale,5.*faceScale,depth)
+            * (1.-smoothstep(5.*faceScale,shadeDepth,depth));
+        color *= 1.-.12*u_finish.y*top*inner;
     }
     if (u_state.x > 0.) {
         vec3 pressed = vec3(dot(color,vec3(1.1575,-0.1431,-0.0144)),

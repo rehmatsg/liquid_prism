@@ -1,0 +1,177 @@
+{
+  "source": "Native SwiftUI Slider active-fill CALayer bounds; iPhone 17, iOS 27.0 (24A5370g), light appearance, 3x; NativeShowcase InspectionHost",
+  "width": 306,
+  "thumbWidth": 37,
+  "edgeBand": 0.02,
+  "mapping": "lerp(thumbCenter, width*value, clamp((0.02-value)/0.02)+clamp((value-0.98)/0.02))",
+  "samples": [
+    {
+      "value": 0,
+      "fillWidth": 0,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.json",
+      "sha256": "c56cf838a29b9b65fb06d21509363cc87e466f2693eb4f79d214d46cfd9541aa"
+    },
+    {
+      "value": 0.001,
+      "fillWidth": 1.2291500582936221,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.001.json",
+      "sha256": "25d8c757b979c7d6fbe04a060ee7b31623d0cb5739854f8686625f62e0771111"
+    },
+    {
+      "value": 0.005,
+      "fillWidth": 6.108749864492565,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.005.json",
+      "sha256": "ce2ad0a187f5604de131aa2224a3925be2400463d8f9f37d8f67ae6901510700"
+    },
+    {
+      "value": 0.01,
+      "fillWidth": 12.124999733120204,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.01.json",
+      "sha256": "e795040b067ca75d99da591be3cab6392b115cc24ecd2e356a7c67ae5591a0c1"
+    },
+    {
+      "value": 0.015,
+      "fillWidth": 18.04874960588291,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.015.json",
+      "sha256": "67fddafd0d2a47da2bc1b89660360e1ffe165490f94f11bc06be2eb4a219d10f"
+    },
+    {
+      "value": 0.019,
+      "fillWidth": 22.721149290873107,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.019.json",
+      "sha256": "e5b684d0ca0f8a0d3496d088db958c5aff913541df5d973e146dd4e5dc19e363"
+    },
+    {
+      "value": 0.02,
+      "fillWidth": 23.879999482780693,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.02.json",
+      "sha256": "3e1583d0f5f1b514f7ab2ca7b64f705058ed6681d4897a35e46a5b92b59e4c95"
+    },
+    {
+      "value": 0.021,
+      "fillWidth": 24.148999923840165,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.021.json",
+      "sha256": "216cfb378d467a1d4a06b6f246dcbc18e6bad4c2c7b046b47663bb3a06737ec5"
+    },
+    {
+      "value": 0.5,
+      "fillWidth": 153,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.5.json",
+      "sha256": "89cf213458633a3dd19cdf42c40f24dbd5b56f0257f64c0862f2da1f81c707ed"
+    },
+    {
+      "value": 0.9,
+      "fillWidth": 260.5999935865402,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.9.json",
+      "sha256": "53f8ba32bb969318adb63d3577fe3ba70026f28b0e3d07cb1235028be0719316"
+    },
+    {
+      "value": 0.92,
+      "fillWidth": 265.98000448942184,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.92.json",
+      "sha256": "1935c6f8021e5f113c49630e0af0393bfa68e2c93a92446786e2744782d88721"
+    },
+    {
+      "value": 0.94,
+      "fillWidth": 271.359999358654,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.94.json",
+      "sha256": "952e479eae616e79c620c14de5d09216d9c720d276fb3f9403d89dbfaf4ebfa1"
+    },
+    {
+      "value": 0.96,
+      "fillWidth": 276.7399942278862,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.96.json",
+      "sha256": "458a56e262f73d9015a096afcb2b15a896e9d2933ce2dd6b809cd98ea0f68249"
+    },
+    {
+      "value": 0.979,
+      "fillWidth": 281.85099256038666,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.979.json",
+      "sha256": "89ea883e538e7deac9eb941ba5de2786ac5efcd56d8beb7bab0d167c73d7cf7d"
+    },
+    {
+      "value": 0.98,
+      "fillWidth": 282.12002206802435,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.98.json",
+      "sha256": "699dc6911d102ccb94ecdb0ab0797d5a0854851aec8ec0b0e45984609d4a1045"
+    },
+    {
+      "value": 0.981,
+      "fillWidth": 283.27885719504366,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.981.json",
+      "sha256": "b560c4b3cc5f4942d91580e777d38e7a8c6861a508507d2ee62f8df08d9906c1"
+    },
+    {
+      "value": 0.985,
+      "fillWidth": 287.95126681566273,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.985.json",
+      "sha256": "72075170ba87cb1e39eac371f439faa24ea98c9b12092310087d125c1cf0000c"
+    },
+    {
+      "value": 0.99,
+      "fillWidth": 293.8750113868715,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.99.json",
+      "sha256": "12aafd32444420c2d7f73382c467964bc39c52d2fb5d582973b6a3b7d58fefdf"
+    },
+    {
+      "value": 0.995,
+      "fillWidth": 299.89125578165056,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.995.json",
+      "sha256": "2376d824e0ebd4341c820fe0cdea2289484c1d10fcdea5c43022195ae787c1f6"
+    },
+    {
+      "value": 0.999,
+      "fillWidth": 304.7708658010009,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-0.999.json",
+      "sha256": "b3cddb5ce8b65224623e14402b989ba7a49cd71476030f9aa9d797ee94907210"
+    },
+    {
+      "value": 1,
+      "fillWidth": 306,
+      "trackWidth": 306,
+      "height": 6,
+      "source": "range-1.json",
+      "sha256": "90d261604ae9c9b3cfbf92d3105e0e362d18173091e395da78dd7f863626474c"
+    }
+  ]
+}

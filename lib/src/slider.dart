@@ -71,7 +71,14 @@ class LiquidPrismSlider extends StatelessWidget {
               final x = 18.5 + travel * (rtl ? 1 - p : p);
               final thumbWidth = 37 * (1 + .55 * lift),
                   thumbHeight = 24 * (1 + .55 * lift);
-              final fill = 18.5 + travel * p;
+              // Native fill follows the thumb except at the first/last 2%,
+              // where it blends continuously to proportional track progress.
+              // Direct layer measurements: doc/native_slider_fill_spec.json.
+              final edgeBlend =
+                  ((.02 - p) / .02).clamp(0.0, 1.0) +
+                  ((p - .98) / .02).clamp(0.0, 1.0);
+              final centerFill = 18.5 + travel * p;
+              final fill = centerFill + (width * p - centerFill) * edgeBlend;
               return ControlDisabled(
                 enabled: enabled,
                 child: Stack(
@@ -116,6 +123,7 @@ class LiquidPrismSlider extends StatelessWidget {
                         ),
                         child: ControlThumb(
                           restingShadow: true,
+                          minifyUnderlay: false,
                           lift: lift,
                           color: thumbColor,
                         ),

@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_lens_motion.dart';
 import 'motion.dart';
 
 /// One interaction owner for the native small controls. Geometry stays in the
@@ -58,26 +59,17 @@ class _ControlInteractionState extends State<ControlInteraction>
     ..value = widget.value;
   late final _lift = RetargetableGlassSpring(vsync: this);
   late final _deformation = RetargetableGlassSpring(vsync: this);
-  static final _shapeSpring = SpringDescription.withDurationAndBounce(
-    duration: const Duration(milliseconds: 444),
-    bounce: .44,
-  );
-  @override
-  void initState() {
-    super.initState();
-    _position.addListener(_followVelocity);
-  }
-
-  void _followVelocity() {
-    if (!_dragging || _reduceMotion) return;
-    // The native small-loupe scale spring is exact; the velocity-to-scale
-    // coupling is an approximation (see the extracted spec's limitations).
-    final stretch = (_position.velocity * widget.travel * .00015).clamp(
-      -.1,
-      .1,
-    );
-    springGlass(_deformation, stretch, _shapeSpring);
-  }
+  static final _shapeSpring = ControlLensMotion.spring;
+  late final _flex = ControlLensMotion((stretch, impulse) {
+    if (mounted && _dragging && !_reduceMotion) {
+      springGlass(
+        _deformation,
+        stretch,
+        _shapeSpring,
+        velocity: _deformation.velocity + impulse,
+      );
+    }
+  });
 
   final _focus = FocusNode();
   Timer? _release;
@@ -145,6 +137,7 @@ class _ControlInteractionState extends State<ControlInteraction>
       return;
     }
     _pointer = event.pointer;
+    _flex.begin(event);
     _contactTime = DateTime.now();
     _downX = event.localPosition.dx;
     _downValue = _position.value;
@@ -172,10 +165,12 @@ class _ControlInteractionState extends State<ControlInteraction>
   void _up(PointerUpEvent event) {
     if (event.pointer != _pointer) return;
     // Gesture recognizers deliver tap/drag completion after the raw event.
+    _flex.stop();
     _unlift();
   }
 
   void _cancel() {
+    _flex.stop();
     final wasDragging = _dragging;
     _pointer = null;
     _dragging = false;
@@ -236,6 +231,7 @@ class _ControlInteractionState extends State<ControlInteraction>
   void _dragStart(DragStartDetails details) {
     if (_pointer == null || !_enabled) return;
     _dragging = true;
+    _flex.follow();
     widget.onChangeStart?.call(widget.value);
     // Slider track taps jump to the contact; a thumb grab preserves its offset.
     if (widget.continuous &&
@@ -264,6 +260,7 @@ class _ControlInteractionState extends State<ControlInteraction>
   void _dragEnd(DragEndDetails details) {
     if (!_dragging || !_enabled) return;
     _dragging = false;
+    _flex.stop();
     _animate(_deformation, 0, _shapeSpring);
     _pointer = null;
     final target = _quantize(_candidate);
@@ -276,6 +273,7 @@ class _ControlInteractionState extends State<ControlInteraction>
 
   @override
   void deactivate() {
+    _flex.stop();
     _release?.cancel();
     _pointer = null;
     _dragging = false;
@@ -295,6 +293,7 @@ class _ControlInteractionState extends State<ControlInteraction>
 
   @override
   void dispose() {
+    _flex.stop();
     _release?.cancel();
     _focus.dispose();
     _position.dispose();
@@ -343,6 +342,11 @@ class _ControlInteractionState extends State<ControlInteraction>
           child: Listener(
             behavior: HitTestBehavior.opaque,
             onPointerDown: _down,
+            onPointerMove: (event) {
+              if (event.pointer == _pointer) {
+                _flex.sample(event, active: _dragging && !_reduceMotion);
+              }
+            },
             onPointerUp: _up,
             onPointerCancel: (event) {
               if (event.pointer == _pointer) _cancel();

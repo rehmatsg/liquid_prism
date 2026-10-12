@@ -15,6 +15,7 @@ enum GlassRole {
   sheet,
   toolbar,
   searchField,
+  sliderLens,
 }
 
 final class GlassRecipe {
@@ -38,7 +39,7 @@ final class GlassRecipe {
   bool get usesNativeControlShadow =>
       kind != 0 && role != GlassRole.surface && role != GlassRole.sheet;
   double get shadowStrength =>
-      kind > 3.5 ? 0 : (usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1));
+      kind == 3 ? 0 : (usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1));
   static GlassRecipe resolve(
     Glass glass,
     Brightness brightness,
@@ -65,11 +66,10 @@ final class GlassRecipe {
               role == GlassRole.toolbar ||
               role == GlassRole.searchField)
           ? (glass.variant == GlassVariant.clear ? 2 : 1)
-          : role == GlassRole.controlThumb
-          ? 4
-          : role == GlassRole.segmentLens
-          ? 5
-          : role == GlassRole.tabLens
+          : (role == GlassRole.controlThumb ||
+                role == GlassRole.segmentLens ||
+                role == GlassRole.tabLens ||
+                role == GlassRole.sliderLens)
           ? 3
           : customOptics
           ? 0
