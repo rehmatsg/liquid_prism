@@ -16,12 +16,17 @@ open class LiquidPrismViewController: FlutterViewController {
   @objc public var verticalBarDisabled = false {
     didSet {
       guard verticalBarDisabled != oldValue else { return }
+      #if canImport(UIKit, _version: 9127.0.85)
       if #available(iOS 27.1, *) { setNeedsUpdateOfVerticalBarConfiguration() }
+      #endif
     }
   }
 
+  // Built with an SDK before iOS 27.1 there is no vertical bar to opt out of.
+  #if canImport(UIKit, _version: 9127.0.85)
   @available(iOS 27.1, *)
   open override var preferredVerticalBarBehavior: UIVerticalBarBehavior {
     verticalBarDisabled ? .disabled : .automatic
   }
+  #endif
 }

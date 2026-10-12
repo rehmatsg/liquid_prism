@@ -1,5 +1,9 @@
 import UIKit
 
+// The vertical bar and reserved-region APIs ship in the iOS 27.1 SDK (UIKit
+// 9127.0.85). `#available` only guards at run time, so builds with older
+// SDKs compile the fallback instead.
+
 /// Where the system places bar chrome around a view, from the iOS 27.1
 /// vertical bar trait and reserved-region APIs. Coordinates are in the
 /// observed view's space, which is Flutter's logical coordinate space.
@@ -44,6 +48,7 @@ public struct SystemChrome: Equatable, Sendable {
     self.verticalBarDisabled = verticalBarDisabled
     horizontalSizeClass = view.traitCollection.horizontalSizeClass
     verticalSizeClass = view.traitCollection.verticalSizeClass
+    #if canImport(UIKit, _version: 9127.0.85)
     guard #available(iOS 27.1, *) else {
       supported = false
       verticalBarEdge = nil
@@ -65,6 +70,12 @@ public struct SystemChrome: Equatable, Sendable {
     }
     occlusions = regions(.occlusion)
     divisions = regions(.division)
+    #else
+    supported = false
+    verticalBarEdge = nil
+    occlusions = []
+    divisions = []
+    #endif
   }
 
   public init(
@@ -138,11 +149,13 @@ public final class SystemChromeObserver {
     sentinel.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     sentinel.isUserInteractionEnabled = false
     sentinel.onUpdate = { [weak self] in self?.refresh() }
+    #if canImport(UIKit, _version: 9127.0.85)
     if #available(iOS 27.1, *) {
       sentinel.registerForTraitChanges(
         UITraitCollection.systemTraitsAffectingVerticalBarEdge
       ) { (view: SentinelView, _) in view.onUpdate?() }
     }
+    #endif
     view.insertSubview(sentinel, at: 0)
     self.view = view
     self.sentinel = sentinel
