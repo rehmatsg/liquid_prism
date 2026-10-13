@@ -321,7 +321,7 @@ Controller/focus nodes are optional; dispose only the ones your app creates.
 The widget owns its omitted resources. It supports input formatters, keyboard
 type/action, capitalization, suggestions/autocorrect, read-only input, alignment,
 editing/tap callbacks and custom prefix/suffix widgets. A supplied suffix replaces
-its clear action. `onCleared` fires after a nonempty field is cleared, alongside
+its clear action; `suffixBuilder` can keep or replace it instead. `onCleared` fires after a nonempty field is cleared, alongside
 `onChanged('')`. Cancel clears when necessary, unfocuses, then calls `onCancel`.
 
 Style can change text/placeholder colors, icon/cursor/clear colors, geometry,
@@ -329,6 +329,60 @@ material, contour, focus spring and clear/cancel action sizing. Direct
 `showCancelButton` and `restingInset` override inherited values. Cancel is hidden
 when it cannot fit. Give search a bounded width and handle keyboard avoidance in
 the parent. Native bottom search uses a parent inset of 8 and resting inset of 20.
+
+### Hosting autocomplete
+
+The field owns its glass housing, focus spring, clear and cancel actions. Host
+your own suggestions around it with these hooks:
+
+- `fieldBuilder` wraps the glass capsule, excluding the resting inset and the
+  cancel action. Its rect is the anchor for a dropdown: wrap the capsule in a
+  `CompositedTransformTarget`, `OverlayPortal`, `TapRegion` or `Focus`. It runs
+  on rebuilds, not per animation frame. Keep its structure stable; replacing
+  ancestors of the field remounts the editor.
+- `groupId` is the editor's tap region group. Give the dropdown's `TapRegion` the
+  same group so a tap on a suggestion is not outside the field. The cancel
+  action always belongs to the group. `onTapOutside` replaces the platform
+  default for every other tap.
+- `onFocusChange` reports focus transitions, not rebuilds or node swaps.
+- `suffixBuilder` receives the field's own clear action, or null while clearing
+  is unavailable. Return it, replace it (for example with a progress indicator)
+  or return null. A direct `suffix` wins.
+- For keys, supply a `focusNode` and set its `onKeyEvent`, or wrap the capsule in
+  `Focus(onKeyEvent: ...)` through `fieldBuilder`.
+
+```dart
+final link = LayerLink();
+final portal = OverlayPortalController();
+final group = Object();
+
+LiquidPrismSearchField(
+  controller: query,
+  focusNode: focus,
+  groupId: group,
+  onTapOutside: (_) => focus.unfocus(),
+  onFocusChange: (focused) => focused ? portal.show() : portal.hide(),
+  suffixBuilder: (context, clear) =>
+      loading ? const CupertinoActivityIndicator() : clear,
+  fieldBuilder: (context, field) => OverlayPortal(
+    controller: portal,
+    overlayChildBuilder: (context) => CompositedTransformFollower(
+      link: link,
+      targetAnchor: Alignment.bottomLeft,
+      showWhenUnlinked: false,
+      child: Align(
+        alignment: AlignmentDirectional.topStart,
+        child: TapRegion(groupId: group, child: suggestions),
+      ),
+    ),
+    child: CompositedTransformTarget(link: link, child: field),
+  ),
+)
+```
+
+This snippet omits app state: `query`, `focus`, `loading` and `suggestions`
+belong to your widget. Read `link.leaderSize` for the anchor's size, or measure
+the capsule with a key placed through `fieldBuilder`.
 
 ## Native menus
 

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Let apps host their own autocomplete on `LiquidPrismSearchField`:
+  `fieldBuilder` wraps the glass capsule as an overlay anchor, `groupId` and
+  `onTapOutside` share the editor's tap region, `onFocusChange` reports focus
+  transitions, and `suffixBuilder` keeps or replaces the clear action. The
+  cancel action now belongs to the editor's tap region group.
+- Add `GlassSearchStyle.padding` and `prefixPadding` for the editor and the
+  default search icon.
+
 ## 0.2.0
 
 - Add `LiquidPrismScaffold` and `GlassChromePlacement`: floating glass chrome
