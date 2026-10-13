@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Measure the tab foreground lens's raster scale when the scene is composed,
+  from the layers that composite it. An ancestor transform that animates
+  beneath a repaint boundary, such as a page scaled behind a modal sheet, no
+  longer leaves the held tab's glyph lens on a stale scale, and a
+  `Transform(filterQuality: ...)` ancestor no longer distorts it.
+- In debug builds, report once when glass sits under an ancestor that moves it
+  after it is rasterized, such as `Transform(filterQuality: ...)`. Glass cannot
+  align its refraction and rim there; remove the `filterQuality` (see
+  [rendering](doc/rendering.md#ancestor-transforms)).
+- Add `example/lib/transform_main.dart`, a fixture placing glass, a toolbar
+  group and a tab bar on a page scaled as a sheet's covered page.
+
 ## 0.2.0
 
 - Add `LiquidPrismScaffold` and `GlassChromePlacement`: floating glass chrome

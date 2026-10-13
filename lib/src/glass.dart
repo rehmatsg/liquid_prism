@@ -9,6 +9,7 @@ import 'style.dart';
 import 'superellipse.dart';
 import 'material.dart';
 import 'glass_transition.dart';
+import 'layer_transform.dart';
 import 'theme.dart';
 import 'recipe.dart';
 import 'pressable.dart';
@@ -21,7 +22,9 @@ part 'glass_group.dart';
 /// Refraction uses Flutter shader filters on Impeller; unsupported renderers
 /// use a frosted fallback.
 /// Ancestor ImageFiltered/Opacity saveLayers isolate the backdrop and are
-/// outside the supported composition.
+/// outside the supported composition, as is an ancestor
+/// `Transform(filterQuality: ...)`, which scales the glass only after its
+/// backdrop is rasterized. A plain ancestor transform is supported.
 class LiquidPrism extends StatefulWidget {
   const LiquidPrism({
     super.key,
@@ -640,9 +643,41 @@ class _RenderGlass extends RenderProxyBox {
     ];
   }
 
+  /// Where [paint] placed this surface within its enclosing layer.
+  Offset _paintOffset = Offset.zero;
+
+  static bool _debugReportedRasterTransform = false;
+
+  /// Reports, once per run, glass whose uniforms cannot match the coordinates
+  /// its backdrop is rasterized in. An ancestor `ImageFilter.matrix` layer, as
+  /// `Transform(filterQuality: ...)` composites, renders this glass into an
+  /// offscreen layer at an origin Impeller chooses and then moves the result,
+  /// so the optical pass would draw its contour away from the content.
+  void _debugCheckRasterTransform(Layer layer) {
+    if (_debugReportedRasterTransform || !attached || !hasSize) return;
+    if (!transformedAfterRaster(
+      composited: compositedTransform(layer),
+      paintOffset: _paintOffset,
+      global: getTransformTo(null),
+      pixelRatio: pixelRatio,
+      bounds: Offset.zero & size,
+    )) {
+      return;
+    }
+    _debugReportedRasterTransform = true;
+    debugPrint(
+      'LiquidPrism: an ancestor moves this glass after it is rasterized, so '
+      'its refraction and rim are drawn away from its content. '
+      'Transform(filterQuality: ...) and other ImageFilter.matrix layers do '
+      'this. Remove filterQuality from the ancestor Transform; a plain '
+      'transform keeps glass aligned. See doc/rendering.md.',
+    );
+  }
+
   @override
   void paint(PaintingContext context, Offset offset) {
     if (size.isEmpty) return;
+    _paintOffset = offset;
     final shadow = _shadowLayer.layer ??= _GlassShadowLayer(this);
     context.pushLayer(shadow, (context, offset) {
       final canvas = context.canvas;
@@ -774,6 +809,10 @@ class _GlassLayer extends ContainerLayer {
   void addToScene(ui.SceneBuilder builder) {
     final owner = glass;
     if (owner == null || !owner.attached) return;
+    assert(() {
+      owner._debugCheckRasterTransform(this);
+      return true;
+    }());
     final batch = owner._group?.prepared[owner];
     final backdrop = filter!;
     if (batch == null) {

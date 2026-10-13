@@ -15,7 +15,7 @@ flutter pub get
 
 Use `flutter devices` to find a simulator or device. Dart changes support hot reload; shader asset changes require a rebuild.
 
-The separate `controls_main.dart` and `chrome_main.dart` entry points retain the focused native-comparison fixtures.
+The separate `controls_main.dart` and `chrome_main.dart` entry points retain the focused native-comparison fixtures. `transform_main.dart` places glass on a page scaled like a modal sheet's covered page.
 
 To record the showcase, launch `flutter run -t test_driver/showcase.dart -d <device-id>`, then run `test_driver/showcase_video.dart` with `DART_VM_SERVICE_URL`, `PRISM_SIMULATOR_ID` and `PRISM_SHOWCASE_OUT` set. Videos and screenshots are local artifacts.
 

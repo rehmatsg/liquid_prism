@@ -33,8 +33,16 @@ paint, causing unselected content to disappear.
 The transparent source rect establishes full input bounds. Intersecting those
 bounds with the pill path determines the actual filter crop. Correct shader origin
 for that crop. Account for DPR and ancestor transforms when converting to raster
-coordinates. Out-of-bounds sampling returns transparent; do not clamp transparent
-glyph edges into streaks.
+coordinates. The lens reads that scale from `compositedTransform` while the
+scene is composed (`_ContentLensLayer`), not from `getTransformTo` at paint: an
+ancestor transform can animate without repainting the tab bar, and an ancestor
+`ImageFilter.matrix` scales the raster only after the filter runs. Out-of-bounds
+sampling returns transparent; do not clamp transparent glyph edges into streaks.
+
+Backdrop glass cannot use that remedy: its input is the enclosing pass, whose
+origin Impeller chooses. Under an ancestor matrix filter it can only warn (debug
+builds, `transformedAfterRaster`). Consumer guidance is in
+[rendering](../rendering.md#ancestor-transforms).
 
 Custom tab icons cannot currently include their own repaint boundaries because
 this window paints their subtree twice. Preserve state identity during style or

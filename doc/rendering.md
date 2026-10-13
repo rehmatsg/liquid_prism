@@ -32,6 +32,38 @@ Default regular glass also draws a separate inner ring and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
 mapping and its measured limits are described in [native shadows](native_shadows.md).
 
+## Ancestor transforms
+
+Glass follows translation, scale and their animation from an ancestor
+`Transform`, `FractionalTranslation` or `ScaleTransition`, such as a page that
+shrinks and slides behind a modal sheet. Its shader inputs are recomputed from
+the current transform each time the scene is composed, so they track every
+frame even when a repaint boundary below the transform keeps the glass from
+repainting.
+
+Do not give a transform above glass a `filterQuality`. With one,
+`Transform` composites through an `ImageFilter.matrix` layer: Impeller renders
+the subtree, glass included, into an offscreen layer and only then scales and
+moves the result. The glass's backdrop lives in that layer, whose origin
+Impeller chooses from the content's bounds and clips, and `dart:ui` exposes
+neither that origin nor the filter's matrix. The optical pass therefore draws
+its contour, rim and refraction away from the content, by as much as the
+transform moves the page, and the error shrinks back to zero as the transform
+returns to identity. Debug builds print a warning the first time this happens.
+
+```dart
+// Keeps glass aligned: a plain transform layer.
+Transform.scale(scale: scale, alignment: Alignment.topCenter, child: page)
+
+// Misplaces glass inside `page` while the scale is not 1.
+Transform.scale(scale: scale, filterQuality: FilterQuality.medium, child: page)
+```
+
+The plain transform rasterizes the scaled page directly, which is also how
+Impeller samples text and images under it. `example/lib/transform_main.dart`
+shows both compositions; run it with `--dart-define=PRISM_TRANSFORM_MODE=filter`
+or `transform`, and `PRISM_TRANSFORM_T=-1` to animate.
+
 ## Cost
 
 Blur cost depends on the affected pixel area, device, overlap, and moving backdrop.
