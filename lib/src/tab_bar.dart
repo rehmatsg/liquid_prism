@@ -749,17 +749,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                       if (haloLevel > .001)
                         Positioned.fill(
                           child: IgnorePointer(
-                            child: ClipPath(
-                              clipper: GlassShapeClipper(
-                                style.shape ?? GlassShape.capsule,
-                              ),
-                              child: CustomPaint(
-                                painter: _LensHalo(
-                                  lens.center,
-                                  NativeMotion.haloDiameter * haloScale,
-                                  NativeMotion.haloOpacity * haloLevel,
-                                  NativeMotion.haloBlurRadius * haloScale,
-                                ),
+                            child: CustomPaint(
+                              painter: _LensHalo(
+                                lens.center,
+                                NativeMotion.haloDiameter * haloScale,
+                                NativeMotion.haloOpacity * haloLevel,
+                                NativeMotion.haloBlurRadius * haloScale,
+                                housing: style.shape ?? GlassShape.capsule,
+                                housingScale: barScale,
                               ),
                             ),
                           ),
@@ -776,6 +773,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 lift: lift,
                                 shape: selectionShape,
                                 role: GlassRole.tabLens,
+                                rim: style.rimRefraction ?? 1,
                                 style: lensStyle.copyWith(
                                   shape: selectionShape,
                                 ),
@@ -1293,12 +1291,32 @@ class _ContentLensLayer extends ContainerLayer {
 }
 
 class _LensHalo extends CustomPainter {
-  const _LensHalo(this.centre, this.diameter, this.opacity, this.blurRadius);
+  const _LensHalo(
+    this.centre,
+    this.diameter,
+    this.opacity,
+    this.blurRadius, {
+    required this.housing,
+    required this.housingScale,
+  });
   final Offset centre;
   final double diameter, opacity, blurRadius;
 
+  /// The housing contour and its flex expansion about the bar's centre. The
+  /// glow is clipped to the housing as drawn: clipped to the resting contour,
+  /// its hard edge sat inside the expanded housing as a second, inset rim
+  /// with a lighter patch inside it, which the lens then magnified.
+  final GlassShape housing;
+  final double housingScale;
+
   @override
   void paint(Canvas canvas, Size size) {
+    final centreOfBar = size.center(Offset.zero);
+    final expand = Matrix4.translationValues(centreOfBar.dx, centreOfBar.dy, 0)
+      ..scaleByDouble(housingScale, housingScale, 1, 1)
+      ..translateByDouble(-centreOfBar.dx, -centreOfBar.dy, 0, 1);
+    canvas.save();
+    canvas.clipPath(housing.path(size).transform(expand.storage));
     canvas.drawCircle(
       centre,
       diameter / 2,
@@ -1309,6 +1327,7 @@ class _LensHalo extends CustomPainter {
         ..color = Color.from(alpha: opacity, red: 1, green: 1, blue: 1)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurRadius),
     );
+    canvas.restore();
   }
 
   @override
@@ -1316,7 +1335,9 @@ class _LensHalo extends CustomPainter {
       centre != old.centre ||
       diameter != old.diameter ||
       opacity != old.opacity ||
-      blurRadius != old.blurRadius;
+      blurRadius != old.blurRadius ||
+      housing != old.housing ||
+      housingScale != old.housingScale;
 }
 
 /// The selection's own blur. Native adds a 2-point blur under the pill, which

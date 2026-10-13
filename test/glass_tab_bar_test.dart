@@ -13,6 +13,7 @@ import 'support/rendering.dart';
 void main() {
   _motionTests();
   _scaleBeneathFilterTest();
+  _rimTests();
   testWidgets(
     'tabs select once and update semantic foreground with live theme',
     (tester) async {
@@ -1009,4 +1010,167 @@ void _scaleBeneathFilterTest() {
       expect(tester.getRect(label), rest);
     },
   );
+}
+
+void _rimTests() {
+  Finder lensGlass(GlassRole role) => find.byWidgetPredicate(
+    (widget) => widget is LiquidPrism && widget.role == role,
+  );
+
+  test('the pill rim reaches the shader slot and survives presence', () {
+    final recipe = GlassRecipe.resolve(
+      Glass.clear,
+      Brightness.dark,
+      GlassRole.tabLens,
+      customOptics: false,
+    );
+    // u_state.w, slot 45 overall (19 into the recipe packet), stays zero for
+    // every surface that does not ask for it.
+    expect(recipe.uniforms[19], 0);
+    final rim = recipe.withLensRim(.8).withPresence(.5);
+    expect(rim.uniforms[19], .8);
+    expect(rim.uniforms[18], .5);
+  });
+
+  testWidgets('held pill rim resolves widget style over theme, keeps zero', (
+    tester,
+  ) async {
+    Future<double> heldRim({
+      GlassTabBarStyle? theme,
+      GlassTabBarStyle? style,
+    }) async {
+      await tester.pumpWidget(
+        glassHarness(
+          imageKey: GlobalKey(),
+          child: LiquidPrismTheme(
+            data: LiquidPrismThemeData(tabBar: theme),
+            child: LiquidPrismTabBar(
+              tabs: const [
+                LiquidPrismTab(
+                  label: 'A',
+                  icon: SizedBox(width: 22, height: 22),
+                ),
+                LiquidPrismTab(
+                  label: 'B',
+                  icon: SizedBox(width: 22, height: 22),
+                ),
+              ],
+              style: style,
+              selectedIndex: 0,
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+      final finger = await tester.startGesture(
+        tester.getCenter(find.bySemanticsLabel('A')),
+      );
+      await tester.pumpAndSettle();
+      final rim = tester.widget<LiquidPrism>(lensGlass(GlassRole.tabLens));
+      // Only the pill carries it; the housing keeps the shared recipe.
+      expect(
+        tester.widget<LiquidPrism>(lensGlass(GlassRole.tabBar)).lensRim,
+        0,
+      );
+      await finger.up();
+      await tester.pumpAndSettle();
+      expect(lensGlass(GlassRole.tabLens), findsNothing);
+      return rim.lensRim;
+    }
+
+    expect(await heldRim(), 1);
+    const half = GlassTabBarStyle(rimRefraction: .5);
+    expect(await heldRim(theme: half), .5);
+    expect(
+      await heldRim(
+        theme: half,
+        style: const GlassTabBarStyle(rimRefraction: 0),
+      ),
+      0,
+    );
+    expect(
+      half.merge(const GlassTabBarStyle(haptics: false)).rimRefraction,
+      .5,
+    );
+    expect(half.copyWith(rimRefraction: 0).rimRefraction, 0);
+  });
+
+  testWidgets('shared lenses outside the tab bar carry no pill rim', (
+    tester,
+  ) async {
+    var on = false;
+    await tester.pumpWidget(
+      glassHarness(
+        imageKey: GlobalKey(),
+        child: LiquidPrismTheme(
+          data: const LiquidPrismThemeData(
+            tabBar: GlassTabBarStyle(rimRefraction: 2),
+          ),
+          child: StatefulBuilder(
+            builder: (context, update) => LiquidPrismSwitch(
+              value: on,
+              onChanged: (value) => update(() => on = value),
+            ),
+          ),
+        ),
+      ),
+    );
+    final finger = await tester.startGesture(
+      tester.getCenter(find.byType(LiquidPrismSwitch)),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    final lenses = tester.widgetList<LiquidPrism>(find.byType(LiquidPrism));
+    expect(lenses, isNotEmpty);
+    for (final glass in lenses) {
+      expect(glass.lensRim, 0);
+    }
+    await finger.up();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('touch glow is clipped to the expanded housing, not the rest', (
+    tester,
+  ) async {
+    final imageKey = GlobalKey();
+    await tester.pumpWidget(
+      glassHarness(
+        imageKey: imageKey,
+        background: const Color(0xFF151B20),
+        child: LiquidPrismTabBar(
+          tabs: const [
+            LiquidPrismTab(label: 'A', icon: SizedBox(width: 22, height: 22)),
+            LiquidPrismTab(label: 'B', icon: SizedBox(width: 22, height: 22)),
+          ],
+          style: const GlassTabBarStyle(
+            labelBehavior: GlassTabLabelBehavior.never,
+            haptics: false,
+          ),
+          selectedIndex: 0,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+    final housing = tester.getRect(lensGlass(GlassRole.tabBar));
+    final finger = await tester.startGesture(
+      tester.getCenter(find.bySemanticsLabel('A')),
+    );
+    await tester.pumpAndSettle();
+    // Hold between the tabs: the lens and its glow sit at the centre, and the
+    // housing's resting top edge lies inside the expanded housing beside it.
+    await finger.moveTo(housing.center);
+    await tester.pumpAndSettle();
+    final origin = tester.getTopLeft(find.byKey(imageKey));
+    final x = housing.center.dx + 62;
+    final pixels = await pixelsAt(tester, imageKey, [
+      Offset(x, housing.top - 1) - origin,
+      Offset(x, housing.top + 1) - origin,
+    ]);
+    // Clipped to the resting contour, the glow ended in a hard edge inside
+    // the expanded housing: a second rim with a lighter patch within it.
+    for (var channel = 0; channel < 3; channel++) {
+      expect((pixels[0][channel] - pixels[1][channel]).abs(), lessThan(6));
+    }
+    await finger.up();
+    await tester.pumpAndSettle();
+  });
 }

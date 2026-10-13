@@ -36,7 +36,9 @@ class LiquidPrism extends StatefulWidget {
     this.shape,
     this.child,
     this.role = GlassRole.surface,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12));
+    this.lensRim = 0,
+  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
+       assert(lensRim >= 0);
   final Glass? glass;
   final double? blur;
 
@@ -47,6 +49,11 @@ class LiquidPrism extends StatefulWidget {
   final GlassShape? shape;
   @internal
   final GlassRole role;
+
+  /// The selected tab pill's chromatic rim refraction; only the lifted lens
+  /// recipe reads it.
+  @internal
+  final double lensRim;
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
@@ -229,6 +236,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
           shape: widget.shape,
           blur: widget.blur,
           role: widget.role,
+          lensRim: widget.lensRim,
           child: widget.child,
         ),
       );
@@ -256,7 +264,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
       LiquidPrismTheme.materialBrightnessOf(context),
       widget.role,
       customOptics: optics != null,
-    ).withPresence(presence);
+    ).withPresence(presence).withLensRim(widget.lensRim);
     var style = (optics ?? recipe.optics(shape.radius)).copyWith(
       cornerRadius: shape.radius,
       frost:

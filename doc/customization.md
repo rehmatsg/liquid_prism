@@ -137,7 +137,18 @@ still invokes the callback.
 and unselected colors, selection color and blur, bar and pill shapes, and haptics.
 All fields can be supplied through the app theme and overridden per bar.
 `selectionBlur` accepts 0–12 logical pixels and is independent of the enclosing
-material's blur. It also applies with a custom selection color.
+material's blur. It also applies with a custom selection color. `rimRefraction`
+(0–2, default 1) tunes the held pill's chromatic rim; set it to 0 to turn it off,
+for example in a theme:
+
+```dart
+LiquidPrismTheme(
+  data: const LiquidPrismThemeData(
+    tabBar: GlassTabBarStyle(rimRefraction: 0),
+  ),
+  child: app,
+)
+```
 
 Custom icons are ordinary widgets, including images and SVG widgets supplied by
 your app. `selectedIcon` is optional. Unchanged icon state is retained during tab,

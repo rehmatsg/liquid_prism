@@ -102,6 +102,7 @@ and artwork can override ambient styling themselves.
 | `shape`, `selectionShape`, `lens` | Capsule housing / capsule pill / shared-lens override |
 | `haptics` | True for user selection feedback |
 | `refractContent`, `contentRefraction`, `contentDepth` | True / 14 / 11.2; lifted glyph displacement and rim depth |
+| `rimRefraction` | 1, 0–2; held pill's chromatic rim split and glint (fitted by eye), 0 off |
 
 Height/content defaults depend on text scale and available width. Set
 `selectionShape` to override shared lens shape for this bar. Housing minification

@@ -15,7 +15,7 @@ uniform vec4 u_material; // Recipe (0 custom, 1 regular, 2 clear, 3 lens), dark,
 uniform vec4 u_tintRed;
 uniform vec4 u_tintGreen;
 uniform vec4 u_tintBlue;
-uniform vec4 u_state;
+uniform vec4 u_state;    // Press, smooth contour, absence, tab pill rim refraction.
 uniform vec4 u_shapeA;
 uniform vec4 u_shapeB;
 uniform vec4 u_shapeC;

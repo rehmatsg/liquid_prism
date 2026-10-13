@@ -30,6 +30,7 @@ final class GlassRecipe {
     this.tintMatrix,
     this.tintAlpha, [
     this.presence = 1,
+    this.lensRim = 0,
   ]);
   final double kind;
   final bool dark;
@@ -43,9 +44,18 @@ final class GlassRecipe {
   /// shadows; the caller scales lens and frost inputs.
   final double presence;
 
+  /// Strength of the selected tab pill's chromatic rim refraction, shader slot
+  /// `u_state.w`. Zero, the default, for every other surface; the shader also
+  /// ignores it outside the lifted lens recipe.
+  final double lensRim;
+
   GlassRecipe withPresence(double value) => value == presence
       ? this
-      : GlassRecipe(kind, dark, role, tintMatrix, tintAlpha, value);
+      : GlassRecipe(kind, dark, role, tintMatrix, tintAlpha, value, lensRim);
+
+  GlassRecipe withLensRim(double value) => value == lensRim
+      ? this
+      : GlassRecipe(kind, dark, role, tintMatrix, tintAlpha, presence, value);
 
   // Native controls retain their captured profile. The requested half-strength
   // Regular/Clear balance applies to standalone surfaces.
@@ -115,9 +125,9 @@ final class GlassRecipe {
     role.shaderId,
     tintAlpha,
     ...tintMatrix,
-    // Press progress, smooth contour flag, absence (1 - presence), reserved.
-    // Absence keeps the zero default fully materialized.
-    0, 0, 1 - presence, 0,
+    // Press progress, smooth contour flag, absence (1 - presence) and the tab
+    // pill's rim refraction. Absence keeps the zero default fully materialized.
+    0, 0, 1 - presence, lensRim,
   ];
 }
 

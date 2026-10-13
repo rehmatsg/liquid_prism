@@ -35,6 +35,7 @@ class GlassTabBarStyle {
     this.refractContent,
     this.contentRefraction,
     this.contentDepth,
+    this.rimRefraction,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
        assert(height == null || height >= 44),
        assert(iconSize == null || iconSize > 0),
@@ -47,7 +48,10 @@ class GlassTabBarStyle {
          contentRefraction == null ||
              (contentRefraction >= 0 && contentRefraction <= 64),
        ),
-       assert(contentDepth == null || contentDepth > 0);
+       assert(contentDepth == null || contentDepth > 0),
+       assert(
+         rimRefraction == null || (rimRefraction >= 0 && rimRefraction <= 2),
+       );
 
   /// Housing material overrides. Lifted lenses use [lens] independently.
   final Glass? glass;
@@ -84,6 +88,12 @@ class GlassTabBarStyle {
   /// Foreground displacement magnitude and rim depth; defaults 14 and 11.2.
   final double? contentRefraction, contentDepth;
 
+  /// Chromatic refraction band at the held pill's rim, 0 to 2. It splits the
+  /// pill's view of the housing per color channel and adds a bright glint just
+  /// inside its contour, so the lifted pill stays visible on a dark housing.
+  /// Defaults to 1; 0 turns it off. Only the tab bar's pill uses it.
+  final double? rimRefraction;
+
   GlassTabBarStyle copyWith({
     Glass? glass,
     LiquidPrismStyle? optics,
@@ -108,6 +118,7 @@ class GlassTabBarStyle {
     bool? refractContent,
     double? contentRefraction,
     double? contentDepth,
+    double? rimRefraction,
   }) => GlassTabBarStyle(
     glass: glass ?? this.glass,
     optics: optics ?? this.optics,
@@ -132,6 +143,7 @@ class GlassTabBarStyle {
     refractContent: refractContent ?? this.refractContent,
     contentRefraction: contentRefraction ?? this.contentRefraction,
     contentDepth: contentDepth ?? this.contentDepth,
+    rimRefraction: rimRefraction ?? this.rimRefraction,
   );
 
   GlassTabBarStyle merge(GlassTabBarStyle? other) => other == null
@@ -160,5 +172,6 @@ class GlassTabBarStyle {
           refractContent: other.refractContent ?? refractContent,
           contentRefraction: other.contentRefraction ?? contentRefraction,
           contentDepth: other.contentDepth ?? contentDepth,
+          rimRefraction: other.rimRefraction ?? rimRefraction,
         );
 }

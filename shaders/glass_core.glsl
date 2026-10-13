@@ -272,6 +272,23 @@ void shadeGlass() {
                   + outerB*vec3(0.01,0.04,0.22);
         }
     } else { color = filteredScene(samplePoint,dx,dy); }
+    // The selected tab pill's rim refraction (u_state.w, zero for every other
+    // surface): the underlay warp splits per channel, red reaching farther out
+    // and blue less, so edges the lens pulls inward (the housing's contour,
+    // the page beyond it) gain a chromatic fringe. Fitted by eye to an iOS 27
+    // dark capture; the native operator is not recovered. Where the split is
+    // under a quarter pixel it is skipped.
+    float lensRim = u_material.x > 2.5 && u_material.x < 3.5 ? u_state.w : 0.;
+    if (lensRim > 0.) {
+        float split = 0.12*lensRim;
+        if (length(underlayOffset)*split*u_geometry.y > 0.25) {
+            vec3 outer = filteredScene(
+                scenePoint(local+underlayOffset*(1.+split)-offset),dx,dy);
+            vec3 inner = filteredScene(
+                scenePoint(local+underlayOffset*(1.-split)-offset),dx,dy);
+            color = vec3(outer.r,color.g,inner.b);
+        }
+    }
     color = gradeInput(color);
     // radiance() moves a channel by at most w/(1+w). Past the depth where both
     // weights fall below two 8-bit steps (w < 0.00784) the terms are
@@ -329,6 +346,15 @@ void shadeGlass() {
         float inner = smoothstep(1.*faceScale,5.*faceScale,depth)
             * (1.-smoothstep(5.*faceScale,shadeDepth,depth));
         color *= 1.-.12*u_finish.y*top*inner;
+        // A bright glint just inside the pill's contour, its blue reaching a
+        // little deeper than its red, so the rim reads against a dark housing.
+        if (lensRim > 0. && depth < 2.*faceScale + aa) {
+            float width = 1.5*faceScale;
+            float spread = .45*faceScale;
+            vec3 glint = clamp(1.-vec3(depth+spread,depth,max(depth-spread,0.))
+                               /width,0.,1.);
+            color += (1.-color)*glint*glint*(.3*lensRim);
+        }
     }
     color = gradePressed(color);
     frag_color = vec4(color*coverage,coverage+rimAlpha)*presence;

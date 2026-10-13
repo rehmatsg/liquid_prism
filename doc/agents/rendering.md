@@ -113,6 +113,26 @@ an isolating ancestor the effect filters its child's raster through a
 composed `ImageFilter` on its content layer instead, and adds no backdrop
 pass.
 
+## Tab pill rim
+
+Recipe slot `u_state.w` (uniform 45, `GlassRecipe.lensRim`) carries the held
+tab pill's rim refraction. Only `LiquidPrismTabBar` sets it, through
+`ControlLens.rim` and the internal `LiquidPrism.lensRim`, scaled by lift; the
+shader reads it only for the lens recipe (kind 3), so every other surface and
+the batch path keep zero. With it, the underlay sample is split per channel
+(red at `1 + 0.12 * rim` of the minifying offset, blue at `1 - 0.12 * rim`;
+skipped under a quarter pixel) and a 1.5-point glint, blue reaching 0.45
+points deeper than red, adds `0.3 * rim` toward white inside the contour. Both
+constants scale with the lens height over 70 points and are fitted by eye to a
+dark iOS 27 capture: the native pill shows a blue fringe then a bright band
+where the housing's edge is pulled inward, and a bright tinted glint at its
+rim. The native operator is not recovered.
+
+The touch glow is painted between the housing and the lens and must be
+clipped to the housing as drawn, including its flex expansion. Clipped to the
+resting contour it left a hard inner edge that the lens magnified into a
+second rim.
+
 ## Shared lens and shadows
 
 `ControlLens` owns clear optics and underlay minification; controls supply their

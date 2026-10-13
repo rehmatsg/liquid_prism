@@ -229,7 +229,10 @@ not take it. A cancelled pointer commits nothing.
 Housing material/motion, layout, typography, colors, contours, haptics and independent resting selection
 blur are customizable. `lens` customizes the lifted face; `refractContent: false`
 or `contentRefraction: 0` disables glyph refraction. `contentDepth` adjusts its
-rim region (native defaults 14 displacement / 11.2 depth). Widget `motion` is
+rim region (native defaults 14 displacement / 11.2 depth). `rimRefraction`
+(0–2, default 1) sets the held pill's chromatic rim: it splits the pill's view of
+the housing per color channel and adds a glint inside its contour, so the pill
+stays visible on a dark housing; 0 turns it off. Widget `motion` is
 `GlassMotion` for travel, press scale and projection; native lift/flex defaults
 remain calibrated separately. Safe-area positioning belongs to the parent.
 

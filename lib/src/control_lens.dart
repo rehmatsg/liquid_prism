@@ -20,13 +20,18 @@ class ControlLens extends StatelessWidget {
     this.restingColor = const Color(0x00000000),
     this.restingShadow = false,
     this.style,
-  });
+    this.rim = 0,
+  }) : assert(rim >= 0);
   final double lift;
   final GlassRole role;
   final GlassShape shape;
   final Color restingColor;
   final bool restingShadow;
   final GlassLensStyle? style;
+
+  /// Chromatic rim refraction at full lift; only the tab bar's pill sets it.
+  /// It fades with [lift] like the lens's other optics.
+  final double rim;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +78,7 @@ class ControlLens extends StatelessWidget {
           child: LiquidPrism(
             glass: (appearance.glass ?? Glass.clear).interactive(false),
             role: materialRole,
+            lensRim: rim * progress,
             shape: contour,
             blur: appearance.blur ?? appearance.optics?.frost ?? 0,
             optics:

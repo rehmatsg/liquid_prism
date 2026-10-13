@@ -93,6 +93,20 @@
   moves that highlight. Mostly vertical drags from these parts scroll an
   enclosing list. Track taps and track drags keep their behavior. Controls no
   longer expose no-op scroll semantics actions from their drag detector.
+- Fix the held tab pill's double rim and lighter patch. The touch glow under
+  the pill was clipped to the housing's resting contour while the housing
+  expands by `1 + 14.14 / width` on contact, so the glow ended in a hard edge
+  about 7 points inside the expanded housing's ends: a second capsule with a
+  lighter patch inside it, which the pill's underlay minification then pulled
+  into concentric rims near its edge. The glow is now clipped to the housing as
+  drawn. This predates the shared-capture change and is not caused by it.
+- Add `GlassTabBarStyle.rimRefraction` (0–2, default 1, 0 turns it off): the
+  held tab pill splits its view of the housing per color channel and adds a
+  bright glint just inside its contour, so the pill reads as a refracting rim
+  on a dark housing instead of nearly disappearing. Only the tab bar's pill
+  uses it; buttons, toolbars, switches, sliders and segments are unchanged.
+  The values are fitted by eye to an iOS 27 dark capture, not recovered from
+  the native operator.
 
 ## 0.2.1
 
