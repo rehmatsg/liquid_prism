@@ -78,6 +78,81 @@ void main() {
     await tester.pumpAndSettle();
     expect(taps, 3);
   });
+  group('a lone toolbar item', () {
+    GlassToolbarItem item({double? width}) => GlassToolbarItem(
+      icon: const Icon(CupertinoIcons.slider_horizontal_3),
+      label: 'Preferences',
+      width: width,
+      onPressed: () {},
+    );
+
+    // UIKit (iOS 27.1) draws a lone bar button as a circle: a 36-point button
+    // in a 44-point navigation glass and a 38-point one in a 48-point bottom
+    // glass. Failure: it is laid out as the 38-point default plus insets, a
+    // 46 x 44 capsule in the navigation bar.
+    for (final (size, extent) in [
+      (GlassToolbarSize.navigation, 44.0),
+      (GlassToolbarSize.bottom, 48.0),
+    ]) {
+      for (final axis in Axis.values) {
+        testWidgets('is a ${extent.toInt()}-point circle (${size.name}, '
+            '${axis.name})', (tester) async {
+          await tester.pumpWidget(
+            harness(
+              LiquidPrismToolbarGroup(size: size, axis: axis, items: [item()]),
+            ),
+          );
+          expect(tester.getSize(find.byType(LiquidPrism)), Size.square(extent));
+          // The whole circle is the action region, centred on the glass.
+          final action = find.bySemanticsLabel('Preferences');
+          expect(tester.getSize(action), Size.square(extent));
+          expect(
+            tester.getCenter(action),
+            tester.getCenter(find.byType(LiquidPrism)),
+          );
+        });
+      }
+    }
+
+    testWidgets('follows a custom height and inset', (tester) async {
+      // Failure: the circle is pinned to the native 44/48 sizes and ignores
+      // the style that sets the bar height.
+      await tester.pumpWidget(
+        harness(
+          LiquidPrismToolbarGroup(
+            style: const GlassToolbarStyle(height: 52, inset: 6),
+            items: [item()],
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(LiquidPrism)), const Size.square(52));
+    });
+
+    testWidgets('keeps an explicit width as a capsule', (tester) async {
+      // Failure: a caller's measured width for a wide custom item is replaced
+      // by the circle.
+      await tester.pumpWidget(
+        harness(
+          LiquidPrismToolbarGroup(
+            size: GlassToolbarSize.navigation,
+            items: [item(width: 60)],
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byType(LiquidPrism)), const Size(68, 44));
+    });
+
+    testWidgets('does not change groups of several default items', (
+      tester,
+    ) async {
+      // Failure: the lone-item circle leaks into multi-item groups, which
+      // keep the measured 38-point items (100 x 48 for two chevrons).
+      await tester.pumpWidget(
+        harness(LiquidPrismToolbarGroup(items: [item(), item()])),
+      );
+      expect(tester.getSize(find.byType(LiquidPrism)), const Size(100, 48));
+    });
+  });
   testWidgets('bottom toolbar keeps sizes in narrow/RTL parents and scrolls', (
     tester,
   ) async {

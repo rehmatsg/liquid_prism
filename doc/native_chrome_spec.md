@@ -12,6 +12,9 @@ appearances, including focused and filled search states.
 | Navigation visual item widths | 42⅓, 38⅔, 38 |
 | Navigation outer inset / item gap | 4 / 16 |
 | Bottom toolbar capsule | 100 × 48 for two chevrons; 48 × 48 for compose |
+| Lone navigation item (`--single`) | 44 × 44 circle; 36 × 36 button, 4 inset |
+| Lone bottom item (`--single`) | 48 × 48 circle; 38 × 38 button, 5 inset |
+| Lone navigation text item ("Edit", `--single`) | 61⅓ × 44 capsule |
 | Bottom visual item width / outer inset / gap | 38 / 5 / 14 |
 | Navigation symbol image views (star / share / ellipsis) | 28⅓ × 27 / 24⅔ × 30 / 24 × 8⅓ |
 | Bottom symbol image views (chevrons / compose) | 16 × 22⅔ / 26⅔ × 27 |
@@ -51,7 +54,9 @@ bindings of the private layout scheduler. The JSON preserves that evidence.
 
 LiquidPrismToolbarGroup defaults to the bottom size; GlassToolbarSize.navigation
 selects the compact size. GlassToolbarItem.width specifies the visual item
-width; symbol-dependent native widths are supported explicitly. Action regions
+width; symbol-dependent native widths are supported explicitly. A lone item
+without an explicit width fills a circle as tall as the bar, as UIKit draws a
+lone bar button; an explicit width keeps a capsule. Action regions
 also cover adjacent gaps. Groups scroll in narrow parents, support RTL, null
 callbacks, keyboard/accessibility activation, and Reduce Motion.
 
@@ -66,6 +71,12 @@ For the measured bottom layout, place the search widget inside an 8-point
 horizontal inset and set restingInset=20. Screen placement and keyboard avoidance
 belong to the containing layout; the field handles its own focus/clear/cancel
 state. See example/lib/chrome_demo.dart for the complete arrangement.
+
+The lone-item rows come from the probe's `--single` launch argument (one
+symbol at the top trailing edge, an "Edit" text item at the leading edge and
+two separated bottom symbols), read from `chrome-<mode>-single-rest.json` on an
+iPhone 17 Pro simulator, iOS 27.1, light appearance. They are not yet folded
+into the JSON.
 
 Generate tool/native_chrome_probe with xcodegen and run its ChromeSpecs scheme on
 the reference simulator. Copy app Documents/extracted and Documents/specs into

@@ -13,6 +13,7 @@ struct ChromeFixture: View {
     @State private var searching = false
     @State private var taps = 0
     var mode: String { ProcessInfo.processInfo.arguments.contains("--light") ? "light" : "dark" }
+    var single: Bool { ProcessInfo.processInfo.arguments.contains("--single") }
     var search: Bool { ProcessInfo.processInfo.arguments.contains("--search") }
     var body: some View {
         NavigationStack {
@@ -23,7 +24,19 @@ struct ChromeFixture: View {
             .navigationTitle(search ? "Search" : "Toolbar")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if !search {
+                if single {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Preferences", systemImage: "slider.horizontal.3") { taps += 1 }
+                    }
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Edit") { taps += 1 }
+                    }
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        Button("Compose", systemImage: "square.and.pencil") { taps += 1 }
+                        Spacer()
+                        Button("Sliders", systemImage: "slider.horizontal.3") { taps += 1 }
+                    }
+                } else if !search {
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         Button("Favorite", systemImage: "star") { taps += 1 }.accessibilityIdentifier("favorite")
                         Button("Share", systemImage: "square.and.arrow.up") { taps += 1 }.accessibilityIdentifier("share")
@@ -42,7 +55,7 @@ struct ChromeFixture: View {
                 try? await Task.sleep(for:.milliseconds(800))
                 StartMotionLog("chrome-\(mode)-\(search ? "search" : "toolbar")",[:],8)
                 try? await Task.sleep(for:.seconds(2))
-                ExtractGlass("chrome-\(mode)-\(search ? "search" : "toolbar")-rest",[:])
+                ExtractGlass("chrome-\(mode)-\(single ? "single" : search ? "search" : "toolbar")-rest",[:])
             }
             .onChange(of: searching) { _, value in
                 if value { Task {

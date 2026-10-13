@@ -424,6 +424,9 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
                                       size: 17,
                                     ),
                                     onPressed: _cancel,
+                                    // The inset sizes this to cancelWidth,
+                                    // which need not equal the field height.
+                                    width: 38,
                                   ),
                                 ],
                               ),
