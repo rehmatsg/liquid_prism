@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.1
+
 - Lay out a `LiquidPrismToolbarGroup` with a single item as a circle, as iOS
   draws a lone bar button: 44 × 44 in a navigation bar and 48 × 48 in a bottom
   toolbar or rail, following custom heights and insets. A navigation group was
