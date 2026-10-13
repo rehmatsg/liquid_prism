@@ -37,8 +37,12 @@ class LiquidPrism extends StatefulWidget {
     this.child,
     this.role = GlassRole.surface,
     this.lensRim = 0,
+    this.chromaticSplit = 0,
+    this.chromaticBand = 0,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(lensRim >= 0);
+       assert(lensRim >= 0),
+       assert(chromaticSplit >= 0),
+       assert(chromaticBand >= 0);
   final Glass? glass;
   final double? blur;
 
@@ -50,10 +54,16 @@ class LiquidPrism extends StatefulWidget {
   @internal
   final GlassRole role;
 
-  /// The selected tab pill's chromatic rim refraction; only the lifted lens
+  /// The selected tab pill's bright glint; only the lifted lens
   /// recipe reads it.
   @internal
   final double lensRim;
+
+  /// Effective lifted-lens red–blue split and band depth, in points.
+  @internal
+  final double chromaticSplit;
+  @internal
+  final double chromaticBand;
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
@@ -237,6 +247,8 @@ class _LiquidPrismState extends State<LiquidPrism> {
           blur: widget.blur,
           role: widget.role,
           lensRim: widget.lensRim,
+          chromaticSplit: widget.chromaticSplit,
+          chromaticBand: widget.chromaticBand,
           child: widget.child,
         ),
       );
@@ -259,12 +271,16 @@ class _LiquidPrismState extends State<LiquidPrism> {
         ? 1.0
         : presenceScope.progress.value.clamp(0.0, 1.0);
     final materialize = presenceScope?.materialize ?? false;
-    final recipe = GlassRecipe.resolve(
-      _material,
-      LiquidPrismTheme.materialBrightnessOf(context),
-      widget.role,
-      customOptics: optics != null,
-    ).withPresence(presence).withLensRim(widget.lensRim);
+    final recipe =
+        GlassRecipe.resolve(
+              _material,
+              LiquidPrismTheme.materialBrightnessOf(context),
+              widget.role,
+              customOptics: optics != null,
+            )
+            .withPresence(presence)
+            .withLensRim(widget.lensRim)
+            .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand);
     var style = (optics ?? recipe.optics(shape.radius)).copyWith(
       cornerRadius: shape.radius,
       frost:
@@ -382,6 +398,21 @@ class _LiquidPrismState extends State<LiquidPrism> {
           )
         : glass;
   }
+}
+
+/// Writes the reserved scalar slots; regular batch members always carry zero.
+/// Split is raster pixels before the sampling transform; depth is local points.
+@visibleForTesting
+void writeChromaticFringeUniforms(
+  List<double> values,
+  GlassRecipe recipe,
+  double pixelRatio,
+) {
+  final lens = recipe.kind == 3;
+  values[60] = lens ? recipe.chromaticBand : 0; // u_shapeD.z
+  values[46 + superellipseUniformCount + 7] = lens
+      ? recipe.chromaticSplit * pixelRatio * recipe.presence
+      : 0; // u_derived[1].w
 }
 
 /// Contact, soft and ambient shadows only darken pixels outside the glass.
@@ -661,6 +692,7 @@ class _RenderGlass extends RenderProxyBox {
       ..._contour,
       ..._derivedUniforms(rect, m),
     ];
+    writeChromaticFringeUniforms(values, recipe, pixelRatio);
     values[42] = press;
     values[43] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
     return values;
@@ -691,7 +723,12 @@ class _RenderGlass extends RenderProxyBox {
     final det = (m[0] * m[5] - m[4] * m[1]).abs();
     final pixel = 1 / (dpr * math.sqrt(math.max(det, 1e-8)));
     final bypass =
-        math.max(math.max(24.0, 2.5 * pixel), edge) + 0.5 + 0.02 * radius;
+        math.max(
+          math.max(math.max(24.0, 2.5 * pixel), edge),
+          recipe.kind == 3 ? recipe.chromaticBand : 0,
+        ) +
+        0.5 +
+        0.02 * radius;
     return [
       1 / math.max(edge, 0.001),
       displacement,
@@ -700,7 +737,7 @@ class _RenderGlass extends RenderProxyBox {
       sigma,
       math.max(2.25, 0.09 * sigma * sigma),
       0.49 * sigma * sigma,
-      0,
+      0, // Chromatic split is written alongside its band after packet assembly.
       broadEnd,
       rimEnd,
       style.frost * 0.85,

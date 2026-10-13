@@ -23,6 +23,8 @@ class ContentLensWindow extends StatefulWidget {
     required this.shape,
     required this.refraction,
     required this.depth,
+    this.chromaticAberration = 0,
+    this.chromaticBand = 4.8,
     this.scale = 1,
     this.origin = Offset.zero,
     required this.child,
@@ -31,6 +33,7 @@ class ContentLensWindow extends StatefulWidget {
   final Color? color;
   final Rect lens;
   final double lift, refraction, depth, scale;
+  final double chromaticAberration, chromaticBand;
   final Offset origin;
   final GlassShape shape;
   final Widget child;
@@ -38,6 +41,23 @@ class ContentLensWindow extends StatefulWidget {
   @override
   State<ContentLensWindow> createState() => _ContentLensWindowState();
 }
+
+/// u_effect after the contour: displacement/depth in scaled points, effective
+/// split in raster pixels, band depth in scaled points. Also used by packet tests.
+List<double> contentLensEffectUniforms({
+  required double refraction,
+  required double depth,
+  required double chromaticAberration,
+  required double chromaticBand,
+  required double lift,
+  required double scale,
+  required double deviceScale,
+}) => [
+  refraction * scale,
+  depth * scale,
+  chromaticAberration * lift.clamp(0.0, 1.0) * scale * deviceScale,
+  chromaticBand * scale,
+];
 
 class _ContentLensWindowState extends State<ContentLensWindow> {
   static Future<ui.FragmentProgram>? _program;
@@ -102,6 +122,8 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
     shader: _shader,
     refraction: widget.refraction,
     depth: widget.depth,
+    chromaticAberration: widget.chromaticAberration,
+    chromaticBand: widget.chromaticBand,
     scale: widget.scale,
     origin: widget.origin,
     child: widget.child,
@@ -125,6 +147,8 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     required this.shader,
     required this.refraction,
     required this.depth,
+    required this.chromaticAberration,
+    required this.chromaticBand,
     required this.scale,
     required this.origin,
     required super.child,
@@ -133,13 +157,23 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
   final Color? color;
   final Rect lens;
   final double lift, refraction, depth, scale;
+  final double chromaticAberration, chromaticBand;
   final Offset origin;
   final GlassShape shape;
   final ui.FragmentShader? shader;
   @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderSelectionWindow(path, color)
-        ..configure(shader, lens, lift, shape, refraction, depth)
+        ..configure(
+          shader,
+          lens,
+          lift,
+          shape,
+          refraction,
+          depth,
+          chromaticAberration,
+          chromaticBand,
+        )
         ..setScale(scale, origin);
   @override
   void updateRenderObject(
@@ -149,7 +183,16 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     renderObject
       ..path = path
       ..color = color
-      ..configure(shader, lens, lift, shape, refraction, depth)
+      ..configure(
+        shader,
+        lens,
+        lift,
+        shape,
+        refraction,
+        depth,
+        chromaticAberration,
+        chromaticBand,
+      )
       ..setScale(scale, origin);
   }
 }
@@ -193,6 +236,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
   ui.FragmentShader? _shader;
   Rect _lens = Rect.zero;
   double _lift = 0, _refraction = 14, _depth = 11.2;
+  double _chromaticAberration = 0, _chromaticBand = 4.8;
   GlassShape _shape = GlassShape.capsule;
   void configure(
     ui.FragmentShader? shader,
@@ -201,13 +245,17 @@ class _RenderSelectionWindow extends RenderProxyBox {
     GlassShape shape,
     double refraction,
     double depth,
+    double chromaticAberration,
+    double chromaticBand,
   ) {
     if (shader == _shader &&
         lens == _lens &&
         lift == _lift &&
         shape == _shape &&
         refraction == _refraction &&
-        depth == _depth) {
+        depth == _depth &&
+        chromaticAberration == _chromaticAberration &&
+        chromaticBand == _chromaticBand) {
       return;
     }
     final refracted = _refractsContent;
@@ -217,6 +265,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _shape = shape;
     _refraction = refraction;
     _depth = depth;
+    _chromaticAberration = chromaticAberration;
+    _chromaticBand = chromaticBand;
     if (refracted != _refractsContent) markNeedsCompositingBitsUpdate();
     markNeedsPaint();
   }
@@ -242,7 +292,9 @@ class _RenderSelectionWindow extends RenderProxyBox {
 
   /// Whether the selected foreground is refracted by the content lens.
   bool get _refractsContent =>
-      _shader != null && _lift >= .001 && _refraction != 0;
+      _shader != null &&
+      _lift >= .001 &&
+      (_refraction != 0 || (_chromaticAberration > 0 && _chromaticBand > 0));
 
   /// The content lens for a raster at [deviceScale] physical pixels per point.
   ui.ImageFilter _contentFilter(double deviceScale) {
@@ -273,8 +325,15 @@ class _RenderSelectionWindow extends RenderProxyBox {
       radius,
       _shape.isSmooth ? 1.0 : 0.0,
       ..._contour,
-      _refraction * _scale,
-      _depth * _scale,
+      ...contentLensEffectUniforms(
+        refraction: _refraction,
+        depth: _depth,
+        chromaticAberration: _chromaticAberration,
+        chromaticBand: _chromaticBand,
+        lift: _lift,
+        scale: _scale,
+        deviceScale: deviceScale,
+      ),
     ];
     for (var i = 0; i < values.length; i++) {
       shader.setFloat(i + 2, values[i]);

@@ -17,6 +17,8 @@ and [components](components.md) for usage.
 | `shadow` / `scaleShadows` | True / true |
 | `shadowOpacity` / `shadowBlur` / `shadowOffset` | Lifted ambient shadow: .1 / 5 / (0, 6) |
 | `ringOpacity` / `ringBlur` / `ringWidth` / `ringOffset` | Lifted shadow ring: .055 / 4 / 2 / (0, 4); slider .2 / 3 / 4 / (0, 8) |
+| `chromaticAberration` | Full-lift red–blue split along the rim, in points: segment/tab 3.5, switch/slider 0; explicit 0 off |
+| `chromaticBand` | Band depth in points, 4.8; explicit 0 off |
 | `rimWidth` / `rimRefraction` | Rim band and its displacement for a 37.2-point lens; slider 6.66 / 11.1, others keep their fitted rim |
 | `rimLight` | Rim key/fill highlight strength at full lift: slider 1, others .6 |
 | `faceBlack` | Lens face black point, 0–1: slider .1, others 0 |
@@ -27,6 +29,9 @@ scale with actual height unless opted out; opacity does not. `shadow: false`
 also removes the resting slider shadow. Ambient/ring fields customize lifted
 shadows; the resting slider shadow retains its native recipe. Rim fields scale
 with lens height like shadow metrics and are ignored when `optics` is supplied.
+Chromatic split/band do not scale with lens height and remain independent of
+`optics`; split scales with lift and surface presence. They affect backdrop and
+refracted foreground. Generic optical dispersion is a separate setting.
 
 ## Buttons: `GlassButtonAppearance`
 
@@ -103,7 +108,7 @@ and artwork can override ambient styling themselves.
 | `shape`, `selectionShape`, `lens` | Capsule housing / capsule pill / shared-lens override |
 | `haptics` | True for user selection feedback |
 | `refractContent`, `contentRefraction`, `contentDepth` | True / 14 / 11.2; lifted glyph displacement and rim depth |
-| `rimRefraction` | 1, 0–2; held pill's chromatic rim split and glint (fitted by eye), 0 off |
+| `rimRefraction` | 1, 0–2; multiplier for along-rim fringe (backdrop and foreground) and bright glint, 0 off |
 
 Height/content defaults depend on text scale and available width. Set
 `selectionShape` to override shared lens shape for this bar. Housing minification

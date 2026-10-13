@@ -21,6 +21,14 @@
   in 0.18 s, inline in over 0.53 s rising 15 points). Native icon-only tab bars
   keep the 86-point pitch, so that default is unchanged.
   See `doc/package_features_spec.md`.
+- Add a lift-scaled chromatic fringe along held segmented/tab selection rims,
+  including labels/icons. `GlassLensStyle.chromaticAberration` controls the
+  full-lift red–blue split (3.5 points for segments/tabs, 0 for switches/sliders);
+  `chromaticBand` controls depth (4.8 points). Explicit zero disables the fringe.
+  Tab `rimRefraction` now scales this fringe and the preserved bright glint;
+  its old radial rim split is replaced. Switch/slider generic dispersion stays
+  unchanged. The foreground shader effect packet grows from vec2 to vec4.
+  Labels take a quarter of the split, blended half with the plain glyph.
 
 - Bend the segmented control's labels near the held selection's rim, as iOS 27
   does, with the tab bar's foreground lens filter. It applies only while the

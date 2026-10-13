@@ -10,11 +10,12 @@ uniform vec4 u_shapeB;
 uniform vec4 u_shapeC;
 uniform vec4 u_shapeD;
 uniform vec4 u_curve[65];
-uniform vec2 u_effect; // Foreground displacement magnitude and SDF depth.
+uniform vec4 u_effect; // Displacement/depth (pt), effective split (px), band (pt).
 uniform sampler2D u_content;
 out vec4 frag_color;
 
 #include "superellipse.glsl"
+#include "chromatic_fringe.glsl"
 
 vec4 readContent(vec2 p) {
     vec2 uv = p / u_textureSize;
@@ -49,5 +50,21 @@ void main() {
     float t = clamp(1.+field.x/u_effect.y,0.,1.);
     float profile = 1.-sqrt(max(1.-t*t,0.));
     vec2 displaced = pixel-field.yz*(u_effect.x*u_geometry.y*profile*u_geometry.x);
-    frag_color = readContent(displaced);
+    vec4 green = readContent(displaced);
+    float depth = -field.x;
+    if (u_effect.z > 0. && u_effect.w > 0. && depth < u_effect.w) {
+        // Glyphs fringe at half the backdrop's split, half blended with the
+        // unshifted sample: a full split on thin strokes left opaque pure
+        // primaries wherever one channel alone hit the glyph, where native
+        // shows a soft tint. Fitted by eye to the iOS 27 segmented capture.
+        vec2 shift = chromaticDirection(field.yz) *
+            (.25*max(chromaticWeight(depth,u_effect.w),0.)*u_effect.z);
+        vec4 red = readContent(displaced-shift);
+        vec4 blue = readContent(displaced+shift);
+        // Each source channel is already premultiplied and <= its own alpha,
+        // so the union alpha bounds all three; mixing two valid premultiplied
+        // colours stays valid.
+        vec4 split = vec4(red.r,green.g,blue.b,max(max(red.a,green.a),blue.a));
+        frag_color = mix(green,split,.5);
+    } else { frag_color = green; }
 }
