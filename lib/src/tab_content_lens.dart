@@ -92,7 +92,6 @@ class _SelectionWindowState extends State<_SelectionWindow> {
     depth: widget.depth,
     scale: widget.scale,
     origin: widget.origin,
-    pixelRatio: MediaQuery.devicePixelRatioOf(context),
     child: widget.child,
   );
 }
