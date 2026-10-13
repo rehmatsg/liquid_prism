@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
@@ -28,11 +29,13 @@ class GlassToolbarItem {
     this.key,
     this.selected = false,
     this.foregroundColor,
-    this.width = 38,
+    double? width,
   }) : menu = null,
        onMenuSelected = null,
        _menuEnabled = false,
-       assert(width >= 36);
+       width = width ?? 38,
+       _hasWidth = width != null,
+       assert(width == null || width >= 36);
 
   const GlassToolbarItem.menu({
     required this.icon,
@@ -43,11 +46,13 @@ class GlassToolbarItem {
     this.key,
     this.selected = false,
     this.foregroundColor,
-    this.width = 38,
+    double? width,
   }) : onPressed = null,
        onMenuSelected = onSelected,
        _menuEnabled = enabled,
-       assert(width >= 36);
+       width = width ?? 38,
+       _hasWidth = width != null,
+       assert(width == null || width >= 36);
   final Widget icon;
   final String label;
   final FutureOr<void> Function()? onPressed;
@@ -61,7 +66,13 @@ class GlassToolbarItem {
 
   /// Native item width depends on the symbol. The captured minimum is 38;
   /// callers can supply the measured width for wider or custom symbols.
+  ///
+  /// Left unset on the only item of a group, the item fills a circle: the
+  /// group is as wide as it is tall (44 points in a navigation bar, 48 in a
+  /// bottom toolbar), as native iOS draws a lone bar button. An explicit width
+  /// is kept, so a wider custom item stays a capsule.
   final double width;
+  final bool _hasWidth;
 }
 
 /// Icon actions sharing one continuous glass capsule, with individual feedback.
@@ -117,8 +128,9 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
         appearance.foregroundColor ??
         theme.foregroundColor ??
         restingGlassAccent(LiquidPrismTheme.tintOf(context), colors.brightness);
+    final widths = _itemWidths(height, inset);
     final width =
-        items.fold<double>(0, (sum, item) => sum + item.width) +
+        widths.fold<double>(0, (sum, extent) => sum + extent) +
         gap * (items.length - 1) +
         inset * 2;
     final capsule = SizedBox(
@@ -142,6 +154,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
                 for (var i = 0; i < items.length; i++)
                   _action(
                     items[i],
+                    widths[i],
                     i,
                     height,
                     inset,
@@ -179,8 +192,19 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
     );
   }
 
+  /// Visual item extents along the group's axis. A lone item without an
+  /// explicit width fills a circle, as UIKit measured: a 36-point button in the
+  /// 44-point navigation circle and a 38-point button in the 48-point bottom one.
+  List<double> _itemWidths(double height, double inset) => [
+    if (items.length == 1 && !items.single._hasWidth)
+      math.max(height - inset * 2, 0)
+    else
+      for (final item in items) item.width,
+  ];
+
   Widget _action(
     GlassToolbarItem item,
+    double itemWidth,
     int index,
     double height,
     double inset,
@@ -215,7 +239,7 @@ class LiquidPrismToolbarGroup extends StatelessWidget {
             final color = !item._isEnabled
                 ? colors.disabledLabel
                 : item.foregroundColor ?? foreground;
-            final extent = item.width + left + right;
+            final extent = itemWidth + left + right;
             return SizedBox(
               width: vertical ? height : extent,
               height: vertical ? extent : height,

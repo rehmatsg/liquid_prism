@@ -298,7 +298,9 @@ LiquidPrismToolbarGroup(
 
 Navigation/bottom presets are 44/48 points high. Style can override height,
 inset, spacing, shapes, colors, material and motion. Each item has its own width,
-key, selected flag and optional literal foreground. Narrow groups scroll rather
+key, selected flag and optional literal foreground. A group with one item and
+no explicit width is a circle as tall as the bar (44 or 48 points), like a lone
+native bar button; give the item a width to keep a wider capsule. Narrow groups scroll rather
 than shrink icons. Direct `size` wins over the theme, even when explicitly bottom.
 Null callbacks disable individual actions; menu items use `enabled: false`.
 
