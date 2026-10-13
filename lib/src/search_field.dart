@@ -14,6 +14,20 @@ import 'theme.dart';
 import 'toolbar.dart';
 import 'appearance.dart';
 
+/// Wraps the search field's glass capsule; see
+/// [LiquidPrismSearchField.fieldBuilder].
+typedef GlassSearchFieldBuilder = Widget Function(
+  BuildContext context,
+  Widget field,
+);
+
+/// Builds the editor's trailing widget; see
+/// [LiquidPrismSearchField.suffixBuilder].
+typedef GlassSearchSuffixBuilder = Widget? Function(
+  BuildContext context,
+  Widget? clearButton,
+);
+
 /// A native-size glass search capsule with clear and focused cancel actions.
 /// Owns its controller/focus node only when they are not supplied by the caller.
 class LiquidPrismSearchField extends StatefulWidget {
@@ -43,6 +57,11 @@ class LiquidPrismSearchField extends StatefulWidget {
     this.onCleared,
     this.prefix,
     this.suffix,
+    this.suffixBuilder,
+    this.fieldBuilder,
+    this.onFocusChange,
+    this.onTapOutside,
+    this.groupId = EditableText,
     this.clearLabel = 'Clear search',
     this.cancelLabel = 'Cancel search',
     this.style,
@@ -71,6 +90,32 @@ class LiquidPrismSearchField extends StatefulWidget {
   final VoidCallback? onTap, onEditingComplete, onCleared;
   final Widget? prefix, suffix;
 
+  /// Builds the trailing widget from the field's own clear action, which is
+  /// null while clearing is unavailable (empty, disabled or hidden by style).
+  /// Return [clearButton] to keep it, another widget such as a progress
+  /// indicator to replace it, or null for none. A non-null [suffix] wins.
+  final GlassSearchSuffixBuilder? suffixBuilder;
+
+  /// Wraps the glass capsule that holds the editor, excluding the resting
+  /// inset and the cancel action. Its rect is the field's anchor: wrap it in a
+  /// [CompositedTransformTarget], [OverlayPortal], [TapRegion] or [Focus] to
+  /// attach a dropdown or handle keys. Keep the returned structure stable
+  /// across builds; replacing ancestors of the field remounts the editor and
+  /// drops the keyboard.
+  final GlassSearchFieldBuilder? fieldBuilder;
+
+  /// Called when the editor gains or loses focus, after the change. Swapping
+  /// in a focus node with a different state does not call it.
+  final ValueChanged<bool>? onFocusChange;
+
+  /// Called for a pointer down outside the editor and outside every
+  /// [TapRegion] sharing [groupId]. Null keeps the platform behavior.
+  final TapRegionCallback? onTapOutside;
+
+  /// Tap region group of the editor. Give a field-anchored overlay's
+  /// [TapRegion] the same group so taps inside it are not outside the field.
+  final Object groupId;
+
   /// Optional inset that dissolves on focus. Native bottom search uses 20
   /// inside a parent inset by 8; standalone fields default to zero.
   final double restingInset;
@@ -81,6 +126,11 @@ class LiquidPrismSearchField extends StatefulWidget {
   @override
   State<LiquidPrismSearchField> createState() => _LiquidPrismSearchFieldState();
 }
+
+Widget? _defaultSuffix(BuildContext context, Widget? clearButton) =>
+    clearButton;
+
+Widget _plainField(BuildContext context, Widget field) => field;
 
 class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
     with TickerProviderStateMixin {
@@ -97,7 +147,8 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
   void initState() {
     super.initState();
     _controller.addListener(_textChanged);
-    _node.addListener(_focusChanged);
+    _node.addListener(_nodeChanged);
+    _reportedFocus = _node.hasFocus;
     _focus.value = _reveal.value = _node.hasFocus ? 1 : 0;
   }
 
@@ -117,8 +168,9 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
       _controller.addListener(_textChanged);
     }
     if (old.focusNode != widget.focusNode) {
-      (old.focusNode ?? _ownedFocus).removeListener(_focusChanged);
-      _node.addListener(_focusChanged);
+      (old.focusNode ?? _ownedFocus).removeListener(_nodeChanged);
+      _node.addListener(_nodeChanged);
+      _reportedFocus = _node.hasFocus;
     }
     if (!widget.enabled) _node.unfocus();
     _focusChanged();
@@ -132,6 +184,16 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
       (LiquidPrismTheme.of(context).search ?? const GlassSearchStyle()).merge(
         widget.appearance,
       );
+
+  late bool _reportedFocus;
+
+  void _nodeChanged() {
+    _focusChanged();
+    final focused = _node.hasFocus;
+    if (focused == _reportedFocus) return;
+    _reportedFocus = focused;
+    widget.onFocusChange?.call(focused);
+  }
 
   void _focusChanged() {
     final focused = widget.enabled && _node.hasFocus;
@@ -172,7 +234,7 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
   @override
   void dispose() {
     _controller.removeListener(_textChanged);
-    _node.removeListener(_focusChanged);
+    _node.removeListener(_nodeChanged);
     _focus.dispose();
     _reveal.dispose();
     _ownedController.dispose();
@@ -191,6 +253,90 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
     final height = math.max(
       appearance.height ?? 48.0,
       MediaQuery.textScalerOf(context).scale(style.fontSize ?? 17) + 28,
+    );
+    final clearButton =
+        widget.enabled &&
+            appearance.showClearButton != false &&
+            _controller.text.isNotEmpty
+        ? LiquidPrismPressable(
+            label: widget.clearLabel,
+            onPressed: _clear,
+            child: SizedBox(
+              width: appearance.clearWidth ?? 36,
+              height: height,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(end: 10 + 2 / 3),
+                child: Icon(
+                  CupertinoIcons.clear_thick_circled,
+                  size: 20,
+                  color: appearance.clearColor ?? colors.secondaryLabel,
+                ),
+              ),
+            ),
+          )
+        : null;
+    // Built outside the focus animation: the capsule's width animates through
+    // layout, so neither the editor nor `fieldBuilder` rebuilds per frame.
+    final capsule = (widget.fieldBuilder ?? _plainField)(
+      context,
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.enabled ? _node.requestFocus : null,
+        child: ChromeMaterial(
+          height: height,
+          role: GlassRole.searchField,
+          glass: widget.glass ?? appearance.glass,
+          optics: widget.optics ?? appearance.optics,
+          blur: widget.blur ?? appearance.blur,
+          shape: appearance.shape,
+          child: CupertinoTextField(
+            controller: _controller,
+            focusNode: _node,
+            enabled: widget.enabled,
+            autofocus: widget.autofocus,
+            keyboardType: widget.keyboardType,
+            inputFormatters: widget.inputFormatters,
+            textCapitalization: widget.textCapitalization,
+            autocorrect: widget.autocorrect,
+            enableSuggestions: widget.enableSuggestions,
+            readOnly: widget.readOnly,
+            textAlign: widget.textAlign,
+            onTap: widget.onTap,
+            onEditingComplete: widget.onEditingComplete,
+            onTapOutside: widget.onTapOutside,
+            groupId: widget.groupId,
+            placeholder: widget.placeholder,
+            placeholderStyle: style
+                .copyWith(color: colors.secondaryLabel)
+                .merge(appearance.placeholderStyle),
+            style: style,
+            cursorColor:
+                appearance.cursorColor ?? LiquidPrismTheme.tintOf(context),
+            decoration: null,
+            padding: appearance.padding ?? EdgeInsets.zero,
+            textInputAction: widget.textInputAction,
+            onChanged: widget.onChanged,
+            onSubmitted: widget.onSubmitted,
+            prefix:
+                widget.prefix ??
+                Padding(
+                  padding:
+                      appearance.prefixPadding ??
+                      const EdgeInsetsDirectional.only(start: 12, end: 8),
+                  child: ExcludeSemantics(
+                    child: Icon(
+                      CupertinoIcons.search,
+                      size: appearance.iconSize ?? 20 + 1 / 3,
+                      color: appearance.iconColor ?? colors.label,
+                    ),
+                  ),
+                ),
+            suffix:
+                widget.suffix ??
+                (widget.suffixBuilder ?? _defaultSuffix)(context, clearButton),
+          ),
+        ),
+      ),
     );
     return AnimatedBuilder(
       animation: Listenable.merge([_focus, _reveal]),
@@ -224,90 +370,7 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: widget.enabled ? _node.requestFocus : null,
-                    child: ChromeMaterial(
-                      height: height,
-                      role: GlassRole.searchField,
-                      glass: widget.glass ?? appearance.glass,
-                      optics: widget.optics ?? appearance.optics,
-                      blur: widget.blur ?? appearance.blur,
-                      shape: appearance.shape,
-                      child: CupertinoTextField(
-                        controller: _controller,
-                        focusNode: _node,
-                        enabled: widget.enabled,
-                        autofocus: widget.autofocus,
-                        keyboardType: widget.keyboardType,
-                        inputFormatters: widget.inputFormatters,
-                        textCapitalization: widget.textCapitalization,
-                        autocorrect: widget.autocorrect,
-                        enableSuggestions: widget.enableSuggestions,
-                        readOnly: widget.readOnly,
-                        textAlign: widget.textAlign,
-                        onTap: widget.onTap,
-                        onEditingComplete: widget.onEditingComplete,
-                        placeholder: widget.placeholder,
-                        placeholderStyle: style
-                            .copyWith(color: colors.secondaryLabel)
-                            .merge(appearance.placeholderStyle),
-                        style: style,
-                        cursorColor:
-                            appearance.cursorColor ??
-                            LiquidPrismTheme.tintOf(context),
-                        decoration: null,
-                        padding: EdgeInsets.zero,
-                        textInputAction: widget.textInputAction,
-                        onChanged: widget.onChanged,
-                        onSubmitted: widget.onSubmitted,
-                        prefix:
-                            widget.prefix ??
-                            Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                start: 12,
-                                end: 8,
-                              ),
-                              child: ExcludeSemantics(
-                                child: Icon(
-                                  CupertinoIcons.search,
-                                  size: appearance.iconSize ?? 20 + 1 / 3,
-                                  color: appearance.iconColor ?? colors.label,
-                                ),
-                              ),
-                            ),
-                        suffix:
-                            widget.suffix ??
-                            (widget.enabled &&
-                                    appearance.showClearButton != false &&
-                                    _controller.text.isNotEmpty
-                                ? LiquidPrismPressable(
-                                    label: widget.clearLabel,
-                                    onPressed: _clear,
-                                    child: SizedBox(
-                                      width: appearance.clearWidth ?? 36,
-                                      height: height,
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.only(
-                                              end: 10 + 2 / 3,
-                                            ),
-                                        child: Icon(
-                                          CupertinoIcons.clear_thick_circled,
-                                          size: 20,
-                                          color:
-                                              appearance.clearColor ??
-                                              colors.secondaryLabel,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                : null),
-                      ),
-                    ),
-                  ),
-                ),
+                Expanded(child: capsule),
                 SizedBox(width: (cancelGap + cancelWidth) * cancel),
               ],
             ),
@@ -339,26 +402,31 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
                         ),
                         child: ExcludeSemantics(
                           excluding: !_node.hasFocus,
-                          child: IgnorePointer(
-                            ignoring: !_node.hasFocus,
-                            child: LiquidPrismToolbarGroup(
-                              glass: widget.glass ?? appearance.glass,
-                              optics: widget.optics ?? appearance.optics,
-                              blur: widget.blur ?? appearance.blur,
-                              style: GlassToolbarStyle(
-                                height: height,
-                                inset: (cancelWidth - 38) / 2,
-                              ),
-                              items: [
-                                GlassToolbarItem(
-                                  label: widget.cancelLabel,
-                                  icon: const Icon(
-                                    CupertinoIcons.xmark,
-                                    size: 17,
-                                  ),
-                                  onPressed: _cancel,
+                          // Cancel belongs to the field: tapping it is never
+                          // a tap outside the editor's group.
+                          child: TapRegion(
+                            groupId: widget.groupId,
+                            child: IgnorePointer(
+                              ignoring: !_node.hasFocus,
+                              child: LiquidPrismToolbarGroup(
+                                glass: widget.glass ?? appearance.glass,
+                                optics: widget.optics ?? appearance.optics,
+                                blur: widget.blur ?? appearance.blur,
+                                style: GlassToolbarStyle(
+                                  height: height,
+                                  inset: (cancelWidth - 38) / 2,
                                 ),
-                              ],
+                                items: [
+                                  GlassToolbarItem(
+                                    label: widget.cancelLabel,
+                                    icon: const Icon(
+                                      CupertinoIcons.xmark,
+                                      size: 17,
+                                    ),
+                                    onPressed: _cancel,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),

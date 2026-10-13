@@ -18,6 +18,12 @@ class ApiExample extends StatefulWidget {
 
 class _ApiExampleState extends State<ApiExample> {
   final _search = TextEditingController();
+  final _searchFocus = FocusNode();
+  // The app owns its suggestions; the field only provides the anchor.
+  final _suggestionLink = LayerLink();
+  final _suggestions = OverlayPortalController();
+  final _searchGroup = Object();
+  static const _ideas = ['Glass', 'Lens', 'Prism', 'Refraction', 'Spring'];
   bool _enabled = true;
   double _level = .52;
   int _segment = 0;
@@ -40,8 +46,51 @@ class _ApiExampleState extends State<ApiExample> {
   @override
   void dispose() {
     _search.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
+
+  Widget _buildSuggestions(BuildContext context) => CompositedTransformFollower(
+    link: _suggestionLink,
+    targetAnchor: Alignment.bottomLeft,
+    offset: const Offset(0, 8),
+    showWhenUnlinked: false,
+    child: Align(
+      alignment: Alignment.topLeft,
+      child: TapRegion(
+        groupId: _searchGroup,
+        child: ValueListenableBuilder(
+          valueListenable: _search,
+          builder: (context, value, _) {
+            final query = value.text.toLowerCase();
+            final matches = _ideas.where(
+              (idea) => idea.toLowerCase().startsWith(query),
+            );
+            return Container(
+              width: _suggestionLink.leaderSize?.width,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFFFF),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final idea in matches)
+                    CupertinoListTile(
+                      title: Text(idea),
+                      onTap: () {
+                        _search.text = idea;
+                        _searchFocus.unfocus();
+                      },
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -64,8 +113,21 @@ class _ApiExampleState extends State<ApiExample> {
               const SizedBox(height: 24),
               LiquidPrismSearchField(
                 controller: _search,
+                focusNode: _searchFocus,
                 placeholder: 'Try the search field',
                 autocorrect: false,
+                groupId: _searchGroup,
+                onTapOutside: (_) => _searchFocus.unfocus(),
+                onFocusChange: (focused) =>
+                    focused ? _suggestions.show() : _suggestions.hide(),
+                fieldBuilder: (context, field) => OverlayPortal(
+                  controller: _suggestions,
+                  overlayChildBuilder: _buildSuggestions,
+                  child: CompositedTransformTarget(
+                    link: _suggestionLink,
+                    child: field,
+                  ),
+                ),
                 appearance: const GlassSearchStyle(
                   height: 52,
                   iconColor: Color(0xFF426D62),

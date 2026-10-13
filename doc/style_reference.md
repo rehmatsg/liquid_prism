@@ -125,6 +125,7 @@ label, callback/menu, key and optional foreground. Group spacing is independent.
 | `textStyle`, `placeholderStyle` | 17-point label / secondary label |
 | `iconColor`, `cursorColor`, `clearColor` | Label / theme accent / secondary label |
 | `iconSize`, `clearWidth` | 20⅓ / 36 |
+| `padding`, `prefixPadding` | Zero editor padding / 12 start and 8 end around the search icon |
 | `cancelWidth`, `cancelSpacing` | 48 / 12; cancellation hides if it cannot fit |
 | `shape`, `glass`, `optics`, `blur` | Capsule and component material overrides |
 | `focusSpring` | 380 ms with zero bounce; field focus, shortening and cancel exit |
@@ -133,6 +134,8 @@ label, callback/menu, key and optional foreground. Group spacing is independent.
 Apply this through search `appearance` or theme `search`. Search `style` remains
 its direct editor `TextStyle`. Input configuration, custom prefix/suffix and
 controller/focus ownership stay on the widget. A custom suffix replaces clearing.
+Autocomplete hooks (`fieldBuilder`, `suffixBuilder`, `groupId`, `onTapOutside`,
+`onFocusChange`) are widget arguments; see [components](components.md#hosting-autocomplete).
 
 ## Transitions: `GlassTransitionStyle`
 

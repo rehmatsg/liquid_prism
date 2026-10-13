@@ -604,6 +604,8 @@ class GlassSearchStyle {
     this.cursorColor,
     this.clearColor,
     this.iconSize,
+    this.padding,
+    this.prefixPadding,
     this.clearWidth,
     this.cancelWidth,
     this.cancelSpacing,
@@ -630,6 +632,14 @@ class GlassSearchStyle {
   final Color? cursorColor;
   final Color? clearColor;
   final double? iconSize;
+
+  /// Editor padding between the prefix and suffix. Defaults to zero; the
+  /// default search icon carries its own [prefixPadding].
+  final EdgeInsetsGeometry? padding;
+
+  /// Padding around the default search icon. Defaults to 12 at the start and
+  /// 8 at the end. A custom `prefix` supplies its own spacing.
+  final EdgeInsetsGeometry? prefixPadding;
   final double? clearWidth;
   final double? cancelWidth;
   final double? cancelSpacing;
@@ -661,6 +671,8 @@ class GlassSearchStyle {
     Color? cursorColor,
     Color? clearColor,
     double? iconSize,
+    EdgeInsetsGeometry? padding,
+    EdgeInsetsGeometry? prefixPadding,
     double? clearWidth,
     double? cancelWidth,
     double? cancelSpacing,
@@ -681,6 +693,8 @@ class GlassSearchStyle {
     cursorColor: cursorColor ?? this.cursorColor,
     clearColor: clearColor ?? this.clearColor,
     iconSize: iconSize ?? this.iconSize,
+    padding: padding ?? this.padding,
+    prefixPadding: prefixPadding ?? this.prefixPadding,
     clearWidth: clearWidth ?? this.clearWidth,
     cancelWidth: cancelWidth ?? this.cancelWidth,
     cancelSpacing: cancelSpacing ?? this.cancelSpacing,
@@ -708,6 +722,8 @@ class GlassSearchStyle {
           cursorColor: other.cursorColor ?? cursorColor,
           clearColor: other.clearColor ?? clearColor,
           iconSize: other.iconSize ?? iconSize,
+          padding: other.padding ?? padding,
+          prefixPadding: other.prefixPadding ?? prefixPadding,
           clearWidth: other.clearWidth ?? clearWidth,
           cancelWidth: other.cancelWidth ?? cancelWidth,
           cancelSpacing: other.cancelSpacing ?? cancelSpacing,
