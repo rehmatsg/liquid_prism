@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0
+
 - Add `LiquidPrismScaffold` and `GlassChromePlacement`: floating glass chrome
   that moves into the iPhone Duo sensor-bar rail and follows window resizes.
   On iOS 27.1 it follows UIKit's `verticalBarEdge` and reserved regions,
@@ -20,6 +22,12 @@
   panel slides on a measured spring while content reflows beneath it, and the
   show toggle materializes in place. Hiding the sidebar no longer moves the tabs
   into the tab bar or rail, matching iOS.
+- Add `LiquidPrismVisibility`, `LiquidPrismPresence`, `GlassTransition` and
+  `GlassTransitionStyle`: glass materializes in and out from the live backdrop
+  while its content fades and sharpens, with a theme-level `transition`.
+- Animate the search field's cancel action: the field shortens while the
+  button slides in from the trailing edge and fades, with `cancelSpring`.
+- Keep tab labels steady under the pill while it is dragged or lifted.
 - Reserve the rail strip when UIKit reports a vertical bar edge without an
   inset, as for an app on the left of Split View. The showcase reflows its
   sections into two columns around a bent fold.
