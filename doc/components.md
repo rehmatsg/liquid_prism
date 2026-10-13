@@ -147,6 +147,19 @@ The grabbed thumb follows the finger directly. The fill blends smoothly to the
 endpoints across the first/last 2%. Default thumb lift is 1.55×; the track seen
 through it keeps its normal thickness. Both are preserved under customization.
 
+The held knob uses the slider's measured lens inputs: a 6.66-point rim with
+11.1 points of refraction, a face black point of .1 that lifts dark backdrops
+seen through it, and the contact shadow kept under the lifted knob. Tune them
+with `GlassLensStyle.rimWidth`, `rimRefraction`, `rimLight`, `faceBlack` and
+`heldContactShadow` in the slider's `lens`; switches and segmented controls
+keep their own defaults.
+
+On iOS a light impact plays when a drag, tap, key or accessibility step reaches
+the minimum or maximum and the parent accepts that value. It plays once per
+arrival: holding against the end is silent until the value leaves it. External
+value updates, cancellation and rejected values are silent. Turn it off with
+`haptics: false` on the slider (which wins) or `GlassSliderStyle(haptics: false)`.
+
 ## Segmented controls
 
 ```dart

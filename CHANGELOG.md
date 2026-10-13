@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Make the held slider knob read like native, especially in dark mode. Its lens
+  now uses the slider's measured glassBackground inputs (rim 6.66 points with
+  11.1 points of refraction, face black .1) and keeps its measured contact
+  shadow while lifted, with the measured ring geometry; rim light (1.0) and the
+  ambient/ring opacities (.12/.2) are fitted to SwiftUI captures. New
+  `GlassLensStyle` fields `rimWidth`, `rimRefraction`, `rimLight`, `faceBlack`
+  and `heldContactShadow` tune this per component; switches, segmented controls
+  and tab pills keep their current look by default. No shader change.
+- Play a light impact on iOS when a slider drag, tap, key or accessibility step
+  reaches its minimum or maximum, once per arrival and only when the parent
+  accepts the value. External updates, cancellation and rejected values are
+  silent. `LiquidPrismSlider.haptics` and `GlassSliderStyle.haptics` (default
+  on) turn it off.
 - Add scroll edge effects and progressive edge blurs. `LiquidPrismEdgeBlur`
   blurs and fades up to two opposite edges of its child per pixel along the
   smootherstep `GlassEdgeFade.curve`, as backdrop passes of a new

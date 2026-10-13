@@ -41,6 +41,10 @@ its own explicit reset: `Glass.tint(null)`.
   increase/decrease previews. Divisions quantize values, not physical pixel travel.
 - Switch haptics occur on iOS at user toggle boundaries. External updates and
   cancellation must not generate haptics.
+- Slider haptics occur on iOS when accepted user input first reaches the minimum
+  or maximum. `ControlInteraction` announces an end only when the parent rebuilds
+  with exactly the end a user input proposed in that frame; external updates,
+  cancellation and rejected or altered values only move the latch.
 - Async button callbacks may overlap. Loading/exclusive state belongs to the app.
 - Custom tab icons must currently avoid nested repaint boundaries; document this
   renderer limitation rather than silently replacing their stateful subtree.

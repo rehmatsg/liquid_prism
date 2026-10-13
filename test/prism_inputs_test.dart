@@ -535,4 +535,181 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+  testWidgets('slider impacts once when accepted user input reaches an end', (
+    tester,
+  ) async {
+    final impacts = <Object?>[];
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') {
+        impacts.add(call.arguments);
+      }
+      return null;
+    });
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    var value = 50.0, accept = true;
+    bool? haptics;
+    GlassSliderStyle? style;
+    late StateSetter update;
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return LiquidPrismSlider(
+              value: value,
+              min: 10,
+              max: 90,
+              label: 'Level',
+              haptics: haptics,
+              style: style,
+              onChanged: (next) {
+                if (accept) setState(() => value = next);
+              },
+            );
+          },
+        ),
+      ),
+    );
+    final slider = find.byType(LiquidPrismSlider);
+    Offset thumb() {
+      final rect = tester.getRect(slider);
+      return Offset(
+        rect.left + 18.5 + (rect.width - 37) * (value - 10) / 80,
+        rect.center.dy,
+      );
+    }
+
+    // A drag that reaches the maximum impacts once, holding against the
+    // end or moving past it is silent, and leaving then returning repeats.
+    var drag = await tester.startGesture(thumb());
+    final start = thumb();
+    await drag.moveTo(start + const Offset(30, 0));
+    await tester.pump();
+    expect(impacts, isEmpty);
+    await drag.moveTo(start + const Offset(400, 0));
+    await tester.pump();
+    expect(value, 90);
+    expect(impacts, ['HapticFeedbackType.lightImpact']);
+    await drag.moveTo(start + const Offset(500, 0));
+    await tester.pump();
+    expect(impacts, hasLength(1));
+    await drag.moveTo(start + const Offset(100, 0));
+    await tester.pump();
+    expect(value, lessThan(90));
+    await drag.moveTo(start + const Offset(400, 0));
+    await tester.pump();
+    expect(impacts, hasLength(2));
+    await drag.up();
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(2), reason: 'Release adds no pulse.');
+
+    // External updates to either end are silent.
+    update(() => value = 10);
+    await tester.pumpAndSettle();
+    update(() => value = 90);
+    await tester.pumpAndSettle();
+    update(() => value = 50);
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(2));
+
+    // A canceled drag stays silent, and so does a later external update.
+    drag = await tester.startGesture(thumb());
+    await drag.moveTo(thumb() + const Offset(60, 0));
+    await tester.pump();
+    await drag.cancel();
+    await tester.pumpAndSettle();
+    update(() => value = 90);
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(2));
+
+    // The parent rejects the end: no pulse.
+    update(() => value = 50);
+    await tester.pumpAndSettle();
+    accept = false;
+    drag = await tester.startGesture(thumb());
+    await drag.moveTo(thumb() + const Offset(400, 0));
+    await tester.pump();
+    await drag.up();
+    await tester.pumpAndSettle();
+    expect(value, 50);
+    expect(impacts, hasLength(2));
+    accept = true;
+
+    // Accessibility steps reach the minimum once.
+    update(() => value = 14);
+    await tester.pumpAndSettle();
+    tester.semantics.decrease(find.semantics.byLabel('Level'));
+    await tester.pumpAndSettle();
+    expect(value, 10);
+    expect(impacts, hasLength(3));
+    tester.semantics.decrease(find.semantics.byLabel('Level'));
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(3), reason: 'Already at the end.');
+
+    // A style turns feedback off; the widget argument wins over it.
+    update(() {
+      value = 86;
+      style = const GlassSliderStyle(haptics: false);
+    });
+    await tester.pumpAndSettle();
+    tester.semantics.increase(find.semantics.byLabel('Level'));
+    await tester.pumpAndSettle();
+    expect(value, 90);
+    expect(impacts, hasLength(3));
+    update(() {
+      value = 86;
+      haptics = true;
+    });
+    await tester.pumpAndSettle();
+    tester.semantics.increase(find.semantics.byLabel('Level'));
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(4));
+    update(() {
+      value = 86;
+      haptics = false;
+      style = null;
+    });
+    await tester.pumpAndSettle();
+    tester.semantics.increase(find.semantics.byLabel('Level'));
+    await tester.pumpAndSettle();
+    expect(value, 90);
+    expect(impacts, hasLength(4));
+    expect(impacts.toSet(), {'HapticFeedbackType.lightImpact'});
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('theme slider haptics false is respected', (tester) async {
+    final impacts = <Object?>[];
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'HapticFeedback.vibrate') impacts.add(call.arguments);
+      return null;
+    });
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    var value = .95;
+    await tester.pumpWidget(
+      host(
+        LiquidPrismTheme(
+          data: const LiquidPrismThemeData(
+            slider: GlassSliderStyle(haptics: false),
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) => LiquidPrismSlider(
+              value: value,
+              label: 'Level',
+              onChanged: (next) => setState(() => value = next),
+            ),
+          ),
+        ),
+      ),
+    );
+    tester.semantics.increase(find.semantics.byLabel('Level'));
+    await tester.pumpAndSettle();
+    expect(value, 1);
+    expect(impacts, isEmpty);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 }

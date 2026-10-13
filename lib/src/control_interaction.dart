@@ -24,6 +24,7 @@ class ControlInteraction extends StatefulWidget {
     this.onChangeStart,
     this.onChangeEnd,
     this.onSelectionFeedback,
+    this.onEdgeFeedback,
     this.steps,
     this.toggle = false,
     this.continuous = false,
@@ -36,6 +37,10 @@ class ControlInteraction extends StatefulWidget {
   final double value, travel;
   final ValueChanged<double>? onChanged, onChangeStart, onChangeEnd;
   final VoidCallback? onSelectionFeedback;
+
+  /// Continuous controls: called when a user drag, tap, key or accessibility
+  /// step that the parent accepts first reaches the minimum or maximum.
+  final VoidCallback? onEdgeFeedback;
   final double Function(double x) positionAt;
   final Widget Function(
     BuildContext,
@@ -87,6 +92,17 @@ class _ControlInteractionState extends State<ControlInteraction>
   double _feedbackValue = 0;
   double? _lastEmitted;
   bool _unliftPending = false;
+
+  /// The end (0 or 1) the accepted value rests at, or null in between. An end
+  /// is announced once on arrival, so holding against it stays silent.
+  double? _edge;
+
+  /// The end a user input proposed this frame, awaiting the parent's answer.
+  double? _proposedEdge;
+  bool _proposalExpiry = false;
+  // Range mapping can round an end by an ulp; that still counts as the end.
+  static double? _edgeOf(double value) =>
+      value <= 1e-9 ? 0 : (value >= 1 - 1e-9 ? 1 : null);
   bool get _enabled => widget.onChanged != null;
   double _quantize(double value) {
     final bounded = value.clamp(0.0, 1.0);
@@ -100,6 +116,12 @@ class _ControlInteractionState extends State<ControlInteraction>
     double target,
     SpringDescription spring,
   ) => springGlass(controller, target, spring, immediate: _reduceMotion);
+
+  @override
+  void initState() {
+    super.initState();
+    _edge = _edgeOf(widget.value);
+  }
 
   @override
   void didChangeDependencies() {
@@ -133,6 +155,37 @@ class _ControlInteractionState extends State<ControlInteraction>
       _cancel();
     }
     if (!_dragging) _animate(_position, widget.value, widget.spring);
+    if (widget.value != oldWidget.value) _settleEdge();
+  }
+
+  /// Announce an end only when the parent accepted exactly the end that a
+  /// user input proposed. External updates and rejected or altered values
+  /// only move the latch, so they stay silent.
+  void _settleEdge() {
+    final edge = _edgeOf(widget.value);
+    final proposed = _proposedEdge;
+    _proposedEdge = null;
+    if (edge != null &&
+        edge != _edge &&
+        edge == proposed &&
+        widget.continuous &&
+        _enabled) {
+      widget.onEdgeFeedback?.call();
+    }
+    _edge = edge;
+  }
+
+  void _proposeEdge(double value) {
+    if (!widget.continuous || widget.onEdgeFeedback == null) return;
+    _proposedEdge = _edgeOf(value);
+    if (_proposalExpiry) return;
+    // A parent that accepts rebuilds within this frame; later updates are
+    // external and must not inherit the proposal.
+    _proposalExpiry = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _proposalExpiry = false;
+      _proposedEdge = null;
+    });
   }
 
   void _down(PointerDownEvent event) {
@@ -182,6 +235,7 @@ class _ControlInteractionState extends State<ControlInteraction>
   }
 
   void _cancel() {
+    _proposedEdge = null;
     _flex.stop();
     final wasDragging = _dragging;
     _pointer = null;
@@ -196,6 +250,7 @@ class _ControlInteractionState extends State<ControlInteraction>
 
   void _notify(double value) {
     _lastEmitted = _quantize(value);
+    _proposeEdge(_lastEmitted!);
     _committing = true;
     try {
       widget.onChanged?.call(_quantize(value));

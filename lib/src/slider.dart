@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_interaction.dart';
@@ -29,6 +32,7 @@ class LiquidPrismSlider extends StatelessWidget {
     this.style,
     this.motion,
     this.semanticFormatterCallback,
+    this.haptics,
   }) : assert(min <= max),
        assert(value >= min && value <= max),
        assert(divisions == null || divisions > 0);
@@ -42,6 +46,11 @@ class LiquidPrismSlider extends StatelessWidget {
 
   /// Format the actual numeric value for accessibility; default is percentage.
   final String Function(double value)? semanticFormatterCallback;
+
+  /// A light impact on iOS when a drag, tap, key or accessibility step that
+  /// the parent accepts reaches [min] or [max]. Overrides
+  /// [GlassSliderStyle.haptics]; defaults on.
+  final bool? haptics;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +68,7 @@ class LiquidPrismSlider extends StatelessWidget {
     final colors = GlassColors.of(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final enabled = onChanged != null && max > min;
+    final feedback = haptics ?? appearance.haptics ?? true;
     double actual(double fraction) => min + fraction * (max - min);
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -92,6 +102,10 @@ class LiquidPrismSlider extends StatelessWidget {
             onChangeEnd: onChangeEnd == null
                 ? null
                 : (v) => onChangeEnd!(actual(v)),
+            onEdgeFeedback:
+                feedback && defaultTargetPlatform == TargetPlatform.iOS
+                ? () => unawaited(HapticFeedback.lightImpact())
+                : null,
             positionAt: (x) =>
                 (((rtl ? width - x : x) - center) / math.max(travel, .001))
                     .clamp(0.0, 1.0),

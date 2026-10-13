@@ -74,9 +74,16 @@ housing while the foreground retains its normal size. The tab's selected icons
 and labels additionally refract near the rim through a separate foreground pass.
 The slider opts out
 of that broad field: **the knob still grows to 1.55× on hold, but the track seen
-through it keeps its normal thickness**. Its rim refraction, clear face and shadow
-still use the shared material. This matches the distinction in the isolated
-small-lens capture without claiming to reproduce Apple's private operators.
+through it keeps its normal thickness**. Its clear face and shadow still use the
+shared material, but its rim and face take the captured slider inputs: inner
+refraction height 6.66 and amount 11.1, face black .1, and the layer contact
+shadow kept at the held frame (see [motion and lenses](motion_and_lenses.md)).
+This matches the distinction in the isolated small-lens capture without claiming
+to reproduce Apple's private operators.
+
+Slider edge haptics (a light impact when accepted user input reaches either end)
+are package behavior. They were not captured from the native slider; the probe
+records no slider feedback settings.
 
 The tab retains the earlier research's lens-speed stretch (0.018 points per
 point/second), independent cross-axis compression, spring lag and recoil. Sharing

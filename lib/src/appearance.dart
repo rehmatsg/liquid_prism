@@ -34,7 +34,16 @@ class GlassLensStyle {
     this.ringBlur,
     this.ringWidth,
     this.ringOffset,
+    this.rimWidth,
+    this.rimRefraction,
+    this.rimLight,
+    this.faceBlack,
+    this.heldContactShadow,
   }) : assert(blur == null || blur >= 0 && blur <= 12),
+       assert(rimWidth == null || rimWidth >= 0),
+       assert(rimRefraction == null || rimRefraction >= 0),
+       assert(rimLight == null || rimLight >= 0),
+       assert(faceBlack == null || faceBlack >= 0 && faceBlack <= 1),
        assert(
          shadowOpacity == null || shadowOpacity >= 0 && shadowOpacity <= 1,
        ),
@@ -65,6 +74,29 @@ class GlassLensStyle {
   final double? ringWidth;
   final Offset? ringOffset;
 
+  /// Width of the refracting rim band, in points for a 37.2-point-tall lens
+  /// (the held small-control height); it scales with the actual lens height.
+  /// The slider defaults to its measured 6.66; other lenses keep their fitted
+  /// default. Ignored when [optics] is supplied.
+  final double? rimWidth;
+
+  /// Rim displacement of the fully lifted lens, in points for a 37.2-point-tall
+  /// lens, scaled like [rimWidth]. The slider defaults to its measured 11.1.
+  final double? rimRefraction;
+
+  /// Strength of the rim key/fill highlights and side shading at full lift.
+  /// The slider defaults to a fitted 1.0; other lenses to 0.6.
+  final double? rimLight;
+
+  /// Black point of the lens face, 0–1: the face shows `b + (1 - b) * color`,
+  /// which lightens dark backdrops seen through the lens. The slider defaults
+  /// to its measured 0.1; other lenses to 0.
+  final double? faceBlack;
+
+  /// Keep the contact shadow (opacity .14, radius 5, offset 1) under the
+  /// lifted lens. The slider defaults true, as measured; others false.
+  final bool? heldContactShadow;
+
   /// Keep existing fields when an argument is null.
   GlassLensStyle copyWith({
     Glass? glass,
@@ -81,6 +113,11 @@ class GlassLensStyle {
     double? ringBlur,
     double? ringWidth,
     Offset? ringOffset,
+    double? rimWidth,
+    double? rimRefraction,
+    double? rimLight,
+    double? faceBlack,
+    bool? heldContactShadow,
   }) => GlassLensStyle(
     glass: glass ?? this.glass,
     optics: optics ?? this.optics,
@@ -96,6 +133,11 @@ class GlassLensStyle {
     ringBlur: ringBlur ?? this.ringBlur,
     ringWidth: ringWidth ?? this.ringWidth,
     ringOffset: ringOffset ?? this.ringOffset,
+    rimWidth: rimWidth ?? this.rimWidth,
+    rimRefraction: rimRefraction ?? this.rimRefraction,
+    rimLight: rimLight ?? this.rimLight,
+    faceBlack: faceBlack ?? this.faceBlack,
+    heldContactShadow: heldContactShadow ?? this.heldContactShadow,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -116,6 +158,11 @@ class GlassLensStyle {
           ringBlur: other.ringBlur ?? ringBlur,
           ringWidth: other.ringWidth ?? ringWidth,
           ringOffset: other.ringOffset ?? ringOffset,
+          rimWidth: other.rimWidth ?? rimWidth,
+          rimRefraction: other.rimRefraction ?? rimRefraction,
+          rimLight: other.rimLight ?? rimLight,
+          faceBlack: other.faceBlack ?? faceBlack,
+          heldContactShadow: other.heldContactShadow ?? heldContactShadow,
         );
 }
 
@@ -317,6 +364,7 @@ class GlassSliderStyle {
     this.thumbColor,
     this.trackShape,
     this.lens,
+    this.haptics,
   }) : assert(width == null || width > 0),
        assert(scale == null || scale > 0),
        assert(hitHeight == null || hitHeight >= 44),
@@ -346,6 +394,10 @@ class GlassSliderStyle {
   /// Component-specific overrides of the shared theme lens.
   final GlassLensStyle? lens;
 
+  /// Light impact on iOS when user input reaches the minimum or maximum.
+  /// Defaults on; the slider's `haptics` argument takes precedence.
+  final bool? haptics;
+
   /// Keep existing fields when an argument is null.
   GlassSliderStyle copyWith({
     double? width,
@@ -359,6 +411,7 @@ class GlassSliderStyle {
     Color? thumbColor,
     GlassShape? trackShape,
     GlassLensStyle? lens,
+    bool? haptics,
   }) => GlassSliderStyle(
     width: width ?? this.width,
     scale: scale ?? this.scale,
@@ -371,6 +424,7 @@ class GlassSliderStyle {
     thumbColor: thumbColor ?? this.thumbColor,
     trackShape: trackShape ?? this.trackShape,
     lens: lens ?? this.lens,
+    haptics: haptics ?? this.haptics,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -388,6 +442,7 @@ class GlassSliderStyle {
           thumbColor: other.thumbColor ?? thumbColor,
           trackShape: other.trackShape ?? trackShape,
           lens: (lens ?? const GlassLensStyle()).merge(other.lens),
+          haptics: other.haptics ?? haptics,
         );
 }
 

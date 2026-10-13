@@ -36,7 +36,8 @@ class ControlLens extends StatelessWidget {
           style,
         );
     final contour = appearance.shape ?? shape;
-    final minify = appearance.minifyUnderlay ?? role != GlassRole.sliderLens;
+    final slider = role == GlassRole.sliderLens;
+    final minify = appearance.minifyUnderlay ?? !slider;
     final materialRole = minify
         ? (role == GlassRole.sliderLens ? GlassRole.controlThumb : role)
         : (role == GlassRole.sliderLens
@@ -47,6 +48,19 @@ class ControlLens extends StatelessWidget {
         // The accepted tab lens is the 70-point reference. Scale the optics
         // and shadow with the actual lens rather than reusing fixed kernels.
         final scale = constraints.maxHeight / 70;
+        // Rim inputs are expressed for the 37.2-point held small lens.
+        final small = constraints.maxHeight / 37.2;
+        // The slider's held glassBackground: inner refraction height 6.66 and
+        // amount 11.1, face black .1 (doc/native_controls_spec.json). Other
+        // lenses keep their accepted, fitted rim until measured separately.
+        final rimWidth = appearance.rimWidth == null
+            ? (slider ? 6.66 * small : 12 * scale)
+            : appearance.rimWidth! * small;
+        final rimRefraction = appearance.rimRefraction == null
+            ? (slider ? 11.1 * small : 9 * scale)
+            : appearance.rimRefraction! * small;
+        final light = appearance.rimLight ?? (slider ? _sliderRimLight : .6);
+        final faceBlack = appearance.faceBlack ?? (slider ? .1 : 0.0);
         return CustomPaint(
           // Keep the shadow out of the lens's backdrop capture. Otherwise its
           // clipped mask can refract into a second capsule inside the lens.
@@ -54,7 +68,7 @@ class ControlLens extends StatelessWidget {
             progress,
             contour,
             restingShadow,
-            appearance,
+            (slider ? _sliderShadow : _sharedShadow).merge(appearance),
           ),
           child: LiquidPrism(
             glass: (appearance.glass ?? Glass.clear).interactive(false),
@@ -64,17 +78,20 @@ class ControlLens extends StatelessWidget {
             optics:
                 appearance.optics ??
                 LiquidPrismStyle(
-                  edgeWidth: (12 * scale).clamp(.01, 64),
-                  refraction: (9 * scale * progress).clamp(0, 64),
+                  edgeWidth: rimWidth.clamp(.01, 64),
+                  refraction: (rimRefraction * progress).clamp(0, 64),
                   frost: 0,
                   dispersion: .3 * progress,
                   reflection: .04 * progress,
                   reflectionReach: (20 * scale).clamp(0, 80),
                   splay: .1,
-                  light: .6 * progress,
+                  light: light * progress,
                   saturation: 1,
                   brightness: 0,
-                  tint: const Color(0x00000000),
+                  // Mixing toward white by b equals a face color matrix with
+                  // black b and white 1: b + (1 - b) * color.
+                  tint: const Color(0xFFFFFFFF)
+                      .withValues(alpha: (faceBlack * progress).clamp(0, 1)),
                 ),
             child: ColoredBox(
               color: restingColor.withValues(
@@ -88,11 +105,44 @@ class ControlLens extends StatelessWidget {
   }
 }
 
+/// Fitted key/fill strength of the held slider rim; see doc/motion_and_lenses.md.
+const _sliderRimLight = 1.0;
+
+/// Shared lifted-shadow fallbacks: renderer calibrations of the native layer
+/// and ring shadows, not recovered kernels.
+const _sharedShadow = GlassLensStyle(
+  heldContactShadow: false,
+  shadowOpacity: .1,
+  shadowBlur: 5,
+  shadowOffset: Offset(0, 6),
+  ringOpacity: .055,
+  ringBlur: 4,
+  ringWidth: 2,
+  ringOffset: Offset(0, 4),
+);
+
+/// The held slider keeps its measured contact shadow (.14, radius 5, offset
+/// 1) and uses the measured ring geometry (width 4, radius 3, offset 8). The
+/// ring and ambient opacities are fitted to the native dark capture.
+const _sliderShadow = GlassLensStyle(
+  heldContactShadow: true,
+  shadowOpacity: _sliderAmbient,
+  shadowBlur: 5,
+  shadowOffset: Offset(0, 6),
+  ringOpacity: _sliderRing,
+  ringBlur: 3,
+  ringWidth: 4,
+  ringOffset: Offset(0, 8),
+);
+const _sliderAmbient = .12, _sliderRing = .2;
+
 class _LensShadow extends CustomPainter {
   const _LensShadow(this.progress, this.shape, this.restingShadow, this.style);
   final double progress;
   final GlassShape shape;
   final bool restingShadow;
+
+  /// Fully resolved: component fallback merged with theme and local styles.
   final GlassLensStyle style;
 
   @override
@@ -100,13 +150,9 @@ class _LensShadow extends CustomPainter {
     if (style.shadow == false) return;
     final outline = shape.path(size);
     final scale = style.scaleShadows == false ? 1.0 : size.height / 37.2;
-    final ambientReach =
-        (style.shadowOffset ?? const Offset(0, 6)).distance +
-        3 * (style.shadowBlur ?? 5);
+    final ambientReach = style.shadowOffset!.distance + 3 * style.shadowBlur!;
     final ringReach =
-        (style.ringOffset ?? const Offset(0, 4)).distance +
-        3 * (style.ringBlur ?? 4) +
-        (style.ringWidth ?? 2);
+        style.ringOffset!.distance + 3 * style.ringBlur! + style.ringWidth!;
     final extent = math.max(40.0, math.max(ambientReach, ringReach)) * scale;
     canvas.save();
     canvas.clipPath(
@@ -115,36 +161,38 @@ class _LensShadow extends CustomPainter {
         ..addRect((Offset.zero & size).inflate(extent))
         ..addPath(outline, Offset.zero),
     );
-    if (restingShadow && progress < 1) {
+    final contact =
+        (restingShadow ? 1 - progress : 0.0) +
+        (style.heldContactShadow! ? progress : 0.0);
+    if (contact > 0) {
       canvas.drawPath(
         outline.shift(const Offset(0, 1)),
         Paint()
-          ..color = const Color(0xFF000000)
-              .withValues(alpha: .14 * (1 - progress))
+          ..color = const Color(0xFF000000).withValues(alpha: .14 * contact)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10 / 3),
       );
     }
     if (progress > 0) {
       canvas.drawPath(
-        outline.shift((style.shadowOffset ?? const Offset(0, 6)) * scale),
+        outline.shift(style.shadowOffset! * scale),
         Paint()
           ..color = const Color(0xFF000000)
-              .withValues(alpha: (style.shadowOpacity ?? .1) * progress)
+              .withValues(alpha: style.shadowOpacity! * progress)
           ..maskFilter = MaskFilter.blur(
             BlurStyle.normal,
-            (style.shadowBlur ?? 5) * scale,
+            style.shadowBlur! * scale,
           ),
       );
       canvas.drawPath(
-        outline.shift((style.ringOffset ?? const Offset(0, 4)) * scale),
+        outline.shift(style.ringOffset! * scale),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = (style.ringWidth ?? 2) * scale
+          ..strokeWidth = style.ringWidth! * scale
           ..color = const Color(0xFF000000)
-              .withValues(alpha: (style.ringOpacity ?? .055) * progress)
+              .withValues(alpha: style.ringOpacity! * progress)
           ..maskFilter = MaskFilter.blur(
             BlurStyle.normal,
-            (style.ringBlur ?? 4) * scale,
+            style.ringBlur! * scale,
           ),
       );
     }

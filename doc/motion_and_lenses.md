@@ -35,6 +35,26 @@ against a chosen preset instead of assuming unspecified fields inherit the nativ
 lens recipe. It replaces the computed optical settings; shadow/layout settings
 remain independent. Setting blur to zero is an explicit override.
 
+### Rim and face
+
+`rimWidth`, `rimRefraction`, `rimLight` and `faceBlack` tune the lens rim and
+face without replacing the whole packet; `heldContactShadow` keeps the resting
+contact shadow under a lifted lens. Lengths are for a 37.2-point-high lens and
+scale with its actual height. Explicit `optics` ignores the rim fields.
+
+The slider resolves these from the held small-lens capture in
+`doc/native_controls_spec.json`. Measured: inner refraction height 6.66 and
+amount 11.1, face color matrix black .1, the layer contact shadow (.14, radius 5,
+offset 1) still present at the held frame, and the ring shadow geometry (width 4,
+radius 3, offset 8). Mapping Apple's refraction height/amount onto this
+renderer's rim band and displacement is an interpretation, not a recovered
+algorithm. Fitted by eye against SwiftUI dark captures: rim light 1.0 (the
+shared lens uses .6), ambient opacity .12 and ring opacity .2. The native
+exterior key/fill darkening (color bias −.3) is only partly reproduced by the
+existing side lobe. The switch (6.9 / 11.5, black .1) and segmented pill
+(4.4 / 6.6, black 0) captures are recorded too, but those lenses keep their
+accepted look; opt in per component through their `lens`.
+
 ## Small-control timing
 
 ```dart

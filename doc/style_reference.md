@@ -16,12 +16,17 @@ and [components](components.md) for usage.
 | `minifyUnderlay` | True for switch/segment/tab, false for slider |
 | `shadow` / `scaleShadows` | True / true |
 | `shadowOpacity` / `shadowBlur` / `shadowOffset` | Lifted ambient shadow: .1 / 5 / (0, 6) |
-| `ringOpacity` / `ringBlur` / `ringWidth` / `ringOffset` | Lifted shadow ring: .055 / 4 / 2 / (0, 4) |
+| `ringOpacity` / `ringBlur` / `ringWidth` / `ringOffset` | Lifted shadow ring: .055 / 4 / 2 / (0, 4); slider .2 / 3 / 4 / (0, 8) |
+| `rimWidth` / `rimRefraction` | Rim band and its displacement for a 37.2-point lens; slider 6.66 / 11.1, others keep their fitted rim |
+| `rimLight` | Rim key/fill highlight strength at full lift: slider 1, others .6 |
+| `faceBlack` | Lens face black point, 0–1: slider .1, others 0 |
+| `heldContactShadow` | Keep the resting contact shadow while lifted: slider true, others false |
 
 Shadow blur/offset/width are reference metrics for a 37.2-point-high lens. They
 scale with actual height unless opted out; opacity does not. `shadow: false`
 also removes the resting slider shadow. Ambient/ring fields customize lifted
-shadows; the resting slider shadow retains its native recipe.
+shadows; the resting slider shadow retains its native recipe. Rim fields scale
+with lens height like shadow metrics and are ignored when `optics` is supplied.
 
 ## Buttons: `GlassButtonAppearance`
 
@@ -61,6 +66,7 @@ plus both insets. Parent layout constraints still apply; leave room for the lens
 | `thumbSize`, `heldScale` | 37×24 / 1.55; hold scale multiplies both thumb axes |
 | `activeColor`, `inactiveColor`, `thumbColor` | Theme accent / semantic slider track / white |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
+| `haptics` | True: iOS light impact when user input reaches the minimum or maximum |
 
 Preferred width is constrained by the parent; the resting thumb fits narrow widths
 proportionally. Hit height stays at least 44. Track fill uses the resting thumb
