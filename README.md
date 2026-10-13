@@ -17,11 +17,12 @@ dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: main
+      ref: v0.2.0
 ```
 
-Run `flutter pub get`. Pin `ref` to a reviewed commit for production apps.
-The package is not published on pub.dev yet.
+Run `flutter pub get`. Each [release](https://github.com/rehmatsg/liquid_prism/releases)
+is a `vX.Y.Z` tag; see the [changelog](CHANGELOG.md). The package is not on
+pub.dev.
 
 ## Your first glass surface
 

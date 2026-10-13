@@ -121,6 +121,11 @@ class DeveloperScriptsTest(unittest.TestCase):
             "tool": "python3",
             "args": ["-m", "unittest", "discover", "-s", "test/tooling", "-p", "test_*.py"],
             "cwd": str(self.checkout),
+        }, {
+            # Versions in pubspec, podspec and changelog agree.
+            "tool": "python3",
+            "args": ["tool/release.py", "check"],
+            "cwd": str(self.checkout),
         }])
         self.assertLess(success.index(formatting[0]), success.index(analysis[0]))
         self.assertLess(success.index(analysis[0]), success.index(tests[0]))

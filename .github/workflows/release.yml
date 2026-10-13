@@ -1,0 +1,33 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ github.ref }}
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # The tag must name the version in pubspec.yaml, the podspec and the
+      # changelog before anything is built.
+      - run: python3 tool/release.py check --tag "$GITHUB_REF_NAME"
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: '3.47.4'
+          channel: stable
+          cache: true
+      - run: ./tool/check.sh
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          python3 tool/release.py notes "$version" > notes.md
+          prerelease=()
+          [[ "$version" == *-* ]] && prerelease=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" --verify-tag \
+            --title "Liquid Prism $version" --notes-file notes.md "${prerelease[@]}"
