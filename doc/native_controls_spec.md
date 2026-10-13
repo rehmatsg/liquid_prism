@@ -126,6 +126,43 @@ one pulse on a toggle, or at each on/off boundary crossed during a drag. Releasi
 or canceling a drag adds no pulse; disabled controls and external value updates
 are silent. Simulators cannot reproduce the physical vibration.
 
+## Gesture ownership
+
+`ControlGestureTests` in the probe drives the same SwiftUI Slider and segmented
+Picker with XCUITest coordinate presses, alone and inside a vertical
+`ScrollView` (`--scroll`), and samples presentation layers every frame. Raw
+logs stay local (`_research/control_specs/raw/gestures`).
+
+Measured (iOS 27.0 simulator, iPhone 17, 60 Hz sampling):
+
+| Contact | What native does |
+| --- | --- |
+| Slider track, 146 points from the thumb: tap, 1.5 s hold, or hold then drag | Nothing. The thumb neither lifts nor moves; the value is unchanged. |
+| Slider track, vertical drag inside a ScrollView | The scroll view scrolls; the slider does nothing. |
+| Slider thumb, then a 30° or 60° drag inside a ScrollView | The slider owns it: the scroll view never moves, the thumb lifts on contact and follows the horizontal component. |
+| Slider thumb, then a vertical drag inside a ScrollView | The slider still owns it: no scroll, the thumb stays lifted in place. |
+| Slider thumb flick (90 points at ~1500 points/s, 0.05 s press) | The thumb lifts within ~0.03 s, follows the finger and then coasts past the release point (from 0.74 to the 1.0 end). |
+| Unselected segment, 1.5 s hold | The selection neither lifts nor moves. The touched label fades to opacity .4 (half-way by ~0.13 s, .4 by ~0.45 s). On release the label returns in ~0.2 s and the selection travels to it, lifting to ~129 × 39 points on the way. |
+| Unselected segment, hold then drag to another | The dimmed label follows the finger; the selection stays. Release commits the segment under the finger. |
+| Unselected segment, quick vertical drag inside a ScrollView | The scroll view scrolls; no label dims. |
+| Selected segment, quick (0.05 s) 60° drag inside a ScrollView | The scroll view scrolls; the selection does not lift. |
+
+The last two rows reflect `UIScrollView.delaysContentTouches` (touches reach
+the control only after ~150 ms without movement). UIKit documents that a scroll
+view does not cancel touches already delivered to a `UIControl`
+(`touchesShouldCancel(in:)` returns false for controls). The probe did not
+measure a held segmented control inside a scroll view, the thumb's exact hit
+extent, or the coasting projection.
+
+The package's policy (judged, see [components](components.md)): the slider
+thumb, the selected segment, the switch and every tab claim the pointer on
+contact and follow drags at any angle, as the native thumb does; the package
+also gives the selected segment that ownership for quick drags inside a scroll
+view, which native yields. The slider track and unselected segments follow the
+measured inactive-part behavior while held, yield cross-axis drags to an
+ancestor scroll view, and keep the package's track tap and track drag. The
+slider does not coast after release.
+
 ## Reproduce
 
 Use Xcode with the reference runtime installed and xcodegen. From

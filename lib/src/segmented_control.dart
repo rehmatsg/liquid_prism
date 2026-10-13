@@ -101,12 +101,18 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                 timing.release?.description ?? NativeControl.largeLift,
             hangTime:
                 timing.minimumLiftDuration ?? const Duration(milliseconds: 220),
+            // Only the selected segment grabs the selection.
+            grabExtent: slot / 2,
             builder: (context, position, lift, stretch, activate) {
               final preview = (position * (count - 1)).round().clamp(
                 0,
                 count - 1,
               );
               final visualSelection = lift > .001 ? preview : selected;
+              final press = ControlInteraction.pressedOf(context);
+              final pressed = press == null
+                  ? null
+                  : (press * (count - 1)).round();
               final physical = (rtl ? 1 - position : position) * (count - 1);
               final pillWidth =
                       math.max(.001, slot - 2 * inset) +
@@ -163,32 +169,45 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                                 onTap: onValueChanged == null
                                     ? null
                                     : () => activate(i / (count - 1)),
-                                child: Center(
-                                  child: DefaultTextStyle.merge(
-                                    style:
-                                        TextStyle(
-                                              fontSize: 13 * scale,
-                                              fontWeight: i == visualSelection
-                                                  ? FontWeight.w500
-                                                  : FontWeight.w400,
-                                            )
-                                            .merge(appearance.labelStyle)
-                                            .copyWith(
-                                              color:
-                                                  foregroundColor ??
-                                                  appearance.foregroundColor ??
-                                                  (i == selected && lift < .5
-                                                      ? appearance
-                                                            .selectedForegroundColor
-                                                      : null) ??
-                                                  appearance
-                                                      .labelStyle
-                                                      ?.color ??
-                                                  (i == selected && lift < .5
-                                                      ? colors.controlThumbLabel
-                                                      : colors.label),
-                                            ),
-                                    child: children[keys[i]]!,
+                                // Native press on another segment: its label
+                                // fades to .4 (~.45 s) and back (~.2 s).
+                                child: AnimatedOpacity(
+                                  opacity: i == pressed && i != selected
+                                      ? .4
+                                      : 1,
+                                  duration: i == pressed
+                                      ? const Duration(milliseconds: 450)
+                                      : const Duration(milliseconds: 200),
+                                  curve: Curves.easeOutQuad,
+                                  child: Center(
+                                    child: DefaultTextStyle.merge(
+                                      style:
+                                          TextStyle(
+                                                fontSize: 13 * scale,
+                                                fontWeight: i == visualSelection
+                                                    ? FontWeight.w500
+                                                    : FontWeight.w400,
+                                              )
+                                              .merge(appearance.labelStyle)
+                                              .copyWith(
+                                                color:
+                                                    foregroundColor ??
+                                                    appearance
+                                                        .foregroundColor ??
+                                                    (i == selected && lift < .5
+                                                        ? appearance
+                                                              .selectedForegroundColor
+                                                        : null) ??
+                                                    appearance
+                                                        .labelStyle
+                                                        ?.color ??
+                                                    (i == selected && lift < .5
+                                                        ? colors
+                                                              .controlThumbLabel
+                                                        : colors.label),
+                                              ),
+                                      child: children[keys[i]]!,
+                                    ),
                                   ),
                                 ),
                               ),

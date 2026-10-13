@@ -132,3 +132,10 @@ retargets momentum and replaces the minimum-lift window. Cancel, disabling,
 reordering and disposal stop stale work. Parent-rejected values settle back.
 RTL reverses physical travel while logical values stay stable. Reduce Motion
 removes lift, stretch and animated travel even when custom motion is supplied.
+
+Only a touch that grabs the thumb or selection lifts on contact: the switch,
+the slider thumb, the selected segment and any tab. A held slider track or an
+unselected segment lifts nothing, as measured on iOS 27; a segment chosen that
+way lifts only while the selection travels to it after release, keeping the
+220 ms minimum lift from that moment. A track drag lifts the thumb when the
+drag starts, under the finger.

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
@@ -667,23 +668,34 @@ void _motionTests() {
   );
 
   testWidgets(
-    'vertical scroll and overlapping pointers cancel before release',
+    'a contact owns the drag against an ancestor scroll; overlapping pointers cancel',
     (tester) async {
       final state = await _mountTabs(tester, scrollable: true);
       final restingWidth = _pill(tester).width;
+      // A touch on the bar belongs to it: a vertical drag does not scroll the
+      // list, and the pill stays lifted on the touched tab until release.
       var pointer = await tester.startGesture(
         tester.getCenter(_tab('Favorites')),
       );
       await pointer.moveBy(const Offset(0, -40));
       await pointer.moveBy(const Offset(0, -30));
       await tester.pumpAndSettle();
-      expect(state.scroll.offset, greaterThan(0));
-      expect(_pill(tester).width, restingWidth);
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Gallery')).dx);
+      expect(state.scroll.offset, 0);
+      expect(_pill(tester).width, greaterThan(restingWidth));
+      expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
       await pointer.up();
-      expect(state.requests, isEmpty);
+      await tester.pumpAndSettle();
+      expect(state.requests, [1]);
+      // Outside the bar the list still scrolls.
+      await tester.dragFrom(const Offset(20, 400), const Offset(0, -120));
+      await tester.pumpAndSettle();
+      expect(state.scroll.offset, greaterThan(0));
       state.scroll.jumpTo(0);
-      await tester.pump();
+      state.update(() {
+        state.selected = 0;
+        state.requests.clear();
+      });
+      await tester.pumpAndSettle();
       pointer = await tester.startGesture(
         tester.getCenter(_tab('Gallery')),
         pointer: 1,
@@ -703,6 +715,69 @@ void _motionTests() {
       expect(state.requests, [1]);
     },
   );
+
+  for (final degrees in [30.0, 60.0]) {
+    testWidgets(
+      'a drag $degrees degrees off the bar axis selects inside a list',
+      (tester) async {
+        final state = await _mountTabs(tester, scrollable: true);
+        final from = tester.getCenter(_tab('Gallery'));
+        final along = tester.getCenter(_tab('Settings')).dx - from.dx;
+        final across = along * math.tan(degrees * math.pi / 180);
+        final pointer = await tester.startGesture(from);
+        for (var i = 1; i <= 10; i++) {
+          await pointer.moveTo(from + Offset(along * i / 10, across * i / 10));
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(
+          _pill(tester).center.dx,
+          greaterThan(tester.getCenter(_tab('Favorites')).dx),
+        );
+        expect(state.scroll.offset, 0);
+        await pointer.up();
+        await tester.pumpAndSettle();
+        expect(state.requests, [2]);
+        _expectSelected(tester, 2);
+      },
+    );
+  }
+
+  testWidgets('a quick flick without a hold selects the projected tab', (
+    tester,
+  ) async {
+    final state = await _mountTabs(tester, scrollable: true);
+    // About 40 points in under 30 ms: well past the touch slop, no hold.
+    await tester.flingFrom(
+      tester.getCenter(_tab('Gallery')),
+      const Offset(40, -12),
+      1500,
+    );
+    await tester.pumpAndSettle();
+    expect(state.requests, [2]);
+    expect(state.scroll.offset, 0);
+    // Rejected by the parent: the pill settles back to the parent's tab.
+    state.update(() => state.accept = false);
+    await tester.flingFrom(
+      tester.getCenter(_tab('Settings')),
+      const Offset(-40, 8),
+      1500,
+    );
+    await tester.pumpAndSettle();
+    expect(state.requests, [2, 0]);
+    _expectSelected(tester, 2);
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
+    // A cancelled drag commits nothing and settles on the selection.
+    final pointer = await tester.startGesture(
+      tester.getCenter(_tab('Settings')),
+    );
+    await pointer.moveBy(const Offset(-150, 30));
+    await tester.pump(const Duration(milliseconds: 100));
+    await pointer.cancel();
+    await tester.pumpAndSettle();
+    expect(state.requests, [2, 0]);
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
+  });
 
   testWidgets(
     'disabled contacts and external updates reject stale commits across reenabling',

@@ -1,0 +1,398 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		33E4A82F899F001DD3978FB7 /* ScrollEdgeSpecsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 291C80D53699483CE5C81F2D /* ScrollEdgeSpecsTests.swift */; };
+		E675FC55BCF8CA48ADD613DC /* Extractor.m in Sources */ = {isa = PBXBuildFile; fileRef = C78B42820C0BBD2FAA345C0D /* Extractor.m */; };
+		FE8C6B90CCEBAA0BA27AC4EE /* ScrollEdgeSpecsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5808AA83B5344AE02A74DB26 /* ScrollEdgeSpecsApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4A38EF27020952AD7CEF59FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8D1A84E5141D64A16028AF04 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 601C2B941CDCA8818498F763;
+			remoteInfo = ScrollEdgeSpecs;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		291C80D53699483CE5C81F2D /* ScrollEdgeSpecsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollEdgeSpecsTests.swift; sourceTree = "<group>"; };
+		56157189760E28665F0B034D /* ScrollEdgeSpecs.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ScrollEdgeSpecs.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5808AA83B5344AE02A74DB26 /* ScrollEdgeSpecsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollEdgeSpecsApp.swift; sourceTree = "<group>"; };
+		B386961E0B352B0469436C84 /* ScrollEdgeSpecsTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ScrollEdgeSpecsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C78B42820C0BBD2FAA345C0D /* Extractor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Extractor.m; sourceTree = "<group>"; };
+		F961A54D052F7A7C605AB249 /* Extractor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Extractor.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0AEFD4956A509D08CB5F75EA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				56157189760E28665F0B034D /* ScrollEdgeSpecs.app */,
+				B386961E0B352B0469436C84 /* ScrollEdgeSpecsTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6904178E6513C43D7F8B4185 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				F961A54D052F7A7C605AB249 /* Extractor.h */,
+				C78B42820C0BBD2FAA345C0D /* Extractor.m */,
+				5808AA83B5344AE02A74DB26 /* ScrollEdgeSpecsApp.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		E902401A7A4DDFEFD3C172BF /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				291C80D53699483CE5C81F2D /* ScrollEdgeSpecsTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		F66FEEC19D7761385BDD1ED5 = {
+			isa = PBXGroup;
+			children = (
+				6904178E6513C43D7F8B4185 /* Sources */,
+				E902401A7A4DDFEFD3C172BF /* Tests */,
+				0AEFD4956A509D08CB5F75EA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0AB1055E2EC16E6EEC43A0F6 /* ScrollEdgeSpecsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EBC421A004986B9470411E41 /* Build configuration list for PBXNativeTarget "ScrollEdgeSpecsTests" */;
+			buildPhases = (
+				4194433AD8CEDE745B117966 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				891F64176AB462023CC24CA4 /* PBXTargetDependency */,
+			);
+			name = ScrollEdgeSpecsTests;
+			packageProductDependencies = (
+			);
+			productName = ScrollEdgeSpecsTests;
+			productReference = B386961E0B352B0469436C84 /* ScrollEdgeSpecsTests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		601C2B941CDCA8818498F763 /* ScrollEdgeSpecs */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 05238495193CE85F406301BA /* Build configuration list for PBXNativeTarget "ScrollEdgeSpecs" */;
+			buildPhases = (
+				BDD0DF7EC6221BBC17313675 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ScrollEdgeSpecs;
+			packageProductDependencies = (
+			);
+			productName = ScrollEdgeSpecs;
+			productReference = 56157189760E28665F0B034D /* ScrollEdgeSpecs.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8D1A84E5141D64A16028AF04 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					0AB1055E2EC16E6EEC43A0F6 = {
+						TestTargetID = 601C2B941CDCA8818498F763;
+					};
+				};
+			};
+			buildConfigurationList = 246405A448FF0894996055C2 /* Build configuration list for PBXProject "ScrollEdgeSpecs" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F66FEEC19D7761385BDD1ED5;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 0AEFD4956A509D08CB5F75EA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				601C2B941CDCA8818498F763 /* ScrollEdgeSpecs */,
+				0AB1055E2EC16E6EEC43A0F6 /* ScrollEdgeSpecsTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4194433AD8CEDE745B117966 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33E4A82F899F001DD3978FB7 /* ScrollEdgeSpecsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BDD0DF7EC6221BBC17313675 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E675FC55BCF8CA48ADD613DC /* Extractor.m in Sources */,
+				FE8C6B90CCEBAA0BA27AC4EE /* ScrollEdgeSpecsApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		891F64176AB462023CC24CA4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 601C2B941CDCA8818498F763 /* ScrollEdgeSpecs */;
+			targetProxy = 4A38EF27020952AD7CEF59FF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1300C179947DCAAF9D320C75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.prism.scrolledgespec.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ScrollEdgeSpecs;
+			};
+			name = Debug;
+		};
+		2C3E44D4DCD3B77804C68DCD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.prism.scrolledgespec.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ScrollEdgeSpecs;
+			};
+			name = Release;
+		};
+		43B3E039871D5492A15C57CC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.prism.scrolledgespec;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = Sources/Extractor.h;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		943021A84B3CD617B71AF323 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.prism.scrolledgespec;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = Sources/Extractor.h;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		955C44402D8C6FF02F4E0290 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		BF0251D15184B1DD19BB1169 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		05238495193CE85F406301BA /* Build configuration list for PBXNativeTarget "ScrollEdgeSpecs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				943021A84B3CD617B71AF323 /* Debug */,
+				43B3E039871D5492A15C57CC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		246405A448FF0894996055C2 /* Build configuration list for PBXProject "ScrollEdgeSpecs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF0251D15184B1DD19BB1169 /* Debug */,
+				955C44402D8C6FF02F4E0290 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EBC421A004986B9470411E41 /* Build configuration list for PBXNativeTarget "ScrollEdgeSpecsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1300C179947DCAAF9D320C75 /* Debug */,
+				2C3E44D4DCD3B77804C68DCD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8D1A84E5141D64A16028AF04 /* Project object */;
+}

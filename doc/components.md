@@ -114,6 +114,8 @@ resting thumb and both insets. Track/lens contours and colors are separate.
 
 Default iOS haptics fire once on a toggle or each crossed drag boundary. A direct
 `haptics` argument wins over the style. Quick taps retain a 220 ms minimum lift.
+The whole switch is its thumb: a touch claims the pointer, so a drag at any
+angle toggles it, even inside a scroll view.
 The default track is 63 × 28; the rest/held thumbs are 37 × 24 and 58 × 38⅓.
 
 ## Sliders
@@ -160,6 +162,14 @@ arrival: holding against the end is silent until the value leaves it. External
 value updates, cancellation and rejected values are silent. Turn it off with
 `haptics: false` on the slider (which wins) or `GlassSliderStyle(haptics: false)`.
 
+Touches within the held thumb's half width (28.7 points by default, at least 22)
+grab it: the slider claims the pointer, lifts the thumb and follows a drag at
+any angle by its horizontal component, so a scroll view around it never takes
+that drag and a quick flick needs no hold. The rest of the track is inactive,
+as on iOS: holding it lifts and moves nothing, and a mostly vertical drag from
+it scrolls an enclosing list. A tap on the track still jumps the value there,
+and a horizontal drag from it takes the thumb to the finger and follows.
+
 ## Segmented controls
 
 ```dart
@@ -183,6 +193,13 @@ heights, selection inset, lift inset per side, colors and typography.
 Direct color arguments override styles. `onChangeStart`/`onChangeEnd` use your
 value type. Touch commits on release; keys and semantics commit immediately.
 
+A touch on the selected segment grabs the selection: it claims the pointer,
+lifts, and follows a drag at any angle. A touch on another segment behaves as on
+iOS: the selection neither lifts nor moves, the touched label dims to .4, a
+horizontal drag moves that highlight, and release commits the segment under the
+finger while the selection travels there, lifted. A mostly vertical drag from an
+unselected segment scrolls an enclosing list and commits nothing.
+
 ## Tab bars
 
 ```dart
@@ -203,6 +220,11 @@ minimum tab spacing and 32 points of label breathing room. Tune those with
 Hidden labels still have accessibility names. `selectedIcon` accepts custom
 selected artwork. Keep custom icon widgets free of repaint boundaries: the
 selection window paints their foreground into two complementary regions.
+
+A touch anywhere on the bar claims the pointer and moves the pill to that tab.
+A drag at any angle, or a quick flick without a hold, then moves the pill along
+the bar and commits the projected tab on release; an enclosing scroll view does
+not take it. A cancelled pointer commits nothing.
 
 Housing material/motion, layout, typography, colors, contours, haptics and independent resting selection
 blur are customizable. `lens` customizes the lifted face; `refractContent: false`

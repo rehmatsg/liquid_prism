@@ -79,6 +79,20 @@
   channel by two 8-bit steps. Measured on the isolated Metal optical pass: 7–9%
   less GPU time for capsule bars and 15–17% for panels, with buttons inside the
   harness's scheduling noise.
+- Fix unreliable drags on the tab bar, slider, switch and segmented control.
+  Their axis-locked drag recognizers lost diagonal drags to an enclosing
+  scroll view, needed 18 points of along-axis travel, and a held slider or
+  segment cancelled its own drag when a slightly diagonal move rejected the
+  tap recognizer first. Each control now has one recognizer that claims a
+  touch on its thumb or selection (all of a switch or tab bar) on contact and
+  drags at any angle past the touch slop, so flicks work without a hold.
+- Holding an inactive part now does what iOS 27 does (measured with the
+  native control probe): a held slider track lifts and moves nothing, and a
+  held unselected segment dims its label to .4 while the selection stays put,
+  then travels there, lifted, on release. A drag from an unselected segment
+  moves that highlight. Mostly vertical drags from these parts scroll an
+  enclosing list. Track taps and track drags keep their behavior. Controls no
+  longer expose no-op scroll semantics actions from their drag detector.
 
 ## 0.2.1
 

@@ -32,6 +32,12 @@ Future<void> main() async {
               widget.key == const ValueKey('segments')) {
             state['segments'] = widget.selectedValue;
           }
+          if (element is StatefulElement &&
+              element.state is ScrollableState &&
+              !state.containsKey('scroll')) {
+            state['scroll'] =
+                (element.state as ScrollableState).position.pixels;
+          }
           final key = element.widget.key;
           if (key is ValueKey &&
               ['switch', 'slider', 'segments'].contains(key.value)) {

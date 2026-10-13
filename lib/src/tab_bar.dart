@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_gesture.dart';
 import 'control_lens.dart';
 import 'appearance.dart';
 import 'chrome_layout.dart';
@@ -658,41 +659,23 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
           onPointerDown: _pointerDown,
           onPointerUp: _pointerUp,
           onPointerCancel: _pointerUp,
-          child: GestureDetector(
-            excludeFromSemantics: true,
-            behavior: HitTestBehavior.opaque,
-            onTapUp: widget.onSelected == null
-                ? null
-                : (details) {
-                    if (!_cancelled) {
-                      _commit(
-                        _logical(_slotAt(details.localPosition)),
-                        velocity: _position.velocity,
-                      );
-                    }
-                  },
-            onTapCancel: () {
-              if (!_dragging) {
-                _feedback(false);
-                _settle();
+          child: ControlGestureDetector(
+            enabled: selects,
+            axis: vertical ? Axis.vertical : Axis.horizontal,
+            onTapUp: (details) {
+              if (!_cancelled) {
+                _commit(
+                  _logical(_slotAt(details.localPosition)),
+                  velocity: _position.velocity,
+                );
               }
             },
-            onHorizontalDragStart: selects && !vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onHorizontalDragUpdate: selects && !vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onHorizontalDragEnd: selects && !vertical ? _dragEnd : null,
-            onHorizontalDragCancel: vertical ? null : cancelDrag,
-            onVerticalDragStart: selects && vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onVerticalDragUpdate: selects && vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onVerticalDragEnd: selects && vertical ? _dragEnd : null,
-            onVerticalDragCancel: vertical ? cancelDrag : null,
+            // Any direction past the touch slop drags; the pill reads only the
+            // bar's own axis, so diagonal drags and flicks still select.
+            onStart: (details) => _drag(details.localPosition),
+            onUpdate: (details) => _drag(details.localPosition),
+            onEnd: _dragEnd,
+            onCancel: cancelDrag,
             child: AnimatedBuilder(
               animation: Listenable.merge([
                 _position,

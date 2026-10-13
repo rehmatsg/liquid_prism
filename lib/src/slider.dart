@@ -116,6 +116,8 @@ class LiquidPrismSlider extends StatelessWidget {
             releaseSpring:
                 timing.release?.description ?? NativeControl.smallRelease,
             hangTime: timing.minimumLiftDuration ?? Duration.zero,
+            // The held thumb's half width, at least half a 44-point target.
+            grabExtent: math.max(22.0, thumb.width * heldScale / 2),
             builder: (context, position, lift, stretch, activate) {
               final p = position.clamp(0.0, 1.0);
               final x = center + travel * (rtl ? 1 - p : p);
