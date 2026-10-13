@@ -4,8 +4,10 @@ import 'dart:ui' show DisplayFeature;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'glass_transition.dart';
 import 'menu/menu.dart';
 import 'menu/menu_elements.dart';
+import 'motion.dart';
 import 'sidebar.dart';
 import 'system_chrome.dart';
 import 'tab_bar.dart';
@@ -156,8 +158,33 @@ class LiquidPrismScaffold extends StatefulWidget {
       );
 }
 
-class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
+class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
+    with SingleTickerProviderStateMixin {
   bool _sidebarHidden = false;
+
+  /// How far the sidebar is shown: it slides the panel and reflows the body.
+  late final _reveal = RetargetableGlassSpring(vsync: this)
+    ..value = 1
+    ..addStatusListener((status) {
+      // Remove the panel once it has slid out.
+      if (status.isCompleted || status.isDismissed) setState(() {});
+    });
+
+  void _setSidebarHidden(bool hidden) {
+    setState(() => _sidebarHidden = hidden);
+    springGlass(
+      _reveal,
+      hidden ? 0 : 1,
+      NativeSidebar.spring,
+      immediate: MediaQuery.disableAnimationsOf(context),
+    );
+  }
+
+  @override
+  void dispose() {
+    _reveal.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +233,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
             tabBar is LiquidPrismTabBar
         ? tabBar
         : null;
-    final sidebar = sidebarTabs != null && !_sidebarHidden;
+    // The panel stays while it slides out. Native hides the tabs with it.
+    final sidebar =
+        sidebarTabs != null && (!_sidebarHidden || _reveal.value > 0);
     final sidebarToggle = sidebarTabs != null && _sidebarHidden;
     // Native: leading, unless the vertical bar already holds that edge.
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -237,7 +266,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
     final corner = rail
         ? null
         : _ChromeLayout.topCorner(media.size, occlusions);
-    final showTabBar = tabBar != null && !sidebar && (rail || !keyboard);
+    final showTabBar =
+        tabBar != null && sidebarTabs == null && (rail || !keyboard);
     final items =
         rail &&
             !_fitsRail(
@@ -259,7 +289,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
         iOS: defaultTargetPlatform == TargetPlatform.iOS,
         topBar:
             widget.leading != null ||
-            sidebarToggle ||
+            // Native keeps the bar row with the sidebar shown or hidden, so
+            // content does not jump when the toggle moves into it.
+            sidebarTabs != null ||
             (!rail && widget.actions.isNotEmpty),
         actionsTop: actionsTop,
         railBottom: railBottom,
@@ -267,6 +299,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
         sidebar: sidebar
             ? (sidebarLeft ? AxisDirection.left : AxisDirection.right)
             : null,
+        reveal: _reveal,
       ),
       children: [
         LayoutId(
@@ -283,21 +316,47 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold> {
             ),
           ),
         ),
+        // Beneath the panel, as natively: the panel slides over it.
+        if (sidebarTabs != null)
+          LayoutId(
+            id: _Slot.sidebarToggle,
+            child: LiquidPrismVisibility(
+              visible: sidebarToggle,
+              // It materializes as the panel leaves and goes at once when the
+              // panel returns over it.
+              transition: sidebarToggle
+                  ? GlassTransition.materialize
+                  : GlassTransition.identity,
+              style: GlassTransitionStyle(
+                enterSpring: GlassSpring.physical(NativeSidebar.spring),
+              ),
+              child: Builder(
+                builder: (context) => Transform.scale(
+                  scale:
+                      NativeSidebar.toggleEntryScale -
+                      (NativeSidebar.toggleEntryScale - 1) *
+                          LiquidPrismPresence.of(context),
+                  child: SidebarToggle(
+                    label: 'Show sidebar',
+                    onPressed: () => _setSidebarHidden(false),
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (sidebar)
           LayoutId(
             id: _Slot.sidebar,
-            child: GlassSidebar(
-              tabBar: sidebarTabs,
-              top: top,
-              onHide: () => setState(() => _sidebarHidden = true),
-            ),
-          ),
-        if (sidebarToggle)
-          LayoutId(
-            id: _Slot.sidebarToggle,
-            child: SidebarToggle(
-              label: 'Show sidebar',
-              onPressed: () => setState(() => _sidebarHidden = false),
+            child: IgnorePointer(
+              ignoring: _sidebarHidden,
+              child: ExcludeSemantics(
+                excluding: _sidebarHidden,
+                child: GlassSidebar(
+                  tabBar: sidebarTabs,
+                  top: top,
+                  onHide: () => _setSidebarHidden(true),
+                ),
+              ),
             ),
           ),
         if (widget.leading case final leading?)
@@ -437,7 +496,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.railBottom,
     required this.corner,
     required this.sidebar,
-  });
+    required this.reveal,
+  }) : super(relayout: reveal);
 
   final GlassChromePlacement placement;
   final EdgeInsets viewPadding;
@@ -450,6 +510,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
   /// The physical edge of a visible sidebar.
   final AxisDirection? sidebar;
+
+  /// How far the sidebar is shown, from 0 to 1.
+  final Animation<double> reveal;
 
   /// Where rail actions start: below the system UI that UIKit reports in the
   /// rail (the status bar), else below the top safe area, else the measured
@@ -565,11 +628,15 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     final railLeft = viewPadding.left;
     final railRight = size.width - viewPadding.right;
     final sidebarWidth = NativeSidebar.width;
+    final shown = sidebar == null ? 0.0 : reveal.value.clamp(0.0, 1.0);
+    // The panel slides by its width while the body reflows with it.
     final contentLeft = sidebar == AxisDirection.left
-        ? math.max(railLeft, sidebarWidth)
+        ? railLeft + (math.max(railLeft, sidebarWidth) - railLeft) * shown
         : railLeft;
     final contentRight = sidebar == AxisDirection.right
-        ? math.min(railRight, size.width - sidebarWidth)
+        ? railRight -
+              (railRight - math.min(railRight, size.width - sidebarWidth)) *
+                  shown
         : railRight;
     var covered = EdgeInsets.only(
       top: topBar ? top + LiquidPrismScaffold.topBarHeight : top,
@@ -587,28 +654,50 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         _Slot.sidebar,
         BoxConstraints.tight(Size(sidebarWidth, size.height)),
       );
+      final hidden = sidebarWidth * (1 - shown);
       positionChild(
         _Slot.sidebar,
         Offset(
-          sidebar == AxisDirection.right ? size.width - sidebarWidth : 0,
+          sidebar == AxisDirection.right
+              ? size.width - sidebarWidth + hidden
+              : -hidden,
           0,
         ),
       );
     }
 
-    // Top-leading controls: the sidebar toggle, then the leading widget.
+    double centred(Size child) =>
+        top + (LiquidPrismScaffold.topBarHeight - child.height) / 2;
+    // The show-sidebar toggle holds its measured place while the body
+    // reflows beneath the panel; the leading widget follows the body.
     var leadingOffset = _edge;
-    for (final slot in [_Slot.sidebarToggle, _Slot.leading]) {
-      if (!hasChild(slot)) continue;
-      final child = layoutChild(slot, BoxConstraints.loose(size));
-      final x = rtl
-          ? barRight - leadingOffset - child.width
-          : barLeft + leadingOffset;
-      positionChild(
-        slot,
-        Offset(x, top + (LiquidPrismScaffold.topBarHeight - child.height) / 2),
+    if (hasChild(_Slot.sidebarToggle)) {
+      final toggle = layoutChild(
+        _Slot.sidebarToggle,
+        BoxConstraints.loose(size),
       );
-      leadingOffset += child.width + 8;
+      const inset = NativeSidebar.toggleInset;
+      positionChild(
+        _Slot.sidebarToggle,
+        Offset(
+          rtl ? railRight - inset - toggle.width : railLeft + inset,
+          // Measured at the top bar's top, as the panel's own toggle.
+          top,
+        ),
+      );
+      if (!toggle.isEmpty) leadingOffset = inset + toggle.width + 8;
+    }
+    if (hasChild(_Slot.leading)) {
+      final child = layoutChild(_Slot.leading, BoxConstraints.loose(size));
+      positionChild(
+        _Slot.leading,
+        Offset(
+          rtl
+              ? barRight - leadingOffset - child.width
+              : barLeft + leadingOffset,
+          centred(child),
+        ),
+      );
     }
 
     // Rail column: 48 pt wide, 12 pt outside the safe area's edge.
@@ -692,5 +781,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       actionsTop != old.actionsTop ||
       railBottom != old.railBottom ||
       corner != old.corner ||
-      sidebar != old.sidebar;
+      sidebar != old.sidebar ||
+      reveal != old.reveal;
 }

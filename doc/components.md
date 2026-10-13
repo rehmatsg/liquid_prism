@@ -238,9 +238,12 @@ window resizes, as UIKit menus do.
 Set `tabBarPlacement: GlassTabBarPlacement.sidebar` to list a
 `LiquidPrismTabBar`'s tabs in a leading sidebar while the window has regular
 width, such as the unfolded iPhone Duo. Apple suggests it for
-information-dense apps. A toggle hides it; the tabs then return to the tab bar
-or rail, and a toggle in the top bar brings the sidebar back. Regular width
-comes from UIKit's size class on iOS 27.1, or a 700 pt window elsewhere.
+information-dense apps. The sidebar is a frosted glass panel over full-width
+content. Its toggle slides it away while the content reflows into the space,
+with the native spring; a toggle that materializes at the top leading corner
+brings it back. As natively, the tabs stay out of the tab bar and rail while the
+sidebar is hidden. Reduce Motion skips the slide. Regular width comes from
+UIKit's size class on iOS 27.1, or a 700 pt window elsewhere.
 
 ### Your own sheets, dialogs and bars
 

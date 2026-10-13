@@ -85,12 +85,39 @@ reports the app's own preference so either behavior resolves to horizontal bars.
 ### Sidebar
 
 `TabView` with `.defaultTabBarPlacement(.sidebar)` on the unfolded Duo shows a
-280 pt opaque sidebar along the leading edge (light #EAEFF2, dark #181D20). A
-48 pt glass toggle sits at x 212, y 24. Rows are 240 × 44 at x 20 from y 81,
-with accent-colored icons and labels at x 74; the selected row is a capsule
-(light #D6DBDE, dark #2C3134). Content starts at x 280. The rail keeps the
-trailing group under the status bar and moves the bottom-bar items to its
-bottom (y 537 and 597); no tab bar remains in it.
+280 pt, full-height `UIGlassEffect` panel along the leading edge, over content
+that stays full width (the body's leading safe area is 280). A 48 pt glass
+toggle sits at x 212, y 24. Rows are 240 × 44 at x 20 from y 81, with
+accent-colored icons centred at x 50 and labels at x 74 in 17 pt SF, medium when
+selected and regular otherwise, in the label color. The selected row is a
+vibrant capsule. The rail keeps the trailing group under the status bar and
+moves the bottom-bar items to its bottom (y 537 and 597); no tab bar remains in
+it, shown or hidden.
+
+Material, fitted on 2026-10-12 from screenshots against the same wallpaper with
+the sidebar hidden (RMS 2.6/255 light, 0.9/255 dark): a Gaussian blur (σ 13 pt
+light, 12 dark), then per channel `luma·L + chroma·(C − L) + offset`, with
+Rec. 709 luminance L. Light: luma .403, chroma .911, offset (131.4, 136.2,
+139.4)/255, so white reads #EAEFF2. Dark: luma .374, chroma .558, offset (25,
+29.4, 32.5)/255, so black reads #181D20. The light fit has a small highlight
+curve that a matrix cannot follow; it is pinned to the white point. The edge is
+sharp, with no refraction rim. The selected capsule darkens what is beneath by
+8.6% in light (#D6DBDE on white) and adds 21 per channel in dark (#2C3134 on
+black).
+
+Motion, from presentation frames sampled every display frame through four
+hide/show cycles in each appearance (tapping the toggle in an XCUITest):
+
+| Element | Motion | Fit |
+| --- | --- | --- |
+| Panel | slides its full width, no fade | response .35 s, damping 1.0 |
+| Body content | leading inset 296 ↔ 16, width reflows | response .34 s, damping 1.0 |
+| Inline navigation title | x 300 ↔ 80 | response .42 s, damping .75 (2.8% overshoot) |
+| Hidden-state toggle (x 20, y 24) | materializes beneath the panel from 1.2× | settles in ~.4 s |
+
+On show, the hidden-state toggle goes at once and the panel slides back over
+it. The navigation bar row keeps its place in both states, so content never
+moves vertically.
 
 ### Poses
 
