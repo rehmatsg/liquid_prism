@@ -141,6 +141,13 @@ void main() {
       expect(tester.getSize(entering), const Size(48, 48));
       expect(tester.getTopLeft(entering).dx, greaterThan(restingEnd));
       expect(tester.getSize(glass).width, lessThan(346));
+      // It fades rather than materializes: its content never blurs.
+      final cancelBlur = tester.widget<ImageFiltered>(
+        find
+            .descendant(of: entering, matching: find.byType(ImageFiltered))
+            .first,
+      );
+      expect(cancelBlur.enabled, isFalse);
       await tester.pumpAndSettle();
       expect(node.hasFocus, isTrue);
       expect(tester.getTopLeft(find.byType(LiquidPrism).last).dx, restingEnd);

@@ -325,10 +325,12 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
                     top: 0,
                     width: cancelWidth,
                     height: height,
-                    // Materializes through the glass's own optics; an Opacity
-                    // or scale here would cut the lens off from its backdrop.
+                    // Fades through the glass's own optics, keeping its full
+                    // lens while it slides; an Opacity or scale here would
+                    // cut the lens off from its backdrop.
                     child: LiquidPrismPresence(
                       progress: _reveal,
+                      materialize: false,
                       child: Transform.translate(
                         // Slides in from the trailing edge, toward the field.
                         offset: Offset(

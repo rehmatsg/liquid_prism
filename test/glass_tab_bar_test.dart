@@ -11,6 +11,7 @@ import 'support/rendering.dart';
 
 void main() {
   _motionTests();
+  _scaleBeneathFilterTest();
   testWidgets(
     'tabs select once and update semantic foreground with live theme',
     (tester) async {
@@ -887,5 +888,50 @@ class _StatefulIconState extends State<_StatefulIcon> {
     width: 22,
     height: 22,
     child: ColoredBox(color: Color(0xFF0088FF)),
+  );
+}
+
+void _scaleBeneathFilterTest() {
+  testWidgets(
+    'held tabs scale beneath the content filter, not under a transform',
+    (tester) async {
+      await tester.pumpWidget(
+        glassHarness(
+          imageKey: GlobalKey(),
+          child: LiquidPrismTabBar(
+            tabs: const [
+              LiquidPrismTab(
+                label: 'Gallery',
+                icon: SizedBox(width: 25, height: 25),
+              ),
+              LiquidPrismTab(
+                label: 'Favorites',
+                icon: SizedBox(width: 25, height: 25),
+              ),
+            ],
+            selectedIndex: 0,
+            onSelected: (_) {},
+          ),
+        ),
+      );
+      final label = find.text('Favorites');
+      final rest = tester.getRect(label);
+      final hold = await tester.startGesture(tester.getCenter(label));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      // The housing's flex still reaches the foreground...
+      final held = tester.getRect(label);
+      expect(held.width, greaterThan(rest.width));
+      // ...but no ancestor transform scales it: an animating scale above the
+      // refraction filter made the selected copy pop between device pixels.
+      for (final transform in tester.widgetList<Transform>(
+        find.ancestor(of: label, matching: find.byType(Transform)),
+      )) {
+        expect(transform.transform.getMaxScaleOnAxis(), 1);
+      }
+      await hold.up();
+      await tester.pumpAndSettle();
+      expect(tester.getRect(label), rest);
+    },
   );
 }
