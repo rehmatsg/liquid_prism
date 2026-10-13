@@ -16,6 +16,10 @@
   native sidebar at regular width, with a hide and show toggle. Report UIKit's
   size classes as `GlassSystemChrome.horizontalSizeClass` and
   `verticalSizeClass`.
+- Match the native sidebar's glass material and its show and hide motion: the
+  panel slides on a measured spring while content reflows beneath it, and the
+  show toggle materializes in place. Hiding the sidebar no longer moves the tabs
+  into the tab bar or rail, matching iOS.
 - Reserve the rail strip when UIKit reports a vertical bar edge without an
   inset, as for an app on the left of Split View. The showcase reflows its
   sections into two columns around a bent fold.

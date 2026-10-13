@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/sidebar.dart';
 import 'package:liquid_prism/src/system_chrome.dart' show SystemChromeListener;
 
 /// Window sizes and safe areas measured on iOS 27.1 simulators.
@@ -446,18 +447,25 @@ void main() {
   });
 
   group('sidebar placement', () {
-    Widget app({required ValueChanged<int> onSelected, int selected = 0}) =>
-        CupertinoApp(
-          home: LiquidPrismScaffold(
-            tabBarPlacement: GlassTabBarPlacement.sidebar,
-            tabBar: LiquidPrismTabBar(
-              selectedIndex: selected,
-              onSelected: onSelected,
-              tabs: _tabs,
-            ),
-            body: const SizedBox.expand(key: _body),
-          ),
-        );
+    Widget app({
+      required ValueChanged<int> onSelected,
+      int selected = 0,
+      bool reduceMotion = false,
+    }) => CupertinoApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
+        child: child!,
+      ),
+      home: LiquidPrismScaffold(
+        tabBarPlacement: GlassTabBarPlacement.sidebar,
+        tabBar: LiquidPrismTabBar(
+          selectedIndex: selected,
+          onSelected: onSelected,
+          tabs: _tabs,
+        ),
+        body: const SizedBox.expand(key: _body),
+      ),
+    );
 
     testWidgets('lists the tabs beside content at regular width', (
       tester,
@@ -478,19 +486,66 @@ void main() {
       final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
       expect(padding.left, 280);
       expect(padding.right, 84);
+      // The top bar row stays reserved, so hiding never shifts content down.
+      expect(padding.top, 24 + 44);
 
       await tester.tap(find.text('Search'));
       await tester.pump();
       expect(selected, 2);
 
-      // Hidden, the tabs go back to the rail and a toggle brings it back.
+      // Hiding slides the panel out while the body reflows beneath it.
       await tester.tap(find.bySemanticsLabel('Hide sidebar'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      final panel = tester.getRect(find.byType(GlassSidebar));
+      expect(panel.width, 280);
+      expect(panel.left, inExclusiveRange(-280, 0));
+      final reflowing = MediaQuery.paddingOf(tester.element(find.byKey(_body)))
+          .left;
+      expect(reflowing, closeTo(280 + panel.left, .5));
+      // The show toggle materializes beneath the panel, grown at first.
+      final entering = find.ancestor(
+        of: find.bySemanticsLabel('Show sidebar'),
+        matching: find.byType(Transform),
+      );
+      expect(
+        tester.widget<Transform>(entering.first).transform.getMaxScaleOnAxis(),
+        greaterThan(1),
+      );
+      expect(find.text('Saved'), findsOneWidget);
+
       await tester.pumpAndSettle();
+      // Native hides the tabs with the panel; nothing returns to the rail.
       expect(find.text('Saved'), findsNothing);
-      expect(tester.getRect(find.byType(LiquidPrismTabBar)).width, 48);
+      expect(find.byType(LiquidPrismTabBar), findsNothing);
+      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).left, 0);
+      expect(
+        tester.getTopLeft(find.bySemanticsLabel('Show sidebar')),
+        const Offset(20, 24),
+      );
+      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).top, 68);
+
       await tester.tap(find.bySemanticsLabel('Show sidebar'));
+      await tester.pump();
+      // The toggle goes at once; the panel slides back over its place.
+      expect(find.bySemanticsLabel('Show sidebar'), findsNothing);
       await tester.pumpAndSettle();
       expect(find.text('Saved'), findsOneWidget);
+      expect(tester.getRect(find.byType(GlassSidebar)).left, 0);
+      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).left, 280);
+    });
+
+    testWidgets('reduce motion toggles the sidebar without sliding', (
+      tester,
+    ) async {
+      window(tester, duoUnfolded);
+      await tester.pumpWidget(app(onSelected: (_) {}, reduceMotion: true));
+      await tester.tap(find.bySemanticsLabel('Hide sidebar'));
+      await tester.pump();
+      // The panel and body jump; only the toggle's short fade remains.
+      expect(find.byType(GlassSidebar), findsNothing);
+      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).left, 0);
+      expect(find.bySemanticsLabel('Show sidebar'), findsOneWidget);
     });
 
     testWidgets('keeps the tab bar at compact width', (tester) async {
