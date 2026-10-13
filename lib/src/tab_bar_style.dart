@@ -60,8 +60,9 @@ class GlassTabBarStyle {
   final TextStyle? labelStyle;
   final Color? selectedColor, unselectedColor, selectionColor;
 
-  /// Extra pill blur, independent of the enclosing bar. Defaults to 2.
-  /// Set to zero to disable; null inherits the enclosing theme.
+  /// Extra pill blur, independent of the enclosing bar. Null inherits the
+  /// enclosing theme, then defaults to 2, or to zero when the housing's own
+  /// frost is at least 3 points and already covers it. Set to zero to disable.
   final double? selectionBlur;
   final GlassShape? shape, selectionShape;
   final bool? haptics;

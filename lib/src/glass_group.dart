@@ -40,6 +40,66 @@ class _LiquidPrismGroupState extends State<LiquidPrismGroup> {
   }
 }
 
+/// Owns a group whose members are only the surfaces below a
+/// [GlassGroupMembers] in its subtree. [LiquidPrismScaffold] hosts one around
+/// its layout and scopes the floating chrome, so the body it paints first is
+/// never a member while the tab bar, leading control and actions share
+/// captures.
+@internal
+class GlassGroupHost extends StatefulWidget {
+  const GlassGroupHost({super.key, required this.child});
+  final Widget child;
+  @override
+  State<GlassGroupHost> createState() => _GlassGroupHostState();
+}
+
+class _GlassGroupHostState extends State<GlassGroupHost> {
+  final _data = _GlassGroupData();
+  @override
+  Widget build(BuildContext context) => _GlassGroupHostScope(
+    data: _data,
+    child: _GlassGroupRenderWidget(data: _data, child: widget.child),
+  );
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(IntProperty('batchedSurfaces', _data.prepared.length))
+      ..add(IntProperty('opticalBatches', _data._batches.length))
+      ..add(IntProperty('sharedBackdropSurfaces', _data.shared.length));
+  }
+
+  @override
+  void dispose() {
+    _data.dispose();
+    super.dispose();
+  }
+}
+
+class _GlassGroupHostScope extends InheritedWidget {
+  const _GlassGroupHostScope({required this.data, required super.child});
+  final _GlassGroupData data;
+  @override
+  bool updateShouldNotify(_GlassGroupHostScope oldWidget) =>
+      data != oldWidget.data;
+}
+
+/// Joins the surfaces below it to the nearest [GlassGroupHost]. Members must
+/// see the same background, painted before all of them; keep content that
+/// paints between members outside.
+@internal
+class GlassGroupMembers extends StatelessWidget {
+  const GlassGroupMembers({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    final host = context
+        .dependOnInheritedWidgetOfExactType<_GlassGroupHostScope>();
+    if (host == null) return child;
+    return _GlassGroupScope(data: host.data, child: child);
+  }
+}
+
 class _GlassGroupScope extends InheritedWidget {
   const _GlassGroupScope({required this.data, required super.child});
   final _GlassGroupData data;
@@ -154,16 +214,90 @@ class _GlassGroupData {
   /// Scalar members reading one backdrop capture, each with its own filter.
   final shared = <_RenderGlass>{};
   final sharedKey = BackdropKey();
+
+  /// One capture for every hoisted frost pass; the optical passes then share
+  /// a second capture that already holds each member's frost.
+  final frostKey = BackdropKey();
   final _batches = <_GlassBatch>[];
   bool _disposed = false;
+
+  /// The shared member that painted the shared shadows and frost this frame.
+  _RenderGlass? _hoistHost;
+  ui.Picture? _sharedShadows;
+  List<Object> _sharedSignature = [];
+
+  /// Paints every shared member's shadow, then its frost pass clipped to its
+  /// contour, in [host]'s enclosing layer space. Shared members never sample
+  /// another member's paint, so their order does not change what the frost
+  /// blurs or what the optical passes read, and the whole group then costs
+  /// one capture for frost and one for optics instead of two per member.
+  void _hoist(ui.SceneBuilder builder, _RenderGlass host) {
+    final offset = host._paintOffset;
+    // prepare() keeps only invertible members, so the host inverts.
+    final hostInverse = Matrix4.inverted(host.getTransformTo(null));
+    final transforms = <_RenderGlass, Matrix4>{};
+    final signature = <Object>[offset, host];
+    for (final member in shared) {
+      final matrix = Matrix4.translationValues(offset.dx, offset.dy, 0)
+        ..multiply(hostInverse)
+        ..multiply(member.glassTransform());
+      transforms[member] = matrix;
+      signature.addAll([
+        member,
+        member.shape,
+        member.size,
+        member.recipe.shadowStrength,
+        member.recipe.usesNativeControlShadow,
+        ...matrix.storage,
+      ]);
+    }
+    if (!listEquals(_sharedSignature, signature)) {
+      _sharedSignature = signature;
+      _sharedShadows?.dispose();
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      for (final entry in transforms.entries) {
+        canvas.save();
+        canvas.transform(entry.value.storage);
+        _ExteriorShadow(
+          entry.key.shape,
+          strength: entry.key.recipe.shadowStrength,
+          nativeControl: entry.key.recipe.usesNativeControlShadow,
+        ).paint(canvas, entry.key.size);
+        canvas.restore();
+      }
+      _sharedShadows = recorder.endRecording();
+    }
+    builder.addPicture(Offset.zero, _sharedShadows!);
+    var index = 0;
+    for (final entry in transforms.entries) {
+      final member = entry.key;
+      final frost = member._frostLayer.layer;
+      if (frost == null || member.style.frost <= 0.05) continue;
+      final contour = member.shape
+          .path(member.size)
+          .transform(entry.value.storage);
+      frost.configure(member.style.frost + index++ * 1e-4, frostKey);
+      builder.pushClipPath(contour);
+      frost.filter.addToScene(builder);
+      builder.pop();
+    }
+  }
 
   void prepare(_GlassGroupLayer groupLayer) {
     prepared.clear();
     shared.clear();
+    _hoistHost = null;
     if (_disposed) return;
     final canBatch = LiquidPrism._batchProgram != null;
     final surfaces = members
-        .where((m) => m.attached && m.hasSize && !m.size.isEmpty)
+        .where(
+          (m) =>
+              m.attached &&
+              m.hasSize &&
+              !m.size.isEmpty &&
+              m.getTransformTo(null).determinant() != 0,
+        )
         .toList();
     final bounds = <_RenderGlass, Rect>{};
     final footprints = <_RenderGlass, Rect>{};
@@ -180,7 +314,9 @@ class _GlassGroupData {
         aligned.add(member);
       }
       bounds[member] = MatrixUtils.transformRect(transform, rect.inflate(2));
-      // Everything a member paints, including its exterior shadow.
+      // Everything a member paints, with the visible part of its exterior
+      // shadow. The faint outer skirt may sit under a shared member's glass
+      // instead of over it, as it already does for batched members.
       painted[member] = MatrixUtils.transformRect(transform, rect.inflate(18));
       // Refraction/dispersion and the anisotropic pixel footprint stay inside
       // this conservative local sampling envelope. Reflections reach outward.
@@ -320,6 +456,8 @@ class _GlassGroupData {
     prepared.clear();
     shared.clear();
     members.clear();
+    _sharedShadows?.dispose();
+    _sharedShadows = null;
     for (final batch in _batches) {
       batch.shader.dispose();
     }

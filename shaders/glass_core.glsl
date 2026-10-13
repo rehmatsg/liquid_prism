@@ -29,27 +29,19 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
     float sigma = u_derived[1].x;
     if (stretch2 <= u_derived[1].y) return readScene(p);
     vec2 major = dxx > dyy ? dx : dy;
-    vec2 minor = dxx > dyy ? dy : dx;
     // Bound a grazing footprint while retaining subpixel integration at the rim.
     major *= min(1., 16. / max(sqrt(stretch2), 0.0001));
+    // Integrate along the major axis only. The minor axis of a compressed
+    // footprint stays within the frost kernel, where its +-1/4 pair equals the
+    // midpoint; a frost of at least 2px lets a short footprint use one pair.
+    if (sigma >= 2. && stretch2 <= u_derived[1].z) {
+        return (readScene(p - major * 0.25) + readScene(p + major * 0.25)) * 0.5;
+    }
     vec3 result = vec3(0.);
-    // With a frost kernel of at least 2px and a short minor axis, the ±¼ pair
-    // equals its midpoint well below 8-bit precision; one read covers each step.
-    if (sigma >= 2. && dot(minor, minor) <= 4.) {
-        if (stretch2 <= u_derived[1].z) {
-            return (readScene(p - major * 0.25) + readScene(p + major * 0.25)) * 0.5;
-        }
-        for (int i = 0; i < 4; i++) {
-            result += readScene(p + major * ((float(i) + 0.5) * 0.25 - 0.5));
-        }
-        return result * 0.25;
-    }
     for (int i = 0; i < 4; i++) {
-        vec2 step = major * ((float(i) + 0.5) * 0.25 - 0.5);
-        result += readScene(p + step + minor * 0.25);
-        result += readScene(p + step - minor * 0.25);
+        result += readScene(p + major * ((float(i) + 0.5) * 0.25 - 0.5));
     }
-    return result * 0.125;
+    return result * 0.25;
 }
 
 #include "superellipse.glsl"
@@ -124,6 +116,46 @@ vec3 radiance(vec3 base, vec3 reflected, float weight) {
     float response = weight / (1. + weight);
     return clamp(base + ((1.-base)*reflected*mix(1.,(1.-y)*(1.-y)*(1.-y)*(1.-y),0.65)-absorption)*response,0.,1.);
 }
+// Saturation and tint grading of the sampled backdrop.
+vec3 gradeInput(vec3 color) {
+    float luma = dot(color,vec3(0.2126,0.7152,0.0722));
+    color = clamp(mix(vec3(luma),color,u_finish.x),0.,1.);
+    return clamp(mix(color,u_tint.rgb,u_tint.a) + u_geometry.w,0.,1.);
+}
+// Material face remap and the optional tint matrix.
+vec3 gradeFace(vec3 color) {
+    if (u_material.x > .5 && u_material.x < 2.5) {
+        // Extracted iOS 27 gray-backdrop glassBackground face inputs. The
+        // optical/compositing implementation remains this package's renderer.
+        bool dark = u_material.y > .5;
+        bool clear = u_material.x > 1.5;
+        float value = dot(color,vec3(.2126,.7152,.0722));
+        float black = clear || dark ? .125 : .4000000059604645;
+        float white = clear ? 1.0800000429153442 :
+            (dark ? 1.100000023841858 : 1.0299999713897705);
+        float saturation = clear ? 1.059999942779541 :
+            (dark ? 1.399999976158142 : 1.2000000476837158);
+        color = (color-vec3(value))*saturation + mix(black,white,value);
+        float fill = clear || dark ? 0. : .20000000298023224;
+        color = clamp(mix(color,vec3(1.),fill),0.,1.);
+    }
+    if (u_material.w > 0.) {
+        vec4 inputColor = vec4(color,1.);
+        vec3 tinted = clamp(vec3(dot(u_tintRed,inputColor),
+            dot(u_tintGreen,inputColor),dot(u_tintBlue,inputColor)),0.,1.);
+        color = mix(color,tinted,u_material.w);
+    }
+    return color;
+}
+vec3 gradePressed(vec3 color) {
+    if (u_state.x > 0.) {
+        vec3 pressed = vec3(dot(color,vec3(1.1575,-0.1431,-0.0144)),
+            dot(color,vec3(-0.0425,1.0570,-0.0145)),
+            dot(color,vec3(-0.0426,-0.1430,1.1856))) + 0.05;
+        color = mix(color,clamp(pressed,0.,1.),u_state.x * 0.9);
+    }
+    return color;
+}
 void shadeGlass() {
     vec2 screen = FlutterFragCoord().xy;
     float det = u_transform.x*u_transform.w - u_transform.y*u_transform.z;
@@ -176,6 +208,21 @@ void shadeGlass() {
     dy = dFdy(samplePoint);
     aa = max(fwidth(d), 0.0001);
     #endif
+    // Past every band that reaches inward (lens, reflections, highlights, the
+    // tab lens's underlay and shade) a fragment is one undisplaced read and
+    // its grading. The derivatives above are evaluated first, and an extra AA
+    // step keeps this exit clear of the coverage ramp and the band edges.
+    float interiorEnd = max(1./u_derived[0].x, u_derived[3].x);
+    interiorEnd = max(interiorEnd, (u_material.x > 1.5 ? 8. : 1.) + aa);
+    if (u_material.x > 2.5 && u_material.x < 3.5) {
+        if (u_material.z < 8.5) interiorEnd = max(interiorEnd, 36.);
+        interiorEnd = max(interiorEnd, 16.*u_extent.y/70.);
+    }
+    if (depth > interiorEnd + aa) {
+        vec3 face = gradePressed(gradeFace(gradeInput(readScene(scenePoint(local)))));
+        frag_color = vec4(face, 1.) * clamp(1.-u_state.z,0.,1.);
+        return;
+    }
     float coverage = clamp(0.5-d/aa,0.,1.);
     // The narrow exterior lobe darkens the sides between vertical highlights.
     float rimAlpha = 0.;
@@ -225,13 +272,11 @@ void shadeGlass() {
                   + outerB*vec3(0.01,0.04,0.22);
         }
     } else { color = filteredScene(samplePoint,dx,dy); }
-    float luma = dot(color,vec3(0.2126,0.7152,0.0722));
-    color = clamp(mix(vec3(luma),color,u_finish.x),0.,1.);
-    color = clamp(mix(color,u_tint.rgb,u_tint.a) + u_geometry.w,0.,1.);
+    color = gradeInput(color);
     // radiance() moves a channel by at most w/(1+w). Past the depth where both
-    // weights fall below half an 8-bit step (w < 0.001965) the terms are
-    // invisible, so the reflection reads stop there instead of at 24/4 points.
-    // Dart derives both ends (zero without reflection or reach).
+    // weights fall below two 8-bit steps (w < 0.00784) the terms are
+    // imperceptible, so the reflection reads stop there instead of at 24/4
+    // points. Dart derives both ends (zero without reflection or reach).
     if (depth < u_derived[3].x) {
         float broadEnd = u_derived[2].x;
         float rimEnd = u_derived[2].y;
@@ -242,44 +287,26 @@ void shadeGlass() {
             float edge = max(1.-depth/4.,0.);
             float rim = edge*sqrt(edge);
             // Reflection taps land outside the contour, where the backdrop is not
-            // frosted; a cross of four taps one sigma apart stands in for it.
+            // frosted; a pair of taps one sigma apart along the normal stands in
+            // for it. The tangent pair of the former cross added two reads for a
+            // change below two 8-bit steps on frosted content.
             vec2 tap = boundary+normal*(1.+depth*reach/12.);
             float s = u_derived[2].z;
             vec3 reflected = s > 0.05
-                ? (sampleLocal(tap+normal*s) + sampleLocal(tap-normal*s)
-                 + sampleLocal(tap+tangent*s) + sampleLocal(tap-tangent*s)) * 0.25
+                ? (sampleLocal(tap+normal*s) + sampleLocal(tap-normal*s)) * 0.5
                 : sampleLocal(tap);
             color = radiance(color,reflected,u_finish.z*rim);
         }
         if (depth < broadEnd) {
-            vec3 diffuse = (sampleLocal(boundary+normal*reach)
-                          + sampleLocal(boundary+normal*reach*0.5+tangent*reach*0.4)
-                          + sampleLocal(boundary+normal*reach*0.5-tangent*reach*0.4))/3.;
+            // The broad lobe keeps its two tangent taps at half reach; the far
+            // normal tap contributed a third read for a near-identical average.
+            vec3 diffuse = (sampleLocal(boundary+normal*reach*0.5+tangent*reach*0.4)
+                          + sampleLocal(boundary+normal*reach*0.5-tangent*reach*0.4))*0.5;
             float fade = 1.-depth/24.;
             color = radiance(color,diffuse,u_finish.z*fade*fade*0.32);
         }
     }
-    if (u_material.x > .5 && u_material.x < 2.5) {
-        // Extracted iOS 27 gray-backdrop glassBackground face inputs. The
-        // optical/compositing implementation remains this package's renderer.
-        bool dark = u_material.y > .5;
-        bool clear = u_material.x > 1.5;
-        float value = dot(color,vec3(.2126,.7152,.0722));
-        float black = clear || dark ? .125 : .4000000059604645;
-        float white = clear ? 1.0800000429153442 :
-            (dark ? 1.100000023841858 : 1.0299999713897705);
-        float saturation = clear ? 1.059999942779541 :
-            (dark ? 1.399999976158142 : 1.2000000476837158);
-        color = (color-vec3(value))*saturation + mix(black,white,value);
-        float fill = clear || dark ? 0. : .20000000298023224;
-        color = clamp(mix(color,vec3(1.),fill),0.,1.);
-    }
-    if (u_material.w > 0.) {
-        vec4 inputColor = vec4(color,1.);
-        vec3 tinted = clamp(vec3(dot(u_tintRed,inputColor),
-            dot(u_tintGreen,inputColor),dot(u_tintBlue,inputColor)),0.,1.);
-        color = mix(color,tinted,u_material.w);
-    }
+    color = gradeFace(color);
     // Vertical key/fill lighting has a sharp rim and a softer eight-point lobe.
     // Every lobe's band is zero past its width plus half the AA step.
     bool clear = u_material.x > 1.5;
@@ -303,11 +330,6 @@ void shadeGlass() {
             * (1.-smoothstep(5.*faceScale,shadeDepth,depth));
         color *= 1.-.12*u_finish.y*top*inner;
     }
-    if (u_state.x > 0.) {
-        vec3 pressed = vec3(dot(color,vec3(1.1575,-0.1431,-0.0144)),
-            dot(color,vec3(-0.0425,1.0570,-0.0145)),
-            dot(color,vec3(-0.0426,-0.1430,1.1856))) + 0.05;
-        color = mix(color,clamp(pressed,0.,1.),u_state.x * 0.9);
-    }
+    color = gradePressed(color);
     frag_color = vec4(color*coverage,coverage+rimAlpha)*presence;
 }

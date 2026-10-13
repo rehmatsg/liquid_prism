@@ -810,7 +810,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                               selected: true,
                               shape: selectionShape,
                               color: style.selectionColor,
-                              blur: style.selectionBlur ?? 2,
+                              blur:
+                                  style.selectionBlur ??
+                                  _selectionBlur(
+                                    context,
+                                    blur: widget.blur ?? style.blur,
+                                    optics: widget.optics ?? style.optics,
+                                    glass: widget.glass ?? style.glass,
+                                  ),
                               child: const SizedBox.expand(),
                             ),
                           ),
@@ -1327,4 +1334,27 @@ class _LensHalo extends CustomPainter {
       diameter != old.diameter ||
       opacity != old.opacity ||
       blurRadius != old.blurRadius;
+}
+
+/// The selection's own blur. Native adds a 2-point blur under the pill, which
+/// a housing frosted at 3 points or more already exceeds: the extra pass would
+/// widen a 3.3-point kernel to 3.9 and cost a full backdrop capture per frame,
+/// so it only runs when the housing is clear or lightly frosted.
+double _selectionBlur(
+  BuildContext context, {
+  required double? blur,
+  required LiquidPrismStyle? optics,
+  required Glass? glass,
+}) {
+  final theme = LiquidPrismTheme.of(context);
+  final frost =
+      blur ??
+      (optics != null ? optics.frost : theme.blur) ??
+      GlassRecipe.resolve(
+        glass ?? theme.glass ?? Glass.regular,
+        LiquidPrismTheme.materialBrightnessOf(context),
+        GlassRole.tabBar,
+        customOptics: false,
+      ).optics(0).frost;
+  return frost >= 3 ? 0 : 2;
 }

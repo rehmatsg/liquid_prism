@@ -71,14 +71,29 @@ Prefer small control surfaces, bounded blur radii, and static materials during
 interaction. The built-in springs update transforms and lifted bounds; they do not animate
 frost blur. An idle component has no repeating ticker.
 
-The optical shader skips reflection samples where their weight falls below half
-an 8-bit step, and skips the highlight and press color matrices at zero weight.
+The optical shader skips reflection samples where their weight can no longer
+move a channel by two 8-bit steps, and skips the highlight and press color
+matrices at zero weight. Deeper than every inward band (lens, reflections,
+highlights, the tab lens's underlay) a fragment is one undisplaced read plus
+grading. The rim reflection reads a pair of taps along the normal and the broad
+lobe its two tangent taps; the former cross and far normal tap changed frosted
+content by less than two steps.
+The tab bar's selected pill adds its own 2-point blur pass only when the housing
+is clear or frosted below 3 points; a frosted housing already covers it, and the
+extra pass would cost a full backdrop capture per frame for a kernel 0.6 points
+wider.
+
+Every backdrop filter costs a full-screen copy per frame on iOS, and Flutter
+renders iOS surfaces in a wide-gamut format with 8 bytes per pixel by default.
+An app that does not need Display P3 can halve the bandwidth of every capture
+and blur by setting `FLTEnableWideGamut` to false in its `Info.plist`.
 Footprint integration scales with the frost blur: a compressed footprint under
 0.3σ reads one sample, under 0.7σ a ±¼ pair, and only wider footprints the
-four-point rule. Where the dispersion split is under 0.45σ, three taps with
+four-point rule along the footprint's major axis; its minor axis stays inside
+the frost kernel. Where the dispersion split is under 0.45σ, three taps with
 moment-matched per-channel weights replace the five spectral bands. Each gate
-keeps the change below half an 8-bit step over the blurred backdrop; at zero
-frost the full paths run. The flat center skips the lens direction arithmetic,
+keeps the change imperceptible over the blurred backdrop; at zero frost the
+full paths run. The flat center skips the lens direction arithmetic,
 and highlights and reflections are evaluated only within their reach of the
 edge. The regular inner ring adds a blurred contour stroke. Exterior shadows are drawn as rounded-rect or
 rounded-superellipse primitives, so Impeller uses its analytic blur instead of
@@ -129,8 +144,20 @@ content outside the group as well.
 Incompatible, overlapping, transformed, or smooth-rectangle surfaces can use
 individual passes.
 Members that are not batched, and whose sampling never reaches another member's
-paint, share one backdrop capture while keeping their own filter. This removes
-render-pass breaks without resampling their output.
+paint, share backdrop captures while keeping their own filters. The first such
+member to reach the scene paints every shared member's exterior shadow and frost
+pass, each frost still clipped to its own contour, and the shared members' optical
+passes then read one capture that already holds all of that frost. A group of
+frosted controls therefore costs two backdrop captures instead of two per member.
+Each capture ends the render pass and copies the whole screen on a tile-based
+GPU, so this removes most of the pass breaks without resampling any output. The
+hoisted frost passes receive distinct sub-visible sigmas on purpose: equal filters
+on one capture are rendered once over the entire capture, not per contour.
+
+`LiquidPrismScaffold` hosts a group around its floating chrome (leading control,
+actions and tab bar) automatically; the body paints first and is not a member.
+Wrap your own app-bar chrome, such as toolbar groups painted over a page, in a
+`LiquidPrismGroup` to get the same sharing.
 
 The optional batch shader targets Impeller. Builds and headless tests may print
 an SkSL compatibility warning for that shader; the Skia backend uses the frosted
