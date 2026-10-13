@@ -7,6 +7,7 @@ import 'control_material.dart';
 import 'theme.dart';
 import 'appearance.dart';
 import 'motion.dart';
+import 'tab_content_lens.dart';
 import 'material.dart';
 
 /// Equal-width segmented tabs, with a free-sliding glass selection lens.
@@ -118,6 +119,12 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                       math.max(.001, slot - 2 * inset) +
                       2 * liftInset.width * lift,
                   pillHeight = thumbHeight + 2 * liftInset.height * lift;
+              final pill = Rect.fromLTWH(
+                slot * (physical + .5) - pillWidth / 2,
+                hitHeight / 2 - pillHeight / 2,
+                pillWidth,
+                pillHeight,
+              );
               return ControlDisabled(
                 enabled: onValueChanged != null,
                 child: Stack(
@@ -136,11 +143,8 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                             colors.tertiarySystemFill,
                       ),
                     ),
-                    Positioned(
-                      left: slot * (physical + .5) - pillWidth / 2,
-                      top: hitHeight / 2 - pillHeight / 2,
-                      width: pillWidth,
-                      height: pillHeight,
+                    Positioned.fromRect(
+                      rect: pill,
                       child: Transform(
                         alignment: Alignment.center,
                         transform: Matrix4.diagonal3Values(
@@ -157,62 +161,79 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                       ),
                     ),
                     Positioned.fill(
-                      child: Row(
-                        children: [
-                          for (var i = 0; i < count; i++)
-                            Expanded(
-                              child: Semantics(
-                                button: true,
-                                selected: i == selected,
-                                inMutuallyExclusiveGroup: true,
-                                enabled: onValueChanged != null,
-                                onTap: onValueChanged == null
-                                    ? null
-                                    : () => activate(i / (count - 1)),
-                                // Native press on another segment: its label
-                                // fades to .4 (~.45 s) and back (~.2 s).
-                                child: AnimatedOpacity(
-                                  opacity: i == pressed && i != selected
-                                      ? .4
-                                      : 1,
-                                  duration: i == pressed
-                                      ? const Duration(milliseconds: 450)
-                                      : const Duration(milliseconds: 200),
-                                  curve: Curves.easeOutQuad,
-                                  child: Center(
-                                    child: DefaultTextStyle.merge(
-                                      style:
-                                          TextStyle(
-                                                fontSize: 13 * scale,
-                                                fontWeight: i == visualSelection
-                                                    ? FontWeight.w500
-                                                    : FontWeight.w400,
-                                              )
-                                              .merge(appearance.labelStyle)
-                                              .copyWith(
-                                                color:
-                                                    foregroundColor ??
-                                                    appearance
-                                                        .foregroundColor ??
-                                                    (i == selected && lift < .5
-                                                        ? appearance
-                                                              .selectedForegroundColor
-                                                        : null) ??
-                                                    appearance
-                                                        .labelStyle
-                                                        ?.color ??
-                                                    (i == selected && lift < .5
-                                                        ? colors
-                                                              .controlThumbLabel
-                                                        : colors.label),
-                                              ),
-                                      child: children[keys[i]]!,
+                      // Native labels bend near the held selection's rim.
+                      child: ContentLensWindow(
+                        lens: Rect.fromCenter(
+                          center: pill.center,
+                          width: pill.width * (1 + stretch),
+                          height: pill.height * (1 - stretch),
+                        ),
+                        lift: lift,
+                        shape: appearance.lens?.shape ?? GlassShape.capsule,
+                        refraction: appearance.refractContent == false
+                            ? 0
+                            : appearance.contentRefraction ?? 14,
+                        depth: appearance.contentDepth ?? 11.2,
+                        child: Row(
+                          children: [
+                            for (var i = 0; i < count; i++)
+                              Expanded(
+                                child: Semantics(
+                                  button: true,
+                                  selected: i == selected,
+                                  inMutuallyExclusiveGroup: true,
+                                  enabled: onValueChanged != null,
+                                  onTap: onValueChanged == null
+                                      ? null
+                                      : () => activate(i / (count - 1)),
+                                  // Native press on another segment: its label
+                                  // fades to .4 (~.45 s) and back (~.2 s).
+                                  child: AnimatedOpacity(
+                                    opacity: i == pressed && i != selected
+                                        ? .4
+                                        : 1,
+                                    duration: i == pressed
+                                        ? const Duration(milliseconds: 450)
+                                        : const Duration(milliseconds: 200),
+                                    curve: Curves.easeOutQuad,
+                                    child: Center(
+                                      child: DefaultTextStyle.merge(
+                                        style:
+                                            TextStyle(
+                                                  fontSize: 13 * scale,
+                                                  fontWeight:
+                                                      i == visualSelection
+                                                      ? FontWeight.w500
+                                                      : FontWeight.w400,
+                                                )
+                                                .merge(appearance.labelStyle)
+                                                .copyWith(
+                                                  color:
+                                                      foregroundColor ??
+                                                      appearance
+                                                          .foregroundColor ??
+                                                      (i == selected &&
+                                                              lift < .5
+                                                          ? appearance
+                                                                .selectedForegroundColor
+                                                          : null) ??
+                                                      appearance
+                                                          .labelStyle
+                                                          ?.color ??
+                                                      (i == selected &&
+                                                              lift < .5
+                                                          ? colors
+                                                                .controlThumbLabel
+                                                          : colors.label),
+                                                ),
+                                        child: children[keys[i]]!,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],

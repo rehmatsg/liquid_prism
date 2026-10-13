@@ -128,16 +128,16 @@ Future<void> main() async {
             '${out.path}/$name-flutter-held.png',
           ]);
           phase('Slow glide');
-          if (name == 'tabs' && midpointHold) {
+          if ((name == 'tabs' || name == 'segments') && midpointHold) {
             final midpoint = start + (end - start) / 4;
             await glide(start, midpoint, 1000);
-            phase('Hold between tabs');
+            phase('Hold between items');
             await hold(1000);
             await simctl([
               'io',
               simulator,
               'screenshot',
-              '${out.path}/tabs-midpoint.png',
+              '${out.path}/$name-midpoint.png',
             ]);
             phase('Slow glide');
             await glide(midpoint, end, 1000);

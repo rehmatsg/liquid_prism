@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Bend the segmented control's labels near the held selection's rim, as iOS 27
+  does, with the tab bar's foreground lens filter. It applies only while the
+  selection is lifted. New `GlassSegmentedStyle` fields `refractContent`,
+  `contentRefraction` and `contentDepth` (defaults true, 14, 11.2) tune or
+  disable it. No shader change.
 - Make the held slider knob read like native, especially in dark mode. Its lens
   now uses the slider's measured glassBackground inputs (rim 6.66 points with
   11.1 points of refraction, face black .1) and keeps its measured contact

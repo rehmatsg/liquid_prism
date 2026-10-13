@@ -200,6 +200,11 @@ horizontal drag moves that highlight, and release commits the segment under the
 finger while the selection travels there, lifted. A mostly vertical drag from an
 unselected segment scrolls an enclosing list and commits nothing.
 
+While the selection is held, labels under its rim bend inward, as on iOS 27;
+a label centred in the selection stays still. `GlassSegmentedStyle`'s
+`refractContent: false` or `contentRefraction: 0` turns this off, and
+`contentDepth` sets the width of the bending band.
+
 ## Tab bars
 
 ```dart

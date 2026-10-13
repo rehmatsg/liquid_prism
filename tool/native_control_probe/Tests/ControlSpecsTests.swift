@@ -30,6 +30,14 @@ final class ControlSpecsTests: XCTestCase {
         let b = app.segmentedControls["segments"].buttons["Third"].coordinate(withNormalizedOffset:CGVector(dx:0.5,dy:0.5))
         a.press(forDuration:1.5,thenDragTo:b,withVelocity:XCUIGestureVelocity(100),thenHoldForDuration:1)
     }}
+    // Holds the selected segment still, then partway between segments, for
+    // screenshots of the labels under the lifted selection.
+    func testSegmentsSelectedHold() { run("segments-hold-light", light: true) { app in
+        let seg = app.segmentedControls["segments"]
+        let a = seg.buttons["First"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let b = seg.buttons["First"].coordinate(withNormalizedOffset: CGVector(dx: 1.0, dy: 0.5))
+        a.press(forDuration: 3, thenDragTo: b, withVelocity: XCUIGestureVelocity(40), thenHoldForDuration: 3)
+    }}
     func testLight() { run("controls-light",light:true) { $0.switches["switch"].tap() }}
 }
 

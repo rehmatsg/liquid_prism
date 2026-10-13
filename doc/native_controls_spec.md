@@ -72,6 +72,11 @@ approximation. Their Gaussian conversion and opacity remain renderer calibration
 The shared broad underlay field minifies the switch, segmented track and tab
 housing while the foreground retains its normal size. The tab's selected icons
 and labels additionally refract near the rim through a separate foreground pass.
+So do the segmented control's labels while its selection is held: on iOS 27.0
+(light, iPhone 17 simulator) a selection held between two segments pulls the
+strokes under its rim inward into a dark smear with a faint colour fringe, while
+a label centred in the selection is unchanged. Liquid Prism reuses the tab's
+foreground filter and its 14 / 11.2 inputs; the colour fringe is not reproduced.
 The slider opts out
 of that broad field: **the knob still grows to 1.55× on hold, but the track seen
 through it keeps its normal thickness**. Its clear face and shadow still use the

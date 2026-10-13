@@ -123,6 +123,8 @@ assume a shared duration changes every optical or nonspatial leg.
 The tab lens has an independent foreground filter. Configure its glyph displacement
 and depth through `GlassTabBarStyle.contentRefraction` / `contentDepth`, or turn it
 off with `refractContent: false`. The housing minification remains a lens setting.
+The segmented control's held selection runs the same filter over its label row
+(`GlassSegmentedStyle.refractContent`, `contentRefraction`, `contentDepth`).
 `rimRefraction` adds the pill's own chromatic rim on top of that minification; it
 does not touch the glyph pass or the shared control lens.
 

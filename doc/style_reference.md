@@ -54,6 +54,7 @@ keeps its own colors. Disabled controls use the semantic disabled label.
 | `inactiveColor`, `thumbColor` | Tertiary label / white |
 | `haptics` | True on iOS user changes |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
+| `refractContent`, `contentRefraction`, `contentDepth` | True / 14 / 11.2; labels bend near the held selection's rim |
 
 Hit width/height remain at least 44. Width must exceed the resting thumb width
 plus both insets. Parent layout constraints still apply; leave room for the lens.

@@ -466,12 +466,20 @@ class GlassSegmentedStyle {
     this.selectedForegroundColor,
     this.trackShape,
     this.lens,
+    this.refractContent,
+    this.contentRefraction,
+    this.contentDepth,
   }) : assert(width == null || width > 0),
        assert(scale == null || scale > 0),
        assert(hitHeight == null || hitHeight >= 44),
        assert(trackHeight == null || trackHeight > 0),
        assert(thumbHeight == null || thumbHeight > 0),
-       assert(selectionInset == null || selectionInset >= 0);
+       assert(selectionInset == null || selectionInset >= 0),
+       assert(
+         contentRefraction == null ||
+             (contentRefraction >= 0 && contentRefraction <= 64),
+       ),
+       assert(contentDepth == null || contentDepth > 0);
 
   /// Preferred width before scaling; parent constraints still apply.
   final double? width;
@@ -497,6 +505,12 @@ class GlassSegmentedStyle {
   /// Component-specific overrides of the shared theme lens.
   final GlassLensStyle? lens;
 
+  /// Refract the labels near the held selection's rim. Defaults true.
+  final bool? refractContent;
+
+  /// Label displacement magnitude and rim depth; defaults 14 and 11.2.
+  final double? contentRefraction, contentDepth;
+
   /// Keep existing fields when an argument is null.
   GlassSegmentedStyle copyWith({
     double? width,
@@ -513,6 +527,9 @@ class GlassSegmentedStyle {
     Color? selectedForegroundColor,
     GlassShape? trackShape,
     GlassLensStyle? lens,
+    bool? refractContent,
+    double? contentRefraction,
+    double? contentDepth,
   }) => GlassSegmentedStyle(
     width: width ?? this.width,
     scale: scale ?? this.scale,
@@ -529,6 +546,9 @@ class GlassSegmentedStyle {
         selectedForegroundColor ?? this.selectedForegroundColor,
     trackShape: trackShape ?? this.trackShape,
     lens: lens ?? this.lens,
+    refractContent: refractContent ?? this.refractContent,
+    contentRefraction: contentRefraction ?? this.contentRefraction,
+    contentDepth: contentDepth ?? this.contentDepth,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -550,6 +570,9 @@ class GlassSegmentedStyle {
               other.selectedForegroundColor ?? selectedForegroundColor,
           trackShape: other.trackShape ?? trackShape,
           lens: (lens ?? const GlassLensStyle()).merge(other.lens),
+          refractContent: other.refractContent ?? refractContent,
+          contentRefraction: other.contentRefraction ?? contentRefraction,
+          contentDepth: other.contentDepth ?? contentDepth,
         );
 }
 
