@@ -51,5 +51,11 @@ void main() {
 #ifdef IMPELLER_TARGET_OPENGLES
   uv.y = 1.0 - uv.y;
 #endif
-  frag_color = texture(u_texture, uv) * clamp(w, 0.0, 1.0);
+  // Past the screen's edge the engine's blur samples nothing, so near an edge
+  // its premultiplied result is the average of fewer, partly transparent
+  // texels: darker, with alpha below 1. Divide by that coverage to recover the
+  // average of the texels that exist, as a clamped blur would give.
+  vec4 c = texture(u_texture, uv);
+  if (c.a > 0.001) c.rgb /= c.a;
+  frag_color = vec4(c.rgb, 1.0) * clamp(w, 0.0, 1.0);
 }

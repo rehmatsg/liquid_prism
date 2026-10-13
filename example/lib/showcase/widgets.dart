@@ -137,35 +137,9 @@ class LargeTitlePage extends StatelessWidget {
         );
       }(),
     };
-    return Stack(
-      children: [
-        content,
-        // The scroll edge effect: content fades out under the status bar and
-        // top actions instead of colliding with them.
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: padding.top + 8,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    colors.groupedBackground,
-                    colors.groupedBackground.withValues(alpha: .85),
-                    colors.groupedBackground.withValues(alpha: 0),
-                  ],
-                  stops: const [0, .55, 1],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+    // The scaffold's scroll edge effect softens content under the bar; the
+    // page paints no fade of its own.
+    return content;
   }
 }
 

@@ -13,4 +13,5 @@ final class ScrollEdgeSpecsTests: XCTestCase {
     func testSoftDark() { capture([]) }
     func testHardLight() { capture(["--light", "--hard"]) }
     func testAutoLight() { capture(["--light", "--auto"]) }
+    func testHardDark() { capture(["--hard"]) }
 }

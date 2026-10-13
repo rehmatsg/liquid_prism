@@ -29,6 +29,18 @@ do not change between rest and scrolled: content simply scrolls beneath them.
 A `captureOnly` backdrop in the content hierarchy shares its capture group
 with the effect's blur.
 
+## Dark appearance
+
+The same fixture in dark appearance (black background) keeps the structure
+and changes the weights: the heavy blur composites at **opacity 0.6** (0.5 in
+light) and the blur fill swaps its sides, darken 0.6, lighten 0.4, normal 0.
+The masks, radii, extents and hairline are unchanged. Measured over the
+stripes, the fade toward black is 0.57–0.59 at the top of the soft strip,
+0.50 at 79 pt, 0.34 at 100 pt and 0.19 at 109 pt; the hard strip holds 0.54
+to its edge. Liquid Prism keeps one default of 0.5 for the fade and the haze
+in both appearances, half a step under native dark; `GlassScrollEdgeStyle`
+raises either.
+
 ## Mask curve
 
 The variable blur's mask ramp, read from the dumped mask image, fits
@@ -72,10 +84,10 @@ hard blur's attenuation at the edge, 0.19, is what a 0.5 pt sigma leaves of
 pt of a 156 pt strip (hard 51 of 116), reach 50 pt past the bar (hard 0), fade
 opacity 0.5, haze 16 at 0.5 masked linearly from 34% (hard constant), hard
 floor 0.25 with the fade held flat and a one-pixel 10% black hairline. The
-blur-fill opacities (lighten 0.6, darken 0.4, normal 0.25) are reproduced only
-as the measured net fade toward the background. Dark appearance and the
-`.automatic` style were not measured; the reveal over the first points of
-scroll is this package's, not native.
+blur-fill opacities (lighten 0.6, darken 0.4, normal 0.25 in light; darken
+0.6, lighten 0.4, normal 0 in dark) are reproduced only as the measured net
+fade toward the background. The `.automatic` style was not measured; the
+reveal over the first points of scroll is this package's, not native.
 
 Not verified: whether the native glass bar buttons sample the content before
 or after the effect. Over the stripes both read as frosted grey, and the

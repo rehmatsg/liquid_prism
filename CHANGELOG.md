@@ -28,6 +28,13 @@
   `floor` and `fadeFloor`, and the defaults become sigma 1.5, falloff 98,
   reach 50 and a 16-point haze at half opacity. The old 4-point blur and
   smootherstep were fitted by eye and read harder than native.
+- Measure the native dark appearance too: the same masks and radii, a 0.6
+  haze and a fade of about 0.58 toward black; the package keeps 0.5 for both
+  appearances. The haze shader divides the engine's blur by its coverage so
+  the effect does not darken toward the screen's edge. The showcase drops the
+  opaque gradient it used to paint over the top of every page, which ran to
+  solid background above the Dynamic Island and read as the effect fading out
+  before the edge.
 - Add `GlassScrollEdgeVariant.hard`, the effect under a bar with a background:
   no reach past the bar, a 2-point blur keeping a quarter of its strength to
   the edge, the fade and haze held flat, and a one-pixel 10% black hairline.
