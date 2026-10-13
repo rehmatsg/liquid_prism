@@ -43,7 +43,8 @@ removes tint; `.interactive(false)` removes the surface's own press feedback.
 modifying refraction, edge width, dispersion, light, reflection, saturation and
 blur. An explicit `blur` overrides its frost. `GlassShape.rect` has continuous
 corners; `roundedRect` uses circular arcs. `circle` is inscribed in its bounds.
-`LiquidPrismGroup` can share compatible captures; see [rendering](rendering.md).
+`LiquidPrismGroup` shares backdrop captures among its members; see
+[rendering](rendering.md). `LiquidPrismScaffold` groups its own chrome.
 
 ### Enter and exit
 

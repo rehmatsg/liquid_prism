@@ -4,6 +4,7 @@ import 'dart:ui' show DisplayFeature;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import 'glass.dart';
 import 'glass_transition.dart';
 import 'menu/menu.dart';
 import 'menu/menu_elements.dart';
@@ -359,36 +360,46 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               ),
             ),
           ),
+        // The floating chrome shares backdrop captures: it paints over the
+        // body with nothing between its surfaces (see GlassGroupHost).
         if (widget.leading case final leading?)
-          LayoutId(id: _Slot.leading, child: leading),
+          LayoutId(
+            id: _Slot.leading,
+            child: GlassGroupMembers(child: leading),
+          ),
         if (items.isNotEmpty)
           LayoutId(
             id: _Slot.actions,
-            child: LiquidPrismToolbarGroup(
-              items: items,
-              // Measured: a 44 pt navigation capsule in the top bar, a 48 pt
-              // wide column in the rail.
-              size: rail || corner != null
-                  ? GlassToolbarSize.bottom
-                  : GlassToolbarSize.navigation,
-              axis: rail ? Axis.vertical : Axis.horizontal,
+            child: GlassGroupMembers(
+              child: LiquidPrismToolbarGroup(
+                items: items,
+                // Measured: a 44 pt navigation capsule in the top bar, a 48 pt
+                // wide column in the rail.
+                size: rail || corner != null
+                    ? GlassToolbarSize.bottom
+                    : GlassToolbarSize.navigation,
+                axis: rail ? Axis.vertical : Axis.horizontal,
+              ),
             ),
           ),
         // A bottom tab bar would sit under the keyboard; native hides it too.
         if (showTabBar)
           LayoutId(
             id: _Slot.tabBar,
-            child: LiquidPrismChrome(
-              placement: resolved,
-              axis: rail ? Axis.vertical : Axis.horizontal,
-              child: tabBar,
+            child: GlassGroupMembers(
+              child: LiquidPrismChrome(
+                placement: resolved,
+                axis: rail ? Axis.vertical : Axis.horizontal,
+                child: tabBar,
+              ),
             ),
           ),
       ],
     );
+    final hosted = GlassGroupHost(child: layout);
     return switch (widget.backgroundColor) {
-      final color? => ColoredBox(color: color, child: layout),
-      null => layout,
+      final color? => ColoredBox(color: color, child: hosted),
+      null => hosted,
     };
   }
 

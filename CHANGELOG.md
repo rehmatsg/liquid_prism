@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Cut backdrop pass breaks for grouped glass: shared members' shadows and frost
+  passes are painted ahead of the first shared optical pass, so a group of
+  frosted surfaces costs two backdrop captures instead of two per surface.
+  `LiquidPrismScaffold` now groups its leading control, actions and tab bar.
+- Skip the tab bar's separate 2-point selection blur pass when the housing is
+  frosted at 3 points or more; `GlassTabBarStyle.selectionBlur` still forces it.
+- Trim the optical shader: an interior fast path past every inward band, a
+  two-tap rim reflection and two-tap broad lobe, major-axis-only footprint
+  integration, and reflection reads ending where they can no longer move a
+  channel by two 8-bit steps. Measured on the isolated Metal optical pass: 7–9%
+  less GPU time for capsule bars and 15–17% for panels, with buttons inside the
+  harness's scheduling noise.
+
 ## 0.2.1
 
 - Lay out a `LiquidPrismToolbarGroup` with a single item as a circle, as iOS

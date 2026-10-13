@@ -1,6 +1,8 @@
 // Sustained-load benchmark with scripted, real gestures. One build per renderer:
 //   flutter run --profile -t lib/bench_main.dart --dart-define=MODE=prism
-// MODE: none | prism | prismnoscale | prismnoblur | lge | lgeblur. DURATION: seconds of scripted use.
+// MODE: none | prism | prismnoscale | prismnoblur | chrome | lge | lgeblur.
+// DURATION: seconds of scripted use. `chrome` is the app-chrome layout: a
+// scaffold with tab bar, toolbar group, round button and search field.
 //
 // Synthesized pointer events go through Flutter's gesture arena, so scrolling
 // uses real fling physics, buttons run their press response and pages use the
@@ -9,6 +11,7 @@
 // back). Every 10 s a `BENCH {json}` line reports frame, CPU, thermal and
 // battery statistics; `BENCH_DONE` ends the run.
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
@@ -47,6 +50,9 @@ Future<void> main() async {
   await LiquidGlassShaders.ensureLoaded();
   await _channel.invokeMethod<void>('setup', {'brightness': 0.5});
   runApp(const _BenchApp());
+  try {
+    File('${Directory.systemTemp.path}/bench.log').writeAsStringSync('');
+  } catch (_) {}
   _Stats().start();
   if (_running) {
     SchedulerBinding.instance.addPostFrameCallback((_) => _Script().run());
@@ -83,6 +89,7 @@ class _FeedPage extends StatelessWidget {
   const _FeedPage();
   @override
   Widget build(BuildContext context) {
+    if (_mode == 'chrome') return const _ChromeFeedPage();
     return CupertinoPageScaffold(
       backgroundColor: const Color(0xFF000000),
       child: Stack(
@@ -140,6 +147,124 @@ class _FeedPage extends StatelessWidget {
             child: GestureDetector(
               onPanUpdate: (d) => _puck.value += d.delta,
               child: _surface(120, 52, 26, const Text('Drag')),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The consumer layout: scrolling content under a tab bar, a navigation
+/// toolbar group, a round back button and a search field. The script's keys
+/// map onto the toolbar items and the back button.
+class _ChromeFeedPage extends StatefulWidget {
+  const _ChromeFeedPage();
+  @override
+  State<_ChromeFeedPage> createState() => _ChromeFeedPageState();
+}
+
+class _ChromeFeedPageState extends State<_ChromeFeedPage> {
+  var _tab = 0;
+  final _query = TextEditingController();
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LiquidPrismScaffold(
+      backgroundColor: const Color(0xFF000000),
+      tabBar: LiquidPrismTabBar(
+        tabs: const [
+          LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+          LiquidPrismTab(label: 'Search', icon: Icon(CupertinoIcons.search)),
+          LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+          LiquidPrismTab(label: 'Profile', icon: Icon(CupertinoIcons.person)),
+        ],
+        selectedIndex: _tab,
+        onSelected: (index) => setState(() => _tab = index),
+      ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.only(top: 150, bottom: 160),
+            itemCount: 600,
+            itemBuilder: (context, i) => _Tile(i),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      LiquidPrismButton(
+                        key: _openKey,
+                        label: 'Open details',
+                        padding: const EdgeInsets.all(12),
+                        onPressed: () => Navigator.of(context).push(
+                          CupertinoPageRoute<void>(
+                            builder: (_) => const _DetailPage(),
+                          ),
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.chevron_back,
+                          size: 20,
+                        ),
+                      ),
+                      const Spacer(),
+                      LiquidPrismToolbarGroup(
+                        size: GlassToolbarSize.navigation,
+                        items: [
+                          GlassToolbarItem(
+                            key: _buttonKeys[0],
+                            label: 'Favorite',
+                            icon: const Icon(CupertinoIcons.star),
+                            onPressed: () {},
+                          ),
+                          GlassToolbarItem(
+                            key: _buttonKeys[1],
+                            label: 'Share',
+                            icon: const Icon(CupertinoIcons.share),
+                            onPressed: () {},
+                          ),
+                          GlassToolbarItem(
+                            key: _buttonKeys[2],
+                            label: 'More',
+                            icon: const Icon(CupertinoIcons.ellipsis),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                LiquidPrismSearchField(controller: _query, restingInset: 20),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+          ValueListenableBuilder(
+            valueListenable: _puck,
+            builder: (context, offset, child) =>
+                Positioned(left: offset.dx, top: offset.dy, child: child!),
+            child: GestureDetector(
+              onPanUpdate: (d) => _puck.value += d.delta,
+              child: LiquidPrism(
+                glass: Glass.clear,
+                shape: GlassShape.capsule,
+                child: const SizedBox(
+                  width: 120,
+                  height: 52,
+                  child: Center(child: Text('Drag')),
+                ),
+              ),
             ),
           ),
         ],
@@ -489,6 +614,16 @@ class _Script {
 // ---------------------------------------------------------------------------
 // Statistics
 
+/// Mirrors the report lines into the app's temporary directory so a run
+/// launched without an attached console (xctrace, devicectl) can be read back:
+/// `devicectl device copy from --domain-type appDataContainer ... tmp/bench.log`.
+void _log(String line) {
+  try {
+    File('${Directory.systemTemp.path}/bench.log')
+        .writeAsStringSync('$line\n', mode: FileMode.append, flush: true);
+  } catch (_) {}
+}
+
 class _Stats {
   final _timings = <(String, FrameTiming)>[];
   final _start = DateTime.now();
@@ -570,13 +705,15 @@ class _Stats {
       _cpuPrev = cpu;
       _prev = now;
       debugPrint('BENCH ${jsonEncode(line)}');
+      _log('BENCH ${jsonEncode(line)}');
       if (!_done && now.difference(_start).inSeconds >= _duration) {
         _done = true;
         _running = false;
         _setPhase('idle');
-        debugPrint(
-          'BENCH_DONE ${jsonEncode({'mode': _mode, 'seconds': now.difference(_start).inSeconds, 'cpuSeconds': cpu - _cpu0!, 'batteryDrop': _battery0! - battery})}',
-        );
+        final done =
+            'BENCH_DONE ${jsonEncode({'mode': _mode, 'seconds': now.difference(_start).inSeconds, 'cpuSeconds': cpu - _cpu0!, 'batteryDrop': _battery0! - battery})}';
+        debugPrint(done);
+        _log(done);
       }
     }
   }

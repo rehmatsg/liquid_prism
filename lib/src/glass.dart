@@ -346,18 +346,33 @@ class _ExteriorShadow extends CustomPainter {
   final double strength;
   final bool nativeControl;
 
+  static double _sigma(GlassShape shape, Size size, bool nativeControl) =>
+      nativeControl
+      ? NativeGlassShadow.control.radius * (2 / 3)
+      : math.min(shape.rect(size).shortestSide * 0.1, 20.0);
+  static double _drop(GlassShape shape, Size size, bool nativeControl) =>
+      nativeControl
+      ? NativeGlassShadow.offset
+      : math.min(shape.rect(size).shortestSide * 0.1, 9.0);
+
+  /// How far outside the contour the shadow paints, in logical pixels.
+  static double extent(
+    GlassShape shape,
+    Size size, {
+    required bool nativeControl,
+  }) => math.max(
+    48,
+    _drop(shape, size, nativeControl) + _sigma(shape, size, nativeControl) * 3,
+  );
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final outline = shape.path(size);
     // Geometry sets the shadow profile; mode scales opacity independently of blur.
     final extent = shape.rect(size).shortestSide;
-    final sigma = nativeControl
-        ? NativeGlassShadow.control.radius * (2 / 3)
-        : math.min(extent * 0.1, 20.0);
-    final drop = nativeControl
-        ? NativeGlassShadow.offset
-        : math.min(extent * 0.1, 9.0);
+    final sigma = _sigma(shape, size, nativeControl);
+    final drop = _drop(shape, size, nativeControl);
     final opacity = nativeControl
         ? NativeGlassShadow.control.opacity * NativeGlassShadow.colorAlpha
         : math.min(0.123 * math.pow(extent / 160, 2), 0.14);
@@ -365,7 +380,11 @@ class _ExteriorShadow extends CustomPainter {
     canvas.clipPath(
       Path()
         ..fillType = PathFillType.evenOdd
-        ..addRect(rect.inflate(math.max(48, drop + sigma * 3)))
+        ..addRect(
+          rect.inflate(
+            _ExteriorShadow.extent(shape, size, nativeControl: nativeControl),
+          ),
+        )
         ..addPath(outline, Offset.zero),
     );
     if (opacity > 0.002) {
@@ -610,7 +629,8 @@ class _RenderGlass extends RenderProxyBox {
     var broadEnd = 0.0;
     var rimEnd = 0.0;
     if (style.reflection > 0.001 && style.reflectionReach > 0.001) {
-      final invisible = 0.001965 / math.max(style.reflection, 0.0001);
+      // Where a channel can no longer move by two 8-bit steps.
+      final invisible = 0.00784 / math.max(style.reflection, 0.0001);
       broadEnd = 24 * (1 - math.sqrt(math.min(invisible / 0.32, 1)));
       rimEnd = 4 * (1 - math.pow(math.min(invisible, 1), 2 / 3).toDouble());
     }
@@ -817,11 +837,11 @@ class _GlassLayer extends ContainerLayer {
     final backdrop = filter!;
     if (batch == null) {
       final group = owner._group;
-      final frosted = owner.style.frost > 0.05;
-      // With frost, each optical pass must read its own frosted backdrop; the
-      // members' frost passes share the capture instead (see _FrostLayer).
-      backdrop.backdropKey =
-          !frosted && group != null && group.shared.contains(owner)
+      // Shared members read one capture: the group paints every shared
+      // member's shadow and frost ahead of the first shared optical pass
+      // (see _GlassShadowLayer), so a frosted member finds its own frost in
+      // the shared capture and no later member's paint reaches its sampling.
+      backdrop.backdropKey = group != null && group.shared.contains(owner)
           ? group.sharedKey
           : null;
       backdrop.filter = _filterCache.resolve(
@@ -863,8 +883,21 @@ class _FrostLayer extends ContainerLayer {
     final owner = glass;
     if (owner == null || !owner.attached) return;
     final group = owner._group;
-    if (group?.prepared[owner] != null) return;
-    final sigma = owner.style.frost;
+    // Batched members compose their own frost; shared members' frost is
+    // painted by the group ahead of the first shared optical pass.
+    if (group != null &&
+        (group.prepared[owner] != null || group.shared.contains(owner))) {
+      return;
+    }
+    configure(owner.style.frost, null);
+    addChildrenToScene(builder);
+  }
+
+  /// Sets the blur and capture key. Backdrop filters sharing a key with equal
+  /// filters are rendered once over the whole capture, so the group hands each
+  /// hoisted member a sigma offset below float precision of a logical pixel:
+  /// every blur then stays clipped to its own contour.
+  void configure(double sigma, BackdropKey? key) {
     if (sigma != _sigma) {
       _sigma = sigma;
       filter.filter = ui.ImageFilter.blur(
@@ -874,11 +907,8 @@ class _FrostLayer extends ContainerLayer {
       );
     }
     filter
-      ..backdropKey = group != null && group.shared.contains(owner)
-          ? group.sharedKey
-          : null
+      ..backdropKey = key
       ..markNeedsAddToScene();
-    addChildrenToScene(builder);
   }
 }
 
@@ -925,7 +955,9 @@ ui.ImageFilter _opticalFilter(ui.FragmentShader shader, double frost) =>
     : ui.ImageFilter.shader(shader);
 
 /// Kept in the original paint order unless the group paints this shadow once
-/// before capturing its common backdrop.
+/// before capturing its common backdrop. The first shared member to reach the
+/// scene paints every shared member's shadow and frost here, so one capture
+/// serves all of their optical passes.
 class _GlassShadowLayer extends ContainerLayer {
   _GlassShadowLayer(this.glass);
   final _RenderGlass glass;
@@ -933,8 +965,20 @@ class _GlassShadowLayer extends ContainerLayer {
   bool get alwaysNeedsAddToScene => true;
   @override
   void addToScene(ui.SceneBuilder builder) {
-    if (glass.attached && glass._group?.prepared.containsKey(glass) != true) {
+    if (!glass.attached) return;
+    final group = glass._group;
+    if (group == null) {
       addChildrenToScene(builder);
+      return;
+    }
+    if (group.prepared.containsKey(glass)) return;
+    if (!group.shared.contains(glass)) {
+      addChildrenToScene(builder);
+      return;
+    }
+    if (group._hoistHost == null) {
+      group._hoistHost = glass;
+      group._hoist(builder, glass);
     }
   }
 }

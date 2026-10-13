@@ -48,6 +48,28 @@ Custom tab icons cannot currently include their own repaint boundaries because
 this window paints their subtree twice. Preserve state identity during style or
 selection changes. Test first render, movement and resize, not only a settled pill.
 
+## Shared captures
+
+Each `BackdropFilterLayer` makes Impeller end the render pass, store the full
+screen and redraw it into a new pass; this pass break, not fragment arithmetic,
+dominates the cost of many surfaces at once. An unbatched surface normally costs
+two breaks: its clipped frost pass and its optical pass. In a group, members in
+`_GlassGroupData.shared` are hoisted: the first shared member to add itself to
+the scene (`_GlassShadowLayer.addToScene`) paints every shared member's exterior
+shadow picture and frost `BackdropFilterLayer` (clipped to that member's contour,
+keyed by `frostKey`), and every shared optical pass uses `sharedKey`. Hoisted
+frost sigmas are offset by `index * 1e-4` so Impeller does not treat them as one
+equal filter and blur the whole capture once. Members' own `_FrostLayer` and
+`_GlassShadowLayer` skip themselves while hoisted. Transforms are taken relative
+to the host (`inverse(host.getTransformTo(null)) * member.glassTransform()`),
+so members under offset or plain transform layers stay aligned.
+
+`GlassGroupHost` and `GlassGroupMembers` split the group's render layer from its
+membership scope; the scaffold hosts the layer around its layout and scopes only
+the chrome slots. Keep the contract: nothing paints between members that a
+member samples. Headless tests exercise the fallback, so verify grouping with
+the real-shader drivers under `_research/package_check/` or the showcase.
+
 ## Shared lens and shadows
 
 `ControlLens` owns clear optics and underlay minification; controls supply their
