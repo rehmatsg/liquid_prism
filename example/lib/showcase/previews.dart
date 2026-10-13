@@ -4,6 +4,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 import 'model.dart';
 import 'widgets.dart';
 import 'package_features_demo.dart';
+import 'search_page.dart';
 
 class LensPlayground extends StatefulWidget {
   const LensPlayground({
@@ -664,6 +665,15 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     ? 'Try typing “a fresh start”.'
                     : 'Looking for “$query”',
                 style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 22),
+              LiquidPrismButton(
+                key: const ValueKey('open-search-page'),
+                label: 'Open the search page',
+                onPressed: () => Navigator.of(context).push<void>(
+                  CupertinoPageRoute(builder: (_) => SearchPage(model: m)),
+                ),
+                child: const Text('Search Page'),
               ),
             ],
             ComponentKind.surfaces => <Widget>[],
