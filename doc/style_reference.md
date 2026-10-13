@@ -120,6 +120,8 @@ and glyph refraction are separate effects. Tab motion is the widget/theme's
 | `foregroundColor`, `pressedColor` | Calibrated accent / 12% semantic label |
 | `shape`, `itemShape` | Capsule / capsule |
 | `glass`, `optics`, `blur`, `motion` | Component overrides of material/theme settings |
+| `backIcon`, `closeIcon` | Back chevron / close mark of `LiquidPrismBackButton` |
+| `backIconShift`, `backIconMirrors` | .5 toward the tip / true, the shift mirrors in RTL |
 
 Each `GlassToolbarItem` owns its width (38 default, at least 36), selected state,
 label, callback/menu, key and optional foreground. Group spacing is independent.

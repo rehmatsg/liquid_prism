@@ -84,12 +84,14 @@ class GlassToolbarItem {
 /// A lone navigation-bar control that pops the route: a back chevron, or a
 /// close mark for a modally presented screen.
 ///
-/// [LiquidPrismScaffold] implies one when its route can pop. Use it directly
-/// to supply your own glyph or action; a custom [icon] is drawn as given.
+/// [LiquidPrismScaffold] implies one when its route can pop. Set an app's own
+/// glyphs once with [GlassToolbarStyle.backIcon] and
+/// [GlassToolbarStyle.closeIcon] in the theme, or pass [icon] here.
 ///
-/// A chevron's visual mass sits toward its point, so drawn on its box centre
-/// it reads as sitting away from the circle's centre; the default glyph is
-/// shifted [glyphShift] toward its point, mirrored in right-to-left layouts.
+/// A back glyph's visual mass sits toward its point, so drawn on its box
+/// centre it reads as sitting away from the circle's centre; it is shifted
+/// [iconShift] toward its point, mirrored in right-to-left layouts while
+/// [iconMirrors]. The close mark is symmetric and is not shifted.
 class LiquidPrismBackButton extends StatelessWidget {
   const LiquidPrismBackButton({
     super.key,
@@ -97,16 +99,18 @@ class LiquidPrismBackButton extends StatelessWidget {
     this.icon,
     this.label,
     this.onPressed,
-    this.glyphShift = .5,
+    this.iconShift,
+    this.iconMirrors,
     this.size = GlassToolbarSize.navigation,
     this.style,
     this.foregroundColor,
-  });
+  }) : assert(iconShift == null || iconShift >= 0);
 
   /// Draw a close mark instead of a back chevron.
   final bool close;
 
-  /// Replaces the default glyph. Drawn without the optical shift.
+  /// Replaces the glyph from the style. Defaults to
+  /// [GlassToolbarStyle.backIcon] or [GlassToolbarStyle.closeIcon].
   final Widget? icon;
 
   /// The accessible name. Defaults to "Back" or "Close".
@@ -115,24 +119,36 @@ class LiquidPrismBackButton extends StatelessWidget {
   /// Defaults to popping the nearest navigator.
   final VoidCallback? onPressed;
 
-  /// How far the default chevron moves toward its point, in logical pixels.
-  final double glyphShift;
+  /// Overrides [GlassToolbarStyle.backIconShift] (default .5).
+  final double? iconShift;
+
+  /// Overrides [GlassToolbarStyle.backIconMirrors] (default true).
+  final bool? iconMirrors;
   final GlassToolbarSize size;
   final GlassToolbarStyle? style;
   final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context) {
-    final rtl = Directionality.of(context) == TextDirection.rtl;
-    final glyph =
-        icon ??
-        (close
-            ? const Icon(CupertinoIcons.xmark)
-            : Transform.translate(
-                // The icon mirrors with the text direction; so does its point.
-                offset: Offset(rtl ? glyphShift : -glyphShift, 0),
-                child: const Icon(CupertinoIcons.chevron_back),
-              ));
+    final appearance =
+        (LiquidPrismTheme.of(context).toolbar ?? const GlassToolbarStyle())
+            .merge(style);
+    final Widget glyph;
+    if (close) {
+      glyph = icon ?? appearance.closeIcon ?? const Icon(CupertinoIcons.xmark);
+    } else {
+      final shift = iconShift ?? appearance.backIconShift ?? .5;
+      final mirrors = iconMirrors ?? appearance.backIconMirrors ?? true;
+      final rtl = Directionality.of(context) == TextDirection.rtl;
+      glyph = Transform.translate(
+        // A mirrored glyph points right in RTL, and so does its shift.
+        offset: Offset(mirrors && rtl ? shift : -shift, 0),
+        child:
+            icon ??
+            appearance.backIcon ??
+            const Icon(CupertinoIcons.chevron_back),
+      );
+    }
     return LiquidPrismToolbarGroup(
       size: size,
       style: style,

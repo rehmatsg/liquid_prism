@@ -250,6 +250,23 @@ on a fullscreen dialog, popping through `Navigator.maybePop`. Pass
 `automaticallyImplyLeading: false` to suppress it, or your own
 `LiquidPrismBackButton(icon: ...)` for a custom glyph.
 
+To use an icon pack's glyphs everywhere, including the implied button, set
+them in the theme:
+
+```dart
+LiquidPrismThemeData(
+  toolbar: GlassToolbarStyle(
+    backIcon: Icon(MyIcons.chevronLeft),
+    closeIcon: Icon(MyIcons.close),
+    // This chevron draws "<" in both text directions.
+    backIconMirrors: false,
+  ),
+)
+```
+
+The back glyph is shifted `backIconShift` (.5) points toward its tip so its
+mass reads centred; the close mark is not shifted.
+
 | Window | Placement |
 | --- | --- |
 | iPhone, portrait or landscape | Actions in a 44 pt top bar, tab bar floating 21 pt above the bottom edge |

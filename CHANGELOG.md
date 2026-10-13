@@ -61,9 +61,12 @@
 - Imply a leading control in `LiquidPrismScaffold`: when its route can pop
   and `leading` is null, a `LiquidPrismBackButton` draws a back chevron, or a
   close mark on a fullscreen dialog, and pops the route.
-  `automaticallyImplyLeading: false` opts out. The button is public for custom
-  glyphs; its default chevron is shifted half a point toward its tip so it
-  reads centred in the circle. The body now keeps 14 points clear below the
+  `automaticallyImplyLeading: false` opts out. The button is public; its back
+  glyph is shifted half a point toward its tip so it reads centred in the
+  circle. An app sets its own glyphs once through `GlassToolbarStyle.backIcon`
+  and `closeIcon` in the theme, which the implied button uses too;
+  `backIconShift` and `backIconMirrors` (false for a glyph that draws the same
+  in both directions) tune the shift. The body now keeps 14 points clear below the
   top bar's capsules (`LiquidPrismScaffold.topBarClearance`), as the measured
   iPhone Duo content safe area does.
 - Animate toolbar items. `LiquidPrismToolbarGroup` materializes items in and

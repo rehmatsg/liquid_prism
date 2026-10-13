@@ -7,10 +7,16 @@ void main() {
     bool imply = true,
     bool fullscreenDialog = false,
     TextDirection direction = TextDirection.ltr,
+    GlassToolbarStyle? toolbar,
   }) => CupertinoApp(
     debugShowCheckedModeBanner: false,
-    builder: (context, child) =>
-        Directionality(textDirection: direction, child: child!),
+    builder: (context, child) => Directionality(
+      textDirection: direction,
+      child: LiquidPrismTheme(
+        data: LiquidPrismThemeData(toolbar: toolbar),
+        child: child!,
+      ),
+    ),
     home: Builder(
       builder: (context) => LiquidPrismScaffold(
         body: Center(
@@ -102,5 +108,57 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Return'));
     expect(pressed, 1);
     expect(find.byIcon(CupertinoIcons.arrow_left), findsOneWidget);
+  });
+
+  testWidgets('themed glyphs reach the implied button', (tester) async {
+    const toolbar = GlassToolbarStyle(
+      backIcon: Icon(CupertinoIcons.arrow_left),
+      closeIcon: Icon(CupertinoIcons.clear_circled),
+      backIconShift: 1,
+      backIconMirrors: false,
+    );
+    // A glyph that draws the same in both directions keeps its shift in RTL.
+    await tester.pumpWidget(
+      app(direction: TextDirection.rtl, toolbar: toolbar),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(CupertinoIcons.chevron_back), findsNothing);
+    final circle = tester.getCenter(find.byType(LiquidPrism));
+    final glyph = tester.getCenter(find.byIcon(CupertinoIcons.arrow_left));
+    expect(glyph.dx - circle.dx, closeTo(-1, .01));
+
+    await tester.pumpWidget(Container());
+    await tester.pumpWidget(app(fullscreenDialog: true, toolbar: toolbar));
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(CupertinoIcons.clear_circled), findsOneWidget);
+  });
+
+  testWidgets('direct arguments override the theme, explicit zero included', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismTheme(
+          data: const LiquidPrismThemeData(
+            toolbar: GlassToolbarStyle(
+              backIcon: Icon(CupertinoIcons.arrow_left),
+              backIconShift: 2,
+            ),
+          ),
+          child: const Center(
+            child: LiquidPrismBackButton(
+              icon: Icon(CupertinoIcons.back),
+              iconShift: 0,
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.byIcon(CupertinoIcons.arrow_left), findsNothing);
+    final circle = tester.getCenter(find.byType(LiquidPrism));
+    final glyph = tester.getCenter(find.byIcon(CupertinoIcons.back));
+    expect(glyph.dx - circle.dx, closeTo(0, .01));
   });
 }

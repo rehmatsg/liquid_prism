@@ -598,6 +598,10 @@ class GlassToolbarStyle {
     this.itemTransition,
     this.itemTransitionStyle,
     this.groupSpacing,
+    this.backIcon,
+    this.closeIcon,
+    this.backIconShift,
+    this.backIconMirrors,
   }) : assert(height == null || height >= 44),
        assert(inset == null || inset >= 0),
        assert(spacing == null || spacing >= 0),
@@ -632,6 +636,20 @@ class GlassToolbarStyle {
   /// Gap between the capsules of a [LiquidPrismToolbar]. Defaults to 8.
   final double? groupSpacing;
 
+  /// The glyphs of [LiquidPrismBackButton], including the one
+  /// [LiquidPrismScaffold] implies. Default to the back chevron and the
+  /// close mark.
+  final Widget? backIcon, closeIcon;
+
+  /// How far the back glyph moves toward its point, in logical pixels, so
+  /// its visual mass sits on the circle's centre. Defaults to .5.
+  final double? backIconShift;
+
+  /// Whether the back glyph points the other way in right-to-left layouts,
+  /// as the default chevron does; the shift follows it. Set false for a
+  /// glyph that draws the same in both directions. Defaults to true.
+  final bool? backIconMirrors;
+
   /// Keep existing fields when an argument is null.
   GlassToolbarStyle copyWith({
     GlassToolbarSize? size,
@@ -650,6 +668,10 @@ class GlassToolbarStyle {
     GlassTransition? itemTransition,
     GlassTransitionStyle? itemTransitionStyle,
     double? groupSpacing,
+    Widget? backIcon,
+    Widget? closeIcon,
+    double? backIconShift,
+    bool? backIconMirrors,
   }) => GlassToolbarStyle(
     size: size ?? this.size,
     height: height ?? this.height,
@@ -667,6 +689,10 @@ class GlassToolbarStyle {
     itemTransition: itemTransition ?? this.itemTransition,
     itemTransitionStyle: itemTransitionStyle ?? this.itemTransitionStyle,
     groupSpacing: groupSpacing ?? this.groupSpacing,
+    backIcon: backIcon ?? this.backIcon,
+    closeIcon: closeIcon ?? this.closeIcon,
+    backIconShift: backIconShift ?? this.backIconShift,
+    backIconMirrors: backIconMirrors ?? this.backIconMirrors,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -692,6 +718,10 @@ class GlassToolbarStyle {
                 other.itemTransitionStyle,
               ),
           groupSpacing: other.groupSpacing ?? groupSpacing,
+          backIcon: other.backIcon ?? backIcon,
+          closeIcon: other.closeIcon ?? closeIcon,
+          backIconShift: other.backIconShift ?? backIconShift,
+          backIconMirrors: other.backIconMirrors ?? backIconMirrors,
         );
 }
 
