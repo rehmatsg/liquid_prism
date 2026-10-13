@@ -76,7 +76,8 @@ So do the segmented control's labels while its selection is held: on iOS 27.0
 (light, iPhone 17 simulator) a selection held between two segments pulls the
 strokes under its rim inward into a dark smear with a faint colour fringe, while
 a label centred in the selection is unchanged. Liquid Prism reuses the tab's
-foreground filter and its 14 / 11.2 inputs; the colour fringe is not reproduced.
+foreground filter and its 14 / 11.2 inputs; the colour fringe is fitted below
+(see Chromatic rim fringe).
 The slider opts out
 of that broad field: **the knob still grows to 1.55× on hold, but the track seen
 through it keeps its normal thickness**. Its clear face and shadow still use the
@@ -214,7 +215,10 @@ green midway. Both pills peak near 3.5 despite the 1.59× input amount ratio.
 Tab peak is about 3.2–3.7 within about 4 points. The segmented lens also
 fringes labels under its rim.
 
-Fitted renderer: full-lift split 3.5 points, band 4.8, direction `-(n.y,n.x)`;
+Fitted renderer: full-lift split 3.5 points, band 4.8, direction `-(n.y,n.x)`.
+Labels and icons in the foreground pass take a quarter of that split, blended
+half with the unshifted glyph, fitted by eye: at the full split thin strokes
+broke into opaque primary colours where native shows a soft tint;
 the weight is `(1-.085*min(d,band))*(1-smoothstep(.62*band,band,d))`, clamped
 nonnegative. The table compares this scalar profile before sampling/lighting;
 it is not a rendered-pixel validation or a reconstruction of Apple's operator.

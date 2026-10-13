@@ -290,9 +290,9 @@ void main() {
             }
 
             // Red right of green/blue on top; order reverses at the bottom.
-            expect(centroid(9, 0), greaterThan(centroid(9, 1) + 1));
-            expect(centroid(9, 1), greaterThan(centroid(9, 2) + 1));
-            expect(centroid(50, 0), lessThan(centroid(50, 2) - 2));
+            expect(centroid(9, 0), greaterThan(centroid(9, 1) + .2));
+            expect(centroid(9, 1), greaterThan(centroid(9, 2) + .2));
+            expect(centroid(50, 0), lessThan(centroid(50, 2) - .4));
             // Beyond the band all channels stay together.
             expect(centroid(30, 0), centroid(30, 1));
             expect(centroid(30, 1), centroid(30, 2));

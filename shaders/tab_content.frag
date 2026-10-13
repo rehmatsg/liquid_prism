@@ -53,12 +53,18 @@ void main() {
     vec4 green = readContent(displaced);
     float depth = -field.x;
     if (u_effect.z > 0. && u_effect.w > 0. && depth < u_effect.w) {
+        // Glyphs fringe at half the backdrop's split, half blended with the
+        // unshifted sample: a full split on thin strokes left opaque pure
+        // primaries wherever one channel alone hit the glyph, where native
+        // shows a soft tint. Fitted by eye to the iOS 27 segmented capture.
         vec2 shift = chromaticDirection(field.yz) *
-            (.5*max(chromaticWeight(depth,u_effect.w),0.)*u_effect.z);
+            (.25*max(chromaticWeight(depth,u_effect.w),0.)*u_effect.z);
         vec4 red = readContent(displaced-shift);
         vec4 blue = readContent(displaced+shift);
-        // Each source channel is already premultiplied and <= its own alpha.
-        // The union alpha bounds all three channels, including glyph edges.
-        frag_color = vec4(red.r,green.g,blue.b,max(max(red.a,green.a),blue.a));
+        // Each source channel is already premultiplied and <= its own alpha,
+        // so the union alpha bounds all three; mixing two valid premultiplied
+        // colours stays valid.
+        vec4 split = vec4(red.r,green.g,blue.b,max(max(red.a,green.a),blue.a));
+        frag_color = mix(green,split,.5);
     } else { frag_color = green; }
 }
