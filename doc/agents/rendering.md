@@ -70,6 +70,37 @@ the chrome slots. Keep the contract: nothing paints between members that a
 member samples. Headless tests exercise the fallback, so verify grouping with
 the real-shader drivers under `_research/package_check/` or the showcase.
 
+`_clipsToGroup` walks a member's or edge effect's layers up to the group
+layer. Offset, transform, plain container and annotated-region layers pass;
+plain clip layers are collected (in root logical coordinates, via
+`compositedTransform` divided by the DPR) and applied again to that member's
+hoisted shadow, frost and edge passes; anything else (a saveLayer clip,
+opacity, filter, mask) keeps the member out of `shared`. Batching still
+requires no intermediate layer at all.
+
+## Edge effects in a group
+
+`_RenderEdgeBlur` (edge_blur.dart, a part of glass.dart) registers in
+`_GlassGroupData.edges`. `prepare()` puts active, non-isolated, hoistable
+effects in `hoistEdges` and turns batching off. The hoist host is whichever
+reaches the scene first: a shared member's `_GlassShadowLayer` or an effect's
+`_EdgeHoistLayer`, which sits between the effect's content layer and its strip
+clips so the hoisted shadows are not clipped to the strips. `_hoist` paints
+shadows, frost, then each hoisted effect's horizontal pass (`frostKey`),
+vertical pass (`sharedKey`) and fade, all clipped to the strips minus the
+shared members' contours (`Path.combine` difference, cached by signature). An
+effect with a child is hoisted only as host, since its child must already be
+painted. Hoisted effects skip their own `_EdgePassLayer` and `_EdgeFadeLayer`;
+a lone shared member stays shared while an effect is hoisted.
+
+The pass uniforms are `u_pass`, `u_box`, `u_matrix`, `u_inverse`, `u_start`,
+`u_end` (24 floats after the engine's texture size); keep `_uniforms` and
+`shaders/edge_blur.frag` in step. The shader pairs Gaussian taps into one
+bilinear read, so the backdrop sampler is bound linear through the same 1 x 1
+image trick as the optical shader, and derives weights incrementally. Under an
+isolating ancestor the effect filters its child's raster through a composed
+`ImageFilter` on its content layer instead, and adds no backdrop pass.
+
 ## Shared lens and shadows
 
 `ControlLens` owns clear optics and underlay minification; controls supply their

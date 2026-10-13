@@ -1,7 +1,8 @@
-import 'glass_transition.dart';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+
+import 'glass_transition.dart';
+import 'scroll_edge.dart';
 
 import 'material.dart';
 import 'style.dart';
@@ -180,6 +181,7 @@ class LiquidPrismThemeData {
     this.search,
     this.controlMotion,
     this.transition,
+    this.scrollEdge,
   }) : assert(blur == null || (blur >= 0 && blur <= 12));
   final Brightness? brightness;
 
@@ -211,6 +213,9 @@ class LiquidPrismThemeData {
   /// Default enter/exit timing for [LiquidPrismVisibility].
   final GlassTransitionStyle? transition;
 
+  /// Defaults for scroll edge effects and scroll fades.
+  final GlassScrollEdgeStyle? scrollEdge;
+
   /// Return an updated theme. Null arguments keep existing values.
   LiquidPrismThemeData copyWith({
     Brightness? brightness,
@@ -232,6 +237,7 @@ class LiquidPrismThemeData {
     GlassSearchStyle? search,
     GlassControlMotion? controlMotion,
     GlassTransitionStyle? transition,
+    GlassScrollEdgeStyle? scrollEdge,
   }) => LiquidPrismThemeData(
     brightness: brightness ?? this.brightness,
     materialBrightness: materialBrightness ?? this.materialBrightness,
@@ -252,6 +258,7 @@ class LiquidPrismThemeData {
     search: search ?? this.search,
     controlMotion: controlMotion ?? this.controlMotion,
     transition: transition ?? this.transition,
+    scrollEdge: scrollEdge ?? this.scrollEdge,
   );
 
   LiquidPrismThemeData merge(LiquidPrismThemeData other) =>
@@ -281,6 +288,9 @@ class LiquidPrismThemeData {
         ),
         transition: (transition ?? const GlassTransitionStyle()).merge(
           other.transition,
+        ),
+        scrollEdge: (scrollEdge ?? const GlassScrollEdgeStyle()).merge(
+          other.scrollEdge,
         ),
       );
 }

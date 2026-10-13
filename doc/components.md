@@ -305,6 +305,85 @@ native bar button; give the item a width to keep a wider capsule. Narrow groups 
 than shrink icons. Direct `size` wins over the theme, even when explicitly bottom.
 Null callbacks disable individual actions; menu items use `enabled: false`.
 
+Items may come and go: an item added to `items` materializes in while the
+capsule widens, and a removed one leaves the same way. Items are matched by
+`key`, else by `label`. An empty list materializes the whole capsule away and
+draws nothing, so a list whose items all depend on state is fine.
+`GlassToolbarStyle.itemTransition: GlassTransition.identity` swaps at once, as
+Reduce Motion does; `itemTransitionStyle` sets the springs.
+
+Several capsules in one bar are one `LiquidPrismToolbar`, a list of groups
+laid out `spacing` (default 8) apart. Declare every group the bar can show and
+let emptiness animate, so groups keep their positions:
+
+```dart
+LiquidPrismToolbar(
+  size: GlassToolbarSize.navigation,
+  groups: [
+    [if (hasSuggestions) suggestionsItem],
+    [sortItem, moreItem],
+  ],
+)
+```
+
+## Scroll edge effects
+
+iOS softens content scrolled under a bar with a progressive blur and a partial
+fade, strongest at the edge and dissolving a little below the bar. The bar's
+glass controls refract the content beneath, not the blur.
+
+`LiquidPrismScaffold` draws this effect under its top bar while the body's
+outermost scroll view is scrolled, fading toward its `backgroundColor`
+(without one, it blurs only). `scrollEdge: false` turns it off and
+`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it: a 4-point blur and a
+half-opacity fade at full strength, reached 48 points above the effect's lower
+end and held to the top, 20 points of reach below the bar, and a 16-point
+scroll over which it arrives. These are fitted by eye, not measured.
+
+For a bar of your own, lay `LiquidPrismScrollEdge` in the bar's background,
+filling the bar's box with the title and controls painted above it, and drive
+`progress` from the scroll offset:
+
+```dart
+SliverLayoutBuilder(
+  builder: (context, constraints) => SliverAppBar(
+    pinned: true,
+    backgroundColor: Colors.transparent,
+    flexibleSpace: LiquidPrismScrollEdge(
+      progress: LiquidPrismScrollEdge.progressFor(constraints.scrollOffset),
+      color: Theme.of(context).scaffoldBackgroundColor,
+    ),
+    leading: LiquidPrismToolbarGroup(size: GlassToolbarSize.navigation, items: [back]),
+    actions: [LiquidPrismToolbar(size: GlassToolbarSize.navigation, groups: groups)],
+  ),
+)
+```
+
+Wrap the page (the `CustomScrollView`, or the body around it) in a
+`LiquidPrismGroup` so the effect and the bar's capsules share two backdrop
+captures and the capsules see through the effect; see
+[rendering](rendering.md#shared-captures-and-edge-effects).
+
+`LiquidPrismScrollFade` wraps a scroll view and springs the same blur and fade
+in at each edge while content extends past it, with `extent`, `sigma`,
+`fadeOpacity` and `plateau` to tune. Both build on `LiquidPrismEdgeBlur`, which
+blurs and fades up to two opposite edges of any child per pixel along
+`GlassEdgeFade.curve`, a smootherstep whose onset the eye cannot find:
+
+```dart
+LiquidPrismEdgeBlur(
+  edges: [
+    GlassEdgeBlur(edge: GlassEdge.top, extent: 96, sigma: 3, plateau: .35, fadeColor: background),
+  ],
+  child: pinnedHeaderContent,
+)
+```
+
+Animate by scaling `sigma` and `fadeOpacity`; an ancestor `Opacity` does not
+attenuate a backdrop blur. With nothing active the widget paints straight
+through without a layer, so child state survives. `GlassEdgeFade.gradient`
+builds the same fade as a plain `LinearGradient` for decorations.
+
 ## Search
 
 ```dart

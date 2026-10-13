@@ -9,6 +9,7 @@ import 'glass_transition.dart';
 import 'menu/menu.dart';
 import 'menu/menu_elements.dart';
 import 'motion.dart';
+import 'scroll_edge.dart';
 import 'sidebar.dart';
 import 'system_chrome.dart';
 import 'tab_bar.dart';
@@ -100,6 +101,8 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.placement,
     this.backgroundColor,
     this.tabBarPlacement = GlassTabBarPlacement.automatic,
+    this.scrollEdge = true,
+    this.scrollEdgeStyle,
   });
 
   /// Full-window content. Usually a scroll view.
@@ -127,6 +130,18 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// leading sidebar while the window has regular width, as on the unfolded
   /// iPhone Duo. People can hide it; the tabs then return to the tab bar.
   final GlassTabBarPlacement tabBarPlacement;
+
+  /// Whether content scrolled under the top bar takes a [LiquidPrismScrollEdge]
+  /// effect, as under native bars: a progressive blur and a partial fade into
+  /// [backgroundColor] that cover the status bar and the bar. The effect
+  /// follows the body's outermost scroll view and shares the chrome's backdrop
+  /// captures, so the leading control and actions refract the unblurred
+  /// content beneath them. Without a top bar nothing is drawn.
+  final bool scrollEdge;
+
+  /// Overrides the theme's [GlassScrollEdgeStyle] field by field. Its
+  /// `fadeColor` applies when [backgroundColor] is null.
+  final GlassScrollEdgeStyle? scrollEdgeStyle;
 
   /// The placement of the nearest scaffold, or null outside one.
   static GlassChromePlacement? placementOf(BuildContext context) =>
@@ -163,6 +178,19 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     with SingleTickerProviderStateMixin {
   bool _sidebarHidden = false;
 
+  /// How far the body's outermost scroll view is scrolled past its start.
+  final _scrollOffset = ValueNotifier<double>(0);
+
+  bool _onScroll(ScrollMetrics metrics) {
+    if (metrics.axis == Axis.vertical) {
+      _scrollOffset.value = math.max(
+        0,
+        metrics.pixels - metrics.minScrollExtent,
+      );
+    }
+    return false;
+  }
+
   /// How far the sidebar is shown: it slides the panel and reflows the body.
   late final _reveal = RetargetableGlassSpring(vsync: this)
     ..value = 1
@@ -184,6 +212,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   @override
   void dispose() {
     _reveal.dispose();
+    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -281,6 +310,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
     final top = math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
+    final topBar =
+        widget.leading != null ||
+        // Native keeps the bar row with the sidebar shown or hidden, so
+        // content does not jump when the toggle moves into it.
+        sidebarTabs != null ||
+        (!rail && widget.actions.isNotEmpty);
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         placement: resolved,
@@ -288,12 +323,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         keyboard: media.viewInsets.bottom,
         textDirection: Directionality.of(context),
         iOS: defaultTargetPlatform == TargetPlatform.iOS,
-        topBar:
-            widget.leading != null ||
-            // Native keeps the bar row with the sidebar shown or hidden, so
-            // content does not jump when the toggle moves into it.
-            sidebarTabs != null ||
-            (!rail && widget.actions.isNotEmpty),
+        topBar: topBar,
         actionsTop: actionsTop,
         railBottom: railBottom,
         corner: corner,
@@ -313,10 +343,44 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   : media.copyWith(
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
-              child: widget.body,
+              child: widget.scrollEdge && topBar
+                  ? NotificationListener<ScrollMetricsNotification>(
+                      onNotification: (n) =>
+                          n.depth == 0 && _onScroll(n.metrics),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (n) =>
+                            n.depth == 0 && _onScroll(n.metrics),
+                        child: widget.body,
+                      ),
+                    )
+                  : widget.body,
             ),
           ),
         ),
+        // Behind the bar's controls, over the body: it shares their captures
+        // and is cut out of their contours (see LiquidPrismEdgeBlur).
+        if (widget.scrollEdge && topBar)
+          LayoutId(
+            id: _Slot.scrollEdge,
+            child: GlassGroupMembers(
+              child: ValueListenableBuilder<double>(
+                valueListenable: _scrollOffset,
+                builder: (context, offset, _) => LiquidPrismScrollEdge(
+                  progress: LiquidPrismScrollEdge.progressFor(
+                    offset,
+                    revealExtent:
+                        GlassScrollEdgeStyle.resolve(
+                          context,
+                          widget.scrollEdgeStyle,
+                        ).revealExtent ??
+                        GlassScrollEdgeStyle.defaultRevealExtent,
+                  ),
+                  color: widget.backgroundColor,
+                  style: widget.scrollEdgeStyle,
+                ),
+              ),
+            ),
+          ),
         // Beneath the panel, as natively: the panel slides over it.
         if (sidebarTabs != null)
           LayoutId(
@@ -453,7 +517,15 @@ class _Ellipsis extends StatelessWidget {
   }
 }
 
-enum _Slot { body, sidebar, sidebarToggle, leading, actions, tabBar }
+enum _Slot {
+  body,
+  scrollEdge,
+  sidebar,
+  sidebarToggle,
+  leading,
+  actions,
+  tabBar,
+}
 
 /// Body constraints that also carry the chrome's coverage, the technique
 /// Flutter's own Scaffold uses to hand layout-time sizes to its body.
@@ -659,6 +731,20 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     final barRight = corner != null && corner!.left > 1
         ? math.min(contentRight, corner!.left)
         : contentRight;
+
+    if (hasChild(_Slot.scrollEdge)) {
+      // The bar's box, status bar included; the effect reaches below it.
+      layoutChild(
+        _Slot.scrollEdge,
+        BoxConstraints.tight(
+          Size(
+            math.max(0, contentRight - contentLeft),
+            top + LiquidPrismScaffold.topBarHeight,
+          ),
+        ),
+      );
+      positionChild(_Slot.scrollEdge, Offset(contentLeft, 0));
+    }
 
     if (hasChild(_Slot.sidebar)) {
       layoutChild(

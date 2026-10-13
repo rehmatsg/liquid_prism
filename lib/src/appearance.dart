@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'glass_transition.dart';
 import 'material.dart';
 import 'motion.dart';
 import 'style.dart';
@@ -516,11 +517,15 @@ class GlassToolbarStyle {
     this.optics,
     this.blur,
     this.motion,
+    this.itemTransition,
+    this.itemTransitionStyle,
+    this.groupSpacing,
   }) : assert(height == null || height >= 44),
        assert(inset == null || inset >= 0),
        assert(spacing == null || spacing >= 0),
        assert(iconSize == null || iconSize > 0),
-       assert(blur == null || blur >= 0 && blur <= 12);
+       assert(blur == null || blur >= 0 && blur <= 12),
+       assert(groupSpacing == null || groupSpacing >= 0);
   final GlassToolbarSize? size;
   final double? height;
   final double? inset;
@@ -537,6 +542,18 @@ class GlassToolbarStyle {
   final double? blur;
   final GlassMotion? motion;
 
+  /// How items added to or removed from a group arrive and leave: the capsule
+  /// resizes while the item materializes. Defaults to
+  /// [GlassTransition.materialize]; [GlassTransition.identity] swaps at once.
+  final GlassTransition? itemTransition;
+
+  /// Timing of [itemTransition] and of whole groups appearing in a
+  /// [LiquidPrismToolbar]. Defaults to the theme's transition style.
+  final GlassTransitionStyle? itemTransitionStyle;
+
+  /// Gap between the capsules of a [LiquidPrismToolbar]. Defaults to 8.
+  final double? groupSpacing;
+
   /// Keep existing fields when an argument is null.
   GlassToolbarStyle copyWith({
     GlassToolbarSize? size,
@@ -552,6 +569,9 @@ class GlassToolbarStyle {
     LiquidPrismStyle? optics,
     double? blur,
     GlassMotion? motion,
+    GlassTransition? itemTransition,
+    GlassTransitionStyle? itemTransitionStyle,
+    double? groupSpacing,
   }) => GlassToolbarStyle(
     size: size ?? this.size,
     height: height ?? this.height,
@@ -566,6 +586,9 @@ class GlassToolbarStyle {
     optics: optics ?? this.optics,
     blur: blur ?? this.blur,
     motion: motion ?? this.motion,
+    itemTransition: itemTransition ?? this.itemTransition,
+    itemTransitionStyle: itemTransitionStyle ?? this.itemTransitionStyle,
+    groupSpacing: groupSpacing ?? this.groupSpacing,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -585,6 +608,12 @@ class GlassToolbarStyle {
           optics: other.optics ?? optics,
           blur: other.blur ?? blur,
           motion: other.motion ?? motion,
+          itemTransition: other.itemTransition ?? itemTransition,
+          itemTransitionStyle:
+              (itemTransitionStyle ?? const GlassTransitionStyle()).merge(
+                other.itemTransitionStyle,
+              ),
+          groupSpacing: other.groupSpacing ?? groupSpacing,
         );
 }
 

@@ -438,6 +438,13 @@ class Art extends StatelessWidget {
   /// Legible ink on each artwork.
   static const inks = [Color(0xFF233B36), Color(0xFF1F1D3D), Color(0xFF4A3029)];
 
+  /// Each artwork's base color, for fades toward it.
+  static const backgrounds = [
+    Color(0xFF8EBEB5),
+    Color(0xFF495D96),
+    Color(0xFFB57248),
+  ];
+
   @override
   Widget build(BuildContext context) =>
       CustomPaint(painter: _ArtPainter(variant), child: child);

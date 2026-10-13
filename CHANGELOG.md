@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+- Add scroll edge effects and progressive edge blurs. `LiquidPrismEdgeBlur`
+  blurs and fades up to two opposite edges of its child per pixel along the
+  smootherstep `GlassEdgeFade.curve`, as backdrop passes of a new
+  `edge_blur.frag` that pairs its Gaussian taps into bilinear reads and derives
+  the weights incrementally, so a 4-point strip costs 37 texture reads per pass
+  instead of 73. `LiquidPrismScrollEdge` is a bar's effect driven by scroll
+  progress; `LiquidPrismScrollFade` springs a scrollable's edges in and out;
+  `GlassScrollEdgeStyle` themes them. `LiquidPrismScaffold` draws the effect
+  under its top bar while the body is scrolled (`scrollEdge: false` opts out).
+- Let edge effects join a glass group's shared captures. Inside a
+  `LiquidPrismGroup` or the scaffold, the effect's passes are hoisted with the
+  members' frost, cut out of their contours, and the members' optical passes
+  read a capture taken before the fade and finished blur: glass over a scroll
+  edge refracts the unblurred content beneath it, as native bar buttons do,
+  and a bar's effect and capsules cost two captures together instead of two
+  each. Plain clips (a viewport, an app bar's toolbar clip) between a member
+  and its group no longer keep it out of the shared capture; the hoisted shadow
+  and frost are clipped the same way.
+- Animate toolbar items. `LiquidPrismToolbarGroup` materializes items in and
+  out as `items` changes, resizing the capsule, and takes an empty list, which
+  materializes the capsule away. New `LiquidPrismToolbar` lays several groups
+  out with a gap and collapses empty ones, so every group a bar can show is
+  declared once. `GlassToolbarStyle` gains `itemTransition`,
+  `itemTransitionStyle` and `groupSpacing`.
 - Cut backdrop pass breaks for grouped glass: shared members' shadows and frost
   passes are painted ahead of the first shared optical pass, so a group of
   frosted surfaces costs two backdrop captures instead of two per surface.

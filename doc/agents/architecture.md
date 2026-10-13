@@ -12,17 +12,18 @@ under `lib/src/` are not a consumer contract.
 | `material.dart`, `style.dart` | Declarative glass variants, contours and optical packets |
 | `appearance.dart`, `tab_bar_style.dart`, `theme.dart` | Partial component styles, inheritance and palette |
 | `glass.dart`, `glass_group.dart`, `recipe.dart` | Surface composition, shader/fallback dispatch and explicit role IDs |
+| `edge_blur.dart`, `edge_fade.dart`, `scroll_edge.dart` | Progressive edge blur passes, the smootherstep fade, scroll edge effects and their group hoisting |
 | `layer_transform.dart` | Composited (raster) transforms versus laid-out transforms |
 | `pressable.dart`, `motion.dart` | Button interaction and interruptible spring controllers |
 | `control_interaction.dart`, `control_lens_motion.dart` | Controlled small-control input, cancellation and velocity deformation |
 | `control_material.dart`, `control_lens.dart` | Track paint and shared resting/lifted lens with external shadows |
 | `switch.dart`, `slider.dart`, `segmented_control.dart` | Per-component layout, logical value mapping and native defaults |
 | `tab_bar.dart`, `tab_content_lens.dart` | Compact navigation layout, independent tab motion and foreground filter |
-| `toolbar.dart`, `chrome_material.dart`, `search_field.dart` | Grouped action layout and owned/borrowed search resources |
+| `toolbar.dart`, `chrome_material.dart`, `search_field.dart` | Grouped action layout with animated item diffing, multi-group toolbars, and owned/borrowed search resources |
 | `chrome_layout.dart`, `sidebar.dart` | Scaffold placement (bottom bar, side rail or sidebar), chrome axis scope and body padding |
 | `system_chrome.dart`, `ios/.../SystemChromeObserver.swift` | iOS 27.1 vertical bar edge and reserved regions, streamed on `liquid_prism/system_chrome` |
 | `menu/`, `ios/Classes/` | Menu models, platform interface, fallback and UIKit presentation |
-| `shaders/` | Impeller glass, batched surfaces and tab glyph refraction |
+| `shaders/` | Impeller glass, batched surfaces, tab glyph refraction and the progressive edge blur |
 
 ## Ownership
 

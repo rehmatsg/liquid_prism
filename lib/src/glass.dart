@@ -8,12 +8,14 @@ import 'package:flutter/widgets.dart';
 import 'style.dart';
 import 'superellipse.dart';
 import 'material.dart';
+import 'edge_fade.dart';
 import 'glass_transition.dart';
 import 'layer_transform.dart';
 import 'theme.dart';
 import 'recipe.dart';
 import 'pressable.dart';
 
+part 'edge_blur.dart';
 part 'glass_group.dart';
 
 /// A live backdrop lens. Foreground content stays sharp above the material.
@@ -48,6 +50,7 @@ class LiquidPrism extends StatefulWidget {
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
+  static ui.FragmentProgram? _edgeProgram;
   static ui.Image? _linearSampler;
   static Future<void>? _loading;
 
@@ -82,6 +85,14 @@ class LiquidPrism extends StatefulWidget {
         // Batching is optional. The scalar optical filter remains available.
         debugPrint('LiquidPrism: shared optical pass unavailable: $error');
       }
+      try {
+        _edgeProgram ??= await ui.FragmentProgram.fromAsset(
+          'packages/liquid_prism/shaders/edge_blur.frag',
+        );
+      } catch (error) {
+        // Edge blurs are optional; their fades still paint.
+        debugPrint('LiquidPrism: edge blur unavailable: $error');
+      }
     } finally {
       _loading = null;
     }
@@ -90,6 +101,20 @@ class LiquidPrism extends StatefulWidget {
   static ui.FragmentShader? _createShader() {
     final shader = _program?.fragmentShader();
     if (shader != null) {
+      shader.setImageSampler(
+        0,
+        _linearSampler!,
+        filterQuality: ui.FilterQuality.low,
+      );
+    }
+    return shader;
+  }
+
+  /// The edge blur reads pairs of texels through one bilinear sample, so its
+  /// backdrop sampler is bound linear the same way.
+  static ui.FragmentShader? _createEdgeShader() {
+    final shader = _edgeProgram?.fragmentShader();
+    if (shader != null && _linearSampler != null) {
       shader.setImageSampler(
         0,
         _linearSampler!,
@@ -978,7 +1003,7 @@ class _GlassShadowLayer extends ContainerLayer {
     }
     if (group._hoistHost == null) {
       group._hoistHost = glass;
-      group._hoist(builder, glass);
+      group._hoist(builder, glass, glass._paintOffset);
     }
   }
 }

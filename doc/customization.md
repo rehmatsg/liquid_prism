@@ -146,6 +146,19 @@ style, and appearance updates.
 RTL reverses visual positions. Arrow keys move focus and selection; Space/Enter
 activates the focused tab. Hidden visual labels remain available to accessibility.
 
+## Scroll edges and toolbars
+
+`GlassScrollEdgeStyle` (theme field `scrollEdge`, or `style` on
+`LiquidPrismScrollEdge`, `LiquidPrismScrollFade` and the scaffold's
+`scrollEdgeStyle`) sets `sigma`, `falloff`, `extension`, `fadeColor`,
+`fadeOpacity`, `revealExtent` and the `spring` scroll fades animate with. A
+direct `color` on the widget wins over the style's `fadeColor`. Fields merge
+individually; zero is respected (a zero `sigma` fades without blurring).
+
+`GlassToolbarStyle.itemTransition` and `itemTransitionStyle` govern how items
+and whole groups arrive and leave; `groupSpacing` is the gap between a
+`LiquidPrismToolbar`'s capsules, below a direct `spacing`.
+
 ## Motion
 
 ```dart

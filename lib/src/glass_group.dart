@@ -30,7 +30,8 @@ class _LiquidPrismGroupState extends State<LiquidPrismGroup> {
     properties
       ..add(IntProperty('batchedSurfaces', _data.prepared.length))
       ..add(IntProperty('opticalBatches', _data._batches.length))
-      ..add(IntProperty('sharedBackdropSurfaces', _data.shared.length));
+      ..add(IntProperty('sharedBackdropSurfaces', _data.shared.length))
+      ..add(IntProperty('hoistedEdgeEffects', _data.hoistEdges.length));
   }
 
   @override
@@ -66,7 +67,8 @@ class _GlassGroupHostState extends State<GlassGroupHost> {
     properties
       ..add(IntProperty('batchedSurfaces', _data.prepared.length))
       ..add(IntProperty('opticalBatches', _data._batches.length))
-      ..add(IntProperty('sharedBackdropSurfaces', _data.shared.length));
+      ..add(IntProperty('sharedBackdropSurfaces', _data.shared.length))
+      ..add(IntProperty('hoistedEdgeEffects', _data.hoistEdges.length));
   }
 
   @override
@@ -221,27 +223,45 @@ class _GlassGroupData {
   final _batches = <_GlassBatch>[];
   bool _disposed = false;
 
-  /// The shared member that painted the shared shadows and frost this frame.
-  _RenderGlass? _hoistHost;
+  /// Edge effects in the group, and those the hoist paints this frame: active,
+  /// not isolated, and under only offset, transform and plain clip layers.
+  final edges = <_RenderEdgeBlur>{};
+  final hoistEdges = <_RenderEdgeBlur>{};
+  final _hoistedEdges = <_RenderEdgeBlur>{};
+
+  /// Clips between a hoisted member or edge and the group layer, in root
+  /// logical coordinates, applied again to whatever the hoist paints for it.
+  final _clips = <RenderObject, List<Path>>{};
+
+  /// The shared member or edge effect that painted the hoist this frame.
+  RenderBox? _hoistHost;
   ui.Picture? _sharedShadows;
   List<Object> _sharedSignature = [];
 
   /// Paints every shared member's shadow, then its frost pass clipped to its
-  /// contour, in [host]'s enclosing layer space. Shared members never sample
-  /// another member's paint, so their order does not change what the frost
-  /// blurs or what the optical passes read, and the whole group then costs
-  /// one capture for frost and one for optics instead of two per member.
-  void _hoist(ui.SceneBuilder builder, _RenderGlass host) {
-    final offset = host._paintOffset;
-    // prepare() keeps only invertible members, so the host inverts.
+  /// contour, then the hoisted edge effects, in [host]'s enclosing layer
+  /// space. Shared members never sample another member's paint, so their
+  /// order does not change what the frost blurs or what the optical passes
+  /// read, and the whole group then costs one capture for frost and one for
+  /// optics instead of two per member. The edge effects' horizontal passes
+  /// read the frost capture and their vertical passes the optical capture,
+  /// cut out of every member's contour, so members' optical passes read
+  /// content with neither the blur nor the fade.
+  void _hoist(ui.SceneBuilder builder, RenderBox host, Offset offset) {
+    // prepare() keeps only invertible members and edges, so the host inverts.
     final hostInverse = Matrix4.inverted(host.getTransformTo(null));
+    final toHost = Matrix4.translationValues(offset.dx, offset.dy, 0)
+      ..multiply(hostInverse);
     final transforms = <_RenderGlass, Matrix4>{};
+    final clips = <RenderObject, List<Path>>{};
     final signature = <Object>[offset, host];
     for (final member in shared) {
-      final matrix = Matrix4.translationValues(offset.dx, offset.dy, 0)
-        ..multiply(hostInverse)
-        ..multiply(member.glassTransform());
+      final matrix = toHost.clone()..multiply(member.glassTransform());
       transforms[member] = matrix;
+      clips[member] = [
+        for (final clip in _clips[member] ?? const <Path>[])
+          clip.transform(toHost.storage),
+      ];
       signature.addAll([
         member,
         member.shape,
@@ -249,6 +269,7 @@ class _GlassGroupData {
         member.recipe.shadowStrength,
         member.recipe.usesNativeControlShadow,
         ...matrix.storage,
+        for (final clip in clips[member]!) clip.getBounds(),
       ]);
     }
     if (!listEquals(_sharedSignature, signature)) {
@@ -258,6 +279,9 @@ class _GlassGroupData {
       final canvas = Canvas(recorder);
       for (final entry in transforms.entries) {
         canvas.save();
+        for (final clip in clips[entry.key]!) {
+          canvas.clipPath(clip);
+        }
         canvas.transform(entry.value.storage);
         _ExteriorShadow(
           entry.key.shape,
@@ -270,26 +294,121 @@ class _GlassGroupData {
     }
     builder.addPicture(Offset.zero, _sharedShadows!);
     var index = 0;
+    final contours = <Path>[];
     for (final entry in transforms.entries) {
       final member = entry.key;
-      final frost = member._frostLayer.layer;
-      if (frost == null || member.style.frost <= 0.05) continue;
       final contour = member.shape
           .path(member.size)
           .transform(entry.value.storage);
+      contours.add(contour);
+      final frost = member._frostLayer.layer;
+      if (frost == null || member.style.frost <= 0.05) continue;
       frost.configure(member.style.frost + index++ * 1e-4, frostKey);
+      final memberClips = clips[member]!;
+      for (final clip in memberClips) {
+        builder.pushClipPath(clip);
+      }
       builder.pushClipPath(contour);
       frost.filter.addToScene(builder);
       builder.pop();
+      for (final _ in memberClips) {
+        builder.pop();
+      }
     }
+    for (final edge in hoistEdges) {
+      // An effect with content of its own blurs that content, which must
+      // already be painted: it joins only when it hosts the hoist itself.
+      if (edge != host && edge.hasChild) continue;
+      _hoistedEdges.add(edge);
+      edge._hoistInto(
+        builder,
+        this,
+        toHost.clone()..multiply(edge.getTransformTo(null)),
+        contours,
+        [
+          for (final clip in _clips[edge] ?? const <Path>[])
+            clip.transform(toHost.storage),
+        ],
+      );
+    }
+  }
+
+  /// Clips between [layer] and [groupLayer] in root logical coordinates, or
+  /// null where another layer would change what a hoisted shadow, frost or
+  /// edge pass shows or reads: a saveLayer clip, opacity, filter or mask.
+  static List<Path>? _clipsToGroup(
+    Layer? layer,
+    Layer groupLayer,
+    double pixelRatio,
+  ) {
+    final clips = <Path>[];
+    for (var ancestor = layer; ancestor != groupLayer;) {
+      if (ancestor == null) return null;
+      Path? path;
+      switch (ancestor) {
+        case ClipRectLayer(:final clipRect?, :final clipBehavior)
+            when clipBehavior != Clip.antiAliasWithSaveLayer:
+          path = Path()..addRect(clipRect);
+        case ClipRRectLayer(:final clipRRect?, :final clipBehavior)
+            when clipBehavior != Clip.antiAliasWithSaveLayer:
+          path = Path()..addRRect(clipRRect);
+        case ClipRSuperellipseLayer(
+              :final clipRSuperellipse?,
+              :final clipBehavior,
+            )
+            when clipBehavior != Clip.antiAliasWithSaveLayer:
+          path = Path()..addRSuperellipse(clipRSuperellipse);
+        case ClipPathLayer(:final clipPath?, :final clipBehavior)
+            when clipBehavior != Clip.antiAliasWithSaveLayer:
+          path = clipPath;
+        case OffsetLayer() || TransformLayer() || AnnotatedRegionLayer():
+          break;
+        case _ when ancestor.runtimeType == ContainerLayer:
+          break;
+        default:
+          return null;
+      }
+      if (path != null) {
+        // Layer transforms compose to physical pixels; the root applies the
+        // device pixel ratio, which hoisted geometry handles itself.
+        final toRoot = Matrix4.diagonal3Values(
+          1 / pixelRatio,
+          1 / pixelRatio,
+          1,
+        )..multiply(compositedTransform(ancestor));
+        clips.add(path.transform(toRoot.storage));
+      }
+      ancestor = ancestor.parent;
+    }
+    return clips;
   }
 
   void prepare(_GlassGroupLayer groupLayer) {
     prepared.clear();
     shared.clear();
+    hoistEdges.clear();
+    _hoistedEdges.clear();
+    _clips.clear();
     _hoistHost = null;
     if (_disposed) return;
-    final canBatch = LiquidPrism._batchProgram != null;
+    for (final edge in edges) {
+      if (!edge.attached ||
+          !edge.hasSize ||
+          edge.size.isEmpty ||
+          !edge._isActive ||
+          edge.getTransformTo(null).determinant() == 0) {
+        continue;
+      }
+      final content = edge._contentLayer.layer;
+      if (content == null || _isolatesBackdrop(content)) continue;
+      final clips = _clipsToGroup(content, groupLayer, edge.pixelRatio);
+      if (clips == null) continue;
+      _clips[edge] = clips;
+      hoistEdges.add(edge);
+    }
+    // Members read captures taken before the hoisted effects' fades and
+    // finished blurs; a batch would read its own later capture instead.
+    final canBatch = LiquidPrism._batchProgram != null && hoistEdges.isEmpty;
     final surfaces = members
         .where(
           (m) =>
@@ -377,8 +496,17 @@ class _GlassGroupData {
       final sameLayers = independentLayers && ancestor == groupLayer;
       // A shared capture omits whatever later members paint, shadows included.
       // Members whose sampling never reaches that content can share it; each
-      // still applies its own scalar filter, so nothing is resampled.
-      if (sameLayers &&
+      // still applies its own scalar filter, so nothing is resampled. Plain
+      // clips on the way to the group are applied again to the hoisted
+      // shadow and frost, so they may sit between.
+      final clips = sameLayers
+          ? const <Path>[]
+          : _clipsToGroup(
+              member._clipLayer.layer?.parent,
+              groupLayer,
+              member.pixelRatio,
+            );
+      if (clips != null &&
           !surfaces.any(
             (other) =>
                 other != member &&
@@ -386,6 +514,7 @@ class _GlassGroupData {
                     sampled[other]!.overlaps(painted[member]!)),
           )) {
         shared.add(member);
+        _clips[member] = clips;
       }
       // Clear, expert and tab-bar optics expose resampling differences in Impeller's
       // cached filter snapshot at high-contrast edges. Keep their scalar path.
@@ -448,13 +577,19 @@ class _GlassGroupData {
       _batches.removeLast().shader.dispose();
     }
     shared.removeAll(prepared.keys);
-    if (shared.length < 2) shared.clear();
+    // One shared member gains nothing from a hoist unless an edge effect
+    // shares its captures too.
+    if (shared.length < 2 && hoistEdges.isEmpty) shared.clear();
   }
 
   void dispose() {
     _disposed = true;
     prepared.clear();
     shared.clear();
+    edges.clear();
+    hoistEdges.clear();
+    _hoistedEdges.clear();
+    _clips.clear();
     members.clear();
     _sharedShadows?.dispose();
     _sharedShadows = null;

@@ -125,7 +125,8 @@ Wrap(
 | A numeric value | `LiquidPrismSlider` |
 | One choice from a small set | `LiquidPrismSegmentedControl<T>` |
 | Floating navigation | `LiquidPrismTabBar` |
-| Grouped icon actions | `LiquidPrismToolbarGroup` |
+| Grouped icon actions | `LiquidPrismToolbarGroup` / `LiquidPrismToolbar` |
+| Content softening under a bar | `LiquidPrismScrollEdge` / `LiquidPrismEdgeBlur` |
 | Search with clear/cancel | `LiquidPrismSearchField` |
 | A native popup | `LiquidPrismButton.menu` / `GlassToolbarItem.menu` |
 
@@ -195,7 +196,9 @@ LiquidPrismTabBar(
 puts them where iOS would. On iPhone, actions sit top-right and the tab bar floats
 at the bottom. Beside the iPhone Duo sensor bar, both move into a side rail and
 the tabs turn icon-only. The layout follows the window as it folds, rotates or
-resizes, and scroll views get padding to clear the glass.
+resizes, and scroll views get padding to clear the glass. Content scrolled
+under the top bar softens with the native scroll edge effect, which the glass
+controls see through.
 
 ```dart
 LiquidPrismScaffold(

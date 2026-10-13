@@ -56,7 +56,7 @@ void main() {
     );
     expect(title.right, lessThanOrEqualTo(466 - 84));
     await tab(tester, 'Library');
-    expect(find.text('9 components'), findsOneWidget);
+    expect(find.text('10 components'), findsOneWidget);
     await press(tester, 'Explore Tab Bars');
     expect(tester.takeException(), isNull);
   });
@@ -91,7 +91,7 @@ void main() {
       await tester.pumpWidget(const LiquidPrismExample());
       expect(find.byKey(const ValueKey('page-title:Explore')), findsOneWidget);
       await tab(tester, 'Library');
-      expect(find.text('9 components'), findsOneWidget);
+      expect(find.text('10 components'), findsOneWidget);
       for (final info in components) {
         await press(tester, 'Explore ${info.title}');
         expect(
@@ -120,7 +120,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Nothing here just yet.'), findsOneWidget);
       await press(tester, 'Reset library search');
-      expect(find.text('9 components'), findsOneWidget);
+      expect(find.text('10 components'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
