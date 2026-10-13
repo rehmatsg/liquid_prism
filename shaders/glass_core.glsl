@@ -243,6 +243,10 @@ void shadeGlass() {
         float spread = u_material.y > .5 ? 0.2588190451 : -0.2756373558;
         float facing = clamp((abs(normal.x)-spread)/(1.-spread),0.,1.);
         float side = facing/(1.+0.5*(1.-facing));
+        // In light appearance the dark line runs all the way round: iOS 27
+        // captures over white darken the top and bottom by about 30% of the
+        // ends (24-28 vs 79 levels). Fitted floor; dark appearance has none.
+        if (u_material.y < .5) side = max(side, 0.3);
         float outerCoverage = clamp(0.5-(d-0.5333333333)/aa,0.,1.);
         rimAlpha = clamp(side*u_finish.y*0.3,0.,1.)*
                    max(outerCoverage-coverage,0.);

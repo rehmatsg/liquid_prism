@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Draw regular glass's thin dark outline all the way round in light
+  appearance, as iOS 27 does: the top and bottom now keep about 30% of the
+  ends' strength instead of fading out, so the white rim reads against it.
 - Fix glass over a scroll edge effect refracting the blurred, faded content.
   The effect's clip walk to its group started at its own content layer and
   never hoisted, and neighbouring members (a bar button above a search-field

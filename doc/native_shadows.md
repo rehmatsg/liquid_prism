@@ -43,6 +43,15 @@ Regular glass additionally has:
 | Negative key/fill SDR spread, light | 1.8500490071139892 |
 | Negative key/fill spread and SDR spread, dark | 1.3089969389957472 |
 
+The negative key/fill draws the thin dark line outside regular glass. Over
+white in light appearance (iOS 27.0 simulator tab bar) it darkens the
+rounded ends by 40 and 79 levels across its two device pixels and the top
+and bottom by 14–28, about 30% of the ends; dark appearance shows no dark
+line. How the spread angles produce that falloff is not recovered: the
+renderer holds the light-mode line at a fitted floor of 30% of its side
+strength (`glass_core.glsl`), which reproduces the top (241, 232 against
+native 241, 231) and the ends (−45, −73 against −40, −79).
+
 Angles are radians. Clear glass's shadow opacity/radius and all ring-shadow
 inputs are zero in the captured fixtures. It retains its optical edge lighting.
 
