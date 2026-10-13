@@ -88,9 +88,9 @@ class GlassTabBarStyle {
   /// Foreground displacement magnitude and rim depth; defaults 14 and 11.2.
   final double? contentRefraction, contentDepth;
 
-  /// Chromatic refraction band at the held pill's rim, 0 to 2. It splits the
-  /// pill's view of the housing per color channel and adds a bright glint just
-  /// inside its contour, so the lifted pill stays visible on a dark housing.
+  /// Multiplier (0 to 2) for the held pill's along-rim chromatic fringe in
+  /// both backdrop and foreground, and its bright glint. The lens's
+  /// chromaticAberration/chromaticBand set the split in points and band depth.
   /// Defaults to 1; 0 turns it off. Only the tab bar's pill uses it.
   final double? rimRefraction;
 

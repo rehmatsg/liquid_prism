@@ -125,6 +125,30 @@ translucent tints and explicit foreground overrides retain their literal values.
 Prominent buttons default to white; disabled controls use a muted semantic color.
 Explicitly colored icons, styled text, and custom artwork retain their colors.
 
+## Chromatic selection rims
+
+`GlassLensStyle.chromaticAberration` sets the red–blue split at full lift in
+points. Segmented selections and tab pills default to 3.5; switch thumbs and
+slider knobs default to 0 for this effect. `chromaticBand` sets its inward depth
+(default 4.8 points). Neither length scales with lens height. Nullable fields
+inherit; explicit 0 disables the fringe, leaving generic optical dispersion
+independent. The effect follows lift and the release spring, affects the
+backdrop and refracted labels/icons, and is absent at rest.
+
+```dart
+const noFringe = GlassLensStyle(chromaticAberration: 0);
+const segmentStyle = GlassSegmentedStyle(lens: noFringe);
+const tabStyle = GlassTabBarStyle(
+  lens: GlassLensStyle(chromaticAberration: 2, chromaticBand: 4.8),
+);
+```
+
+Shared theme lenses, component themes and local lenses merge field by field.
+`refractContent: false` disables both displacement and fringe in the foreground;
+`contentRefraction: 0` disables displacement while retaining the fringe.
+The tab's `rimRefraction` additionally scales the fringe and glint; disabling
+only `chromaticAberration` preserves that glint.
+
 ## Navigation
 
 `LiquidPrismTabBar` requires at least two tabs, a valid `selectedIndex`, bounded
@@ -138,7 +162,8 @@ and unselected colors, selection color and blur, bar and pill shapes, and haptic
 All fields can be supplied through the app theme and overridden per bar.
 `selectionBlur` accepts 0–12 logical pixels and is independent of the enclosing
 material's blur. It also applies with a custom selection color. `rimRefraction`
-(0–2, default 1) tunes the held pill's chromatic rim; set it to 0 to turn it off,
+(0–2, default 1) scales the held pill's along-rim fringe in the backdrop and
+foreground, plus its bright glint; set it to 0 to turn all three off,
 for example in a theme:
 
 ```dart

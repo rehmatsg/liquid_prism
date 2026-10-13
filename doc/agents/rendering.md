@@ -115,20 +115,34 @@ pass.
 
 ## Tab pill rim
 
-Recipe slot `u_state.w` (uniform 45, `GlassRecipe.lensRim`) carries the held
-tab pill's rim refraction. Only `LiquidPrismTabBar` sets it, through
-`ControlLens.rim` and the internal `LiquidPrism.lensRim`, scaled by lift; the
-shader reads it only for the lens recipe (kind 3), so every other surface and
-the batch path keep zero. With it, the underlay sample is split per channel
-(red at `1 + 0.06 * rim` of the minifying offset, blue at `1 - 0.06 * rim`;
-skipped under a quarter pixel) and a 1.5-point glint, blue reaching 0.3
-points deeper than red, adds `0.16 * rim` toward white inside the contour.
-These were halved from a first fit after the stronger rim read as too much on
-a device in dark mode. Both
-constants scale with the lens height over 70 points and are fitted by eye to a
-dark iOS 27 capture: the native pill shows a blue fringe then a bright band
-where the housing's edge is pulled inward, and a bright tinted glint at its
-rim. The native operator is not recovered.
+The tab pill's old radial channel split is replaced by the along-rim fringe.
+Recipe slot `u_state.w` (uniform 45, `GlassRecipe.lensRim`) retains the bright
+glint, scaled by lift and `GlassTabBarStyle.rimRefraction`. That style multiplier
+also scales the new fringe in backdrop and foreground; 0 disables all three.
+The existing 1.5-point glint (blue reaching .3 deeper) and .16 strength still
+scale with lens height over 70; this is a fitted treatment, not a native operator.
+
+The scalar packet remains 338 floats. Reserved `u_derived[1].w` (float 329)
+now carries effective red–blue split in device pixels: style split × lift ×
+presence × DPR, before the existing sampling transform. Reserved `u_shapeD.z`
+(float 60) carries band depth in local points. The contour generator still writes
+zero there; packet assembly replaces it only for lens kind 3. Non-lens recipes
+write both slots as zero; batching accepts only kind 1 and keeps its constant
+`u_shapeD` zero. The smooth-contour bypass and flat-center exit include the band.
+
+`chromatic_fringe.glsl` shares the fitted falloff and direction `-(n.y,n.x)`
+across both passes. Only inside the lens and band, red reads `p-s`, green `p`,
+blue `p+s`, with `s = .5 * w * split * direction` transformed into the backdrop
+raster basis. The existing generic dispersion path remains outside the band.
+See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe).
+
+The foreground packet grows from 288 to 290 floats: after the contour,
+`u_effect` is now vec4 at floats 286–289: displacement/depth in scaled points,
+effective split in raster pixels (split × clamped lift × flex scale × composited
+DPR), and band in scaled points. Out-of-bounds reads remain transparent. R/G/B
+come from the corresponding shifted premultiplied samples; output alpha is their
+maximum, bounding every channel even at antialiased glyph edges. Zero displacement
+can still fringe; `refractContent: false` disables both foreground effects.
 
 The touch glow is painted between the housing and the lens and must be
 clipped to the housing as drawn, including its flex expansion. Clipped to the

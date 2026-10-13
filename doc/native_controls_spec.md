@@ -194,3 +194,46 @@ holds, slow drags both ways and releases for each component. Videos and raw nati
 captures stay in the ignored artifacts/research directories.
 For a focused quick-tap comparison, run `SwitchTapTests` in the native showcase
 and `example/test_driver/switch_tap_video.dart` against the showcase Flutter VM.
+
+## Chromatic rim fringe
+
+Direct measurements: iOS 27.0, iPhone 17 Pro simulator, held over 8-point
+stripes, filter inputs read 1 second into a 2.5-second hold. Only lifted
+selection lenses with `glassForeground` disperse: segmented selection height
+44 points, inputAberrationAmount 2.3158; tab pill height 70, amount 3.6842
+(both H/19). Resting amount is 0. Switch/slider held amounts are 0; glass
+buttons, interactive glass surfaces and toolbars have no such filter. Light
+and dark match. Amount rises with lift and decays with the release spring.
+Full-lift inputs: angle -0.2618 (-15 degrees), offset H/1.8, height 0,
+edgeStart -0.2H × lift. Their mapping to the fringe is unknown.
+
+Measured red–blue split runs along the rim: top +3.5 points (red right of
+blue), bottom -3.5; left cap +1.8–2.0 vertically (red below blue), right cap
+-2.1–2.5. Normal component is at most .5 points. Channel order B, G, R,
+green midway. Both pills peak near 3.5 despite the 1.59× input amount ratio.
+Tab peak is about 3.2–3.7 within about 4 points. The segmented lens also
+fringes labels under its rim.
+
+Fitted renderer: full-lift split 3.5 points, band 4.8, direction `-(n.y,n.x)`;
+the weight is `(1-.085*min(d,band))*(1-smoothstep(.62*band,band,d))`, clamped
+nonnegative. The table compares this scalar profile before sampling/lighting;
+it is not a rendered-pixel validation or a reconstruction of Apple's operator.
+
+| Depth inside rim (pt) | Measured split (pt) | Fitted split (pt) |
+| --- | --- | --- |
+| .7 | 3.6 | 3.292 |
+| 1.3 | 3.5 | 3.113 |
+| 2.0 | 3.1 | 2.905 |
+| 2.7 | 2.8 | 2.697 |
+| 3.3 | 2.6 | 2.308 |
+| 4.0 | 1.3 | .943 |
+| 4.7 | .5 | .018 |
+| 6.0 | .2 | 0 |
+| 7.0 | .1 | 0 |
+| 8.0+ | 0 | 0 |
+
+RMS error .281 points, maximum absolute error .482 at depth 4.7. This compact
+fit underestimates the fringe and omits the small measured tail beyond 4.8.
+Switch/slider keep their existing generic `dispersion: .3 * lift` by explicit
+product choice; their new along-rim fringe defaults to zero. Tab radial rim
+channel splitting is replaced; its existing fitted bright glint is preserved.

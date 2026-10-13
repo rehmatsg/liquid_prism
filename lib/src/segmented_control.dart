@@ -52,6 +52,9 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
     final inset = (appearance.selectionInset ?? 2) * scale;
     final liftInset = (appearance.liftInset ?? const Size(12, 8)) * scale;
     assert(liftInset.width >= 0 && liftInset.height >= 0);
+    final lensStyle = (theme.lens ?? const GlassLensStyle()).merge(
+      appearance.lens,
+    );
     final colors = GlassColors.of(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     assert(children.length > 1 && children.length < 100);
@@ -174,6 +177,10 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                             ? 0
                             : appearance.contentRefraction ?? 14,
                         depth: appearance.contentDepth ?? 11.2,
+                        chromaticAberration: appearance.refractContent == false
+                            ? 0
+                            : lensStyle.chromaticAberration ?? 3.5,
+                        chromaticBand: lensStyle.chromaticBand ?? 4.8,
                         child: Row(
                           children: [
                             for (var i = 0; i < count; i++)

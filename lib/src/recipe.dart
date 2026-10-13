@@ -31,6 +31,8 @@ final class GlassRecipe {
     this.tintAlpha, [
     this.presence = 1,
     this.lensRim = 0,
+    this.chromaticSplit = 0,
+    this.chromaticBand = 0,
   ]);
   final double kind;
   final bool dark;
@@ -44,18 +46,56 @@ final class GlassRecipe {
   /// shadows; the caller scales lens and frost inputs.
   final double presence;
 
-  /// Strength of the selected tab pill's chromatic rim refraction, shader slot
+  /// Strength of the selected tab pill's bright glint, shader slot
   /// `u_state.w`. Zero, the default, for every other surface; the shader also
   /// ignores it outside the lifted lens recipe.
   final double lensRim;
 
+  /// Effective red–blue split in points, already scaled by lift.
+  final double chromaticSplit;
+
+  /// Chromatic band depth in points (independent of lens height).
+  final double chromaticBand;
+
+  GlassRecipe withChromaticFringe(double split, double band) => GlassRecipe(
+    kind,
+    dark,
+    role,
+    tintMatrix,
+    tintAlpha,
+    presence,
+    lensRim,
+    split,
+    band,
+  );
+
   GlassRecipe withPresence(double value) => value == presence
       ? this
-      : GlassRecipe(kind, dark, role, tintMatrix, tintAlpha, value, lensRim);
+      : GlassRecipe(
+          kind,
+          dark,
+          role,
+          tintMatrix,
+          tintAlpha,
+          value,
+          lensRim,
+          chromaticSplit,
+          chromaticBand,
+        );
 
   GlassRecipe withLensRim(double value) => value == lensRim
       ? this
-      : GlassRecipe(kind, dark, role, tintMatrix, tintAlpha, presence, value);
+      : GlassRecipe(
+          kind,
+          dark,
+          role,
+          tintMatrix,
+          tintAlpha,
+          presence,
+          value,
+          chromaticSplit,
+          chromaticBand,
+        );
 
   // Native controls retain their captured profile. The requested half-strength
   // Regular/Clear balance applies to standalone surfaces.
@@ -126,7 +166,7 @@ final class GlassRecipe {
     tintAlpha,
     ...tintMatrix,
     // Press progress, smooth contour flag, absence (1 - presence) and the tab
-    // pill's rim refraction. Absence keeps the zero default fully materialized.
+    // pill's glint. Absence keeps the zero default fully materialized.
     0, 0, 1 - presence, lensRim,
   ];
 }

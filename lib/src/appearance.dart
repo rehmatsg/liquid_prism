@@ -37,12 +37,16 @@ class GlassLensStyle {
     this.rimWidth,
     this.rimRefraction,
     this.rimLight,
+    this.chromaticAberration,
+    this.chromaticBand,
     this.faceBlack,
     this.heldContactShadow,
   }) : assert(blur == null || blur >= 0 && blur <= 12),
        assert(rimWidth == null || rimWidth >= 0),
        assert(rimRefraction == null || rimRefraction >= 0),
        assert(rimLight == null || rimLight >= 0),
+       assert(chromaticAberration == null || chromaticAberration >= 0),
+       assert(chromaticBand == null || chromaticBand >= 0),
        assert(faceBlack == null || faceBlack >= 0 && faceBlack <= 1),
        assert(
          shadowOpacity == null || shadowOpacity >= 0 && shadowOpacity <= 1,
@@ -88,6 +92,16 @@ class GlassLensStyle {
   /// The slider defaults to a fitted 1.0; other lenses to 0.6.
   final double? rimLight;
 
+  /// Red–blue split along the rim at full lift, in points (not height-scaled).
+  /// Defaults to 3.5 for segmented selections and tab pills, 0 for switch
+  /// thumbs and slider knobs. Zero disables this fringe independently of
+  /// generic [optics] dispersion. The tab bar's rimRefraction scales it too.
+  final double? chromaticAberration;
+
+  /// Depth of the chromatic rim band in points; defaults to 4.8.
+  /// Zero disables the fringe. Independent of [rimWidth] and [optics].
+  final double? chromaticBand;
+
   /// Black point of the lens face, 0–1: the face shows `b + (1 - b) * color`,
   /// which lightens dark backdrops seen through the lens. The slider defaults
   /// to its measured 0.1; other lenses to 0.
@@ -116,6 +130,8 @@ class GlassLensStyle {
     double? rimWidth,
     double? rimRefraction,
     double? rimLight,
+    double? chromaticAberration,
+    double? chromaticBand,
     double? faceBlack,
     bool? heldContactShadow,
   }) => GlassLensStyle(
@@ -136,6 +152,8 @@ class GlassLensStyle {
     rimWidth: rimWidth ?? this.rimWidth,
     rimRefraction: rimRefraction ?? this.rimRefraction,
     rimLight: rimLight ?? this.rimLight,
+    chromaticAberration: chromaticAberration ?? this.chromaticAberration,
+    chromaticBand: chromaticBand ?? this.chromaticBand,
     faceBlack: faceBlack ?? this.faceBlack,
     heldContactShadow: heldContactShadow ?? this.heldContactShadow,
   );
@@ -161,6 +179,8 @@ class GlassLensStyle {
           rimWidth: other.rimWidth ?? rimWidth,
           rimRefraction: other.rimRefraction ?? rimRefraction,
           rimLight: other.rimLight ?? rimLight,
+          chromaticAberration: other.chromaticAberration ?? chromaticAberration,
+          chromaticBand: other.chromaticBand ?? chromaticBand,
           faceBlack: other.faceBlack ?? faceBlack,
           heldContactShadow: other.heldContactShadow ?? heldContactShadow,
         );

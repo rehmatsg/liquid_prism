@@ -125,8 +125,21 @@ and depth through `GlassTabBarStyle.contentRefraction` / `contentDepth`, or turn
 off with `refractContent: false`. The housing minification remains a lens setting.
 The segmented control's held selection runs the same filter over its label row
 (`GlassSegmentedStyle.refractContent`, `contentRefraction`, `contentDepth`).
-`rimRefraction` adds the pill's own chromatic rim on top of that minification; it
-does not touch the glyph pass or the shared control lens.
+`GlassLensStyle.chromaticAberration` adds a lift-scaled red–blue split along the
+rim (3.5 points for segments/tabs, 0 for switches/sliders), in both the backdrop
+and foreground. `chromaticBand` defaults to 4.8 points; neither length scales
+with lens height. Explicit zero disables it independently of generic optical
+dispersion, which the switch and slider retain unchanged. `refractContent: false`
+also disables foreground fringe; zero `contentRefraction` keeps fringe without
+displacement. Tab `rimRefraction` (default 1) scales fringe in both passes and the
+existing bright glint; 0 disables all three, without disabling minification.
+
+The renderer fits stripe measurements with
+`w(d) = (1 - .085 * min(d, band)) * (1 - smoothstep(.62 * band, band, d))`,
+clamped nonnegative, and direction `-(n.y, n.x)` for outward normal `n`.
+Red samples at `p - .5 * w * split * direction`, green at `p`, blue at the
+opposite offset. This is a fitted renderer, not Apple's recovered operator.
+See [measured values and fit error](native_controls_spec.md#chromatic-rim-fringe).
 
 ## Interaction guarantees
 

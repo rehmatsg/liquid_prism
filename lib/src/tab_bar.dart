@@ -817,6 +817,11 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 ? 0
                                 : style.contentRefraction ?? 14,
                             depth: style.contentDepth ?? 11.2,
+                            chromaticAberration: style.refractContent == false
+                                ? 0
+                                : (lensStyle.chromaticAberration ?? 3.5) *
+                                      (style.rimRefraction ?? 1),
+                            chromaticBand: lensStyle.chromaticBand ?? 4.8,
                             child: child!,
                           ),
                         ),

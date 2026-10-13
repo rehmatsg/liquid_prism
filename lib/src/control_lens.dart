@@ -29,7 +29,7 @@ class ControlLens extends StatelessWidget {
   final bool restingShadow;
   final GlassLensStyle? style;
 
-  /// Chromatic rim refraction at full lift; only the tab bar's pill sets it.
+  /// Fringe/glint multiplier at full lift; only the tab bar's pill sets it.
   /// It fades with [lift] like the lens's other optics.
   final double rim;
 
@@ -79,6 +79,14 @@ class ControlLens extends StatelessWidget {
             glass: (appearance.glass ?? Glass.clear).interactive(false),
             role: materialRole,
             lensRim: rim * progress,
+            chromaticSplit:
+                (appearance.chromaticAberration ??
+                    (role == GlassRole.segmentLens || role == GlassRole.tabLens
+                        ? 3.5
+                        : 0)) *
+                progress *
+                (role == GlassRole.tabLens ? rim : 1),
+            chromaticBand: appearance.chromaticBand ?? 4.8,
             shape: contour,
             blur: appearance.blur ?? appearance.optics?.frost ?? 0,
             optics:
