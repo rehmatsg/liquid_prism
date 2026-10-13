@@ -1,13 +1,12 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_interaction.dart';
 import 'control_material.dart';
 import 'theme.dart';
+import 'haptics.dart';
 import 'appearance.dart';
 import 'motion.dart';
 import 'material.dart';
@@ -103,8 +102,16 @@ class LiquidPrismSlider extends StatelessWidget {
                 ? null
                 : (v) => onChangeEnd!(actual(v)),
             onEdgeFeedback:
-                feedback && defaultTargetPlatform == TargetPlatform.iOS
-                ? () => unawaited(HapticFeedback.lightImpact())
+                feedback &&
+                    (theme.haptics != null ||
+                        defaultTargetPlatform == TargetPlatform.iOS)
+                ? () => dispatchGlassHaptic(
+                    context,
+                    const GlassHapticEvent(
+                      GlassHapticComponent.slider,
+                      GlassHapticKind.limitReached,
+                    ),
+                  )
                 : null,
             positionAt: (x) =>
                 (((rtl ? width - x : x) - center) / math.max(travel, .001))

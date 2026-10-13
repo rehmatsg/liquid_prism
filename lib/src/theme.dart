@@ -9,6 +9,8 @@ import 'style.dart';
 import 'motion.dart';
 import 'tab_bar_style.dart';
 import 'appearance.dart';
+import 'haptics.dart';
+import 'navigation_bar_style.dart';
 
 /// Native iOS 27 semantic source colors, resolved for the current appearance.
 /// These are tint inputs, not the final composited glass pixel colors.
@@ -162,6 +164,7 @@ final class GlassColors {
 @immutable
 class LiquidPrismThemeData {
   const LiquidPrismThemeData({
+    this.haptics,
     this.brightness,
     this.materialBrightness,
     this.tint,
@@ -171,6 +174,7 @@ class LiquidPrismThemeData {
     this.blur,
     this.shape,
     this.motion,
+    this.navigationBar,
     this.tabBar,
     this.lens,
     this.button,
@@ -183,6 +187,9 @@ class LiquidPrismThemeData {
     this.transition,
     this.scrollEdge,
   }) : assert(blur == null || (blur >= 0 && blur <= 12));
+
+  /// Replaces native feedback; component haptics flags still silence it.
+  final GlassHaptics? haptics;
   final Brightness? brightness;
 
   /// Appearance of the glass body and selected pill, independent of accents.
@@ -200,6 +207,7 @@ class LiquidPrismThemeData {
   final double? blur;
   final GlassShape? shape;
   final GlassMotion? motion;
+  final GlassNavigationBarStyle? navigationBar;
   final GlassTabBarStyle? tabBar;
   final GlassLensStyle? lens;
   final GlassButtonAppearance? button;
@@ -218,6 +226,7 @@ class LiquidPrismThemeData {
 
   /// Return an updated theme. Null arguments keep existing values.
   LiquidPrismThemeData copyWith({
+    GlassHaptics? haptics,
     Brightness? brightness,
     Brightness? materialBrightness,
     Color? tint,
@@ -227,6 +236,7 @@ class LiquidPrismThemeData {
     double? blur,
     GlassShape? shape,
     GlassMotion? motion,
+    GlassNavigationBarStyle? navigationBar,
     GlassTabBarStyle? tabBar,
     GlassLensStyle? lens,
     GlassButtonAppearance? button,
@@ -239,6 +249,7 @@ class LiquidPrismThemeData {
     GlassTransitionStyle? transition,
     GlassScrollEdgeStyle? scrollEdge,
   }) => LiquidPrismThemeData(
+    haptics: haptics ?? this.haptics,
     brightness: brightness ?? this.brightness,
     materialBrightness: materialBrightness ?? this.materialBrightness,
     tint: tint ?? this.tint,
@@ -248,6 +259,7 @@ class LiquidPrismThemeData {
     blur: blur ?? this.blur,
     shape: shape ?? this.shape,
     motion: motion ?? this.motion,
+    navigationBar: navigationBar ?? this.navigationBar,
     tabBar: tabBar ?? this.tabBar,
     lens: lens ?? this.lens,
     button: button ?? this.button,
@@ -263,6 +275,7 @@ class LiquidPrismThemeData {
 
   LiquidPrismThemeData merge(LiquidPrismThemeData other) =>
       LiquidPrismThemeData(
+        haptics: other.haptics ?? haptics,
         brightness: other.brightness ?? brightness,
         materialBrightness: other.materialBrightness ?? materialBrightness,
         tint: other.tint ?? tint,
@@ -272,6 +285,9 @@ class LiquidPrismThemeData {
         blur: other.blur ?? blur,
         shape: other.shape ?? shape,
         motion: other.motion ?? motion,
+        navigationBar: (navigationBar ?? const GlassNavigationBarStyle()).merge(
+          other.navigationBar,
+        ),
         tabBar: (tabBar ?? const GlassTabBarStyle()).merge(other.tabBar),
         lens: (lens ?? const GlassLensStyle()).merge(other.lens),
         button: (button ?? const GlassButtonAppearance()).merge(other.button),

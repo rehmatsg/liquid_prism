@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
@@ -36,6 +38,11 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
   GestureDragEndCallback? onEnd;
   GestureTapUpCallback? onTapUp;
 
+  /// Uses Flutter kLongPressTimeout; consumes the contact without a tap.
+  GestureLongPressStartCallback? onLongPress;
+  Timer? _longPressTimer;
+  bool _longPressed = false;
+
   /// The contact ended without a tap or drag end: lost arena, pointer cancel,
   /// or an unclaimed contact that moved off its axis and was released.
   VoidCallback? onCancel;
@@ -63,6 +70,7 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
     _downLocal = event.localPosition;
     _dragging = false;
     _movedOff = false;
+    _longPressed = false;
     _velocity = VelocityTracker.withKind(event.kind)
       ..addPosition(event.timeStamp, event.localPosition);
     _claimed = claimsContact?.call(event.localPosition) ?? true;
@@ -70,12 +78,41 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
     // recognizer sees it before ancestor scrollables, so a claim made here
     // makes the control the eager winner.
     if (_claimed) resolvePointer(event.pointer, GestureDisposition.accepted);
+    if (onLongPress != null) {
+      _longPressTimer = Timer(kLongPressTimeout, () {
+        final callback = onLongPress;
+        if (_pointer == null || _dragging || _movedOff || callback == null) {
+          return;
+        }
+        resolvePointer(event.pointer, GestureDisposition.accepted);
+        if (_pointer == null) return;
+        _longPressed = true;
+        invokeCallback<void>(
+          'onLongPress',
+          () => callback(
+            LongPressStartDetails(
+              globalPosition: _downGlobal,
+              localPosition: _downLocal,
+            ),
+          ),
+        );
+      });
+    }
   }
 
   @override
   void handleEvent(PointerEvent event) {
     if (event.pointer != _pointer) return;
+    if (_longPressed) {
+      if (event is PointerUpEvent || event is PointerCancelEvent) {
+        _finish(event.pointer);
+      }
+      return;
+    }
     if (event is PointerMoveEvent) {
+      if ((event.position - _downGlobal).distance > _slop) {
+        _longPressTimer?.cancel();
+      }
       if (!event.synthesized) {
         _velocity?.addPosition(event.timeStamp, event.localPosition);
       }
@@ -140,6 +177,7 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
       resolvePointer(event.pointer, GestureDisposition.accepted);
       if (_pointer == null) return false;
     }
+    _longPressTimer?.cancel();
     _dragging = true;
     final start = onStart;
     if (start != null) {
@@ -203,6 +241,8 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
   }
 
   void _finish(int pointer) {
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
     _pointer = null;
     _dragging = false;
     _velocity = null;
@@ -222,9 +262,17 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
 
   @override
   void didStopTrackingLastPointer(int pointer) {
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
     _pointer = null;
     _dragging = false;
     _velocity = null;
+  }
+
+  @override
+  void dispose() {
+    _longPressTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -244,6 +292,7 @@ class ControlGestureDetector extends StatelessWidget {
     this.onUpdate,
     this.onEnd,
     this.onTapUp,
+    this.onLongPress,
     this.onCancel,
   });
   final bool enabled;
@@ -253,6 +302,7 @@ class ControlGestureDetector extends StatelessWidget {
   final GestureDragUpdateCallback? onUpdate;
   final GestureDragEndCallback? onEnd;
   final GestureTapUpCallback? onTapUp;
+  final GestureLongPressStartCallback? onLongPress;
   final VoidCallback? onCancel;
   final Widget child;
 
@@ -275,6 +325,7 @@ class ControlGestureDetector extends StatelessWidget {
                   ..onUpdate = onUpdate
                   ..onEnd = onEnd
                   ..onTapUp = onTapUp
+                  ..onLongPress = onLongPress
                   ..onCancel = onCancel,
               ),
       },

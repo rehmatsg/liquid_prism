@@ -22,6 +22,8 @@ import 'style.dart';
 import 'selection.dart';
 import 'tab_bar_style.dart';
 import 'theme.dart';
+import 'haptics.dart';
+import 'badge.dart';
 
 @immutable
 final class LiquidPrismTab {
@@ -29,6 +31,7 @@ final class LiquidPrismTab {
     required this.label,
     required this.icon,
     this.selectedIcon,
+    this.badge,
   });
 
   /// Accessible name, including when visual labels are hidden.
@@ -38,6 +41,7 @@ final class LiquidPrismTab {
   /// contain repaint boundaries: the selection window paints them twice.
   final Widget icon;
   final Widget? selectedIcon;
+  final GlassBadge? badge;
 }
 
 /// A controlled tab bar with a draggable, velocity-preserving selection pill.
@@ -57,6 +61,7 @@ class LiquidPrismTabBar extends StatefulWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
+    this.onLongPressed,
     this.style,
     this.glass,
     this.optics,
@@ -69,6 +74,10 @@ class LiquidPrismTabBar extends StatefulWidget {
   final List<LiquidPrismTab> tabs;
   final int selectedIndex;
   final ValueChanged<int>? onSelected;
+
+  /// A hold without a drag, using Flutter's kLongPressTimeout. Does not select.
+  /// Disabled along with selection when [onSelected] is null.
+  final ValueChanged<int>? onLongPressed;
   final GlassTabBarStyle? style;
   final Glass? glass;
   final LiquidPrismStyle? optics;
@@ -383,7 +392,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final settleVelocity = velocity ?? _position.velocity;
     _committing = true;
     if ((_style.haptics ?? true) && index != widget.selectedIndex) {
-      unawaited(HapticFeedback.selectionClick());
+      dispatchGlassHaptic(
+        context,
+        const GlassHapticEvent(
+          GlassHapticComponent.tabBar,
+          GlassHapticKind.selectionChange,
+        ),
+      );
     }
     widget.onSelected!(index);
     _committing = false;
@@ -394,6 +409,28 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       }
     });
     if (mounted) setState(() {});
+  }
+
+  void _longPress(int index) {
+    if (_cancelled ||
+        widget.onSelected == null ||
+        widget.onLongPressed == null) {
+      return;
+    }
+    _cancelled = true;
+    _dragging = false;
+    _feedback(false);
+    _settle();
+    if (_style.haptics ?? true) {
+      dispatchGlassHaptic(
+        context,
+        const GlassHapticEvent(
+          GlassHapticComponent.tabBar,
+          GlassHapticKind.longPress,
+        ),
+      );
+    }
+    widget.onLongPressed!(index);
   }
 
   void _pointerDown(PointerDownEvent event) {
@@ -641,6 +678,33 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ],
           ),
         );
+        final badges = widget.tabs.any((tab) => tab.badge != null)
+            ? ExcludeSemantics(
+                child: IgnorePointer(
+                  child: Flex(
+                    direction: vertical ? Axis.vertical : Axis.horizontal,
+                    children: [
+                      for (var index = 0; index < widget.tabs.length; index++)
+                        Expanded(
+                          child: _tab(
+                            index,
+                            height,
+                            iconSize,
+                            textStyle,
+                            labels,
+                            colors,
+                            selectedAccent,
+                            style,
+                            window: false,
+                            vertical: vertical,
+                            badgeLayer: true,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              )
+            : null;
         final selects = widget.onSelected != null;
         void cancelDrag() {
           if (_pointer == null && !_dragging) return;
@@ -658,6 +722,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
           child: ControlGestureDetector(
             enabled: selects,
             axis: vertical ? Axis.vertical : Axis.horizontal,
+            onLongPress: widget.onLongPressed == null
+                ? null
+                : (details) =>
+                      _longPress(_logical(_slotAt(details.localPosition))),
             onTapUp: (details) {
               if (!_cancelled) {
                 _commit(
@@ -821,6 +889,31 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                           ),
                         ),
                       ),
+                      if (badges != null)
+                        Positioned.fill(
+                          key: const ValueKey('tab-badges'),
+                          child: Padding(
+                            padding: padding,
+                            // The same flex scale as the foreground, about
+                            // the bar's centre.
+                            child: Transform(
+                              transform:
+                                  Matrix4.translationValues(
+                                      centre.dx - padding.left,
+                                      centre.dy - padding.top,
+                                      0,
+                                    )
+                                    ..scaleByDouble(barScale, barScale, 1, 1)
+                                    ..translateByDouble(
+                                      -(centre.dx - padding.left),
+                                      -(centre.dy - padding.top),
+                                      0,
+                                      1,
+                                    ),
+                              child: badges,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 );
@@ -848,6 +941,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     GlassTabBarStyle style, {
     required bool window,
     required bool vertical,
+    bool badgeLayer = false,
   }) {
     final selected = widget.selectedIndex == index;
     final enabled = widget.onSelected != null;
@@ -861,38 +955,83 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         : selected && !window
         ? selectedAccent
         : style.unselectedColor ?? colors.label;
+    // Badges paint in their own layer over the foreground (see
+    // [badgeLayer]): inside it the selection window would recolour them with
+    // the selected accent, where native badges stay red under the pill.
+    Widget hidden(Widget child) => badgeLayer
+        ? Visibility(
+            visible: false,
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            child: child,
+          )
+        : child;
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconTheme.merge(
           data: IconThemeData(size: iconSize, color: color),
-          child: icon,
+          child: GlassBadgedIcon(
+            badge: badgeLayer ? tab.badge : null,
+            color: style.badgeColor,
+            textStyle: style.badgeTextStyle,
+            child: hidden(icon),
+          ),
         ),
         if (labels != GlassTabLabelBehavior.never &&
             (labels != GlassTabLabelBehavior.selected || selected)) ...[
           const SizedBox(height: 2),
-          Text(
-            tab.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: labelStyle.copyWith(
-              color: labelStyle.color ?? color,
-              fontWeight:
-                  labelStyle.fontWeight ??
-                  (selected ? FontWeight.w600 : FontWeight.w500),
+          if (badgeLayer)
+            hidden(
+              Text(
+                tab.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle.copyWith(
+                  fontWeight:
+                      labelStyle.fontWeight ??
+                      (selected ? FontWeight.w600 : FontWeight.w500),
+                ),
+              ),
+            )
+          else
+            Text(
+              tab.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: labelStyle.copyWith(
+                color: labelStyle.color ?? color,
+                fontWeight:
+                    labelStyle.fontWeight ??
+                    (selected ? FontWeight.w600 : FontWeight.w500),
+              ),
             ),
-          ),
         ],
       ],
     );
+    if (badgeLayer) {
+      return SizedBox(
+        width: vertical ? height : null,
+        height: vertical ? null : height,
+        child: Center(child: content),
+      );
+    }
     return Semantics(
       container: true,
       button: true,
       selected: selected,
       enabled: enabled,
       label: tab.label,
+      value: tab.badge?.semanticLabel,
       excludeSemantics: true,
       onTap: enabled ? () => _commit(index) : null,
+      onLongPress: enabled && widget.onLongPressed != null
+          ? () {
+              _cancelled = false;
+              _longPress(index);
+            }
+          : null,
       child: CallbackShortcuts(
         bindings: {
           SingleActivator(

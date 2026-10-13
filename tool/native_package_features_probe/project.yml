@@ -1,0 +1,37 @@
+name: PackageFeaturesSpecs
+options:
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGNING_ALLOWED: NO
+    TARGETED_DEVICE_FAMILY: "1"
+targets:
+  PackageFeaturesSpecs:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.prism.packagefeatures
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+  PackageFeaturesSpecsTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: PackageFeaturesSpecs
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.prism.packagefeatures.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  PackageFeaturesSpecs:
+    build:
+      targets:
+        PackageFeaturesSpecs: all
+        PackageFeaturesSpecsTests: [test]
+    test:
+      targets: [PackageFeaturesSpecsTests]

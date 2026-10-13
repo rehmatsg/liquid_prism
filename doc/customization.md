@@ -252,3 +252,28 @@ settings replace the default material recipe.
 `LiquidPrismSelection` provides just the selected fill/blur treatment for custom
 controls. `LiquidPrismPressable` provides the lower-level semantic interaction
 wrapper; its feedback-only constructor does not create an accessibility action.
+
+## Shared feedback and navigation chrome
+
+Theme `haptics` accepts a `GlassHaptics` callback with typed `GlassHapticEvent`
+component/kind. A nested non-null hook replaces the outer hook; component false
+silences it. No hook retains native feedback and platform gates. A custom hook
+receives switch/slider feedback on all platforms.
+
+Theme `navigationBar` and scaffold `navigationBarStyle` merge title styles,
+large-title styles, gutter, controlGap, revealExtent and revealCurve field by
+field. Titles retain explicit child text styles. As measured on iOS 27, the
+large title scrolls with the content; once the scroll passes `revealExtent`
+(its 52-point row) the titles swap on a timer, not with the scroll. Zero
+revealExtent swaps on the first positive scroll offset. The native snap of a
+half-scrolled title on release is not reproduced.
+
+Tab/toolbar `badgeColor` and `badgeTextStyle` resolve local style > component
+theme > the measured system red and white. Text-style fields merge individually.
+Segmented `sizing: GlassSegmentedSizing.fitLabels` and `labelPadding` inherit
+in the same order; explicit width/trackHeight/thumbHeight override fitting.
+`resizeToAvoidBottomInset` is a scaffold input, default true, consuming only the
+body's bottom viewInset when keyboard height is folded into padding.
+
+[Feature evidence and contracts](package_features_spec.md) lists the measured
+values and what remains fitted.

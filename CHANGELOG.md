@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Add tab `onLongPressed` using Flutter's long-press timeout, with cancellation,
+  selection suppression, accessibility and feedback through the existing owner.
+- Add theme `GlassHaptics` event routing for tabs/sidebar, switch and slider;
+  per-component haptics flags remain authoritative. Native fallbacks are retained.
+- Consume the scaffold body's bottom keyboard viewInset when folded into padding;
+  `resizeToAvoidBottomInset: false` delegates avoidance to descendants.
+- Add opt-in segmented `fitLabels` sizing and label padding (10 points a side,
+  measured from a fixed-size iOS 27 Picker); fixed sizing stays default. Text scaling grows fitted slots and track height.
+- Add badges to tabs and toolbar items (`GlassBadge.count`, `.text`, `.dot`)
+  with accessible values and theme/local colour and typography. Geometry and
+  type are measured on iOS 27: an 18.33-point capsule (18 on toolbar items),
+  12-point medium white text, 4 points of padding, counts never shortened
+  unless `overflow` is set.
+- Add scaffold inline and large titles with a themed `GlassNavigationBarStyle`,
+  measured on iOS 27: 17-point semibold inline title, 34-point bold large title
+  in a 52-point row that scrolls with the content, then a timed swap (large out
+  in 0.18 s, inline in over 0.53 s rising 15 points). Native icon-only tab bars
+  keep the 86-point pitch, so that default is unchanged.
+  See `doc/package_features_spec.md`.
+
 - Bend the segmented control's labels near the held selection's rim, as iOS 27
   does, with the tab bar's foreground lens filter. It applies only while the
   selection is lifted. New `GlassSegmentedStyle` fields `refractContent`,

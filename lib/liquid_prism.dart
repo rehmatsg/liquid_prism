@@ -38,6 +38,7 @@ export 'src/appearance.dart'
         GlassSwitchStyle,
         GlassSliderStyle,
         GlassSegmentedStyle,
+        GlassSegmentedSizing,
         GlassToolbarStyle,
         GlassSearchStyle;
 export 'src/pressable.dart' show LiquidPrismPressable;
@@ -66,3 +67,10 @@ export 'src/search_field.dart'
         LiquidPrismSearchField;
 
 export 'liquid_menu.dart';
+
+export 'src/haptics.dart'
+    show GlassHaptics, GlassHapticEvent, GlassHapticComponent, GlassHapticKind;
+
+export 'src/badge.dart' show GlassBadge;
+
+export 'src/navigation_bar_style.dart' show GlassNavigationBarStyle;

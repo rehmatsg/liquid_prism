@@ -1,13 +1,13 @@
-import 'dart:async';
 import 'dart:ui' as ui;
 
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'button.dart';
 import 'material.dart';
 import 'tab_bar.dart';
 import 'theme.dart';
+import 'haptics.dart';
+import 'badge.dart';
 
 /// Where [LiquidPrismScaffold] shows its tabs when the window has regular
 /// width, such as the unfolded iPhone Duo.
@@ -153,18 +153,50 @@ class GlassSidebar extends StatelessWidget {
     final onSelected = tabBar.onSelected;
     void select() {
       if (onSelected == null) return;
-      if (!selected && (tabBar.style?.haptics ?? true)) {
-        unawaited(HapticFeedback.selectionClick());
+      if (!selected &&
+          ((LiquidPrismTheme.of(context).tabBar?.merge(tabBar.style) ??
+                      tabBar.style)
+                  ?.haptics ??
+              true)) {
+        dispatchGlassHaptic(
+          context,
+          const GlassHapticEvent(
+            GlassHapticComponent.tabBar,
+            GlassHapticKind.selectionChange,
+          ),
+        );
       }
       onSelected(index);
     }
 
+    void longPress() {
+      if (onSelected == null || tabBar.onLongPressed == null) return;
+      final style =
+          LiquidPrismTheme.of(context).tabBar?.merge(tabBar.style) ??
+          tabBar.style;
+      if (style?.haptics ?? true) {
+        dispatchGlassHaptic(
+          context,
+          const GlassHapticEvent(
+            GlassHapticComponent.tabBar,
+            GlassHapticKind.longPress,
+          ),
+        );
+      }
+      tabBar.onLongPressed!(index);
+    }
+
+    final hold = onSelected != null && tabBar.onLongPressed != null
+        ? longPress
+        : null;
     return Semantics(
+      onLongPress: hold,
       container: true,
       button: true,
       selected: selected,
       enabled: onSelected != null,
       label: tab.label,
+      value: tab.badge?.semanticLabel,
       excludeSemantics: true,
       onTap: onSelected == null ? null : select,
       child: FocusableActionDetector(
@@ -181,6 +213,7 @@ class GlassSidebar extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onSelected == null ? null : select,
+          onLongPress: hold,
           child: CustomPaint(
             painter: selected
                 ? _SelectionPainter(NativeSidebar.selection(colors.brightness))
@@ -203,9 +236,22 @@ class GlassSidebar extends StatelessWidget {
                               ? colors.disabledLabel
                               : accent,
                         ),
-                        child: selected
-                            ? tab.selectedIcon ?? tab.icon
-                            : tab.icon,
+                        child: GlassBadgedIcon(
+                          badge: tab.badge,
+                          color:
+                              (LiquidPrismTheme.of(context).tabBar
+                                          ?.merge(tabBar.style) ??
+                                      tabBar.style)
+                                  ?.badgeColor,
+                          textStyle:
+                              (LiquidPrismTheme.of(context).tabBar
+                                          ?.merge(tabBar.style) ??
+                                      tabBar.style)
+                                  ?.badgeTextStyle,
+                          child: selected
+                              ? tab.selectedIcon ?? tab.icon
+                              : tab.icon,
+                        ),
                       ),
                     ),
                   ),

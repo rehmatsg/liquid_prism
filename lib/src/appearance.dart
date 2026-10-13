@@ -446,6 +446,9 @@ class GlassSliderStyle {
         );
 }
 
+/// Fixed native fixture width, or equal slots fitted to Text/RichText labels.
+enum GlassSegmentedSizing { fixed, fitLabels }
+
 /// Segmented track, typography and selection geometry.
 ///
 /// Unspecified fields inherit the surrounding theme, then native defaults.
@@ -453,6 +456,8 @@ class GlassSliderStyle {
 class GlassSegmentedStyle {
   const GlassSegmentedStyle({
     this.width,
+    this.sizing,
+    this.labelPadding,
     this.scale,
     this.hitHeight,
     this.trackHeight,
@@ -484,6 +489,15 @@ class GlassSegmentedStyle {
   /// Preferred width before scaling; parent constraints still apply.
   final double? width;
 
+  /// Defaults to fixed (300 points). Fit uses the widest Text/RichText label.
+  /// For custom widget labels, supply [width] explicitly.
+  final GlassSegmentedSizing? sizing;
+
+  /// Fit-label room around the widest label, before scale. Defaults to 10
+  /// horizontal (measured: a fixed-size iOS 27 Picker gives each segment the
+  /// widest label plus about 10 points a side) and 8 vertical.
+  final EdgeInsetsGeometry? labelPadding;
+
   /// Proportional geometry scale. Touch height remains at least 44 points.
   final double? scale;
 
@@ -514,6 +528,8 @@ class GlassSegmentedStyle {
   /// Keep existing fields when an argument is null.
   GlassSegmentedStyle copyWith({
     double? width,
+    GlassSegmentedSizing? sizing,
+    EdgeInsetsGeometry? labelPadding,
     double? scale,
     double? hitHeight,
     double? trackHeight,
@@ -532,6 +548,8 @@ class GlassSegmentedStyle {
     double? contentDepth,
   }) => GlassSegmentedStyle(
     width: width ?? this.width,
+    sizing: sizing ?? this.sizing,
+    labelPadding: labelPadding ?? this.labelPadding,
     scale: scale ?? this.scale,
     hitHeight: hitHeight ?? this.hitHeight,
     trackHeight: trackHeight ?? this.trackHeight,
@@ -556,6 +574,8 @@ class GlassSegmentedStyle {
       ? this
       : GlassSegmentedStyle(
           width: other.width ?? width,
+          sizing: other.sizing ?? sizing,
+          labelPadding: other.labelPadding ?? labelPadding,
           scale: other.scale ?? scale,
           hitHeight: other.hitHeight ?? hitHeight,
           trackHeight: other.trackHeight ?? trackHeight,
@@ -587,6 +607,8 @@ class GlassToolbarStyle {
     this.inset,
     this.spacing,
     this.iconSize,
+    this.badgeColor,
+    this.badgeTextStyle,
     this.foregroundColor,
     this.pressedColor,
     this.shape,
@@ -614,6 +636,11 @@ class GlassToolbarStyle {
   final double? spacing;
   final double? iconSize;
   final Color? foregroundColor;
+
+  /// Badge fill and count typography; null inherits the theme, then the
+  /// measured system red and 12-point medium white.
+  final Color? badgeColor;
+  final TextStyle? badgeTextStyle;
   final Color? pressedColor;
   final GlassShape? shape;
   final GlassShape? itemShape;
@@ -657,6 +684,8 @@ class GlassToolbarStyle {
     double? inset,
     double? spacing,
     double? iconSize,
+    Color? badgeColor,
+    TextStyle? badgeTextStyle,
     Color? foregroundColor,
     Color? pressedColor,
     GlassShape? shape,
@@ -678,6 +707,8 @@ class GlassToolbarStyle {
     inset: inset ?? this.inset,
     spacing: spacing ?? this.spacing,
     iconSize: iconSize ?? this.iconSize,
+    badgeColor: badgeColor ?? this.badgeColor,
+    badgeTextStyle: badgeTextStyle ?? this.badgeTextStyle,
     foregroundColor: foregroundColor ?? this.foregroundColor,
     pressedColor: pressedColor ?? this.pressedColor,
     shape: shape ?? this.shape,
@@ -704,6 +735,10 @@ class GlassToolbarStyle {
           inset: other.inset ?? inset,
           spacing: other.spacing ?? spacing,
           iconSize: other.iconSize ?? iconSize,
+          badgeColor: other.badgeColor ?? badgeColor,
+          badgeTextStyle:
+              badgeTextStyle?.merge(other.badgeTextStyle) ??
+              other.badgeTextStyle,
           foregroundColor: other.foregroundColor ?? foregroundColor,
           pressedColor: other.pressedColor ?? pressedColor,
           shape: other.shape ?? shape,

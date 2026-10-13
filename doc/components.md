@@ -577,3 +577,34 @@ triggers. UIKit owns the iOS popup; customize its model (symbols, sections,
 submenus, selected/disabled/destructive items and deferred actions), not its
 renderer. For typed imperative results use `liquidMenus.show<T>`. See the
 [menu guide](native_menus.md) for setup and callback/dismissal semantics.
+
+## Tab actions, feedback, badges and navigation titles
+
+Tabs accept `onLongPressed`; a hold uses Flutter's `kLongPressTimeout`, returns
+the pill to the selected tab and never selects on release. Use the package
+callback instead of an icon GestureDetector. A null `onSelected` disables it.
+
+Set theme `haptics: GlassHaptics((context, event) { ... })` for a shared app
+feedback policy. Component `haptics: false` still silences feedback. Null retains
+existing native calls. Segmented controls do not generate package haptics.
+
+Text/RichText segments can opt into
+`GlassSegmentedStyle(sizing: GlassSegmentedSizing.fitLabels)`; equal widths fit
+the widest label and text scaling. Custom widget labels need explicit width.
+
+Add `badge: GlassBadge.count(7)`, `GlassBadge.text('New')` or an empty
+`GlassBadge.dot()` to a tab or toolbar item. As on iOS 27, counts are never
+shortened (1000 draws `1,000`); pass `overflow: 99` to draw `99+`. The full value
+is announced; supply a localized `semanticLabel` (and `GlassBadge.text` for a
+locale's digit grouping). Styles expose `badgeColor` and `badgeTextStyle`.
+
+`LiquidPrismScaffold(title: Text('Inbox'), largeTitle: Text('Inbox'), body: list)`
+adds a header that follows the outermost vertical scroll view, even with
+`scrollEdge: false`: the large title scrolls up with the content and, once its
+row has gone, fades out as the inline title rises in, as on iOS 27. Supply only `title` for an inline header. The accessory sits
+below the title rows. Keyboard height enters body padding once; the body's
+bottom viewInset is consumed. Set `resizeToAvoidBottomInset: false` to delegate
+keyboard avoidance to descendants.
+
+See [feature contracts and adoption](package_features_spec.md) for per-item
+changes, native measurements and remaining gaps.

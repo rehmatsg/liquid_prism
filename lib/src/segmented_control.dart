@@ -46,9 +46,9 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
       motion,
     );
     final scale = appearance.scale ?? 1;
-    final hitHeight = math.max(44.0, (appearance.hitHeight ?? 44) * scale);
-    final trackHeight = (appearance.trackHeight ?? 32) * scale;
-    final thumbHeight = (appearance.thumbHeight ?? 28) * scale;
+    var hitHeight = math.max(44.0, (appearance.hitHeight ?? 44) * scale);
+    var trackHeight = (appearance.trackHeight ?? 32) * scale;
+    var thumbHeight = (appearance.thumbHeight ?? 28) * scale;
     final inset = (appearance.selectionInset ?? 2) * scale;
     final liftInset = (appearance.liftInset ?? const Size(12, 8)) * scale;
     assert(liftInset.width >= 0 && liftInset.height >= 0);
@@ -58,11 +58,77 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
     assert(children.containsKey(selectedValue));
     final keys = children.keys.toList();
     final count = keys.length, selected = keys.indexOf(selectedValue);
+    var preferredWidth = (appearance.width ?? 300) * scale;
+    if (appearance.sizing == GlassSegmentedSizing.fitLabels) {
+      final padding =
+          (appearance.labelPadding ??
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8))
+              .resolve(Directionality.of(context)) *
+          scale;
+      var widest = 0.0, tallest = 0.0;
+      for (final child in children.values) {
+        final base = DefaultTextStyle.of(context).style.merge(
+          TextStyle(
+            fontSize: 13 * scale,
+            fontWeight: FontWeight.w500,
+          ).merge(appearance.labelStyle),
+        );
+        final InlineSpan? span = switch (child) {
+          Text(:final data, :final textSpan, :final style) => TextSpan(
+            text: data,
+            children: textSpan == null ? null : [textSpan],
+            style: base.merge(style),
+          ),
+          RichText(:final text) => text,
+          _ => null,
+        };
+        assert(
+          span != null || appearance.width != null,
+          'fitLabels needs Text/RichText labels, or an explicit width for custom widgets.',
+        );
+        if (span == null) continue;
+        final painter = TextPainter(
+          text: span,
+          textDirection:
+              (child is Text
+                  ? child.textDirection
+                  : (child as RichText).textDirection) ??
+              Directionality.of(context),
+          textScaler: child is Text
+              ? child.textScaler ?? MediaQuery.textScalerOf(context)
+              : (child as RichText).textScaler,
+          locale:
+              (child is Text ? child.locale : (child as RichText).locale) ??
+              Localizations.maybeLocaleOf(context),
+          strutStyle: child is Text
+              ? child.strutStyle
+              : (child as RichText).strutStyle,
+          textHeightBehavior: child is Text
+              ? child.textHeightBehavior
+              : (child as RichText).textHeightBehavior,
+          maxLines: 1,
+        )..layout();
+        widest = math.max(widest, painter.width);
+        tallest = math.max(tallest, painter.height);
+        painter.dispose();
+      }
+      if (appearance.width == null) {
+        preferredWidth = (widest.ceilToDouble() + padding.horizontal) * count;
+      }
+      if (appearance.trackHeight == null) {
+        trackHeight = math.max(
+          trackHeight,
+          tallest.ceilToDouble() + padding.vertical,
+        );
+      }
+      if (appearance.thumbHeight == null) {
+        thumbHeight = math.max(0, trackHeight - 2 * inset);
+      }
+      hitHeight = math.max(hitHeight, trackHeight);
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.constrainWidth(
-          (appearance.width ?? 300) * scale,
-        );
+        final width = constraints.constrainWidth(preferredWidth);
         if (width <= 0) return const SizedBox.shrink();
         final slot = width / count;
         return SizedBox(

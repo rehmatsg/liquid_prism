@@ -164,3 +164,28 @@ minimum lift, flex strength, maximum stretch and velocity decay. `GlassSpring`
 accepts duration/bounce or Flutter physics. `GlassMotion` controls button/toolbar
 press and tab travel. See [motion and lenses](motion_and_lenses.md) for their
 separate scopes, native timings and input guarantees.
+
+## Additional feature styles
+
+| Style / field | Default / meaning |
+| --- | --- |
+| `GlassSegmentedStyle.sizing` | `fixed`; opt into `fitLabels` for Text/RichText |
+| `GlassSegmentedStyle.labelPadding` | Horizontal 10 (measured) / vertical 8, before scale; fit mode only |
+| Tab / toolbar `badgeColor` | System red (measured) |
+| Tab / toolbar `badgeTextStyle` | 12-point medium, white (measured) |
+| `GlassNavigationBarStyle.titleStyle` | 17-point semibold, semantic label |
+| `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold, semantic label |
+| `gutter` / `controlGap` | 16 / 12 |
+| `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
+| `revealCurve` | easeOutCubic (fitted) for the inline title's 0.53 s fade and 15-point rise |
+
+Measured on iOS 27: badges are 18.33-point capsules (18 on toolbar items) with
+4 points of padding; a tab badge's leading edge sits 5 points inside the glyph's
+trailing edge, its top 24.5 above the glyph's centre; a toolbar badge sits 2.8
+points above the capsule and overhangs the item by 3. The icon-only tab pitch is
+86, as for labelled tabs.
+See [evidence and adoption](package_features_spec.md).
+
+Theme `haptics` replaces native calls with `GlassHaptics`, subject to component
+haptics flags. Scaffold titles resolve `navigationBarStyle` above theme
+`navigationBar`; scaffold `resizeToAvoidBottomInset` defaults true.

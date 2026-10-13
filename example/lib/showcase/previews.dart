@@ -3,6 +3,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import 'model.dart';
 import 'widgets.dart';
+import 'package_features_demo.dart';
 
 class LensPlayground extends StatefulWidget {
   const LensPlayground({
@@ -563,6 +564,8 @@ class _ComponentPreviewState extends State<ComponentPreview> {
               ),
               const SizedBox(height: 20),
               ScrollEdgePreview(model: m),
+              const SizedBox(height: 20),
+              const PackageFeaturesDemo(),
               const SizedBox(height: 20),
               const Text(
                 'A scroll fade softens whichever edge content runs past.',

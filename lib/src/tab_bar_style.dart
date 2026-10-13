@@ -20,6 +20,8 @@ class GlassTabBarStyle {
     this.height,
     this.padding,
     this.iconSize,
+    this.badgeColor,
+    this.badgeTextStyle,
     this.labelStyle,
     this.selectedColor,
     this.unselectedColor,
@@ -62,6 +64,11 @@ class GlassTabBarStyle {
   final double? height, iconSize;
   final EdgeInsets? padding;
   final TextStyle? labelStyle;
+
+  /// Badge fill and count typography; null inherits the theme, then the
+  /// measured system red and 12-point medium white.
+  final Color? badgeColor;
+  final TextStyle? badgeTextStyle;
   final Color? selectedColor, unselectedColor, selectionColor;
 
   /// Extra pill blur, independent of the enclosing bar. Null inherits the
@@ -103,6 +110,8 @@ class GlassTabBarStyle {
     double? height,
     EdgeInsets? padding,
     double? iconSize,
+    Color? badgeColor,
+    TextStyle? badgeTextStyle,
     TextStyle? labelStyle,
     Color? selectedColor,
     Color? unselectedColor,
@@ -128,6 +137,8 @@ class GlassTabBarStyle {
     height: height ?? this.height,
     padding: padding ?? this.padding,
     iconSize: iconSize ?? this.iconSize,
+    badgeColor: badgeColor ?? this.badgeColor,
+    badgeTextStyle: badgeTextStyle ?? this.badgeTextStyle,
     labelStyle: labelStyle ?? this.labelStyle,
     selectedColor: selectedColor ?? this.selectedColor,
     unselectedColor: unselectedColor ?? this.unselectedColor,
@@ -157,6 +168,10 @@ class GlassTabBarStyle {
           height: other.height ?? height,
           padding: other.padding ?? padding,
           iconSize: other.iconSize ?? iconSize,
+          badgeColor: other.badgeColor ?? badgeColor,
+          badgeTextStyle:
+              badgeTextStyle?.merge(other.badgeTextStyle) ??
+              other.badgeTextStyle,
           labelStyle: labelStyle?.merge(other.labelStyle) ?? other.labelStyle,
           selectedColor: other.selectedColor ?? selectedColor,
           unselectedColor: other.unselectedColor ?? unselectedColor,

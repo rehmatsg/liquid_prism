@@ -15,6 +15,7 @@ import 'recipe.dart';
 import 'style.dart';
 import 'theme.dart';
 import 'appearance.dart';
+import 'badge.dart';
 import 'menu/menu.dart';
 import 'menu/menus.dart';
 
@@ -31,6 +32,7 @@ class GlassToolbarItem {
     this.key,
     this.selected = false,
     this.foregroundColor,
+    this.badge,
     double? width,
   }) : menu = null,
        onMenuSelected = null,
@@ -48,6 +50,7 @@ class GlassToolbarItem {
     this.key,
     this.selected = false,
     this.foregroundColor,
+    this.badge,
     double? width,
   }) : onPressed = null,
        onMenuSelected = onSelected,
@@ -56,6 +59,7 @@ class GlassToolbarItem {
        _hasWidth = width != null,
        assert(width == null || width >= 36);
   final Widget icon;
+  final GlassBadge? badge;
   final String label;
   final FutureOr<void> Function()? onPressed;
 
@@ -711,7 +715,9 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     final extent = entry.width + left + right;
     Widget cell = Builder(
       builder: (actionContext) => LiquidPrismPressable.glass(
-        label: item.label,
+        label: item.badge == null
+            ? item.label
+            : '${item.label}, ${item.badge!.semanticLabel}',
         selected: item.selected,
         motion: widget.motion ?? appearance.motion,
         onPressed: item.menu == null
@@ -740,6 +746,7 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                     : EdgeInsetsDirectional.only(start: left, end: right),
                 child: Stack(
                   alignment: Alignment.center,
+                  clipBehavior: Clip.none,
                   children: [
                     Padding(
                       padding: vertical
@@ -772,6 +779,20 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                       ),
                       child: item.icon,
                     ),
+                    // Measured on iOS 27: an 18-point badge whose top sits
+                    // 2.8 points above the capsule and whose trailing edge
+                    // overhangs the item by about 3 points.
+                    if (item.badge case final badge?)
+                      PositionedDirectional(
+                        top: -2.8,
+                        end: -3,
+                        child: GlassBadgeView(
+                          badge: badge,
+                          height: 18,
+                          color: appearance.badgeColor,
+                          textStyle: appearance.badgeTextStyle,
+                        ),
+                      ),
                   ],
                 ),
               ),
