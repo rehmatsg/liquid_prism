@@ -592,6 +592,8 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
         // item carries its gap and collapses to nothing without a jump.
         var width = 0.0;
         final cells = <Widget>[];
+        final badges = <Widget>[];
+        final badged = _entries.any((entry) => entry.item.badge != null);
         var position = 0;
         for (final entry in _entries) {
           final double left, right;
@@ -605,6 +607,20 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
           final extent = entry.width + left + right;
           final progress = entry.presence.value.clamp(0.0, 1.0);
           width += extent * progress;
+          if (badged) {
+            badges.add(
+              _badge(
+                entry,
+                extent * progress,
+                left,
+                right,
+                progress,
+                height,
+                appearance,
+                vertical,
+              ),
+            );
+          }
           cells.add(
             _action(
               entry,
@@ -620,30 +636,56 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
             ),
           );
         }
-        final capsule = SizedBox(
-          width: vertical ? height : width,
-          height: vertical ? width : height,
-          child: ChromeMaterial(
-            height: height,
-            role: GlassRole.toolbar,
-            glass: widget.glass ?? appearance.glass,
-            optics: widget.optics ?? appearance.optics,
-            blur: widget.blur ?? appearance.blur,
-            shape: appearance.shape,
-            child: ClipPath(
-              clipper: GlassShapeClipper(
-                appearance.shape ?? GlassShape.capsule,
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: vertical ? Axis.vertical : Axis.horizontal,
-                child: Flex(
-                  direction: vertical ? Axis.vertical : Axis.horizontal,
-                  mainAxisSize: MainAxisSize.min,
-                  children: cells,
-                ),
+        Widget capsule = ChromeMaterial(
+          height: height,
+          role: GlassRole.toolbar,
+          glass: widget.glass ?? appearance.glass,
+          optics: widget.optics ?? appearance.optics,
+          blur: widget.blur ?? appearance.blur,
+          shape: appearance.shape,
+          child: ClipPath(
+            clipper: GlassShapeClipper(appearance.shape ?? GlassShape.capsule),
+            child: SingleChildScrollView(
+              scrollDirection: vertical ? Axis.vertical : Axis.horizontal,
+              child: Flex(
+                direction: vertical ? Axis.vertical : Axis.horizontal,
+                mainAxisSize: MainAxisSize.min,
+                children: cells,
               ),
             ),
           ),
+        );
+        if (badged) {
+          // Badges overhang the capsule, as native ones do, so they paint
+          // above it rather than inside its clip.
+          capsule = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(child: capsule),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: ExcludeSemantics(
+                    child: OverflowBox(
+                      alignment: AlignmentDirectional.topStart,
+                      maxWidth: vertical ? null : double.infinity,
+                      maxHeight: vertical ? double.infinity : null,
+                      child: Flex(
+                        direction: vertical ? Axis.vertical : Axis.horizontal,
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: badges,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        capsule = SizedBox(
+          width: vertical ? height : width,
+          height: vertical ? width : height,
+          child: capsule,
         );
         final body = widget.items.every((item) => !item._isEnabled)
             ? capsule
@@ -698,6 +740,51 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     else
       for (final entry in items) entry.item.width,
   ];
+
+  /// The item's badge, in a cell the size of its slot. Measured on iOS 27:
+  /// an 18-point badge whose top sits 2.8 points above the capsule and whose
+  /// trailing edge overhangs the item by about 3 points.
+  Widget _badge(
+    _ToolbarEntry entry,
+    double extent,
+    double left,
+    double right,
+    double progress,
+    double height,
+    GlassToolbarStyle appearance,
+    bool vertical,
+  ) {
+    final badge = entry.item.badge;
+    return SizedBox(
+      width: vertical ? height : extent,
+      height: vertical ? extent : height,
+      child: badge == null || entry.leaving
+          ? null
+          : Padding(
+              padding: vertical
+                  ? EdgeInsets.only(top: left, bottom: right)
+                  : EdgeInsetsDirectional.only(start: left, end: right),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  PositionedDirectional(
+                    top: -2.8,
+                    end: -3,
+                    child: Opacity(
+                      opacity: progress,
+                      child: GlassBadgeView(
+                        badge: badge,
+                        height: 18,
+                        color: appearance.badgeColor,
+                        textStyle: appearance.badgeTextStyle,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
 
   Widget _action(
     _ToolbarEntry entry,
@@ -779,20 +866,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                       ),
                       child: item.icon,
                     ),
-                    // Measured on iOS 27: an 18-point badge whose top sits
-                    // 2.8 points above the capsule and whose trailing edge
-                    // overhangs the item by about 3 points.
-                    if (item.badge case final badge?)
-                      PositionedDirectional(
-                        top: -2.8,
-                        end: -3,
-                        child: GlassBadgeView(
-                          badge: badge,
-                          height: 18,
-                          color: appearance.badgeColor,
-                          textStyle: appearance.badgeTextStyle,
-                        ),
-                      ),
                   ],
                 ),
               ),
