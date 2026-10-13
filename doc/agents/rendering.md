@@ -93,6 +93,16 @@ effect with a child is hoisted only as host, since its child must already be
 painted. Hoisted effects skip their own `_EdgePassLayer` and `_EdgeFadeLayer`;
 a lone shared member stays shared while an effect is hoisted.
 
+An effect's clip walk to the group starts at its content layer's parent (the
+content layer is its own). While an effect is hoisted, members share unless
+their glass bounds overlap: their 44-point reflection envelopes and shadow
+skirts reaching a neighbour would otherwise leave both unshared, and an
+unshared member captures after the effect and refracts blurred, faded
+content (a bar button above a search-field accessory). Without hoisted
+effects the stricter sampled/painted test still applies. Headless tests do
+not load the shaders, so verify hoisting on a simulator: compare the glass
+over the strip with `scrollEdge: false`.
+
 The pass uniforms are `u_pass`, `u_box`, `u_matrix`, `u_inverse`, `u_start`,
 `u_end` (24 floats after the engine's texture size; the strips' fourth
 components are their strength floors); keep `_uniforms` and

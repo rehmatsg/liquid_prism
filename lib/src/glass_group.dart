@@ -401,7 +401,9 @@ class _GlassGroupData {
       }
       final content = edge._contentLayer.layer;
       if (content == null || _isolatesBackdrop(content)) continue;
-      final clips = _clipsToGroup(content, groupLayer, edge.pixelRatio);
+      // From the content layer's parent, as for members: the content layer
+      // is this effect's own and holds no clip.
+      final clips = _clipsToGroup(content.parent, groupLayer, edge.pixelRatio);
       if (clips == null) continue;
       _clips[edge] = clips;
       hoistEdges.add(edge);
@@ -506,13 +508,23 @@ class _GlassGroupData {
               groupLayer,
               member.pixelRatio,
             );
-      if (clips != null &&
-          !surfaces.any(
-            (other) =>
-                other != member &&
-                (sampled[member]!.overlaps(painted[other]!) ||
-                    sampled[other]!.overlaps(painted[member]!)),
-          )) {
+      // Under a hoisted edge effect, a member left out reads its own capture
+      // taken after the effect, so it refracts blurred and faded content.
+      // There only overlapping glass excludes it: a neighbour's glass and
+      // shadow missing from its reflections (a bar button 16 points above a
+      // search field) cost far less than refracting the effect.
+      final excluded = hoistEdges.isEmpty
+          ? surfaces.any(
+              (other) =>
+                  other != member &&
+                  (sampled[member]!.overlaps(painted[other]!) ||
+                      sampled[other]!.overlaps(painted[member]!)),
+            )
+          : surfaces.any(
+              (other) =>
+                  other != member && bounds[member]!.overlaps(bounds[other]!),
+            );
+      if (clips != null && !excluded) {
         shared.add(member);
         _clips[member] = clips;
       }

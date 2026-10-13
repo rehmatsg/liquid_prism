@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Fix glass over a scroll edge effect refracting the blurred, faded content.
+  The effect's clip walk to its group started at its own content layer and
+  never hoisted, and neighbouring members (a bar button above a search-field
+  accessory) left each other unshared through their reflection reach. They
+  now share the pre-effect captures unless their glass overlaps.
 - Add tab `onLongPressed` using Flutter's long-press timeout, with cancellation,
   selection suppression, accessibility and feedback through the existing owner.
 - Add theme `GlassHaptics` event routing for tabs/sidebar, switch and slider;
