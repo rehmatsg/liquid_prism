@@ -52,6 +52,7 @@ export 'src/toolbar.dart'
     show
         GlassToolbarSize,
         GlassToolbarItem,
+        LiquidPrismBackButton,
         LiquidPrismToolbar,
         LiquidPrismToolbarGroup;
 export 'src/search_field.dart'

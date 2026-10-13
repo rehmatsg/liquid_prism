@@ -20,6 +20,14 @@
   each. Plain clips (a viewport, an app bar's toolbar clip) between a member
   and its group no longer keep it out of the shared capture; the hoisted shadow
   and frost are clipped the same way.
+- Imply a leading control in `LiquidPrismScaffold`: when its route can pop
+  and `leading` is null, a `LiquidPrismBackButton` draws a back chevron, or a
+  close mark on a fullscreen dialog, and pops the route.
+  `automaticallyImplyLeading: false` opts out. The button is public for custom
+  glyphs; its default chevron is shifted half a point toward its tip so it
+  reads centred in the circle. The body now keeps 14 points clear below the
+  top bar's capsules (`LiquidPrismScaffold.topBarClearance`), as the measured
+  iPhone Duo content safe area does.
 - Animate toolbar items. `LiquidPrismToolbarGroup` materializes items in and
   out as `items` changes, resizing the capsule, and takes an empty list, which
   materializes the capsule away. New `LiquidPrismToolbar` lays several groups

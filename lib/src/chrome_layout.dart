@@ -96,6 +96,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     super.key,
     required this.body,
     this.leading,
+    this.automaticallyImplyLeading = true,
     this.actions = const [],
     this.tabBar,
     this.placement,
@@ -109,8 +110,12 @@ class LiquidPrismScaffold extends StatefulWidget {
   final Widget body;
 
   /// A top-leading control, such as a back button. It stays in the top bar in
-  /// every placement.
+  /// every placement. Null implies one; see [automaticallyImplyLeading].
   final Widget? leading;
+
+  /// Whether a null [leading] becomes a [LiquidPrismBackButton] when the
+  /// route can pop: a back chevron, or a close mark on a fullscreen dialog.
+  final bool automaticallyImplyLeading;
 
   /// Actions sharing one glass capsule: top trailing, or atop the rail.
   final List<GlassToolbarItem> actions;
@@ -149,6 +154,10 @@ class LiquidPrismScaffold extends StatefulWidget {
 
   /// The top bar's measured height: 44 pt navigation capsules.
   static const double topBarHeight = 44;
+
+  /// Space the body keeps below the top bar. Measured: the content safe area
+  /// on iPhone Duo starts 58 pt below the bar's top, 14 pt under its capsules.
+  static const double topBarClearance = 14;
 
   @override
   State<LiquidPrismScaffold> createState() => _LiquidPrismScaffoldState();
@@ -310,8 +319,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
     final top = math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
+    final leading =
+        widget.leading ??
+        (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
     final topBar =
-        widget.leading != null ||
+        leading != null ||
         // Native keeps the bar row with the sidebar shown or hidden, so
         // content does not jump when the toggle moves into it.
         sidebarTabs != null ||
@@ -426,7 +438,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           ),
         // The floating chrome shares backdrop captures: it paints over the
         // body with nothing between its surfaces (see GlassGroupHost).
-        if (widget.leading case final leading?)
+        if (leading case final leading?)
           LayoutId(
             id: _Slot.leading,
             child: GlassGroupMembers(child: leading),
@@ -465,6 +477,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       final color? => ColoredBox(color: color, child: hosted),
       null => hosted,
     };
+  }
+
+  /// A back control for a route that can pop, or a close control for a
+  /// fullscreen dialog, which arrives modally and reads truer with a mark.
+  Widget? _impliedLeading(BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route == null || !route.canPop) return null;
+    return LiquidPrismBackButton(
+      close: route is PageRoute && route.fullscreenDialog,
+    );
   }
 
   /// Whether the actions and [tabs] both fit a rail of [height] below the
@@ -722,7 +744,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                   shown
         : railRight;
     var covered = EdgeInsets.only(
-      top: topBar ? top + LiquidPrismScaffold.topBarHeight : top,
+      top: topBar
+          ? top +
+                LiquidPrismScaffold.topBarHeight +
+                LiquidPrismScaffold.topBarClearance
+          : top,
     );
     // The top bar row ends where a corner status bar begins.
     final barLeft = corner != null && corner!.left <= 1

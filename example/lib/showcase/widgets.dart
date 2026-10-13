@@ -383,20 +383,6 @@ class SectionTitle extends StatelessWidget {
 }
 
 /// A circular glass back button, 44 pt like the native one.
-class GlassBackButton extends StatelessWidget {
-  const GlassBackButton({super.key});
-
-  @override
-  Widget build(BuildContext context) => LiquidPrismButton(
-    label: 'Back to showcase',
-    shape: GlassShape.circle,
-    padding: const EdgeInsets.all(12),
-    foregroundColor: ink(context),
-    onPressed: () => Navigator.of(context).pop(),
-    child: const Icon(CupertinoIcons.chevron_back, size: 20),
-  );
-}
-
 /// Columns of at least [minimumWidth], filling the available width.
 class FlowGrid extends StatelessWidget {
   const FlowGrid({

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/widgets.dart';
 
 import 'chrome_layout.dart';
@@ -78,6 +79,73 @@ class GlassToolbarItem {
   /// is kept, so a wider custom item stays a capsule.
   final double width;
   final bool _hasWidth;
+}
+
+/// A lone navigation-bar control that pops the route: a back chevron, or a
+/// close mark for a modally presented screen.
+///
+/// [LiquidPrismScaffold] implies one when its route can pop. Use it directly
+/// to supply your own glyph or action; a custom [icon] is drawn as given.
+///
+/// A chevron's visual mass sits toward its point, so drawn on its box centre
+/// it reads as sitting away from the circle's centre; the default glyph is
+/// shifted [glyphShift] toward its point, mirrored in right-to-left layouts.
+class LiquidPrismBackButton extends StatelessWidget {
+  const LiquidPrismBackButton({
+    super.key,
+    this.close = false,
+    this.icon,
+    this.label,
+    this.onPressed,
+    this.glyphShift = .5,
+    this.size = GlassToolbarSize.navigation,
+    this.style,
+    this.foregroundColor,
+  });
+
+  /// Draw a close mark instead of a back chevron.
+  final bool close;
+
+  /// Replaces the default glyph. Drawn without the optical shift.
+  final Widget? icon;
+
+  /// The accessible name. Defaults to "Back" or "Close".
+  final String? label;
+
+  /// Defaults to popping the nearest navigator.
+  final VoidCallback? onPressed;
+
+  /// How far the default chevron moves toward its point, in logical pixels.
+  final double glyphShift;
+  final GlassToolbarSize size;
+  final GlassToolbarStyle? style;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final glyph =
+        icon ??
+        (close
+            ? const Icon(CupertinoIcons.xmark)
+            : Transform.translate(
+                // The icon mirrors with the text direction; so does its point.
+                offset: Offset(rtl ? glyphShift : -glyphShift, 0),
+                child: const Icon(CupertinoIcons.chevron_back),
+              ));
+    return LiquidPrismToolbarGroup(
+      size: size,
+      style: style,
+      foregroundColor: foregroundColor,
+      items: [
+        GlassToolbarItem(
+          icon: glyph,
+          label: label ?? (close ? 'Close' : 'Back'),
+          onPressed: onPressed ?? () => Navigator.of(context).maybePop(),
+        ),
+      ],
+    );
+  }
 }
 
 /// Several capsules of icon actions in a row, as a navigation bar's trailing

@@ -200,8 +200,12 @@ remain calibrated separately. Safe-area positioning belongs to the parent.
 
 ## Adaptive layout
 
-`LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and an optional
-`leading` control over a full-window `body`:
+`LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and a
+`leading` control over a full-window `body`. With no `leading`, a route that
+can pop gets a `LiquidPrismBackButton`: a glass back chevron, or a close mark
+on a fullscreen dialog, popping through `Navigator.maybePop`. Pass
+`automaticallyImplyLeading: false` to suppress it, or your own
+`LiquidPrismBackButton(icon: ...)` for a custom glyph.
 
 | Window | Placement |
 | --- | --- |
@@ -218,8 +222,8 @@ other. Pass `placement` to force one. The [adaptive layout
 measurements](native_adaptive_layout.md) record the native frames this follows.
 
 The body receives `MediaQuery.padding` that includes the space the chrome
-covers, so scroll views keep content clear while it still shows through the
-glass. When the device is partly folded, the fold reaches the body as a
+covers plus 14 points below the top bar's capsules, so scroll views keep
+content clear while it still shows through the glass. When the device is partly folded, the fold reaches the body as a
 `MediaQuery.displayFeatures` entry; `DisplayFeatureSubScreen` keeps content out
 of it. Read `LiquidPrismScaffold.placementOf(context)` to adapt your own layout.
 

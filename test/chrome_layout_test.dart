@@ -118,7 +118,7 @@ void main() {
     expect(actions.height, 44);
 
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
-    expect(padding.top, 62 + 44);
+    expect(padding.top, 62 + 44 + 14);
     expect(padding.bottom, 874 - bar.top + 3);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
@@ -487,7 +487,7 @@ void main() {
       expect(padding.left, 280);
       expect(padding.right, 84);
       // The top bar row stays reserved, so hiding never shifts content down.
-      expect(padding.top, 24 + 44);
+      expect(padding.top, 24 + 44 + 14);
 
       await tester.tap(find.text('Search'));
       await tester.pump();
@@ -523,7 +523,7 @@ void main() {
         tester.getTopLeft(find.bySemanticsLabel('Show sidebar')),
         const Offset(20, 24),
       );
-      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).top, 68);
+      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).top, 82);
 
       await tester.tap(find.bySemanticsLabel('Show sidebar'));
       await tester.pump();
