@@ -12,6 +12,7 @@ under `lib/src/` are not a consumer contract.
 | `material.dart`, `style.dart` | Declarative glass variants, contours and optical packets |
 | `appearance.dart`, `tab_bar_style.dart`, `theme.dart` | Partial component styles, inheritance and palette |
 | `glass.dart`, `glass_group.dart`, `recipe.dart` | Surface composition, shader/fallback dispatch and explicit role IDs |
+| `layer_transform.dart` | Composited (raster) transforms versus laid-out transforms |
 | `pressable.dart`, `motion.dart` | Button interaction and interruptible spring controllers |
 | `control_interaction.dart`, `control_lens_motion.dart` | Controlled small-control input, cancellation and velocity deformation |
 | `control_material.dart`, `control_lens.dart` | Track paint and shared resting/lifted lens with external shadows |

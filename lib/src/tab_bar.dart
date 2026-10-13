@@ -13,6 +13,7 @@ import 'appearance.dart';
 import 'chrome_layout.dart';
 import 'superellipse.dart';
 import 'glass.dart';
+import 'layer_transform.dart';
 import 'foreground.dart';
 import 'material.dart';
 import 'motion.dart';
@@ -975,7 +976,6 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     required this.lift,
     required this.shape,
     required this.shader,
-    required this.pixelRatio,
     required this.refraction,
     required this.depth,
     required this.scale,
@@ -985,14 +985,14 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
   final Path? path;
   final Color color;
   final Rect lens;
-  final double lift, pixelRatio, refraction, depth, scale;
+  final double lift, refraction, depth, scale;
   final Offset origin;
   final GlassShape shape;
   final ui.FragmentShader? shader;
   @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderSelectionWindow(path, color)
-        ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth)
+        ..configure(shader, lens, lift, shape, refraction, depth)
         ..setScale(scale, origin);
   @override
   void updateRenderObject(
@@ -1002,7 +1002,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     renderObject
       ..path = path
       ..color = color
-      ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth)
+      ..configure(shader, lens, lift, shape, refraction, depth)
       ..setScale(scale, origin);
   }
 }
@@ -1043,14 +1043,13 @@ class _RenderSelectionWindow extends RenderProxyBox {
 
   ui.FragmentShader? _shader;
   Rect _lens = Rect.zero;
-  double _lift = 0, _pixelRatio = 1, _refraction = 14, _depth = 11.2;
+  double _lift = 0, _refraction = 14, _depth = 11.2;
   GlassShape _shape = GlassShape.capsule;
   void configure(
     ui.FragmentShader? shader,
     Rect lens,
     double lift,
     GlassShape shape,
-    double pixelRatio,
     double refraction,
     double depth,
   ) {
@@ -1058,7 +1057,6 @@ class _RenderSelectionWindow extends RenderProxyBox {
         lens == _lens &&
         lift == _lift &&
         shape == _shape &&
-        pixelRatio == _pixelRatio &&
         refraction == _refraction &&
         depth == _depth) {
       return;
@@ -1067,7 +1065,6 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _lens = lens;
     _lift = lift;
     _shape = shape;
-    _pixelRatio = pixelRatio;
     _refraction = refraction;
     _depth = depth;
     markNeedsPaint();
@@ -1091,9 +1088,14 @@ class _RenderSelectionWindow extends RenderProxyBox {
   Size? _contourSize;
   double? _contourRadius;
   List<double> _contour = [];
-  ui.ImageFilter? _contentFilter() {
-    final shader = _shader;
-    if (shader == null || _lift < .001 || _refraction == 0) return null;
+
+  /// Whether the selected foreground is refracted by the content lens.
+  bool get _refractsContent =>
+      _shader != null && _lift >= .001 && _refraction != 0;
+
+  /// The content lens for a raster at [deviceScale] physical pixels per point.
+  ui.ImageFilter _contentFilter(double deviceScale) {
+    final shader = _shader!;
     // The filter sits outside the flex scale, so its lens is the scaled
     // contour; lengths in points scale with it.
     final local = _shape.rect(_lens.size).shift(_lens.topLeft);
@@ -1115,7 +1117,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
       contour.top,
       contour.width,
       contour.height,
-      _pixelRatio * getTransformTo(null).getMaxScaleOnAxis(),
+      deviceScale,
       _lift,
       radius,
       _shape.isSmooth ? 1.0 : 0.0,
@@ -1129,7 +1131,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     return ui.ImageFilter.shader(shader);
   }
 
-  final _warp = LayerHandle<ImageFilterLayer>();
+  final _warp = LayerHandle<_ContentLensLayer>();
   final _clip = LayerHandle<ClipPathLayer>();
   final _outsideClip = LayerHandle<ClipPathLayer>();
   final _filter = LayerHandle<ColorFilterLayer>();
@@ -1222,8 +1224,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
       ),
     );
 
-    final filter = _contentFilter();
-    if (filter == null) {
+    if (!_refractsContent) {
       _warp.layer = null;
       clipped(context, offset);
       return;
@@ -1233,20 +1234,24 @@ class _RenderSelectionWindow extends RenderProxyBox {
     // of a pixel each frame, so the shader resampled the glyphs at a shifting
     // phase and they shook in place. The shader only pulls samples inward from
     // the contour, so clipping first leaves its output unchanged.
-    final layer = _warp.layer ??= ImageFilterLayer();
-    layer.offset = offset;
-    layer.imageFilter = filter;
-    context.pushLayer(layer, (context, _) {
-      // Establish the full foreground source extent. Glyph-only ink bounds
-      // otherwise shift the shader's lens coordinate system.
-      context.canvas.drawRect(
-        Offset.zero & size,
-        Paint()
-          ..color = const Color(0x00000000)
-          ..blendMode = BlendMode.src,
-      );
-      clipped(context, Offset.zero);
-    }, offset);
+    final lens = _warp.layer ??= _ContentLensLayer(this);
+    lens.invalidate();
+    final layer = lens.filter..offset = offset;
+    context.pushLayer(
+      lens,
+      (context, _) => context.pushLayer(layer, (context, _) {
+        // Establish the full foreground source extent. Glyph-only ink bounds
+        // otherwise shift the shader's lens coordinate system.
+        context.canvas.drawRect(
+          Offset.zero & size,
+          Paint()
+            ..color = const Color(0x00000000)
+            ..blendMode = BlendMode.src,
+        );
+        clipped(context, Offset.zero);
+      }, offset),
+      offset,
+    );
   }
 
   @override
@@ -1257,6 +1262,42 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _warp.layer = null;
     _scaled.layer = null;
     _outsideScaled.layer = null;
+    super.dispose();
+  }
+}
+
+/// Configures the content lens filter at composition. The filter maps its
+/// raster with the composited device scale, which an animating ancestor
+/// transform changes without repainting the tab bar beneath a repaint
+/// boundary. The composited scale, unlike the laid-out one, also excludes an
+/// ancestor `ImageFilter.matrix`, which scales this raster only afterwards.
+class _ContentLensLayer extends ContainerLayer {
+  _ContentLensLayer(this.window);
+  final _RenderSelectionWindow window;
+  // The handle keeps the child alive while it is detached between repaints.
+  final _filter = LayerHandle<ImageFilterLayer>(ImageFilterLayer());
+  ImageFilterLayer get filter => _filter.layer!;
+  double? _deviceScale;
+
+  /// Rebuilds the filter at the next composition; the window repainted.
+  void invalidate() => _deviceScale = null;
+
+  @override
+  bool get alwaysNeedsAddToScene => true;
+
+  @override
+  void addToScene(ui.SceneBuilder builder) {
+    final scale = compositedTransform(this).getMaxScaleOnAxis();
+    if (scale != _deviceScale || filter.imageFilter == null) {
+      _deviceScale = scale;
+      filter.imageFilter = window._contentFilter(scale);
+    }
+    addChildrenToScene(builder);
+  }
+
+  @override
+  void dispose() {
+    _filter.layer = null;
     super.dispose();
   }
 }
