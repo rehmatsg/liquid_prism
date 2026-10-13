@@ -1,3 +1,5 @@
+![Liquid Prism glass wordmark](assets/liquid-prism-4k.png)
+
 # Liquid Prism
 
 Liquid glass for Flutter: surfaces, buttons, switches, sliders, segmented controls,
