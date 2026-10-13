@@ -817,22 +817,22 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                       ),
                       Positioned.fill(
                         key: const ValueKey('tab-foreground'),
-                        child: Transform.scale(
-                          scale: barScale,
-                          child: Padding(
-                            padding: padding,
-                            child: _SelectionWindow(
-                              path: window,
-                              color: selectedAccent,
-                              lens: foregroundPill,
-                              lift: lift,
-                              shape: selectionShape,
-                              refraction: style.refractContent == false
-                                  ? 0
-                                  : style.contentRefraction ?? 14,
-                              depth: style.contentDepth ?? 11.2,
-                              child: child!,
-                            ),
+                        child: Padding(
+                          padding: padding,
+                          child: _SelectionWindow(
+                            scale: barScale,
+                            // The housing scales about the bar's centre.
+                            origin: centre - padding.topLeft,
+                            path: window,
+                            color: selectedAccent,
+                            lens: foregroundPill,
+                            lift: lift,
+                            shape: selectionShape,
+                            refraction: style.refractContent == false
+                                ? 0
+                                : style.contentRefraction ?? 14,
+                            depth: style.contentDepth ?? 11.2,
+                            child: child!,
                           ),
                         ),
                       ),
@@ -962,6 +962,11 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 
 /// Paints its child once, then again clipped to [path] with every pixel
 /// recoloured to [color]: the selected tint shows wherever the pill is.
+///
+/// The housing's flex [scale] is applied here, beneath the refraction filter,
+/// rather than by an ancestor transform. A filter layer under an animating
+/// scale is placed on whole device pixels each frame, so while the pill lifted
+/// the selected copy popped between pixels against the smoothly scaling rest.
 class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
   const _SelectionWindowPaint({
     required this.path,
@@ -973,18 +978,22 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     required this.pixelRatio,
     required this.refraction,
     required this.depth,
+    required this.scale,
+    required this.origin,
     required super.child,
   });
   final Path? path;
   final Color color;
   final Rect lens;
-  final double lift, pixelRatio, refraction, depth;
+  final double lift, pixelRatio, refraction, depth, scale;
+  final Offset origin;
   final GlassShape shape;
   final ui.FragmentShader? shader;
   @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderSelectionWindow(path, color)
-        ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth);
+        ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth)
+        ..setScale(scale, origin);
   @override
   void updateRenderObject(
     BuildContext context,
@@ -993,7 +1002,8 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     renderObject
       ..path = path
       ..color = color
-      ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth);
+      ..configure(shader, lens, lift, shape, pixelRatio, refraction, depth)
+      ..setScale(scale, origin);
   }
 }
 
@@ -1014,6 +1024,22 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _color = value;
     markNeedsPaint();
   }
+
+  double _scale = 1;
+  Offset _origin = Offset.zero;
+  void setScale(double scale, Offset origin) {
+    if (scale == _scale && origin == _origin) return;
+    _scale = scale;
+    _origin = origin;
+    markNeedsPaint();
+  }
+
+  /// The flex scale about [_origin], or null at rest.
+  Matrix4? get _transform => _scale == 1
+      ? null
+      : (Matrix4.translationValues(_origin.dx, _origin.dy, 0)
+          ..scaleByDouble(_scale, _scale, 1, 1)
+          ..translateByDouble(-_origin.dx, -_origin.dy, 0, 1));
 
   ui.FragmentShader? _shader;
   Rect _lens = Rect.zero;
@@ -1047,34 +1073,55 @@ class _RenderSelectionWindow extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    final local = _transform;
+    if (local != null) transform.multiply(local);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      result.addWithPaintTransform(
+        transform: _transform,
+        position: position,
+        hitTest: (result, position) =>
+            super.hitTestChildren(result, position: position),
+      );
+
   Size? _contourSize;
-  GlassShape? _contourShape;
+  double? _contourRadius;
   List<double> _contour = [];
   ui.ImageFilter? _contentFilter() {
     final shader = _shader;
     if (shader == null || _lift < .001 || _refraction == 0) return null;
-    final contour = _shape.rect(_lens.size).shift(_lens.topLeft);
-    if (_contourSize != contour.size || _contourShape != _shape) {
+    // The filter sits outside the flex scale, so its lens is the scaled
+    // contour; lengths in points scale with it.
+    final local = _shape.rect(_lens.size).shift(_lens.topLeft);
+    final contour = Rect.fromCenter(
+      center: _origin + (local.center - _origin) * _scale,
+      width: local.width * _scale,
+      height: local.height * _scale,
+    );
+    final radius = _shape.radius * _scale;
+    if (_contourSize != contour.size || _contourRadius != radius) {
       _contourSize = contour.size;
-      _contourShape = _shape;
-      _contour = superellipseUniforms(contour.size, _shape.radius);
+      _contourRadius = radius;
+      _contour = superellipseUniforms(contour.size, radius);
     }
-    // Impeller crops the selected portal's input to its output clip. Express
-    // the lens relative to that crop, rather than the full foreground row.
-    final source = (Offset.zero & size).intersect(_path!.getBounds());
-    if (source.isEmpty) return null;
+    // The filter reads the whole foreground row, which stays put while the
+    // pill moves; the lens is expressed relative to that row.
     final values = [
-      contour.left - source.left,
-      contour.top - source.top,
+      contour.left,
+      contour.top,
       contour.width,
       contour.height,
       _pixelRatio * getTransformTo(null).getMaxScaleOnAxis(),
       _lift,
-      _shape.radius,
+      radius,
       _shape.isSmooth ? 1.0 : 0.0,
       ..._contour,
-      _refraction,
-      _depth,
+      _refraction * _scale,
+      _depth * _scale,
     ];
     for (var i = 0; i < values.length; i++) {
       shader.setFloat(i + 2, values[i]);
@@ -1086,6 +1133,31 @@ class _RenderSelectionWindow extends RenderProxyBox {
   final _clip = LayerHandle<ClipPathLayer>();
   final _outsideClip = LayerHandle<ClipPathLayer>();
   final _filter = LayerHandle<ColorFilterLayer>();
+  final _scaled = LayerHandle<TransformLayer>();
+  final _outsideScaled = LayerHandle<TransformLayer>();
+
+  /// Paints [painter] under the flex scale, reusing [handle]'s layer.
+  void _underScale(
+    PaintingContext context,
+    Offset offset,
+    LayerHandle<TransformLayer> handle,
+    PaintingContextCallback painter,
+  ) {
+    final local = _transform;
+    if (local == null) {
+      handle.layer = null;
+      painter(context, offset);
+    } else {
+      handle.layer = context.pushTransform(
+        needsCompositing,
+        offset,
+        local,
+        painter,
+        oldLayer: handle.layer,
+      );
+    }
+  }
+
   @override
   bool get alwaysNeedsCompositing => _path != null;
   @override
@@ -1094,11 +1166,17 @@ class _RenderSelectionWindow extends RenderProxyBox {
     if (child == null) return;
     final path = _path;
     if (path == null) {
-      context.paintChild(child, offset);
       _clip.layer = null;
       _outsideClip.layer = null;
       _filter.layer = null;
       _warp.layer = null;
+      _scaled.layer = null;
+      _underScale(
+        context,
+        offset,
+        _outsideScaled,
+        (context, offset) => context.paintChild(child, offset),
+      );
       return;
     }
     // The selected and unselected copies occupy complementary regions.
@@ -1108,52 +1186,67 @@ class _RenderSelectionWindow extends RenderProxyBox {
       Path()..addRect(Offset.zero & size),
       path,
     );
-    _outsideClip.layer = context.pushClipPath(
-      needsCompositing,
+    _underScale(
+      context,
       offset,
-      Offset.zero & size,
-      outside,
-      (context, offset) => context.paintChild(child, offset),
-      oldLayer: _outsideClip.layer,
+      _outsideScaled,
+      (context, offset) => _outsideClip.layer = context.pushClipPath(
+        needsCompositing,
+        offset,
+        Offset.zero & size,
+        outside,
+        (context, offset) => context.paintChild(child, offset),
+        oldLayer: _outsideClip.layer,
+      ),
     );
-    _clip.layer = context.pushClipPath(
-      needsCompositing,
-      offset,
-      path.getBounds(),
-      path,
-      (context, offset) {
-        void selected(PaintingContext context, Offset offset) {
-          _filter.layer = context.pushColorFilter(
-            offset,
-            ui.ColorFilter.mode(_color, BlendMode.srcIn),
-            (context, offset) => context.paintChild(child, offset),
-            oldLayer: _filter.layer,
-          );
-        }
+    void selected(PaintingContext context, Offset offset) {
+      _filter.layer = context.pushColorFilter(
+        offset,
+        ui.ColorFilter.mode(_color, BlendMode.srcIn),
+        (context, offset) => context.paintChild(child, offset),
+        oldLayer: _filter.layer,
+      );
+    }
 
-        final filter = _contentFilter();
-        if (filter == null) {
-          _warp.layer = null;
-          selected(context, offset);
-        } else {
-          final layer = _warp.layer ??= ImageFilterLayer();
-          layer.offset = offset;
-          layer.imageFilter = filter;
-          context.pushLayer(layer, (context, _) {
-            // Establish the full foreground source extent. Glyph-only ink
-            // bounds otherwise shift the shader's lens coordinate system.
-            context.canvas.drawRect(
-              Offset.zero & size,
-              Paint()
-                ..color = const Color(0x00000000)
-                ..blendMode = BlendMode.src,
-            );
-            selected(context, Offset.zero);
-          }, offset);
-        }
-      },
-      oldLayer: _clip.layer,
+    void clipped(PaintingContext context, Offset offset) => _underScale(
+      context,
+      offset,
+      _scaled,
+      (context, offset) => _clip.layer = context.pushClipPath(
+        needsCompositing,
+        offset,
+        path.getBounds(),
+        path,
+        selected,
+        oldLayer: _clip.layer,
+      ),
     );
+
+    final filter = _contentFilter();
+    if (filter == null) {
+      _warp.layer = null;
+      clipped(context, offset);
+      return;
+    }
+    // Clip inside the filter, not around it. Impeller sizes a filter's input
+    // to its clip; a clip that follows the pill moves that input by fractions
+    // of a pixel each frame, so the shader resampled the glyphs at a shifting
+    // phase and they shook in place. The shader only pulls samples inward from
+    // the contour, so clipping first leaves its output unchanged.
+    final layer = _warp.layer ??= ImageFilterLayer();
+    layer.offset = offset;
+    layer.imageFilter = filter;
+    context.pushLayer(layer, (context, _) {
+      // Establish the full foreground source extent. Glyph-only ink bounds
+      // otherwise shift the shader's lens coordinate system.
+      context.canvas.drawRect(
+        Offset.zero & size,
+        Paint()
+          ..color = const Color(0x00000000)
+          ..blendMode = BlendMode.src,
+      );
+      clipped(context, Offset.zero);
+    }, offset);
   }
 
   @override
@@ -1162,6 +1255,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _outsideClip.layer = null;
     _filter.layer = null;
     _warp.layer = null;
+    _scaled.layer = null;
+    _outsideScaled.layer = null;
     super.dispose();
   }
 }

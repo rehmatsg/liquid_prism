@@ -219,13 +219,15 @@ class _LiquidPrismState extends State<LiquidPrism> {
           widget.blur ??
           (widget.optics != null ? widget.optics!.frost : theme.blur),
     );
-    if (materialize && presence < 1) {
-      // Lens, frost, light and shadow share one curve, so the outline never
-      // arrives ahead of the lens; the spring supplies the easing.
+    if (presence < 1) {
+      // Frost is its own backdrop pass, which the output fade cannot reach,
+      // so it always follows presence. Materializing also grows the lens on
+      // the same curve, so the outline never arrives ahead of it; a plain
+      // fade keeps the full lens. The spring supplies the easing.
       style = style.copyWith(
-        refraction: style.refraction * presence,
-        dispersion: style.dispersion * presence,
         frost: style.frost * presence,
+        refraction: materialize ? style.refraction * presence : null,
+        dispersion: materialize ? style.dispersion * presence : null,
       );
     }
     final shader = _shader;

@@ -14,14 +14,19 @@ its selected icon/label near the rim. Avoid wrapping glass
 in an ancestor `Opacity` or `ImageFiltered` save layer: that can isolate its backdrop.
 Fade glass with `LiquidPrismPresence` instead. Presence travels in the recipe:
 shader slot `u_state.z` carries absence (1 − presence, so the zero default stays
-fully present) and premultiplies the output, shadows scale with it, and lens,
-dispersion and frost inputs grow with presence. Content fades and unblurs in
+fully present) and premultiplies the output, shadows scale with it, and frost
+(a separate backdrop pass) grows with presence. Materializing also grows the
+lens and dispersion; a plain fade (`materialize: false`) keeps the full lens. Content fades and unblurs in
 the glass's own child wrappers. Glass nested inside the content of a fading
 surface sits under that content fade while it runs.
 
 Smooth rectangles and capsules use Flutter's continuous-corner clipping and
 scalar shader passes. Circles retain their circular contour. Selected pills apply
 an independent blur and color adjustment beneath foreground content; held tabs additionally use the glyph refraction pass.
+That pass clips to the pill inside its filter and applies the housing's flex
+scale beneath it. Impeller places a filter layer on whole device pixels, so a
+clip that follows the pill or an animating ancestor scale makes the filtered
+glyphs pop between pixels against the unfiltered ones.
 
 Default regular glass also draws a separate inner ring and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
