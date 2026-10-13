@@ -45,4 +45,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('API example hosts suggestions under its search field', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ApiExample());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(LiquidPrismSearchField));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(CupertinoTextField), 'pr');
+    await tester.pumpAndSettle();
+    expect(find.text('Glass'), findsNothing);
+    final suggestion = find.text('Prism');
+    expect(
+      tester.getTopLeft(suggestion).dy,
+      greaterThan(tester.getBottomLeft(find.byType(LiquidPrism).first).dy),
+    );
+    await tester.tap(suggestion);
+    await tester.pumpAndSettle();
+    final editor = tester.widget<CupertinoTextField>(
+      find.byType(CupertinoTextField),
+    );
+    expect(editor.controller!.text, 'Prism');
+    expect(editor.focusNode!.hasFocus, isFalse);
+    expect(find.byType(CupertinoListTile), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }

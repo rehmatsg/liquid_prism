@@ -46,6 +46,10 @@ export "src/segmented_control.dart" show LiquidPrismSegmentedControl;
 
 export 'src/toolbar.dart'
     show GlassToolbarSize, GlassToolbarItem, LiquidPrismToolbarGroup;
-export 'src/search_field.dart' show LiquidPrismSearchField;
+export 'src/search_field.dart'
+    show
+        GlassSearchFieldBuilder,
+        GlassSearchSuffixBuilder,
+        LiquidPrismSearchField;
 
 export 'liquid_menu.dart';

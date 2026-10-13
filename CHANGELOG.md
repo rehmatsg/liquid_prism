@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Let apps host their own autocomplete on `LiquidPrismSearchField`:
+  `fieldBuilder` wraps the glass capsule as an overlay anchor, `groupId` and
+  `onTapOutside` share the editor's tap region, `onFocusChange` reports focus
+  transitions, and `suffixBuilder` keeps or replaces the clear action. The
+  cancel action now belongs to the editor's tap region group.
+- Add `GlassSearchStyle.padding` and `prefixPadding` for the editor and the
+  default search icon.
 - Measure the tab foreground lens's raster scale when the scene is composed,
   from the layers that composite it. An ancestor transform that animates
   beneath a repaint boundary, such as a page scaled behind a modal sheet, no
