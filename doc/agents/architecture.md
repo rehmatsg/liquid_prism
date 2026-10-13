@@ -23,7 +23,7 @@ under `lib/src/` are not a consumer contract.
 | `chrome_layout.dart`, `sidebar.dart` | Scaffold placement (bottom bar, side rail or sidebar), chrome axis scope and body padding |
 | `system_chrome.dart`, `ios/.../SystemChromeObserver.swift` | iOS 27.1 vertical bar edge and reserved regions, streamed on `liquid_prism/system_chrome` |
 | `menu/`, `ios/Classes/` | Menu models, platform interface, fallback and UIKit presentation |
-| `shaders/` | Impeller glass, batched surfaces, tab glyph refraction and the progressive edge blur |
+| `shaders/` | Impeller glass, batched surfaces, tab glyph refraction, the progressive edge blur and its haze mask |
 
 ## Ownership
 

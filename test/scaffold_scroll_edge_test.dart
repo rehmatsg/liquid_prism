@@ -5,6 +5,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 const _body = Key('body');
 
 void main() {
+  accessoryTests();
   void phone(WidgetTester tester) {
     tester.view
       ..devicePixelRatio = 1
@@ -166,4 +167,65 @@ void main() {
     expect(spec.fadeColor, isNull);
     expect(spec.sigma, GlassScrollEdgeStyle.defaultSigma);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+}
+
+void accessoryTests() {
+  testWidgets('an accessory sits under the bar inside the effect', (
+    tester,
+  ) async {
+    tester.view
+      ..devicePixelRatio = 1
+      ..physicalSize = const Size(402, 874)
+      ..padding = const FakeViewPadding(top: 62, bottom: 34)
+      ..viewPadding = const FakeViewPadding(top: 62, bottom: 34);
+    addTearDown(tester.view.reset);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          backgroundColor: const Color(0xFF101010),
+          scrollEdgeStyle: const GlassScrollEdgeStyle(
+            variant: GlassScrollEdgeVariant.hard,
+          ),
+          leading: const SizedBox(width: 44, height: 44),
+          accessory: const PreferredSize(
+            preferredSize: Size.fromHeight(36),
+            child: SizedBox(key: Key('tabs'), height: 36),
+          ),
+          body: ListView.builder(
+            key: _body,
+            controller: controller,
+            itemCount: 60,
+            itemBuilder: (context, index) =>
+                SizedBox(height: 44, child: Text('Row $index')),
+          ),
+        ),
+      ),
+    );
+    final tabs = tester.getRect(find.byKey(const Key('tabs')));
+    expect(tabs.top, 62 + 44);
+    expect(tabs.height, 36);
+    expect(tabs.width, 402);
+    final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
+    expect(padding.top, 62 + 44 + 36 + 14);
+
+    controller.jumpTo(100);
+    await tester.pump();
+    final blur = find.byType(LiquidPrismEdgeBlur);
+    expect(tester.getSize(blur), const Size(402, 62 + 44 + 36));
+    final spec = tester.widget<LiquidPrismEdgeBlur>(blur).edges.single;
+    expect(spec.extent, 62 + 44 + 36, reason: 'hard: no reach past the bar');
+    expect(spec.floor, GlassScrollEdgeStyle.defaultHardFloor);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  test('the fade gradient keeps its floor at the far end', () {
+    final gradient = GlassEdgeFade.gradient(
+      color: const Color(0xFFFFFFFF),
+      floor: .4,
+      opacity: .5,
+    );
+    expect(gradient.colors.first.a, closeTo(.5, 1e-6));
+    expect(gradient.colors.last.a, closeTo(.2, 1e-6));
+  });
 }

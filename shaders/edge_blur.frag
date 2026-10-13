@@ -21,7 +21,8 @@ uniform vec4 u_matrix;
 // Its inverse, precomputed per surface.
 uniform vec4 u_inverse;
 // Start (top/left) strip: extent (logical px, 0 = off), max sigma (logical
-// px), leading fraction held at full sigma, unused.
+// px), leading fraction held at full sigma, floor (the fraction of full
+// strength kept at the strip's inner end, for a hard edge).
 uniform vec4 u_start;
 // End (bottom/right) strip, same layout.
 uniform vec4 u_end;
@@ -33,18 +34,21 @@ out vec4 frag_color;
 // blur at 3x). Larger sigmas truncate their kernel; the loop ends early below.
 #define MAX_PAIRS 36
 
-// Smootherstep: zero first and second derivatives at both ends, the same curve
-// as GlassFadeCurve in Dart so a blur and a fade over one strip track exactly.
-float smootherstep01(float t) {
-  return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+// Smoothstep, the curve fitted to the mask of iOS 27's scroll edge effect
+// (doc/native_scroll_edge_spec.md), the same as GlassFadeCurve in Dart so a
+// blur and a fade over one strip track exactly.
+float smoothstep01(float t) {
+  return t * t * (3.0 - 2.0 * t);
 }
 
-// Blur strength 1 -> 0 across a strip, with a solid plateau near the edge.
-float ramp(float dist, float extent, float plateau) {
-  if (extent <= 0.0) return 0.0;
+// Blur strength 1 -> floor across a strip, with a solid plateau near the
+// edge, and nothing past the strip.
+float ramp(float dist, float extent, float plateau, float floorStrength) {
+  if (extent <= 0.0 || dist >= extent) return 0.0;
   float t = clamp(dist / extent, 0.0, 1.0);
   if (t <= plateau) return 1.0;
-  return 1.0 - smootherstep01((t - plateau) / (1.0 - plateau));
+  float fall = 1.0 - smoothstep01((t - plateau) / (1.0 - plateau));
+  return floorStrength + (1.0 - floorStrength) * fall;
 }
 
 // Samples the input at p (texture px, Flutter orientation), clamped to bounds.
@@ -85,8 +89,8 @@ void main() {
 
   // The two strips sit on opposite edges, so summing is exact.
   float sigmaLogical =
-      u_start.y * ramp(coord, u_start.x, u_start.z)
-      + u_end.y * ramp(len - coord, u_end.x, u_end.z);
+      u_start.y * ramp(coord, u_start.x, u_start.z, u_start.w)
+      + u_end.y * ramp(len - coord, u_end.x, u_end.z, u_end.w);
   if (sigmaLogical < 0.02) {
     frag_color = sampleTexture(xy);
     return;

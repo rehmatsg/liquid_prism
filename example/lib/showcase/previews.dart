@@ -769,6 +769,7 @@ class ScrollEdgePreview extends StatefulWidget {
 class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
   final controller = ScrollController();
   int likes = 0;
+  bool hard = false;
   @override
   void dispose() {
     controller.dispose();
@@ -833,6 +834,11 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
                           controller.hasClients ? controller.offset : 0,
                         ),
                         color: Art.backgrounds[widget.model.wallpaper],
+                        style: GlassScrollEdgeStyle(
+                          variant: hard
+                              ? GlassScrollEdgeVariant.hard
+                              : GlassScrollEdgeVariant.soft,
+                        ),
                       ),
                     ),
                     Padding(
@@ -867,9 +873,15 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
                                 onPressed: () => setState(() => likes++),
                               ),
                               GlassToolbarItem(
-                                icon: const Icon(CupertinoIcons.share),
-                                label: 'Share row',
-                                onPressed: () {},
+                                icon: Icon(
+                                  hard
+                                      ? CupertinoIcons
+                                            .rectangle_compress_vertical
+                                      : CupertinoIcons
+                                            .rectangle_expand_vertical,
+                                ),
+                                label: hard ? 'Soft edge' : 'Hard edge',
+                                onPressed: () => setState(() => hard = !hard),
                               ),
                             ],
                           ),

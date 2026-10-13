@@ -339,10 +339,33 @@ glass controls refract the content beneath, not the blur.
 `LiquidPrismScaffold` draws this effect under its top bar while the body's
 outermost scroll view is scrolled, fading toward its `backgroundColor`
 (without one, it blurs only). `scrollEdge: false` turns it off and
-`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it: a 4-point blur and a
-half-opacity fade at full strength, reached 48 points above the effect's lower
-end and held to the top, 20 points of reach below the bar, and a 16-point
-scroll over which it arrives. These are fitted by eye, not measured.
+`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it. The defaults are
+measured from iOS 27's own effect ([spec](native_scroll_edge_spec.md)): a
+1.5-point variable blur and a half-opacity fade held over the top third of the
+strip and falling along a smoothstep over its last 98 points, a 16-point haze
+blended in at half opacity, 50 points of reach below the bar, and a 16-point
+scroll over which it arrives (the reveal is this package's; native shows it as
+soon as content is beneath).
+
+`GlassScrollEdgeVariant.hard` is the effect under a bar with a background, as
+SwiftUI's `.hard` style: it stops at the bar's edge with a one-pixel hairline,
+blurs 2 points keeping a quarter of that to the edge, and holds its fade and
+haze flat. Give the scaffold an `accessory` (a `PreferredSizeWidget` such as
+segmented tabs) to extend the bar below its capsules; the effect and the body's
+padding cover it. Together they make a bar like a native navigation bar with a
+palette of tabs:
+
+```dart
+LiquidPrismScaffold(
+  backgroundColor: background,
+  scrollEdgeStyle: const GlassScrollEdgeStyle(variant: GlassScrollEdgeVariant.hard),
+  accessory: PreferredSize(
+    preferredSize: const Size.fromHeight(44),
+    child: LiquidPrismSegmentedControl<int>(...),
+  ),
+  body: ...,
+)
+```
 
 For a bar of your own, lay `LiquidPrismScrollEdge` in the bar's background,
 filling the bar's box with the title and controls painted above it, and drive
@@ -383,10 +406,15 @@ LiquidPrismEdgeBlur(
 )
 ```
 
-Animate by scaling `sigma` and `fadeOpacity`; an ancestor `Opacity` does not
-attenuate a backdrop blur. With nothing active the widget paints straight
-through without a layer, so child state survives. `GlassEdgeFade.gradient`
-builds the same fade as a plain `LinearGradient` for decorations.
+Each strip can also hold a `floor` of strength at its inner end, a `fadeFloor`
+for a fade that stays flat, and a `haze`: a heavy blur blended in at
+`hazeOpacity`, masked linearly past `hazePlateau`, the way native bars lay a
+16-point blur at half opacity under their light variable blur so fine detail
+softens without vanishing. Animate by scaling `sigma`, `fadeOpacity` and
+`hazeOpacity`; an ancestor `Opacity` does not attenuate a backdrop blur. With
+nothing active the widget paints straight through without a layer, so child
+state survives. `GlassEdgeFade.gradient` builds the same fade as a plain
+`LinearGradient` for decorations.
 
 ## Search
 

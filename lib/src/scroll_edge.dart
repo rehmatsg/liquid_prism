@@ -6,29 +6,55 @@ import 'glass.dart';
 import 'motion.dart';
 import 'theme.dart';
 
+/// How a scroll edge effect ends at the bar's inner side.
+enum GlassScrollEdgeVariant {
+  /// Dissolves into the content a little past the bar, as under floating
+  /// glass bar buttons.
+  soft,
+
+  /// Stops at the bar's inner side with a hard edge, as under a bar with a
+  /// background. The blur and fade still ramp within the bar.
+  hard,
+}
+
 /// Appearance of a scroll edge effect: the progressive blur and fade iOS
 /// applies to content scrolled under a bar.
 ///
-/// Unspecified fields inherit the theme, then the fitted defaults: a 4-point
-/// blur and a half-opacity fade that both reach full strength 48 points above
-/// the effect's inner end and hold it to the edge, reach 20 points past the
-/// bar, and arrive over the first 16 points of scroll. The native soft effect
-/// was not measured pixel by pixel; these are fitted by eye on iOS 26.
+/// Unspecified fields inherit the theme, then the measured native defaults
+/// (doc/native_scroll_edge_spec.md, iOS 27.0): a 1.5-point variable blur and
+/// a half-opacity fade that hold full strength over the top third of the
+/// effect and fall along [GlassEdgeFade.curve] over its remaining 98 points,
+/// a 16-point haze blended in at half opacity, and 50 points of reach past
+/// the bar. The hard variant blurs 2 points, keeps a quarter of its blur, its
+/// whole fade and its whole haze to the bar's edge, and draws a hairline
+/// there. The effect arrives over the first 16 points of scroll, which is
+/// this package's reveal; native bars show it as soon as content is beneath.
 @immutable
 class GlassScrollEdgeStyle {
   const GlassScrollEdgeStyle({
+    this.variant,
     this.sigma,
     this.falloff,
     this.extension,
+    this.floor,
     this.fadeColor,
     this.fadeOpacity,
+    this.haze,
+    this.hazeOpacity,
+    this.hairline,
     this.revealExtent,
     this.spring,
   }) : assert(sigma == null || sigma >= 0),
        assert(falloff == null || falloff >= 0),
        assert(extension == null || extension >= 0),
+       assert(floor == null || (floor >= 0 && floor <= 1)),
        assert(fadeOpacity == null || (fadeOpacity >= 0 && fadeOpacity <= 1)),
+       assert(haze == null || haze >= 0),
+       assert(hazeOpacity == null || (hazeOpacity >= 0 && hazeOpacity <= 1)),
        assert(revealExtent == null || revealExtent > 0);
+
+  /// Soft or hard. Defaults to [GlassScrollEdgeVariant.soft].
+  final GlassScrollEdgeVariant? variant;
 
   /// Gaussian sigma at full strength, in logical pixels. Zero fades only.
   final double? sigma;
@@ -38,8 +64,14 @@ class GlassScrollEdgeStyle {
   final double? falloff;
 
   /// How far the effect reaches past the box it is given, so a bar's lower
-  /// edge dissolves into the content instead of drawing a horizon.
+  /// edge dissolves into the content instead of drawing a horizon. The hard
+  /// variant defaults to none.
   final double? extension;
+
+  /// Fraction of full strength kept at the effect's inner end, 0–1. The soft
+  /// variant defaults to none; the hard variant keeps part of its blur and
+  /// fade up to its edge.
+  final double? floor;
 
   /// The surface content fades into. Null fades toward the color the widget
   /// is given, else blurs only.
@@ -49,6 +81,17 @@ class GlassScrollEdgeStyle {
   /// partly visible.
   final double? fadeOpacity;
 
+  /// Sigma of the heavy blur blended into the effect ([GlassEdgeBlur.haze]).
+  /// Zero leaves only the variable blur.
+  final double? haze;
+
+  /// The haze's opacity, 0–1.
+  final double? hazeOpacity;
+
+  /// Whether the hard variant draws a one-pixel 10% black line at its edge,
+  /// as native bars do. Ignored by the soft variant.
+  final bool? hairline;
+
   /// Scroll distance over which the effect fades in, in logical pixels.
   final double? revealExtent;
 
@@ -57,19 +100,29 @@ class GlassScrollEdgeStyle {
 
   /// Keep existing fields when an argument is null.
   GlassScrollEdgeStyle copyWith({
+    GlassScrollEdgeVariant? variant,
     double? sigma,
     double? falloff,
     double? extension,
+    double? floor,
     Color? fadeColor,
     double? fadeOpacity,
+    double? haze,
+    double? hazeOpacity,
+    bool? hairline,
     double? revealExtent,
     GlassSpring? spring,
   }) => GlassScrollEdgeStyle(
+    variant: variant ?? this.variant,
     sigma: sigma ?? this.sigma,
     falloff: falloff ?? this.falloff,
     extension: extension ?? this.extension,
+    floor: floor ?? this.floor,
     fadeColor: fadeColor ?? this.fadeColor,
     fadeOpacity: fadeOpacity ?? this.fadeOpacity,
+    haze: haze ?? this.haze,
+    hazeOpacity: hazeOpacity ?? this.hazeOpacity,
+    hairline: hairline ?? this.hairline,
     revealExtent: revealExtent ?? this.revealExtent,
     spring: spring ?? this.spring,
   );
@@ -78,11 +131,16 @@ class GlassScrollEdgeStyle {
   GlassScrollEdgeStyle merge(GlassScrollEdgeStyle? other) => other == null
       ? this
       : GlassScrollEdgeStyle(
+          variant: other.variant ?? variant,
           sigma: other.sigma ?? sigma,
           falloff: other.falloff ?? falloff,
           extension: other.extension ?? extension,
+          floor: other.floor ?? floor,
           fadeColor: other.fadeColor ?? fadeColor,
           fadeOpacity: other.fadeOpacity ?? fadeOpacity,
+          haze: other.haze ?? haze,
+          hazeOpacity: other.hazeOpacity ?? hazeOpacity,
+          hairline: other.hairline ?? hairline,
           revealExtent: other.revealExtent ?? revealExtent,
           spring: other.spring ?? spring,
         );
@@ -91,31 +149,52 @@ class GlassScrollEdgeStyle {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is GlassScrollEdgeStyle &&
+          other.variant == variant &&
           other.sigma == sigma &&
           other.falloff == falloff &&
           other.extension == extension &&
+          other.floor == floor &&
           other.fadeColor == fadeColor &&
           other.fadeOpacity == fadeOpacity &&
+          other.haze == haze &&
+          other.hazeOpacity == hazeOpacity &&
+          other.hairline == hairline &&
           other.revealExtent == revealExtent &&
           other.spring == spring;
 
   @override
   int get hashCode => Object.hash(
+    variant,
     sigma,
     falloff,
     extension,
+    floor,
     fadeColor,
     fadeOpacity,
+    haze,
+    hazeOpacity,
+    hairline,
     revealExtent,
     spring,
   );
 
-  // Fitted defaults; see the class comment.
-  static const double defaultSigma = 4;
-  static const double defaultFalloff = 48;
-  static const double defaultExtension = 20;
+  // Measured on iOS 27.0; see doc/native_scroll_edge_spec.md.
+  static const double defaultSigma = 1.5;
+  static const double defaultFalloff = 98;
+  static const double defaultExtension = 50;
   static const double defaultFadeOpacity = .5;
+  static const double defaultHaze = 16;
+  static const double defaultHazeOpacity = .5;
+  static const double defaultHazePlateau = .34;
   static const double defaultRevealExtent = 16;
+
+  /// The hard variant's defaults: a 2-point blur that keeps a quarter of its
+  /// strength at the edge, falling over the lower 51 points of the bar, with
+  /// no reach past it and the fade and haze held to the edge.
+  static const double defaultHardSigma = 2;
+  static const double defaultHardFalloff = 51;
+  static const double defaultHardFloor = .25;
+  static const Color hairlineColor = Color(0x1A000000);
 
   /// The style at [context]: theme, then [override].
   static GlassScrollEdgeStyle resolve(
@@ -185,13 +264,30 @@ class LiquidPrismScrollEdge extends StatelessWidget {
     final strength = progress.clamp(0.0, 1.0);
     if (strength <= 0) return const SizedBox.shrink();
     final resolved = GlassScrollEdgeStyle.resolve(context, style);
+    final hard = resolved.variant == GlassScrollEdgeVariant.hard;
     final extension =
-        resolved.extension ?? GlassScrollEdgeStyle.defaultExtension;
-    final falloff = resolved.falloff ?? GlassScrollEdgeStyle.defaultFalloff;
-    final sigma = resolved.sigma ?? GlassScrollEdgeStyle.defaultSigma;
+        resolved.extension ??
+        (hard ? 0 : GlassScrollEdgeStyle.defaultExtension);
+    final floor =
+        resolved.floor ?? (hard ? GlassScrollEdgeStyle.defaultHardFloor : 0);
+    final falloff =
+        resolved.falloff ??
+        (hard
+            ? GlassScrollEdgeStyle.defaultHardFalloff
+            : GlassScrollEdgeStyle.defaultFalloff);
+    final sigma =
+        resolved.sigma ??
+        (hard
+            ? GlassScrollEdgeStyle.defaultHardSigma
+            : GlassScrollEdgeStyle.defaultSigma);
     final fade = color ?? resolved.fadeColor;
     final opacity =
         resolved.fadeOpacity ?? GlassScrollEdgeStyle.defaultFadeOpacity;
+    final haze = resolved.haze ?? GlassScrollEdgeStyle.defaultHaze;
+    final hazeOpacity =
+        resolved.hazeOpacity ?? GlassScrollEdgeStyle.defaultHazeOpacity;
+    final hairline = hard && (resolved.hairline ?? true);
+    final pixel = 1 / MediaQuery.devicePixelRatioOf(context);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -216,8 +312,15 @@ class LiquidPrismScrollEdge extends StatelessWidget {
                       extent: extent,
                       sigma: sigma * strength,
                       plateau: extent <= falloff ? 0 : 1 - falloff / extent,
+                      floor: floor,
                       fadeColor: fade,
                       fadeOpacity: opacity * strength,
+                      fadeFloor: hard ? 1 : null,
+                      haze: haze,
+                      hazeOpacity: hazeOpacity * strength,
+                      hazePlateau: hard
+                          ? 1
+                          : GlassScrollEdgeStyle.defaultHazePlateau,
                     ),
                   ],
                 );
@@ -225,6 +328,23 @@ class LiquidPrismScrollEdge extends StatelessWidget {
             ),
           ),
         ),
+        if (hairline)
+          Positioned(
+            top: edge == GlassEdge.bottom ? 0 : null,
+            bottom: edge == GlassEdge.top ? 0 : null,
+            left: edge == GlassEdge.right ? 0 : null,
+            right: edge == GlassEdge.left ? 0 : null,
+            width: edge.isHorizontal ? null : pixel,
+            height: edge.isHorizontal ? pixel : null,
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: strength,
+                child: const ColoredBox(
+                  color: GlassScrollEdgeStyle.hairlineColor,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

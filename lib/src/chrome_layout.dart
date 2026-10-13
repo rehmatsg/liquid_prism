@@ -98,6 +98,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions = const [],
+    this.accessory,
     this.tabBar,
     this.placement,
     this.backgroundColor,
@@ -119,6 +120,12 @@ class LiquidPrismScaffold extends StatefulWidget {
 
   /// Actions sharing one glass capsule: top trailing, or atop the rail.
   final List<GlassToolbarItem> actions;
+
+  /// A row below the top bar and inside its scroll edge effect, such as
+  /// segmented tabs, sized by its preferred height and spanning the content
+  /// width. Pair it with [GlassScrollEdgeVariant.hard] for a bar with a
+  /// hard edge, as a native navigation bar with a bottom palette.
+  final PreferredSizeWidget? accessory;
 
   /// Usually a [LiquidPrismTabBar]. It adopts the placement's axis unless it
   /// sets its own.
@@ -336,6 +343,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         textDirection: Directionality.of(context),
         iOS: defaultTargetPlatform == TargetPlatform.iOS,
         topBar: topBar,
+        accessoryHeight: widget.accessory?.preferredSize.height ?? 0,
         actionsTop: actionsTop,
         railBottom: railBottom,
         corner: corner,
@@ -355,7 +363,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   : media.copyWith(
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
-              child: widget.scrollEdge && topBar
+              child: widget.scrollEdge && (topBar || widget.accessory != null)
                   ? NotificationListener<ScrollMetricsNotification>(
                       onNotification: (n) =>
                           n.depth == 0 && _onScroll(n.metrics),
@@ -371,7 +379,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ),
         // Behind the bar's controls, over the body: it shares their captures
         // and is cut out of their contours (see LiquidPrismEdgeBlur).
-        if (widget.scrollEdge && topBar)
+        if (widget.scrollEdge && (topBar || widget.accessory != null))
           LayoutId(
             id: _Slot.scrollEdge,
             child: GlassGroupMembers(
@@ -392,6 +400,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ),
               ),
             ),
+          ),
+        if (widget.accessory case final accessory?)
+          LayoutId(
+            id: _Slot.accessory,
+            child: GlassGroupMembers(child: accessory),
           ),
         // Beneath the panel, as natively: the panel slides over it.
         if (sidebarTabs != null)
@@ -542,6 +555,7 @@ class _Ellipsis extends StatelessWidget {
 enum _Slot {
   body,
   scrollEdge,
+  accessory,
   sidebar,
   sidebarToggle,
   leading,
@@ -597,6 +611,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.textDirection,
     required this.iOS,
     required this.topBar,
+    required this.accessoryHeight,
     required this.actionsTop,
     required this.railBottom,
     required this.corner,
@@ -607,6 +622,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final GlassChromePlacement placement;
   final EdgeInsets viewPadding;
   final double keyboard, actionsTop, railBottom;
+
+  /// Height of the row below the top bar, 0 without one.
+  final double accessoryHeight;
 
   /// A status bar region in a top corner, which the top bar's row avoids.
   final Rect? corner;
@@ -743,11 +761,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
               (railRight - math.min(railRight, size.width - sidebarWidth)) *
                   shown
         : railRight;
+    final barRow = topBar ? LiquidPrismScaffold.topBarHeight : 0.0;
     var covered = EdgeInsets.only(
-      top: topBar
-          ? top +
-                LiquidPrismScaffold.topBarHeight +
-                LiquidPrismScaffold.topBarClearance
+      top: topBar || accessoryHeight > 0
+          ? top + barRow + accessoryHeight + LiquidPrismScaffold.topBarClearance
           : top,
     );
     // The top bar row ends where a corner status bar begins.
@@ -759,17 +776,28 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         : contentRight;
 
     if (hasChild(_Slot.scrollEdge)) {
-      // The bar's box, status bar included; the effect reaches below it.
+      // The bar's box, status bar and accessory included; a soft effect
+      // reaches below it.
       layoutChild(
         _Slot.scrollEdge,
         BoxConstraints.tight(
           Size(
             math.max(0, contentRight - contentLeft),
-            top + LiquidPrismScaffold.topBarHeight,
+            top + barRow + accessoryHeight,
           ),
         ),
       );
       positionChild(_Slot.scrollEdge, Offset(contentLeft, 0));
+    }
+    if (hasChild(_Slot.accessory)) {
+      layoutChild(
+        _Slot.accessory,
+        BoxConstraints.tightFor(
+          width: math.max(0, contentRight - contentLeft),
+          height: accessoryHeight,
+        ),
+      );
+      positionChild(_Slot.accessory, Offset(contentLeft, top + barRow));
     }
 
     if (hasChild(_Slot.sidebar)) {
@@ -901,6 +929,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       textDirection != old.textDirection ||
       iOS != old.iOS ||
       topBar != old.topBar ||
+      accessoryHeight != old.accessoryHeight ||
       actionsTop != old.actionsTop ||
       railBottom != old.railBottom ||
       corner != old.corner ||

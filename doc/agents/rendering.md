@@ -94,12 +94,24 @@ painted. Hoisted effects skip their own `_EdgePassLayer` and `_EdgeFadeLayer`;
 a lone shared member stays shared while an effect is hoisted.
 
 The pass uniforms are `u_pass`, `u_box`, `u_matrix`, `u_inverse`, `u_start`,
-`u_end` (24 floats after the engine's texture size); keep `_uniforms` and
+`u_end` (24 floats after the engine's texture size; the strips' fourth
+components are their strength floors); keep `_uniforms` and
 `shaders/edge_blur.frag` in step. The shader pairs Gaussian taps into one
 bilinear read, so the backdrop sampler is bound linear through the same 1 x 1
-image trick as the optical shader, and derives weights incrementally. Under an
-isolating ancestor the effect filters its child's raster through a composed
-`ImageFilter` on its content layer instead, and adds no backdrop pass.
+image trick as the optical shader, and derives weights incrementally. Its ramp
+is smoothstep, fitted to the native mask (doc/native_scroll_edge_spec.md).
+
+The haze (`GlassEdgeBlur.haze`) is a third backdrop filter after the vertical
+pass: `ImageFilter.compose(outer: shader(edge_haze.frag), inner:
+ImageFilter.blur(sigma))`. The engine blurs the capture (downsampled, cheap)
+and the mask shader scales the result's premultiplied colour by a per-row
+weight (`u_start`/`u_end`: extent, opacity, plateau), so composited over the
+pass it blends the heavy blur in by that weight, as native bars composite a
+16-point blur at half opacity under a linear mask. Hoisted, it reads
+`sharedKey` like the vertical pass. It is skipped in the texture frame. Under
+an isolating ancestor the effect filters its child's raster through a
+composed `ImageFilter` on its content layer instead, and adds no backdrop
+pass.
 
 ## Shared lens and shadows
 

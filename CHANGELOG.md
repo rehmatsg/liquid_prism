@@ -20,6 +20,19 @@
   each. Plain clips (a viewport, an app bar's toolbar clip) between a member
   and its group no longer keep it out of the shared capture; the hoisted shadow
   and frost are clipped the same way.
+- Measure iOS 27's scroll edge effect and build the defaults from it
+  (`doc/native_scroll_edge_spec.md`, probe under `tool/native_scroll_edge_probe`).
+  The native effect is a 16-point blur at half opacity under a light 1.5-point
+  variable blur and a half fade, masked by a smoothstep; `GlassFadeCurve` is
+  now smoothstep, `GlassEdgeBlur` gains `haze`, `hazeOpacity`, `hazePlateau`,
+  `floor` and `fadeFloor`, and the defaults become sigma 1.5, falloff 98,
+  reach 50 and a 16-point haze at half opacity. The old 4-point blur and
+  smootherstep were fitted by eye and read harder than native.
+- Add `GlassScrollEdgeVariant.hard`, the effect under a bar with a background:
+  no reach past the bar, a 2-point blur keeping a quarter of its strength to
+  the edge, the fade and haze held flat, and a one-pixel 10% black hairline.
+  `LiquidPrismScaffold.accessory` adds a row of tabs or controls below the top
+  bar inside the effect and the body's padding.
 - Imply a leading control in `LiquidPrismScaffold`: when its route can pop
   and `leading` is null, a `LiquidPrismBackButton` draws a back chevron, or a
   close mark on a fullscreen dialog, and pops the route.

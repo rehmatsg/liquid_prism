@@ -18,7 +18,11 @@ export 'src/edge_fade.dart' show GlassEdge, GlassEdgeFade, GlassFadeCurve;
 export 'src/glass.dart'
     show GlassEdgeBlur, LiquidPrism, LiquidPrismEdgeBlur, LiquidPrismGroup;
 export 'src/scroll_edge.dart'
-    show GlassScrollEdgeStyle, LiquidPrismScrollEdge, LiquidPrismScrollFade;
+    show
+        GlassScrollEdgeStyle,
+        GlassScrollEdgeVariant,
+        LiquidPrismScrollEdge,
+        LiquidPrismScrollFade;
 export 'src/glass_transition.dart'
     show
         GlassTransition,

@@ -24,6 +24,8 @@ JSON; preserve unresolved questions instead of upgrading an approximation to fac
 - [Control sizes/timing](../native_controls_spec.md),
   [continuous slider endpoint fill](../native_slider_fill_spec.json).
 - [Toolbar/search geometry](../native_chrome_spec.md).
+- [Scroll edge effect composition, mask curve and pixel profile](../native_scroll_edge_spec.md),
+  from `tool/native_scroll_edge_probe`.
 - [Palette](../native_colors.md), [shadows](../native_shadows.md).
 - [Showcase comparison](../native_showcase_comparison.md).
 

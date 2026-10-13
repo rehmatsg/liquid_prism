@@ -11,8 +11,8 @@ void main() {
     expect(GlassEdgeFade.curve.transform(.5), .5);
     expect(GlassEdgeFade.curve.transform(1), 1);
     // Flat at both ends: the first samples barely move.
-    expect(GlassEdgeFade.curve.transform(1 / 16), lessThan(.01));
-    expect(GlassEdgeFade.curve.transform(15 / 16), greaterThan(.99));
+    expect(GlassEdgeFade.curve.transform(1 / 16), lessThan(.02));
+    expect(GlassEdgeFade.curve.transform(15 / 16), greaterThan(.98));
 
     final gradient = GlassEdgeFade.gradient(
       color: const Color(0xFF102030),
@@ -188,15 +188,16 @@ void main() {
     await tester.pumpWidget(build(1));
     final blur = find.byType(LiquidPrismEdgeBlur);
     expect(blur, findsOneWidget);
-    // The default effect reaches 20 points below the bar's box.
-    expect(tester.getSize(blur), const Size(300, 120));
+    // The default effect reaches 50 points below the bar's box.
+    expect(tester.getSize(blur), const Size(300, 150));
     final spec = tester.widget<LiquidPrismEdgeBlur>(blur).edges.single;
     expect(spec.edge, GlassEdge.top);
-    expect(spec.extent, 120);
+    expect(spec.extent, 150);
     expect(spec.sigma, GlassScrollEdgeStyle.defaultSigma);
     expect(spec.fadeOpacity, GlassScrollEdgeStyle.defaultFadeOpacity);
-    // Full strength holds down to 48 points above the strip's end.
-    expect(spec.plateau, closeTo(1 - 48 / 120, 1e-9));
+    // Full strength holds down to 98 points above the strip's end.
+    expect(spec.plateau, closeTo(1 - 98 / 150, 1e-9));
+    expect(spec.haze, GlassScrollEdgeStyle.defaultHaze);
 
     await tester.pumpWidget(build(.5));
     final half = tester.widget<LiquidPrismEdgeBlur>(blur).edges.single;

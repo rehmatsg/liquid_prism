@@ -14,12 +14,22 @@ class GlassEdgeBlur {
     required this.extent,
     this.sigma = 0,
     this.plateau = 0,
+    this.floor = 0,
     this.fadeColor,
     this.fadeOpacity = 1,
+    this.fadeFloor,
+    this.haze = 0,
+    this.hazeOpacity = .5,
+    this.hazePlateau = .34,
   }) : assert(extent >= 0),
        assert(sigma >= 0),
        assert(plateau >= 0 && plateau < 1),
-       assert(fadeOpacity >= 0 && fadeOpacity <= 1);
+       assert(floor >= 0 && floor <= 1),
+       assert(fadeOpacity >= 0 && fadeOpacity <= 1),
+       assert(fadeFloor == null || (fadeFloor >= 0 && fadeFloor <= 1)),
+       assert(haze >= 0),
+       assert(hazeOpacity >= 0 && hazeOpacity <= 1),
+       assert(hazePlateau >= 0 && hazePlateau <= 1);
 
   /// Which edge of the box the strip sits on.
   final GlassEdge edge;
@@ -35,14 +45,39 @@ class GlassEdgeBlur {
   /// before the smootherstep falloff begins.
   final double plateau;
 
+  /// Fraction of full strength the blur and fade keep at the strip's inner
+  /// end, 0–1. Zero dissolves into the content; above zero the strip ends
+  /// with a hard edge, as a bar with a hard scroll edge effect does.
+  final double floor;
+
   /// Fades the strip toward this color, solid at the edge. Null fades nothing.
   final Color? fadeColor;
 
   /// The fade's opacity at the edge, 0–1.
   final double fadeOpacity;
 
+  /// Fraction of the fade kept at the strip's inner end, in place of [floor].
+  /// 1 holds the fade flat to the edge, as a hard scroll edge effect does.
+  final double? fadeFloor;
+
+  /// Sigma of a heavy blur blended into the strip at [hazeOpacity], the way
+  /// native bars lay a 16-point blur at half opacity under their light
+  /// variable blur, so fine detail softens without disappearing. Zero adds
+  /// none. It runs through the engine's own blur, not the per-pixel pass.
+  final double haze;
+
+  /// The haze's opacity at the edge, 0–1.
+  final double hazeOpacity;
+
+  /// Leading fraction of the strip held at full [hazeOpacity] before it falls
+  /// linearly to nothing at the inner end; 1 holds it to the edge.
+  final double hazePlateau;
+
   /// Whether the strip blurs.
   bool get blurs => sigma > 0.01 && extent > 0;
+
+  /// Whether the strip blends a heavy blur.
+  bool get hazes => haze > 0.01 && hazeOpacity > 0 && extent > 0;
 
   /// Whether the strip fades.
   bool get fades =>
@@ -53,15 +88,25 @@ class GlassEdgeBlur {
     double? extent,
     double? sigma,
     double? plateau,
+    double? floor,
     Color? fadeColor,
     double? fadeOpacity,
+    double? fadeFloor,
+    double? haze,
+    double? hazeOpacity,
+    double? hazePlateau,
   }) => GlassEdgeBlur(
     edge: edge ?? this.edge,
     extent: extent ?? this.extent,
     sigma: sigma ?? this.sigma,
     plateau: plateau ?? this.plateau,
+    floor: floor ?? this.floor,
     fadeColor: fadeColor ?? this.fadeColor,
     fadeOpacity: fadeOpacity ?? this.fadeOpacity,
+    fadeFloor: fadeFloor ?? this.fadeFloor,
+    haze: haze ?? this.haze,
+    hazeOpacity: hazeOpacity ?? this.hazeOpacity,
+    hazePlateau: hazePlateau ?? this.hazePlateau,
   );
 
   @override
@@ -72,17 +117,34 @@ class GlassEdgeBlur {
           other.extent == extent &&
           other.sigma == sigma &&
           other.plateau == plateau &&
+          other.floor == floor &&
           other.fadeColor == fadeColor &&
-          other.fadeOpacity == fadeOpacity;
+          other.fadeOpacity == fadeOpacity &&
+          other.fadeFloor == fadeFloor &&
+          other.haze == haze &&
+          other.hazeOpacity == hazeOpacity &&
+          other.hazePlateau == hazePlateau;
 
   @override
-  int get hashCode =>
-      Object.hash(edge, extent, sigma, plateau, fadeColor, fadeOpacity);
+  int get hashCode => Object.hash(
+    edge,
+    extent,
+    sigma,
+    plateau,
+    floor,
+    fadeColor,
+    fadeOpacity,
+    fadeFloor,
+    haze,
+    hazeOpacity,
+    hazePlateau,
+  );
 
   @override
   String toString() =>
       'GlassEdgeBlur(${edge.name}, extent: $extent, sigma: $sigma, '
-      'plateau: $plateau, fade: $fadeColor @ $fadeOpacity)';
+      'plateau: $plateau, floor: $floor, fade: $fadeColor @ $fadeOpacity, '
+      'haze: $haze @ $hazeOpacity)';
 }
 
 /// Blurs and fades up to two opposite edges of its [child] progressively,
@@ -281,6 +343,10 @@ class _RenderEdgeBlur extends RenderProxyBox {
     LayerHandle<_EdgePassLayer>(),
   ];
   final _fadeLayer = LayerHandle<_EdgeFadeLayer>();
+  final _hazeClipLayer = LayerHandle<ClipPathLayer>();
+  final _hazeLayer = LayerHandle<_EdgeHazeLayer>();
+  _EdgePassFilter? _hazeFilter;
+  ({ui.ImageFilter mask, double sigma, ui.ImageFilter filter})? _hazeCompose;
 
   List<_EdgePassFilter>? _screenFilters;
   List<_EdgePassFilter>? _textureFilters;
@@ -332,8 +398,12 @@ class _RenderEdgeBlur extends RenderProxyBox {
   Iterable<GlassEdgeBlur> get _blurs =>
       _program == null ? const [] : _specs.where((spec) => spec.blurs);
   Iterable<GlassEdgeBlur> get _fades => _specs.where((spec) => spec.fades);
+  Iterable<GlassEdgeBlur> get _hazes => LiquidPrism._hazeProgram == null
+      ? const []
+      : _specs.where((spec) => spec.hazes);
   bool get _blurring => _blurs.isNotEmpty;
-  bool get _isActive => _blurring || _fades.isNotEmpty;
+  bool get _hazing => _hazes.isNotEmpty;
+  bool get _isActive => _blurring || _hazing || _fades.isNotEmpty;
   bool get hasChild => child != null;
 
   @override
@@ -351,6 +421,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _contentLayer.layer?.blur = null;
     _hoistLayer.layer?.blur = null;
     _fadeLayer.layer?.blur = null;
+    _hazeLayer.layer?.blur = null;
     for (final handle in _passLayers) {
       handle.layer?.blur = null;
     }
@@ -374,6 +445,9 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _hoistLayer.layer = null;
     _fadeLayer.layer?.blur = null;
     _fadeLayer.layer = null;
+    _hazeClipLayer.layer = null;
+    _hazeLayer.layer?.blur = null;
+    _hazeLayer.layer = null;
     for (var pass = 0; pass < 2; pass++) {
       _stripClipLayers[pass].layer = null;
       _passLayers[pass].layer?.blur = null;
@@ -385,6 +459,9 @@ class _RenderEdgeBlur extends RenderProxyBox {
     for (final filter in [...?_screenFilters, ...?_textureFilters]) {
       filter.dispose();
     }
+    _hazeFilter?.dispose();
+    _hazeFilter = null;
+    _hazeCompose = null;
     _screenFilters = null;
     _textureFilters = null;
     _textureCompose = null;
@@ -442,6 +519,29 @@ class _RenderEdgeBlur extends RenderProxyBox {
         _passLayers[pass].layer?.blur = null;
         _passLayers[pass].layer = null;
       }
+    }
+    if (_hazing) {
+      final strips = _stripPath(_hazes);
+      final haze = _hazeLayer.layer ??= _EdgeHazeLayer();
+      haze.blur = this;
+      _hazeClipLayer.layer = context.pushClipPath(
+        needsCompositing,
+        offset,
+        strips.getBounds(),
+        strips,
+        (context, offset) => context.pushLayer(
+          haze,
+          (context, offset) =>
+              context.pushLayer(haze.filter, (_, _) {}, offset),
+          offset,
+        ),
+        clipBehavior: Clip.hardEdge,
+        oldLayer: _hazeClipLayer.layer,
+      );
+    } else {
+      _hazeClipLayer.layer = null;
+      _hazeLayer.layer?.blur = null;
+      _hazeLayer.layer = null;
     }
     if (_fades.isNotEmpty) {
       final fade = _fadeLayer.layer ??= _EdgeFadeLayer();
@@ -551,6 +651,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
             rect: rect,
             edge: spec.edge,
             plateau: spec.plateau,
+            floor: spec.fadeFloor ?? spec.floor,
             opacity: spec.fadeOpacity,
           ),
       );
@@ -610,6 +711,73 @@ class _RenderEdgeBlur extends RenderProxyBox {
   static const _screenFrame = 0.0;
   static const _textureFrame = 1.0;
 
+  /// The haze: the engine's blur at the strips' sigma, weighted per row by
+  /// the mask shader, so that composited over the pass it blends the blur in.
+  ui.ImageFilter _hazeScreenFilter() {
+    final filter = _hazeFilter ??= _EdgePassFilter(
+      LiquidPrism._createHazeShader()!,
+    );
+    GlassEdgeBlur? start;
+    GlassEdgeBlur? end;
+    var sigma = 0.0;
+    for (final spec in _hazes) {
+      if (spec.edge.isStart) {
+        start = spec;
+      } else {
+        end = spec;
+      }
+      sigma = math.max(sigma, spec.haze);
+    }
+    final edge = (start ?? end)!.edge;
+    final (a, b, c, d) = _screenMatrix;
+    final det = a * d - b * c;
+    final inverse = det.abs() < 1e-9
+        ? (1.0, 0.0, 0.0, 1.0)
+        : (d / det, -b / det, -c / det, a / det);
+    final mask = filter.filterFor([
+      edge.isHorizontal ? 1 : 0,
+      _screenFrame,
+      size.width,
+      size.height,
+      _screenOrigin.dx,
+      _screenOrigin.dy,
+      0,
+      0,
+      a,
+      b,
+      c,
+      d,
+      inverse.$1,
+      inverse.$2,
+      inverse.$3,
+      inverse.$4,
+      start?.extent ?? 0,
+      start?.hazeOpacity ?? 0,
+      start?.hazePlateau ?? 0,
+      0,
+      end?.extent ?? 0,
+      end?.hazeOpacity ?? 0,
+      end?.hazePlateau ?? 0,
+      0,
+    ]);
+    final cached = _hazeCompose;
+    if (cached != null &&
+        identical(cached.mask, mask) &&
+        cached.sigma == sigma) {
+      return cached.filter;
+    }
+    final composed = ui.ImageFilter.compose(
+      outer: mask,
+      inner: ui.ImageFilter.blur(
+        sigmaX: sigma,
+        sigmaY: sigma,
+        tileMode: ui.TileMode.clamp,
+      ),
+    );
+    _hazeCompose = (mask: mask, sigma: sigma, filter: composed);
+    return composed;
+  }
+
   /// The shader's float uniforms in declaration order after the engine-set
   /// texture size: u_pass, u_box, u_matrix, u_inverse, u_start, u_end. All
   /// lengths are in logical px; the frame's matrix takes them to texture px.
@@ -654,11 +822,11 @@ class _RenderEdgeBlur extends RenderProxyBox {
       start?.extent ?? 0,
       start?.sigma ?? 0,
       start?.plateau ?? 0,
-      0,
+      start?.floor ?? 0,
       end?.extent ?? 0,
       end?.sigma ?? 0,
       end?.plateau ?? 0,
-      0,
+      end?.floor ?? 0,
     ];
   }
 
@@ -688,10 +856,12 @@ class _RenderEdgeBlur extends RenderProxyBox {
     }
     final blurs = _blurs.toList();
     final fades = _fades.toList();
+    final hazes = _hazes.toList();
     if (_hoistStrips == null || !listEquals(signature, _hoistStripSignature)) {
       _hoistStripSignature = signature;
-      var strips = _stripPath(_specs.where((spec) => spec.blurs || spec.fades))
-          .transform(toHost.storage);
+      var strips = _stripPath(
+        _specs.where((spec) => spec.blurs || spec.fades || spec.hazes),
+      ).transform(toHost.storage);
       for (final contour in contours) {
         strips = Path.combine(PathOperation.difference, strips, contour);
       }
@@ -712,6 +882,17 @@ class _RenderEdgeBlur extends RenderProxyBox {
         layer.filter.addToScene(builder);
         builder.pop();
       }
+    }
+    // The haze reads the optical capture like the vertical pass, so the
+    // members' optical passes see neither.
+    final haze = hazes.isNotEmpty ? _hazeLayer.layer : null;
+    if (haze != null) {
+      haze.filter
+        ..filter = _hazeScreenFilter()
+        ..backdropKey = group.sharedKey;
+      builder.pushClipPath(strips);
+      haze.filter.addToScene(builder);
+      builder.pop();
     }
     if (fades.isNotEmpty) {
       final fadeSignature = <Object>[...signature];
@@ -866,6 +1047,35 @@ class _EdgePassLayer extends ContainerLayer {
     if (owner._group?._hoistedEdges.contains(owner) ?? false) return;
     filter
       ..filter = owner._screenFrameFilter(pass)
+      ..backdropKey = null;
+    addChildrenToScene(builder);
+  }
+}
+
+/// The haze over the strips: a heavy engine blur blended in by a per-row
+/// weight, after the variable blur. Adds nothing while isolated or hoisted.
+class _EdgeHazeLayer extends ContainerLayer {
+  _RenderEdgeBlur? blur;
+  final _filter = LayerHandle<BackdropFilterLayer>(BackdropFilterLayer());
+  BackdropFilterLayer get filter => _filter.layer!;
+
+  @override
+  bool get alwaysNeedsAddToScene => true;
+
+  @override
+  void dispose() {
+    _filter.layer = null;
+    super.dispose();
+  }
+
+  @override
+  void addToScene(ui.SceneBuilder builder) {
+    final owner = blur;
+    if (owner == null || !owner.attached) return;
+    if (owner._isolated) return;
+    if (owner._group?._hoistedEdges.contains(owner) ?? false) return;
+    filter
+      ..filter = owner._hazeScreenFilter()
       ..backdropKey = null;
     addChildrenToScene(builder);
   }

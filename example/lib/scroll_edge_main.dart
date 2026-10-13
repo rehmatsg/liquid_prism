@@ -23,11 +23,13 @@ class ScrollEdgeDemo extends StatefulWidget {
 }
 
 class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
-  final _scroll = ScrollController();
+  // Starts scrolled so the effect shows at once.
+  final _scroll = ScrollController(initialScrollOffset: 160);
   var _tab = 0;
   var _extra = false;
   var _dark = true;
   var _sliver = false;
+  var _hard = false;
 
   @override
   void dispose() {
@@ -59,7 +61,21 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                 label: _sliver ? 'Scaffold bar' : 'Sliver bar',
                 onPressed: () => setState(() => _sliver = !_sliver),
               ),
+              GlassToolbarItem(
+                icon: Icon(
+                  _hard
+                      ? CupertinoIcons.rectangle_compress_vertical
+                      : CupertinoIcons.rectangle_expand_vertical,
+                ),
+                label: _hard ? 'Soft edge' : 'Hard edge',
+                onPressed: () => setState(() => _hard = !_hard),
+              ),
             ];
+            final edgeStyle = GlassScrollEdgeStyle(
+              variant: _hard
+                  ? GlassScrollEdgeVariant.hard
+                  : GlassScrollEdgeVariant.soft,
+            );
             final content = Builder(
               builder: (context) => _Rows(
                 colors: colors,
@@ -80,6 +96,32 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                     )
                   : LiquidPrismScaffold(
                       backgroundColor: _background,
+                      scrollEdgeStyle: edgeStyle,
+                      // A hard-edged bar carries its tabs inside the effect.
+                      accessory: _hard
+                          ? PreferredSize(
+                              preferredSize: const Size.fromHeight(44),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  4,
+                                  16,
+                                  8,
+                                ),
+                                child: LiquidPrismSegmentedControl<int>(
+                                  label: 'Section',
+                                  selectedValue: _tab,
+                                  onValueChanged: (value) =>
+                                      setState(() => _tab = value),
+                                  children: const {
+                                    0: Text('Overview'),
+                                    1: Text('Jobs'),
+                                    2: Text('People'),
+                                  },
+                                ),
+                              ),
+                            )
+                          : null,
                       leading: LiquidPrismToolbarGroup(
                         size: GlassToolbarSize.navigation,
                         items: [

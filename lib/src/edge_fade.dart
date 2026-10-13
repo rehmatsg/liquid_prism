@@ -15,19 +15,19 @@ enum GlassEdge {
   bool get isStart => this == top || this == left;
 }
 
-/// Smootherstep easing, f(t) = 6t⁵ − 15t⁴ + 10t³.
+/// Smoothstep easing, f(t) = 3t² − 2t³: the curve of iOS 27's scroll edge
+/// effect, fitted to the mask image its variable blur reads (see
+/// doc/native_scroll_edge_spec.md).
 ///
-/// Both the first and second derivatives are zero at t = 0 and t = 1, so a
-/// fade sampled along this curve blends into its solid and transparent regions
-/// with no visible onset: the eye cannot find where the gradient starts, unlike
-/// linear or ease curves whose slope kicks in abruptly at the endpoints.
+/// Its first derivative is zero at t = 0 and t = 1, so a fade sampled along it
+/// blends into its solid and transparent regions without a visible onset.
 /// [LiquidPrismEdgeBlur] ramps its blur along the same curve, so a blur and a
 /// fade over one strip track each other exactly.
 class GlassFadeCurve extends Curve {
   const GlassFadeCurve();
 
   @override
-  double transformInternal(double t) => t * t * t * (t * (t * 6 - 15) + 10);
+  double transformInternal(double t) => t * t * (3 - 2 * t);
 }
 
 /// Edge fades along [curve], built as gradients for any edge of a box.
@@ -58,9 +58,11 @@ abstract final class GlassEdgeFade {
   /// transparent at [end] along [curve].
   ///
   /// [plateau] (0 ≤ plateau < 1) is the leading fraction of the extent held
-  /// fully solid before the eased falloff begins. [opacity] (0–1) caps the
-  /// whole fade: even the solid edge only reaches it, with every stop scaled
-  /// proportionally so the curve's endpoints stay smooth.
+  /// fully solid before the eased falloff begins, and [floor] (0–1) the
+  /// fraction of the solid alpha kept at [end], for a fade that stops with a
+  /// hard edge. [opacity] (0–1) caps the whole fade: even the solid edge only
+  /// reaches it, with every stop scaled proportionally so the curve's
+  /// endpoints stay smooth.
   ///
   /// The fade scales the alpha of the one [color] rather than blending toward
   /// transparent black, which would darken its tail. A translucent color scales
@@ -70,9 +72,11 @@ abstract final class GlassEdgeFade {
     AlignmentGeometry begin = Alignment.topCenter,
     AlignmentGeometry end = Alignment.bottomCenter,
     double plateau = 0,
+    double floor = 0,
     double opacity = 1,
   }) {
     assert(plateau >= 0 && plateau < 1, 'plateau must be in [0, 1)');
+    assert(floor >= 0 && floor <= 1, 'floor must be in [0, 1]');
     assert(opacity >= 0 && opacity <= 1, 'opacity must be in [0, 1]');
     final peak = color.a * opacity;
     return LinearGradient(
@@ -84,7 +88,8 @@ abstract final class GlassEdgeFade {
       ],
       colors: [
         if (plateau > 0) color.withValues(alpha: peak),
-        for (final alpha in _alphas) color.withValues(alpha: peak * alpha),
+        for (final alpha in _alphas)
+          color.withValues(alpha: peak * (floor + (1 - floor) * alpha)),
       ],
     );
   }
@@ -97,6 +102,7 @@ abstract final class GlassEdgeFade {
     required Rect rect,
     required GlassEdge edge,
     double plateau = 0,
+    double floor = 0,
     double opacity = 1,
   }) {
     final (begin, end) = switch (edge) {
@@ -110,6 +116,7 @@ abstract final class GlassEdgeFade {
       begin: begin,
       end: end,
       plateau: plateau,
+      floor: floor,
       opacity: opacity,
     ).createShader(rect);
   }
