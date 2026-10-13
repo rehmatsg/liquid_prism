@@ -120,9 +120,11 @@ tab pill's rim refraction. Only `LiquidPrismTabBar` sets it, through
 `ControlLens.rim` and the internal `LiquidPrism.lensRim`, scaled by lift; the
 shader reads it only for the lens recipe (kind 3), so every other surface and
 the batch path keep zero. With it, the underlay sample is split per channel
-(red at `1 + 0.12 * rim` of the minifying offset, blue at `1 - 0.12 * rim`;
-skipped under a quarter pixel) and a 1.5-point glint, blue reaching 0.45
-points deeper than red, adds `0.3 * rim` toward white inside the contour. Both
+(red at `1 + 0.06 * rim` of the minifying offset, blue at `1 - 0.06 * rim`;
+skipped under a quarter pixel) and a 1.5-point glint, blue reaching 0.3
+points deeper than red, adds `0.16 * rim` toward white inside the contour.
+These were halved from a first fit after the stronger rim read as too much on
+a device in dark mode. Both
 constants scale with the lens height over 70 points and are fitted by eye to a
 dark iOS 27 capture: the native pill shows a blue fringe then a bright band
 where the housing's edge is pulled inward, and a bright tinted glint at its

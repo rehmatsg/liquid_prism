@@ -280,7 +280,7 @@ void shadeGlass() {
     // under a quarter pixel it is skipped.
     float lensRim = u_material.x > 2.5 && u_material.x < 3.5 ? u_state.w : 0.;
     if (lensRim > 0.) {
-        float split = 0.12*lensRim;
+        float split = 0.06*lensRim;
         if (length(underlayOffset)*split*u_geometry.y > 0.25) {
             vec3 outer = filteredScene(
                 scenePoint(local+underlayOffset*(1.+split)-offset),dx,dy);
@@ -350,10 +350,10 @@ void shadeGlass() {
         // little deeper than its red, so the rim reads against a dark housing.
         if (lensRim > 0. && depth < 2.*faceScale + aa) {
             float width = 1.5*faceScale;
-            float spread = .45*faceScale;
+            float spread = .3*faceScale;
             vec3 glint = clamp(1.-vec3(depth+spread,depth,max(depth-spread,0.))
                                /width,0.,1.);
-            color += (1.-color)*glint*glint*(.3*lensRim);
+            color += (1.-color)*glint*glint*(.16*lensRim);
         }
     }
     color = gradePressed(color);
