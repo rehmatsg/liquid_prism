@@ -240,7 +240,7 @@ class _GlassGroupData {
 
   /// Paints every shared member's shadow, then its frost pass clipped to its
   /// contour, then the hoisted edge effects, in [host]'s enclosing layer
-  /// space. Shared members never sample another member's paint, so their
+  /// space; with an effect hoisted the shadows come last, over it. Shared members never sample another member's paint, so their
   /// order does not change what the frost blurs or what the optical passes
   /// read, and the whole group then costs one capture for frost and one for
   /// optics instead of two per member. The edge effects' horizontal passes
@@ -292,7 +292,13 @@ class _GlassGroupData {
       }
       _sharedShadows = recorder.endRecording();
     }
-    builder.addPicture(Offset.zero, _sharedShadows!);
+    // The shadows belong to the glass, which sits above any hoisted edge
+    // effect: paint them after it so the effect neither blurs nor fades them,
+    // as an unshared member's own shadow paints after the effect.
+    final shadowsLast = hoistEdges.any(
+      (edge) => edge == host || !edge.hasChild,
+    );
+    if (!shadowsLast) builder.addPicture(Offset.zero, _sharedShadows!);
     var index = 0;
     final contours = <Path>[];
     for (final entry in transforms.entries) {
@@ -331,6 +337,7 @@ class _GlassGroupData {
         ],
       );
     }
+    if (shadowsLast) builder.addPicture(Offset.zero, _sharedShadows!);
   }
 
   /// Clips between [layer] and [groupLayer] in root logical coordinates, or

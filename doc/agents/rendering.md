@@ -99,7 +99,9 @@ their glass bounds overlap: their 44-point reflection envelopes and shadow
 skirts reaching a neighbour would otherwise leave both unshared, and an
 unshared member captures after the effect and refracts blurred, faded
 content (a bar button above a search-field accessory). Without hoisted
-effects the stricter sampled/painted test still applies. Headless tests do
+effects the stricter sampled/painted test still applies. With an effect
+hoisted, the shared shadows paint after it: they belong to the glass above
+the effect, so the effect must neither blur nor fade them. Headless tests do
 not load the shaders, so verify hoisting on a simulator: compare the glass
 over the strip with `scrollEdge: false`.
 
