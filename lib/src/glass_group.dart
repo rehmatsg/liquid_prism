@@ -517,9 +517,17 @@ class _GlassGroupData {
             );
       // Under a hoisted edge effect, a member left out reads its own capture
       // taken after the effect, so it refracts blurred and faded content.
-      // There only overlapping glass excludes it: a neighbour's glass and
-      // shadow missing from its reflections (a bar button 16 points above a
-      // search field) cost far less than refracting the effect.
+      // There only glass stacked on glass excludes it: a neighbour's glass
+      // and shadow missing from its reflections (a bar button 16 points above
+      // a search field) cost far less than refracting the effect. Edges that
+      // merely meet do not count: a pressed group grows a few points into a
+      // neighbour 5 points away, and dropping that neighbour from the shared
+      // captures for the press made it flash to the effect's faded content.
+      bool stacked(_RenderGlass a, _RenderGlass b) {
+        final overlap = bounds[a]!.deflate(2).intersect(bounds[b]!.deflate(2));
+        return overlap.width > 8 && overlap.height > 8;
+      }
+
       final excluded = hoistEdges.isEmpty
           ? surfaces.any(
               (other) =>
@@ -527,10 +535,7 @@ class _GlassGroupData {
                   (sampled[member]!.overlaps(painted[other]!) ||
                       sampled[other]!.overlaps(painted[member]!)),
             )
-          : surfaces.any(
-              (other) =>
-                  other != member && bounds[member]!.overlaps(bounds[other]!),
-            );
+          : surfaces.any((other) => other != member && stacked(member, other));
       if (clips != null && !excluded) {
         shared.add(member);
         _clips[member] = clips;
