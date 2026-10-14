@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.5.3
+
+- The `leading` slot of `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`
+  is now bounded by the actions and `trailing` (12 points before them), so a
+  wide leading widget, such as a menu trigger with a long label, ellipsizes
+  instead of running under them.
+- An inline title taller than the bar's row (two lines at a large text size,
+  say) now scales down to fit the row instead of overflowing it.
+
 ## 0.5.2
 
 - Fix the action capsules jumping to the middle of the screen while a new

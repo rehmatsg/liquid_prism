@@ -1429,24 +1429,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         }
       }
     }
-    if (hasChild(_Slot.leading)) {
-      final child = layoutChild(_Slot.leading, BoxConstraints.loose(size));
-      if (rtl) {
-        trailingStart = barRight - leadingOffset - child.width;
-      } else {
-        leadingEnd = barLeft + leadingOffset + child.width;
-      }
-      positionChild(
-        _Slot.leading,
-        Offset(
-          rtl
-              ? barRight - leadingOffset - child.width
-              : barLeft + leadingOffset,
-          centred(child),
-        ),
-      );
-    }
-
     // Rail column: 48 pt wide, 12 pt outside the safe area's edge.
     double railX(double width) => right
         ? railRight + _railGap + (48 - width) / 2
@@ -1490,6 +1472,37 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       }
       actionsInBar = true;
       positionChild(_Slot.trailing, Offset(x, centred(child)));
+    }
+
+    if (hasChild(_Slot.leading)) {
+      // Bounded by the actions and trailing widget, a title gap before them,
+      // so a wide leading widget (a menu trigger, say) ellipsizes rather
+      // than running under them.
+      final room = rtl
+          ? barRight -
+                leadingOffset -
+                (actionsInBar ? leadingEnd + titleGap : barLeft + _edge)
+          : (actionsInBar ? trailingStart - titleGap : barRight - _edge) -
+                barLeft -
+                leadingOffset;
+      final child = layoutChild(
+        _Slot.leading,
+        BoxConstraints.loose(Size(math.max(0, room), size.height)),
+      );
+      if (rtl) {
+        trailingStart = barRight - leadingOffset - child.width;
+      } else {
+        leadingEnd = barLeft + leadingOffset + child.width;
+      }
+      positionChild(
+        _Slot.leading,
+        Offset(
+          rtl
+              ? barRight - leadingOffset - child.width
+              : barLeft + leadingOffset,
+          centred(child),
+        ),
+      );
     }
 
     if (hasChild(_Slot.title)) {
