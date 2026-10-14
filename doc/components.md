@@ -268,6 +268,18 @@ the top one. A `body` still works for content that builds its own scrollable:
 the insets arrive as `MediaQuery.padding`. When that body's lists sit one level
 down, as in a tab view, pass `scrollDepth: 1`.
 
+`header:` puts your own heading at the top of the slivers, such as a detail
+page's icon and title; it scrolls away under the bar and the inline `title`
+fades in once it has, as after a large title. Titles focus in and out through
+a blur as they fade.
+
+A `slivers` page scrolls back to the top when its tab is tapped again and, on
+iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`
+reports reselections for anything else, such as focusing a search field. The
+scaffold supplies the background, keyboard avoidance and these behaviours, so a
+page needs no Material `Scaffold`; keep one (or a `Material` ancestor) only for
+Material widgets that need it, such as ink effects or snack bars.
+
 ## Sliver app bar
 
 `LiquidPrismSliverAppBar` is the scaffold's top bar as a pinned sliver, for

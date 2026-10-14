@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
@@ -224,5 +225,103 @@ void main() {
       await tester.pumpAndSettle();
       expect(rectOf(tester, 'r5').top, closeTo(top - offset, .01));
     }
+  });
+
+  testWidgets('a header scrolls away, then the title swaps in', (tester) async {
+    phone(tester);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Inline'),
+          scrollController: controller,
+          header: const SizedBox(
+            key: ValueKey('header'),
+            height: 120,
+            child: Text('Heading'),
+          ),
+          slivers: rows(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    double inline() => tester
+        .widget<Opacity>(
+          find.ancestor(
+            of: find.text('Inline'),
+            matching: find.byType(Opacity),
+          ),
+        )
+        .opacity;
+    final header = rectOf(tester, 'header');
+    expect(header.top, 62 + 44 + LiquidPrismScaffold.topBarClearance);
+    expect(rectOf(tester, 'row0').top, header.bottom);
+    expect(inline(), 0);
+    controller.jumpTo(60);
+    await tester.pumpAndSettle();
+    expect(inline(), 0, reason: 'the header still shows');
+    controller.jumpTo(121);
+    await tester.pumpAndSettle();
+    expect(inline(), 1);
+    controller.jumpTo(0);
+    await tester.pumpAndSettle();
+    expect(inline(), 0);
+  });
+
+  testWidgets('reselecting the tab scrolls the visible page to the top', (
+    tester,
+  ) async {
+    phone(tester);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          tabBar: LiquidPrismTabBar(
+            selectedIndex: 0,
+            onSelected: (_) {},
+            tabs: const [
+              LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+              LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.star)),
+            ],
+          ),
+          // A page's own scaffold inside the shell's body.
+          body: LiquidPrismScaffold(
+            title: const Text('Home'),
+            scrollController: controller,
+            slivers: rows(),
+          ),
+        ),
+      ),
+    );
+    controller.jumpTo(800);
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Home').last);
+    await tester.pumpAndSettle();
+    expect(controller.offset, 0);
+  });
+
+  testWidgets('a status bar tap scrolls to the top on iOS', (tester) async {
+    phone(tester);
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Feed'),
+          scrollController: controller,
+          slivers: rows(),
+        ),
+      ),
+    );
+    controller.jumpTo(800);
+    await tester.pumpAndSettle();
+    tester.simulateStatusBarTap();
+    await tester.pumpAndSettle();
+    expect(controller.offset, 0);
+    debugDefaultTargetPlatformOverride = null;
   });
 }

@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import 'chrome_layout.dart';
 import 'glass.dart';
+import 'glass_transition.dart';
 import 'navigation_bar_style.dart';
 import 'scroll_edge.dart';
 import 'theme.dart';
@@ -223,6 +224,10 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
 
   _SliverBarDelegate get _d => widget.delegate;
 
+  /// The shared glass content blur, so titles focus in like glass content.
+  double get _titleBlur =>
+      LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
+
   @override
   void initState() {
     super.initState();
@@ -310,10 +315,13 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         return ExcludeSemantics(
           excluding: !visible,
           child: IgnorePointer(
-            child: Opacity(
-              opacity: opacity.clamp(0.0, 1.0),
+            // The titles focus in and out as they fade, as native soft bars
+            // do: blurred when absent, sharp when present.
+            child: GlassContentPresence(
+              presence: opacity,
+              blur: _titleBlur,
               child: large
-                  ? child
+                  ? child!
                   : Transform.translate(
                       offset: Offset(0, 15 * (1 - inline.value)),
                       child: child,

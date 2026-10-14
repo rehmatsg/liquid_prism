@@ -4,6 +4,14 @@
 
 ## 0.4.0
 
+- Add `LiquidPrismScaffold.header`: content at the top of `slivers` that
+  scrolls away under the bar, after which the inline title swaps in, as after
+  a large title.
+- Scroll a `slivers` page back to the top when its tab is tapped again
+  (`LiquidPrismTabReselection`, also available to listen to) and, on iOS,
+  when the status bar is tapped, so a page needs no Material `Scaffold`.
+- Titles now focus in and out through a blur as they fade, as native soft
+  bars do.
 - Let `LiquidPrismScaffold` build the page's scroll view: `slivers:` in place
   of `body` pads the content below the bar, large title and accessory and
   above the tab bar, bottom bar and keyboard, follows its scroll and dismisses

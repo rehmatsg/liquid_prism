@@ -53,6 +53,7 @@ enum ComponentKind {
   tabs,
   toolbar,
   scrollEdges,
+  pages,
   menus,
   search,
 }
@@ -199,6 +200,24 @@ const components = [
         'LiquidPrismGroup',
         'Glass over the effect refracts the content, not the blur',
       ),
+    ],
+  ),
+  ComponentInfo(
+    ComponentKind.pages,
+    'Page Layouts',
+    'Bars, headers and bottom bars.',
+    CupertinoIcons.rectangle_stack,
+    Color(0xFF5856D6),
+    description:
+        'Hand the scaffold your slivers and it builds the page: the bar, a '
+        'large title or header, an accessory, a bottom bar, pull to refresh '
+        'and the edge effects, with its glass grouped for you.',
+    details: [
+      ('LiquidPrismScaffold.slivers', 'The scaffold builds the scroll view'),
+      ('header', 'Your own heading, scrolling away under the bar'),
+      ('bottomBar', 'Pinned above the home indicator or keyboard'),
+      ('onRefresh', 'Native pull to refresh below the bar'),
+      ('LiquidPrismSliverAppBar', 'The same bar inside your own scroll view'),
     ],
   ),
   ComponentInfo(

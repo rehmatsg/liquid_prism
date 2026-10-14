@@ -6,6 +6,8 @@ import 'widgets.dart';
 import 'package_features_demo.dart';
 import 'search_page.dart';
 import 'sliver_bar_page.dart';
+import 'header_page.dart';
+import 'scaffold_lab_page.dart';
 
 class LensPlayground extends StatefulWidget {
   const LensPlayground({
@@ -572,21 +574,62 @@ class _ComponentPreviewState extends State<ComponentPreview> {
               const SizedBox(height: 20),
               const PackageFeaturesDemo(),
               const SizedBox(height: 20),
-              LiquidPrismButton(
-                key: const ValueKey('open-sliver-bar'),
-                label: 'Open a page with a sliver app bar',
-                onPressed: () => Navigator.of(context).push<void>(
-                  CupertinoPageRoute(builder: (_) => const SliverBarPage()),
-                ),
-                child: const Text('Sliver App Bar'),
-              ),
-              const SizedBox(height: 20),
               const Text(
                 'A scroll fade softens whichever edge content runs past.',
                 style: TextStyle(fontSize: 13, height: 1.35),
               ),
               const SizedBox(height: 12),
               const ScrollFadePreview(),
+            ],
+            ComponentKind.pages => [
+              const Text(
+                'A page in a few lines.',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Each page below is one LiquidPrismScaffold or sliver bar, '
+                'with no scroll view, padding or grouping of its own.',
+                style: TextStyle(fontSize: 14, height: 1.35),
+              ),
+              const SizedBox(height: 20),
+              for (final (key, title, label, page)
+                  in <(String, String, String, Widget)>[
+                    (
+                      'open-scaffold-lab',
+                      'Scaffold Lab',
+                      'Switch every page option live',
+                      const ScaffoldLabPage(),
+                    ),
+                    (
+                      'open-header-page',
+                      'Header Page',
+                      'A header that scrolls away and a bottom bar',
+                      const HeaderPage(),
+                    ),
+                    (
+                      'open-sliver-bar',
+                      'Sliver App Bar',
+                      'The bar inside your own CustomScrollView',
+                      const SliverBarPage(),
+                    ),
+                    (
+                      'open-search-page-2',
+                      'Search Page',
+                      'A fixed search field with an always-visible close',
+                      SearchPage(model: m),
+                    ),
+                  ]) ...[
+                LiquidPrismButton(
+                  key: ValueKey(key),
+                  label: label,
+                  onPressed: () =>
+                      Navigator.of(context)
+                          .push<void>(CupertinoPageRoute(builder: (_) => page)),
+                  child: Text(title),
+                ),
+                const SizedBox(height: 12),
+              ],
             ],
             ComponentKind.menus => [
               const Text(

@@ -3,6 +3,7 @@ import 'dart:ui' show DisplayFeature;
 
 import 'package:flutter/cupertino.dart' show CupertinoSliverRefreshControl;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'glass.dart';
@@ -15,6 +16,7 @@ import 'scroll_edge.dart';
 import 'sidebar.dart';
 import 'system_chrome.dart';
 import 'tab_bar.dart';
+import 'tab_reselection.dart';
 import 'toolbar.dart';
 import 'theme.dart';
 import 'navigation_bar_style.dart';
@@ -106,6 +108,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.scrollDepth = 0,
     this.title,
     this.largeTitle,
+    this.header,
     this.navigationBarStyle,
     this.leading,
     this.automaticallyImplyLeading = true,
@@ -125,6 +128,14 @@ class LiquidPrismScaffold extends StatefulWidget {
        assert(
          onRefresh == null || slivers != null,
          'onRefresh needs slivers; a body adds its own refresh control.',
+       ),
+       assert(
+         header == null || slivers != null,
+         'header needs slivers; it scrolls with them.',
+       ),
+       assert(
+         header == null || largeTitle == null,
+         'Use a header or a large title, not both.',
        );
 
   /// Full-window content, usually a scroll view, laid out under the chrome.
@@ -169,6 +180,12 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// vertical scroll view even when [scrollEdge] is false. Supply [title] too
   /// for the collapsed header. Only the visible header contributes semantics.
   final Widget? largeTitle;
+
+  /// Content at the top of [slivers] that scrolls away under the bar, such as
+  /// a page's own heading or hero, in place of a [largeTitle]. While it shows
+  /// the bar's [title] is hidden; once it has scrolled under the bar the
+  /// title fades in, with the same timing as after a large title.
+  final Widget? header;
   final GlassNavigationBarStyle? navigationBarStyle;
 
   /// Fold the keyboard into body padding and consume its bottom view inset.
@@ -271,8 +288,46 @@ class LiquidPrismScaffold extends StatefulWidget {
 }
 
 class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   bool _sidebarHidden = false;
+
+  /// The [LiquidPrismScaffold.header]'s laid-out height: the scroll at which
+  /// the title swaps in.
+  double _headerExtent = 0;
+
+  /// Tab reselections, shared by this scaffold's tab bar and the pages in its
+  /// body; each page's scroll view returns to the top.
+  final _reselection = LiquidPrismTabReselection();
+
+  final _statusBarKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  // A tap on the iOS status bar scrolls the page to the top, as a Material
+  // Scaffold does, for the scaffold in front only.
+  @override
+  void handleStatusBarTap() {
+    final controller =
+        widget.scrollController ?? PrimaryScrollController.maybeOf(context);
+    final box = _statusBarKey.currentContext?.findRenderObject();
+    if (controller == null || !controller.hasClients || box == null) return;
+    final result = HitTestResult();
+    WidgetsBinding.instance.hitTestInView(
+      result,
+      Offset.zero,
+      View.of(context).viewId,
+    );
+    if (!result.path.any((entry) => entry.target == box)) return;
+    controller.animateTo(
+      0,
+      duration: const Duration(milliseconds: 1000),
+      curve: Curves.easeOutCirc,
+    );
+  }
 
   /// How far the body's outermost scroll view is scrolled past its start.
   final _scrollOffset = ValueNotifier<double>(0);
@@ -352,6 +407,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _inlineFade.dispose();
     _scrollOffset.dispose();
     _scrollRemaining.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _reselection.dispose();
     super.dispose();
   }
 
@@ -485,8 +542,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   (largeTitleStyle.height ?? 1.2) +
               11.33;
     final extent = navigation.revealExtent ?? expandedHeight;
-    _collapseAt = widget.largeTitle == null ? double.infinity : extent;
-    if (widget.largeTitle == null && _collapsed) {
+    final swaps = widget.largeTitle != null || widget.header != null;
+    _collapseAt = widget.header != null
+        ? (_headerExtent > 0 ? _headerExtent : double.infinity)
+        : widget.largeTitle == null
+        ? double.infinity
+        : extent;
+    if (!swaps && _collapsed) {
       _collapsed = false;
       _largeFade.value = _inlineFade.value = 0;
     }
@@ -495,6 +557,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       curve: navigation.revealCurve ?? Curves.easeOutCubic,
       reverseCurve: (navigation.revealCurve ?? Curves.easeOutCubic).flipped,
     );
+    // The shared glass content blur, so titles focus in like glass content.
+    final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
     Widget header(Widget child, TextStyle style, {required bool large}) {
       Widget text = Semantics(
         header: true,
@@ -505,8 +569,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           child: child,
         ),
       );
-      // Without a large title the inline title simply shows.
-      if (widget.largeTitle == null) return IgnorePointer(child: text);
+      // Without a large title or header the inline title simply shows.
+      if (!swaps) return IgnorePointer(child: text);
       return AnimatedBuilder(
         animation: Listenable.merge([_largeFade, _inlineFade]),
         builder: (context, child) {
@@ -515,10 +579,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           return ExcludeSemantics(
             excluding: !visible,
             child: IgnorePointer(
-              child: Opacity(
-                opacity: opacity.clamp(0.0, 1.0),
+              // The titles focus in and out as they fade, as native soft
+              // bars do: blurred when absent, sharp when present.
+              child: GlassContentPresence(
+                presence: opacity,
+                blur: titleBlur,
                 child: large
-                    ? child
+                    ? child!
                     : Transform.translate(
                         offset: Offset(0, 15 * (1 - inline.value)),
                         child: child,
@@ -575,7 +642,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
               child:
-                  ((widget.scrollEdge || widget.largeTitle != null) &&
+                  ((widget.scrollEdge || swaps) &&
                           (topBar || widget.accessory != null)) ||
                       widget.bottomBar != null
                   ? NotificationListener<ScrollMetricsNotification>(
@@ -752,7 +819,31 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           ),
       ],
     );
-    final hosted = GlassGroupHost(child: layout);
+    Widget hosted = GlassGroupHost(
+      child: Stack(
+        children: [
+          Positioned.fill(child: layout),
+          // Hit at the status bar only while this scaffold is in front.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: math.max(1, media.viewPadding.top),
+            child: MetaData(
+              key: _statusBarKey,
+              behavior: HitTestBehavior.translucent,
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (widget.tabBar != null) {
+      hosted = LiquidPrismTabReselection.scope(
+        reselection: _reselection,
+        child: hosted,
+      );
+    }
     return switch (widget.backgroundColor) {
       final color? => ColoredBox(color: color, child: hosted),
       null => hosted,
@@ -774,53 +865,15 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   Widget _content() {
     final body = widget.body;
     if (body != null) return body;
-    return Builder(
-      builder: (context) {
-        final padding = MediaQuery.paddingOf(context);
-        final onRefresh = widget.onRefresh;
-        return CustomScrollView(
-          controller: widget.scrollController,
-          primary: widget.scrollController == null ? true : null,
-          // Pull to refresh and the bounce need room to scroll on a short
-          // page too.
-          physics: const AlwaysScrollableScrollPhysics(),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          slivers: [
-            if (onRefresh != null)
-              CupertinoSliverRefreshControl(
-                onRefresh: onRefresh,
-                // The control sits above the top inset; its indicator draws
-                // below the bar, in the gap the pull opens over the content.
-                builder:
-                    (
-                      context,
-                      mode,
-                      pulledExtent,
-                      triggerDistance,
-                      indicatorExtent,
-                    ) => Transform.translate(
-                      offset: Offset(0, padding.top),
-                      child:
-                          CupertinoSliverRefreshControl.buildRefreshIndicator(
-                            context,
-                            mode,
-                            pulledExtent,
-                            triggerDistance,
-                            indicatorExtent,
-                          ),
-                    ),
-              ),
-            SliverToBoxAdapter(child: SizedBox(height: padding.top)),
-            SliverPadding(
-              padding: EdgeInsets.only(
-                left: padding.left,
-                right: padding.right,
-              ),
-              sliver: SliverMainAxisGroup(slivers: widget.slivers!),
-            ),
-            SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
-          ],
-        );
+    return _SliverPage(
+      slivers: widget.slivers!,
+      header: widget.header,
+      controller: widget.scrollController,
+      onRefresh: widget.onRefresh,
+      onHeaderExtent: (extent) {
+        if (extent == _headerExtent || !mounted) return;
+        setState(() => _headerExtent = extent);
+        _syncTitle();
       },
     );
   }
@@ -1385,4 +1438,148 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       corner != old.corner ||
       sidebar != old.sidebar ||
       reveal != old.reveal;
+}
+
+/// The scroll view [LiquidPrismScaffold.slivers] builds: the chrome's insets
+/// as slivers, the header, pull to refresh and a return to the top on a tab
+/// reselection.
+class _SliverPage extends StatefulWidget {
+  const _SliverPage({
+    required this.slivers,
+    required this.header,
+    required this.controller,
+    required this.onRefresh,
+    required this.onHeaderExtent,
+  });
+  final List<Widget> slivers;
+  final Widget? header;
+  final ScrollController? controller;
+  final Future<void> Function()? onRefresh;
+  final ValueChanged<double> onHeaderExtent;
+
+  @override
+  State<_SliverPage> createState() => _SliverPageState();
+}
+
+class _SliverPageState extends State<_SliverPage> {
+  LiquidPrismTabReselection? _reselection;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reselection = LiquidPrismTabReselection.maybeOf(context);
+    if (reselection != _reselection) {
+      _reselection?.removeListener(_toTop);
+      _reselection = reselection?..addListener(_toTop);
+    }
+  }
+
+  @override
+  void dispose() {
+    _reselection?.removeListener(_toTop);
+    super.dispose();
+  }
+
+  /// Back to the top, for the visible page of the current route only.
+  void _toTop() {
+    if (!mounted || !TickerMode.valuesOf(context).enabled) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    final controller =
+        widget.controller ?? PrimaryScrollController.maybeOf(context);
+    if (controller == null || !controller.hasClients) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      controller.jumpTo(0);
+    } else {
+      controller.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final padding = MediaQuery.paddingOf(context);
+    final onRefresh = widget.onRefresh;
+    final header = widget.header;
+    return CustomScrollView(
+      controller: widget.controller,
+      primary: widget.controller == null ? true : null,
+      // Pull to refresh and the bounce need room to scroll on a short page.
+      physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        if (onRefresh != null)
+          CupertinoSliverRefreshControl(
+            onRefresh: onRefresh,
+            // The control sits above the top inset; its indicator draws below
+            // the bar, in the gap the pull opens over the content.
+            builder:
+                (
+                  context,
+                  mode,
+                  pulledExtent,
+                  triggerDistance,
+                  indicatorExtent,
+                ) => Transform.translate(
+                  offset: Offset(0, padding.top),
+                  child: CupertinoSliverRefreshControl.buildRefreshIndicator(
+                    context,
+                    mode,
+                    pulledExtent,
+                    triggerDistance,
+                    indicatorExtent,
+                  ),
+                ),
+          ),
+        SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+        SliverPadding(
+          padding: EdgeInsets.only(left: padding.left, right: padding.right),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              if (header != null)
+                SliverToBoxAdapter(
+                  child: _SizeReporter(
+                    onHeight: widget.onHeaderExtent,
+                    child: header,
+                  ),
+                ),
+              ...widget.slivers,
+            ],
+          ),
+        ),
+        SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
+      ],
+    );
+  }
+}
+
+/// Reports its child's laid-out height after each layout that changes it.
+class _SizeReporter extends SingleChildRenderObjectWidget {
+  const _SizeReporter({required this.onHeight, required super.child});
+  final ValueChanged<double> onHeight;
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderSizeReporter(onHeight);
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderSizeReporter renderObject,
+  ) => renderObject.onHeight = onHeight;
+}
+
+class _RenderSizeReporter extends RenderProxyBox {
+  _RenderSizeReporter(this.onHeight);
+  ValueChanged<double> onHeight;
+  double? _reported;
+  @override
+  void performLayout() {
+    super.performLayout();
+    final height = size.height;
+    if (height == _reported) return;
+    _reported = height;
+    // Outside layout: the scaffold rebuilds with the new threshold.
+    WidgetsBinding.instance.addPostFrameCallback((_) => onHeight(height));
+  }
 }
