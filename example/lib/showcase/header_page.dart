@@ -4,10 +4,18 @@ import 'package:liquid_prism/liquid_prism.dart';
 import 'widgets.dart';
 
 /// A detail page built on [LiquidPrismScaffold.slivers]: a header that
-/// scrolls away under the bar before the title swaps in, pull to refresh and
-/// a bottom bar, with no scroll view, padding or grouping of its own.
-class HeaderPage extends StatelessWidget {
+/// scrolls away under the bar before the title swaps in, sticky tabs that pin
+/// below the bar, a trailing pill, pull to refresh and a bottom bar, with no
+/// scroll view, padding or grouping of its own.
+class HeaderPage extends StatefulWidget {
   const HeaderPage({super.key});
+
+  @override
+  State<HeaderPage> createState() => _HeaderPageState();
+}
+
+class _HeaderPageState extends State<HeaderPage> {
+  var _tab = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +38,22 @@ class HeaderPage extends StatelessWidget {
           ),
         ],
       ],
+      trailing: Container(
+        key: const ValueKey('header-trailing'),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: colors.blue.withValues(alpha: .14),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          '12 left',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: colors.blue,
+          ),
+        ),
+      ),
       onRefresh: () => Future<void>.delayed(const Duration(seconds: 1)),
       header: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
@@ -67,6 +91,25 @@ class HeaderPage extends StatelessWidget {
         ),
       ),
       slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _StickyTabs(
+            background: colors.groupedBackground,
+            child: LiquidPrismSegmentedControl<int>(
+              key: const ValueKey('header-tabs'),
+              selectedValue: _tab,
+              style: const GlassSegmentedStyle(
+                sizing: GlassSegmentedSizing.fitLabels,
+              ),
+              onValueChanged: (v) => setState(() => _tab = v),
+              children: const {
+                0: Text('Overview'),
+                1: Text('Activity'),
+                2: Text('Notes'),
+              },
+            ),
+          ),
+        ),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList.builder(
@@ -90,4 +133,33 @@ class HeaderPage extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Tabs that pin below the bar once the header has scrolled away.
+class _StickyTabs extends SliverPersistentHeaderDelegate {
+  _StickyTabs({required this.background, required this.child});
+  final Color background;
+  final Widget child;
+
+  @override
+  double get minExtent => 56;
+  @override
+  double get maxExtent => 56;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      ColoredBox(
+        color: background,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: child,
+          ),
+        ),
+      );
+
+  @override
+  bool shouldRebuild(_StickyTabs old) =>
+      old.background != background || old.child != child;
 }

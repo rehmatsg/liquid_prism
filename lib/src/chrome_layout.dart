@@ -115,6 +115,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions = const [],
+    this.trailing,
     this.accessory,
     this.tabBar,
     this.placement,
@@ -223,6 +224,12 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// stack, and fold into one "More" menu when they do not fit.
   final List<Object> actions;
 
+  /// A widget in the top bar before the [actions], such as a status pill or
+  /// a counter: laid out as given, without glass of its own, centred on the
+  /// controls' row 8 points from the first capsule (or at the trailing edge
+  /// without actions). The inline title leads beside it as beside actions.
+  final Widget? trailing;
+
   /// The trailing capsules, in order.
   List<List<GlassToolbarItem>> get _actionGroups => glassActionGroups(actions);
 
@@ -259,7 +266,15 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// follows the body's outermost scroll view and shares the chrome's backdrop
   /// captures, so the leading control and actions refract the unblurred
   /// content beneath them. Without a top bar nothing is drawn.
+  ///
+  /// Turning it on after the page appears, as a page might once its entering
+  /// transition settles, fades the effects in, blur and fade together, over
+  /// [scrollEdgeFadeDuration]; turning it off fades them out.
   final bool scrollEdge;
+
+  /// How long the scroll edge effects take to fade in or out when
+  /// [scrollEdge] changes.
+  static const scrollEdgeFadeDuration = Duration(milliseconds: 900);
 
   /// Overrides the theme's [GlassScrollEdgeStyle] field by field. Its
   /// `fadeColor` applies when [backgroundColor] is null.
@@ -314,10 +329,39 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   final _statusBarKey = GlobalKey();
 
+  /// The scroll edge effects' presence: 1 while [LiquidPrismScaffold.scrollEdge]
+  /// holds, easing in and out when it changes.
+  late final _edgePresence =
+      AnimationController(
+        vsync: this,
+        duration: LiquidPrismScaffold.scrollEdgeFadeDuration,
+        value: widget.scrollEdge ? 1 : 0,
+      )..addStatusListener((status) {
+        // Remove the effects once they have faded out.
+        if (status.isDismissed && mounted) setState(() {});
+      });
+  late final _edgeStrength = CurvedAnimation(
+    parent: _edgePresence,
+    curve: Curves.easeInOutCubic,
+  );
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didUpdateWidget(LiquidPrismScaffold old) {
+    super.didUpdateWidget(old);
+    if (old.scrollEdge == widget.scrollEdge) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _edgePresence.value = widget.scrollEdge ? 1 : 0;
+    } else if (widget.scrollEdge) {
+      _edgePresence.forward();
+    } else {
+      _edgePresence.reverse();
+    }
   }
 
   // A tap on the iOS status bar scrolls the page to the top, as a Material
@@ -418,6 +462,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   @override
   void dispose() {
+    _edgeStrength.dispose();
+    _edgePresence.dispose();
     _reveal.dispose();
     _largeFade.dispose();
     _inlineFade.dispose();
@@ -578,6 +624,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                         6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
     final swaps = widget.largeTitle != null || widget.header != null;
+    // The edge effects stay while they fade out.
+    final edges = widget.scrollEdge || !_edgePresence.isDismissed;
     _collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
         : widget.largeTitle == null
@@ -588,7 +636,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _largeFade.value = _inlineFade.value = 0;
     }
     // With actions in the bar, the title leads instead of centring.
-    final titleLeads = widget._allActions.isNotEmpty;
+    final titleLeads = widget._allActions.isNotEmpty || widget.trailing != null;
     // The shared glass content blur, so titles focus in like glass content.
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
     Widget header(Widget child, TextStyle style, {required bool large}) {
@@ -636,6 +684,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         widget.title != null ||
         widget.largeTitle != null ||
         leading != null ||
+        widget.trailing != null ||
         // Native keeps the bar row with the sidebar shown or hidden, so
         // content does not jump when the toggle moves into it.
         sidebarTabs != null ||
@@ -687,8 +736,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
               child:
-                  ((widget.scrollEdge || swaps) &&
-                          (topBar || widget.accessory != null)) ||
+                  ((edges || swaps) && (topBar || widget.accessory != null)) ||
                       widget.bottomBar != null
                   ? NotificationListener<ScrollMetricsNotification>(
                       onNotification: (n) =>
@@ -706,46 +754,53 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ),
         // Behind the bar's controls, over the body: it shares their captures
         // and is cut out of their contours (see LiquidPrismEdgeBlur).
-        if (widget.scrollEdge && (topBar || widget.accessory != null))
+        if (edges && (topBar || widget.accessory != null))
           LayoutId(
             id: _Slot.scrollEdge,
             child: GlassGroupMembers(
-              child: ValueListenableBuilder<double>(
-                valueListenable: _scrollOffset,
-                builder: (context, offset, _) => LiquidPrismScrollEdge(
-                  progress: LiquidPrismScrollEdge.progressFor(
-                    offset,
-                    revealExtent:
-                        GlassScrollEdgeStyle.resolve(
-                          context,
-                          widget.scrollEdgeStyle,
-                        ).revealExtent ??
-                        GlassScrollEdgeStyle.defaultRevealExtent,
-                  ),
+              child: ListenableBuilder(
+                listenable: Listenable.merge([_scrollOffset, _edgeStrength]),
+                builder: (context, _) => LiquidPrismScrollEdge(
+                  progress:
+                      _edgeStrength.value *
+                      LiquidPrismScrollEdge.progressFor(
+                        _scrollOffset.value,
+                        revealExtent:
+                            GlassScrollEdgeStyle.resolve(
+                              context,
+                              widget.scrollEdgeStyle,
+                            ).revealExtent ??
+                            GlassScrollEdgeStyle.defaultRevealExtent,
+                      ),
                   color: widget.backgroundColor,
                   style: widget.scrollEdgeStyle,
                 ),
               ),
             ),
           ),
-        if (widget.scrollEdge && widget.bottomBar != null)
+        if (edges && widget.bottomBar != null)
           LayoutId(
             id: _Slot.bottomScrollEdge,
             child: GlassGroupMembers(
               child: IgnorePointer(
-                child: ValueListenableBuilder<double>(
-                  valueListenable: _scrollRemaining,
-                  builder: (context, remaining, _) => LiquidPrismScrollEdge(
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _scrollRemaining,
+                    _edgeStrength,
+                  ]),
+                  builder: (context, _) => LiquidPrismScrollEdge(
                     edge: GlassEdge.bottom,
-                    progress: LiquidPrismScrollEdge.progressFor(
-                      remaining,
-                      revealExtent:
-                          GlassScrollEdgeStyle.resolve(
-                            context,
-                            widget.scrollEdgeStyle,
-                          ).revealExtent ??
-                          GlassScrollEdgeStyle.defaultRevealExtent,
-                    ),
+                    progress:
+                        _edgeStrength.value *
+                        LiquidPrismScrollEdge.progressFor(
+                          _scrollRemaining.value,
+                          revealExtent:
+                              GlassScrollEdgeStyle.resolve(
+                                context,
+                                widget.scrollEdgeStyle,
+                              ).revealExtent ??
+                              GlassScrollEdgeStyle.defaultRevealExtent,
+                        ),
                     color: widget.backgroundColor,
                     style: widget.scrollEdgeStyle,
                   ),
@@ -870,6 +925,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       axis: rail ? Axis.vertical : Axis.horizontal,
                     ),
             ),
+          ),
+        if (widget.trailing case final trailing?)
+          LayoutId(
+            id: _Slot.trailing,
+            child: GlassGroupMembers(child: trailing),
           ),
         // A bottom tab bar would sit under the keyboard; native hides it too.
         if (showTabBar)
@@ -1009,6 +1069,7 @@ enum _Slot {
   sidebarToggle,
   leading,
   actions,
+  trailing,
   tabBar,
 }
 
@@ -1211,6 +1272,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
   // Measured on iOS 27 simulators; see doc/native_adaptive_layout.md.
   static const _edge = 16.0;
+
+  /// Between [LiquidPrismScaffold.trailing] and the first capsule, as the
+  /// capsules space themselves.
+  static const _trailingGap = 8.0;
   static const _minimumTop = 24.0;
   // Measured: in a sheet the bar's controls sit 16 pt below its top.
   static const _sheetTop = 16.0;
@@ -1408,6 +1473,22 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           Offset(x, top + math.max(0, (barRow - actions.height) / 2)),
         );
       }
+    }
+
+    if (hasChild(_Slot.trailing)) {
+      // Before the capsules in the bar, or at its trailing edge.
+      final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
+      final x = rtl
+          ? (actionsInBar ? leadingEnd + _trailingGap : barLeft + _edge)
+          : (actionsInBar ? trailingStart - _trailingGap : barRight - _edge) -
+                child.width;
+      if (rtl) {
+        leadingEnd = x + child.width;
+      } else {
+        trailingStart = x;
+      }
+      actionsInBar = true;
+      positionChild(_Slot.trailing, Offset(x, centred(child)));
     }
 
     if (hasChild(_Slot.title)) {
@@ -1653,7 +1734,9 @@ class _SliverPageState extends State<_SliverPage> {
                   ),
                 ),
           ),
-        SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+        // Pinned and empty: content scrolls under the bar, while the app's
+        // own pinned headers stack below it rather than behind it.
+        SliverPersistentHeader(pinned: true, delegate: _TopInset(padding.top)),
         SliverPadding(
           padding: EdgeInsets.only(left: padding.left, right: padding.right),
           sliver: SliverMainAxisGroup(
@@ -1673,6 +1756,21 @@ class _SliverPageState extends State<_SliverPage> {
       ],
     );
   }
+}
+
+/// The bar's inset as a pinned sliver that paints nothing.
+class _TopInset extends SliverPersistentHeaderDelegate {
+  _TopInset(this.extent);
+  final double extent;
+  @override
+  double get minExtent => extent;
+  @override
+  double get maxExtent => extent;
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      const SizedBox.expand();
+  @override
+  bool shouldRebuild(_TopInset old) => old.extent != extent;
 }
 
 /// Reports its child's laid-out height after each layout that changes it.
