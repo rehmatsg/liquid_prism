@@ -81,80 +81,87 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ),
       ),
-      // The scaffold's padding clears the bar and the field, so read it from
-      // a context below the scaffold.
-      body: Builder(
-        builder: (context) => ListView(
-          // Dragging the results dismisses the keyboard, as in iOS search.
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: EdgeInsets.fromLTRB(
-            16,
-            MediaQuery.paddingOf(context).top + 8,
-            16,
-            MediaQuery.paddingOf(context).bottom + 24,
-          ),
-          children: [
-            if (found.isEmpty && ideas.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 48),
-                child: Column(
-                  children: [
-                    Icon(
-                      CupertinoIcons.search,
-                      size: 44,
-                      color: muted(context),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'No results for “${_query.text.trim()}”',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
+      // The scaffold builds the scroll view, clears the bar, the field and
+      // the bottom bar, and dismisses the keyboard on drag.
+      onRefresh: () => Future<void>.delayed(const Duration(seconds: 1)),
+      bottomBar: query.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: LiquidPrismButton(
+                key: const ValueKey('search-page-done'),
+                label: 'Show results',
+                onPressed: () => _focus.unfocus(),
+                child: Text('Show ${found.length + ideas.length} results'),
+              ),
+            ),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          sliver: SliverList.list(
+            children: [
+              if (found.isEmpty && ideas.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 48),
+                  child: Column(
+                    children: [
+                      Icon(
+                        CupertinoIcons.search,
+                        size: 44,
+                        color: muted(context),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Check the spelling or try a new search.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, color: muted(context)),
-                    ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No results for “${_query.text.trim()}”',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Check the spelling or try a new search.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 15, color: muted(context)),
+                      ),
+                    ],
+                  ),
+                ),
+              if (found.isNotEmpty)
+                InsetSection(
+                  header: 'Components',
+                  children: [
+                    for (final c in found)
+                      ListRow(
+                        title: c.title,
+                        subtitle: c.subtitle,
+                        icon: c.icon,
+                        iconColor: c.color,
+                        onPressed: () {
+                          _focus.unfocus();
+                          Navigator.of(context).push<void>(
+                            CupertinoPageRoute(
+                              builder: (_) =>
+                                  ComponentPage(info: c, model: widget.model),
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 ),
-              ),
-            if (found.isNotEmpty)
-              InsetSection(
-                header: 'Components',
-                children: [
-                  for (final c in found)
-                    ListRow(
-                      title: c.title,
-                      subtitle: c.subtitle,
-                      icon: c.icon,
-                      iconColor: c.color,
-                      onPressed: () {
-                        _focus.unfocus();
-                        Navigator.of(context).push<void>(
-                          CupertinoPageRoute(
-                            builder: (_) =>
-                                ComponentPage(info: c, model: widget.model),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-            if (ideas.isNotEmpty)
-              InsetSection(
-                header: query.isEmpty ? 'Suggestions' : 'Ideas',
-                children: [
-                  for (final idea in ideas)
-                    ListRow(title: idea.$1, subtitle: idea.$2),
-                ],
-              ),
-          ],
+              if (ideas.isNotEmpty)
+                InsetSection(
+                  header: query.isEmpty ? 'Suggestions' : 'Ideas',
+                  children: [
+                    for (final idea in ideas)
+                      ListRow(title: idea.$1, subtitle: idea.$2),
+                  ],
+                ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

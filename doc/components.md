@@ -241,6 +241,33 @@ stays visible on a dark housing; 0 turns it off. Widget `motion` is
 `GlassMotion` for travel, press scale and projection; native lift/flex defaults
 remain calibrated separately. Safe-area positioning belongs to the parent.
 
+## Scrolling pages
+
+Pass `slivers:` instead of `body:` and the scaffold builds the scroll view:
+
+```dart
+LiquidPrismScaffold(
+  title: const Text('Applications'),
+  largeTitle: const Text('Applications'),
+  actions: [[filter], [sort, search]],
+  onRefresh: reload,
+  bottomBar: SaveButton(...),
+  slivers: [SliverList.builder(...)],
+)
+```
+
+It pads the content below the bar, large title and accessory and above the tab
+bar, `bottomBar` and keyboard; follows the scroll for the edge effects and the
+large title; dismisses the keyboard on drag; and, with `onRefresh`, adds native
+pull to refresh below the bar. `scrollController` hands the page its
+controller. Pinned `SliverPersistentHeader`s pin below the bar, and
+`SliverFillRemaining` fills the space between the insets, for empty and error
+states. `bottomBar` pins a bar above the home indicator, tab bar or keyboard;
+content under it takes a bottom scroll edge effect in the same glass group as
+the top one. A `body` still works for content that builds its own scrollable:
+the insets arrive as `MediaQuery.padding`. When that body's lists sit one level
+down, as in a tab view, pass `scrollDepth: 1`.
+
 ## Sliver app bar
 
 `LiquidPrismSliverAppBar` is the scaffold's top bar as a pinned sliver, for

@@ -4,6 +4,18 @@
 
 ## 0.4.0
 
+- Let `LiquidPrismScaffold` build the page's scroll view: `slivers:` in place
+  of `body` pads the content below the bar, large title and accessory and
+  above the tab bar, bottom bar and keyboard, follows its scroll and dismisses
+  the keyboard on drag. `onRefresh` adds native pull to refresh below the bar;
+  `scrollController` hands a page its controller.
+- Add `LiquidPrismScaffold.bottomBar`: a bar pinned above the home indicator,
+  tab bar or keyboard that pads the body, with a bottom scroll edge effect in
+  the same glass group as the top one (one set of captures for both).
+- Add `LiquidPrismScaffold.scrollDepth` so pages whose lists sit inside a tab
+  view drive the bar from the visible list.
+- Fix list content moving twice as fast as the finger while a large title
+  collapsed: the body keeps the expanded bar's inset.
 - Add `LiquidPrismSliverAppBar`, a pinned navigation bar for a
   `CustomScrollView` laid out as the scaffold's top bar: implied back
   button, inline and large titles with the measured collapse, `actions`

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show DisplayFeature;
 
+import 'package:flutter/cupertino.dart' show CupertinoSliverRefreshControl;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -9,6 +10,7 @@ import 'glass_transition.dart';
 import 'menu/menu.dart';
 import 'menu/menu_elements.dart';
 import 'motion.dart';
+import 'edge_fade.dart' show GlassEdge;
 import 'scroll_edge.dart';
 import 'sidebar.dart';
 import 'system_chrome.dart';
@@ -96,7 +98,12 @@ class LiquidPrismChrome extends InheritedWidget {
 class LiquidPrismScaffold extends StatefulWidget {
   const LiquidPrismScaffold({
     super.key,
-    required this.body,
+    this.body,
+    this.slivers,
+    this.scrollController,
+    this.onRefresh,
+    this.bottomBar,
+    this.scrollDepth = 0,
     this.title,
     this.largeTitle,
     this.navigationBarStyle,
@@ -111,10 +118,49 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.resizeToAvoidBottomInset = true,
     this.scrollEdge = true,
     this.scrollEdgeStyle,
-  });
+  }) : assert(
+         (body == null) != (slivers == null),
+         'Pass either body or slivers.',
+       ),
+       assert(
+         onRefresh == null || slivers != null,
+         'onRefresh needs slivers; a body adds its own refresh control.',
+       );
 
-  /// Full-window content. Usually a scroll view.
-  final Widget body;
+  /// Full-window content, usually a scroll view, laid out under the chrome.
+  /// The chrome's insets reach it as `MediaQuery.padding`: a [ListView] or
+  /// [GridView] without its own padding applies them, any other scroll view
+  /// pads itself. Prefer [slivers] for a page that scrolls.
+  final Widget? body;
+
+  /// The page's content as slivers, in place of [body]. The scaffold builds
+  /// the [CustomScrollView]: it pads the content below the bar, large title
+  /// and accessory and above the tab bar, [bottomBar] and keyboard, follows
+  /// its scroll for the edge effects and the large title, and dismisses the
+  /// keyboard on drag. A pinned [SliverPersistentHeader] among them pins
+  /// below the bar; [SliverFillRemaining] fills the space between the insets.
+  final List<Widget>? slivers;
+
+  /// The controller of the scroll view built from [slivers], for a page that
+  /// scrolls it itself. Null makes it the primary scroll view, which a
+  /// tab bar's reselection or a status bar tap scrolls to the top.
+  final ScrollController? scrollController;
+
+  /// Pull to refresh for [slivers]: a native refresh control that appears
+  /// below the bar as the content is pulled down.
+  final Future<void> Function()? onRefresh;
+
+  /// A bar pinned to the bottom of the page, above the home indicator and
+  /// the keyboard, such as a primary action. The body is padded to clear it,
+  /// and content scrolled under it takes a bottom scroll edge effect that its
+  /// glass refracts through, as at the top.
+  final Widget? bottomBar;
+
+  /// Which scroll view drives the edge effects and the large title, counted
+  /// in nested scrollables from the body: 0 is its outermost one. A page of
+  /// lists one level down, such as a horizontal tab view of vertical lists,
+  /// passes 1; the visible tab's list then drives the bar.
+  final int scrollDepth;
 
   /// Inline header, centred between leading and trailing chrome.
   final Widget? title;
@@ -231,11 +277,19 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// How far the body's outermost scroll view is scrolled past its start.
   final _scrollOffset = ValueNotifier<double>(0);
 
+  /// How much of that scroll view's content lies beyond its end, under a
+  /// [LiquidPrismScaffold.bottomBar].
+  final _scrollRemaining = ValueNotifier<double>(0);
+
   bool _onScroll(ScrollMetrics metrics) {
     if (metrics.axis == Axis.vertical) {
       _scrollOffset.value = math.max(
         0,
         metrics.pixels - metrics.minScrollExtent,
+      );
+      _scrollRemaining.value = math.max(
+        0,
+        metrics.maxScrollExtent - metrics.pixels,
       );
       _syncTitle();
     }
@@ -297,6 +351,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _largeFade.dispose();
     _inlineFade.dispose();
     _scrollOffset.dispose();
+    _scrollRemaining.dispose();
     super.dispose();
   }
 
@@ -520,18 +575,20 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
               child:
-                  (widget.scrollEdge || widget.largeTitle != null) &&
-                      (topBar || widget.accessory != null)
+                  ((widget.scrollEdge || widget.largeTitle != null) &&
+                          (topBar || widget.accessory != null)) ||
+                      widget.bottomBar != null
                   ? NotificationListener<ScrollMetricsNotification>(
                       onNotification: (n) =>
-                          n.depth == 0 && _onScroll(n.metrics),
+                          n.depth == widget.scrollDepth && _onScroll(n.metrics),
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (n) =>
-                            n.depth == 0 && _onScroll(n.metrics),
-                        child: widget.body,
+                            n.depth == widget.scrollDepth &&
+                            _onScroll(n.metrics),
+                        child: _content(),
                       ),
                     )
-                  : widget.body,
+                  : _content(),
             ),
           ),
         ),
@@ -558,6 +615,36 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ),
               ),
             ),
+          ),
+        if (widget.scrollEdge && widget.bottomBar != null)
+          LayoutId(
+            id: _Slot.bottomScrollEdge,
+            child: GlassGroupMembers(
+              child: IgnorePointer(
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _scrollRemaining,
+                  builder: (context, remaining, _) => LiquidPrismScrollEdge(
+                    edge: GlassEdge.bottom,
+                    progress: LiquidPrismScrollEdge.progressFor(
+                      remaining,
+                      revealExtent:
+                          GlassScrollEdgeStyle.resolve(
+                            context,
+                            widget.scrollEdgeStyle,
+                          ).revealExtent ??
+                          GlassScrollEdgeStyle.defaultRevealExtent,
+                    ),
+                    color: widget.backgroundColor,
+                    style: widget.scrollEdgeStyle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (widget.bottomBar case final bottomBar?)
+          LayoutId(
+            id: _Slot.bottomBar,
+            child: GlassGroupMembers(child: bottomBar),
           ),
         if (widget.title case final title?)
           LayoutId(
@@ -682,6 +769,62 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     );
   }
 
+  /// The body, or a scroll view built from the slivers with the chrome's
+  /// insets as slivers of their own.
+  Widget _content() {
+    final body = widget.body;
+    if (body != null) return body;
+    return Builder(
+      builder: (context) {
+        final padding = MediaQuery.paddingOf(context);
+        final onRefresh = widget.onRefresh;
+        return CustomScrollView(
+          controller: widget.scrollController,
+          primary: widget.scrollController == null ? true : null,
+          // Pull to refresh and the bounce need room to scroll on a short
+          // page too.
+          physics: const AlwaysScrollableScrollPhysics(),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            if (onRefresh != null)
+              CupertinoSliverRefreshControl(
+                onRefresh: onRefresh,
+                // The control sits above the top inset; its indicator draws
+                // below the bar, in the gap the pull opens over the content.
+                builder:
+                    (
+                      context,
+                      mode,
+                      pulledExtent,
+                      triggerDistance,
+                      indicatorExtent,
+                    ) => Transform.translate(
+                      offset: Offset(0, padding.top),
+                      child:
+                          CupertinoSliverRefreshControl.buildRefreshIndicator(
+                            context,
+                            mode,
+                            pulledExtent,
+                            triggerDistance,
+                            indicatorExtent,
+                          ),
+                    ),
+              ),
+            SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+            SliverPadding(
+              padding: EdgeInsets.only(
+                left: padding.left,
+                right: padding.right,
+              ),
+              sliver: SliverMainAxisGroup(slivers: widget.slivers!),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
+          ],
+        );
+      },
+    );
+  }
+
   /// Whether the actions and [tabs] both fit a rail of [height] below the
   /// actions' top, with the measured gaps.
   bool _fitsRail(double height, {required Widget? tabs}) {
@@ -737,6 +880,8 @@ class _Ellipsis extends StatelessWidget {
 
 enum _Slot {
   body,
+  bottomScrollEdge,
+  bottomBar,
   title,
   largeTitle,
   scrollEdge,
@@ -971,11 +1116,14 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? (scrollOffset.value > 0 ? 1.0 : 0.0)
         : (scrollOffset.value / collapseExtent).clamp(0.0, 1.0);
     final largeHeight = expandedHeight * (1 - collapse);
+    // The body keeps the expanded bar's inset while the large title collapses:
+    // content scrolls one for one beneath the title and accessory riding up
+    // over it. A shrinking inset moved content twice as fast as the finger.
     var covered = EdgeInsets.only(
       top: topBar || accessoryHeight > 0
           ? top +
                 barRow +
-                largeHeight +
+                expandedHeight +
                 accessoryHeight +
                 LiquidPrismScaffold.topBarClearance
           : top,
@@ -1175,6 +1323,40 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       }
     }
 
+    if (hasChild(_Slot.bottomBar)) {
+      // Above the keyboard, else above the tab bar or the home indicator.
+      final floor = keyboard > 0
+          ? keyboard
+          : covered.bottom > 0
+          ? covered.bottom + 8
+          : viewPadding.bottom;
+      final bar = layoutChild(
+        _Slot.bottomBar,
+        BoxConstraints.loose(
+          Size(math.max(0, contentRight - contentLeft), size.height),
+        ),
+      );
+      final barTop = size.height - floor - bar.height;
+      positionChild(
+        _Slot.bottomBar,
+        Offset(
+          contentLeft + (contentRight - contentLeft - bar.width) / 2,
+          barTop,
+        ),
+      );
+      covered = covered.copyWith(bottom: size.height - barTop);
+      if (hasChild(_Slot.bottomScrollEdge)) {
+        // From the bar's top to the screen's bottom; a soft effect reaches
+        // above it.
+        layoutChild(
+          _Slot.bottomScrollEdge,
+          BoxConstraints.tight(
+            Size(math.max(0, contentRight - contentLeft), size.height - barTop),
+          ),
+        );
+        positionChild(_Slot.bottomScrollEdge, Offset(contentLeft, barTop));
+      }
+    }
     covered = covered.copyWith(
       bottom: math.max(covered.bottom, keyboard),
       left: contentLeft,
