@@ -445,6 +445,35 @@ void main() {
     expect(hairline.height, 1);
   });
 
+  testWidgets('the hard hairline turns white in dark appearance', (
+    tester,
+  ) async {
+    phone(tester);
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Hard'),
+          scrollController: controller,
+          scrollEdgeStyle: const GlassScrollEdgeStyle(
+            variant: GlassScrollEdgeVariant.hard,
+          ),
+          slivers: rows(),
+        ),
+      ),
+    );
+    controller.jumpTo(200);
+    await tester.pumpAndSettle();
+    final colors = tester
+        .widgetList<ColoredBox>(find.byType(ColoredBox))
+        .map((box) => box.color);
+    expect(colors, contains(GlassScrollEdgeStyle.darkHairlineColor));
+    expect(colors, isNot(contains(GlassScrollEdgeStyle.hairlineColor)));
+  });
+
   testWidgets('beside actions the title leads; without them it centres', (
     tester,
   ) async {

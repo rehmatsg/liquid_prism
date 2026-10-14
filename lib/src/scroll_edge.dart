@@ -194,7 +194,15 @@ class GlassScrollEdgeStyle {
   static const double defaultHardSigma = 2;
   static const double defaultHardFalloff = 51;
   static const double defaultHardFloor = .25;
+
+  /// The hard variant's hairline: a device pixel of black at 10% in light
+  /// appearance and white at 10% in dark, measured on iOS 27.
   static const Color hairlineColor = Color(0x1A000000);
+  static const Color darkHairlineColor = Color(0x1AFFFFFF);
+
+  /// The hairline for [brightness].
+  static Color hairlineColorFor(Brightness brightness) =>
+      brightness == Brightness.dark ? darkHairlineColor : hairlineColor;
 
   /// The style at [context]: theme, then [override].
   static GlassScrollEdgeStyle resolve(
@@ -340,8 +348,10 @@ class LiquidPrismScrollEdge extends StatelessWidget {
             child: IgnorePointer(
               child: Opacity(
                 opacity: strength,
-                child: const ColoredBox(
-                  color: GlassScrollEdgeStyle.hairlineColor,
+                child: ColoredBox(
+                  color: GlassScrollEdgeStyle.hairlineColorFor(
+                    LiquidPrismTheme.brightnessOf(context),
+                  ),
                 ),
               ),
             ),

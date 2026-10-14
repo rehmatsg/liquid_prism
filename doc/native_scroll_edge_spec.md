@@ -22,7 +22,7 @@ Both variants draw the effect with three things:
 | --- | --- | --- |
 | Heavy blur: `CABackdropLayer`, `gaussianBlur` radius 16, captured at scale 0.25, composited at **opacity 0.5** | Masked by an axial gradient with alpha 1 at **34%** of the strip falling **linearly** to 0 at its end | Unmasked: constant to the bar's edge |
 | Light variable blur: `CABackdropLayer`, filter `blur` with `inputMaskImage` (1 × 384), `inputFade`, and a "blur fill" (radius 16, lighten 0.6, darken 0.4, normal 0.25) | `inputRadius` **1.5**; mask full to **37%**, zero from **96%**; `inputFade` true | `inputRadius` **2**; mask full to **56%**, falling to a **0.247** floor at the end; `inputFade` false |
-| Edge | Reaches **40 pt below the bar frame** (156 pt total; 50 pt below the capsules) | Ends at the bar frame (116 pt) with a **1/3 pt hairline**, black at **10%** |
+| Edge | Reaches **40 pt below the bar frame** (156 pt total; 50 pt below the capsules) | Ends at the bar frame (116 pt) with a **1/3 pt hairline**: black at **10%** in light, white at **10%** in dark |
 
 The container is 402 × 156 pt (soft) or 116 pt (hard). The effect's layers
 do not change between rest and scrolled: content simply scrolls beneath them.
@@ -83,11 +83,32 @@ hard blur's attenuation at the edge, 0.19, is what a 0.5 pt sigma leaves of
 `GlassScrollEdgeStyle` defaults: variable blur sigma 1.5 (hard 2), falloff 98
 pt of a 156 pt strip (hard 51 of 116), reach 50 pt past the bar (hard 0), fade
 opacity 0.5, haze 16 at 0.5 masked linearly from 34% (hard constant), hard
-floor 0.25 with the fade held flat and a one-pixel 10% black hairline. The
-blur-fill opacities (lighten 0.6, darken 0.4, normal 0.25 in light; darken
+floor 0.25 with the fade held flat and a one-pixel hairline (10% black in
+light, 10% white in dark). The blur-fill opacities (lighten 0.6, darken 0.4, normal 0.25 in light; darken
 0.6, lighten 0.4, normal 0 in dark) are reproduced only as the measured net
 fade toward the background. The `.automatic` style was not measured; the
 reveal over the first points of scroll is this package's, not native.
+
+## Hard hairline
+
+Measured on the iOS 27 simulator at 3x, top bar, `.safeAreaBar` accessory and
+bottom toolbar alike:
+
+- A plain `CALayer` (delegate `_UIScrollEdgeEffectLayerDelegate`), the third
+  sublayer of the effect after the two backdrops. It is 1/3 pt tall and sits
+  inside the bar frame, ending exactly at its edge (115.667–116 for the top
+  bar; along the top of the effect for bottom bars).
+- `backgroundColor` sRGB `(0, 0, 0, 0.1)` in light and `(1, 1, 1, 0.1)` in
+  dark; opacity 1, no compositing filter, no filters.
+- Plain source-over in gamma-encoded sRGB, drawn over the effect: 200 → 180
+  in light and 58 → 78 in dark. Linear-light blending (190 and 103) is ruled
+  out. Content below the line is untouched.
+- It never animates: identical at rest, scrolled and scrolled back, with no
+  animation keys over about 120 traced frames each way.
+
+Liquid Prism draws the same colours a device pixel thick at the far side of
+the edge. Its hairline follows the package's reveal; native shows it at rest.
+Evidence: `_research/hard_hairline/`; probe: `tool/native_scroll_edge_probe/hairline.sh`.
 
 Not verified: whether the native glass bar buttons sample the content before
 or after the effect. Over the stripes both read as frosted grey, and the

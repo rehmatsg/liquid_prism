@@ -481,9 +481,9 @@ scroll over which it arrives (the reveal is this package's; native shows it as
 soon as content is beneath).
 
 `GlassScrollEdgeVariant.hard` is the effect under a bar with a background, as
-SwiftUI's `.hard` style: it stops at the bar's edge with a one-pixel hairline,
-blurs 2 points keeping a quarter of that to the edge, and holds its fade and
-haze flat. Give the scaffold an `accessory` (a `PreferredSizeWidget` such as
+SwiftUI's `.hard` style: it stops at the bar's edge with a one-pixel hairline
+(10% black in light, 10% white in dark), blurs 2 points keeping a quarter of
+that to the edge, and holds its fade and haze flat. Give the scaffold an `accessory` (a `PreferredSizeWidget` such as
 segmented tabs) to extend the bar below its capsules; the effect and the body's
 padding cover it. Together they make a bar like a native navigation bar with a
 palette of tabs:
