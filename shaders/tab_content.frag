@@ -30,6 +30,13 @@ vec4 readContent(vec2 p) {
 void main() {
     vec2 pixel = FlutterFragCoord().xy;
     vec2 p = pixel / u_geometry.x - u_origin;
+    // Outside the contour's box the field is positive: pass the pixel through
+    // without the contour search. The filter covers the whole foreground row,
+    // most of it beyond the pill.
+    if (any(lessThan(p, vec2(0.))) || any(greaterThan(p, u_extent))) {
+        frag_color = readContent(pixel);
+        return;
+    }
     vec3 field;
     if (u_geometry.w > .5 && u_geometry.z > .001) {
         field = roundedSuperellipse(p);
