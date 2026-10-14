@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.5.1
+
+- Content now starts 16 points below the bar's controls, matching the
+  16-point side margins (`LiquidPrismScaffold.topBarClearance`; native keeps
+  14). Under a large title it still starts at the end of the title's row.
+
 ## 0.5.0
 
 - Pinned `SliverPersistentHeader`s in `LiquidPrismScaffold.slivers` now pin

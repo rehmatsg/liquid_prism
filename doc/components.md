@@ -315,7 +315,7 @@ It takes `leading` (or implies a back or close button), `title`,
 `scrollEdge`, `scrollEdgeStyle` and `navigationBarStyle`, with the scaffold's
 measured geometry: 16-point edges, the 44-point control row under the status
 bar, a 52-point large title row that rides the scroll before the titles swap
-on a timer, and 14 points of clearance before the content. The bar's glass and
+on a timer, and 16 points of clearance before the content. The bar's glass and
 its edge effect share one glass group, so the controls refract the content
 before the effect.
 
@@ -364,7 +364,7 @@ other. Pass `placement` to force one. The [adaptive layout
 measurements](native_adaptive_layout.md) record the native frames this follows.
 
 The body receives `MediaQuery.padding` that includes the space the chrome
-covers plus 14 points below the top bar's capsules, so scroll views keep
+covers plus 16 points below the top bar's capsules, so scroll views keep
 content clear while it still shows through the glass. When the device is partly folded, the fold reaches the body as a
 `MediaQuery.displayFeatures` entry; `DisplayFeatureSubScreen` keeps content out
 of it. Read `LiquidPrismScaffold.placementOf(context)` to adapt your own layout.

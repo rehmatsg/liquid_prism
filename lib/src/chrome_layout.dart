@@ -288,8 +288,9 @@ class LiquidPrismScaffold extends StatefulWidget {
   static const double topBarHeight = 44;
 
   /// Space the body keeps below the top bar. Measured: the content safe area
-  /// on iPhone Duo starts 58 pt below the bar's top, 14 pt under its capsules.
-  static const double topBarClearance = 14;
+  /// on iPhone Duo starts 58 pt below the bar's top, 14 pt under its capsules;
+  /// this package keeps 16, matching the 16-point side margins.
+  static const double topBarClearance = 16;
 
   @override
   State<LiquidPrismScaffold> createState() => _LiquidPrismScaffoldState();
