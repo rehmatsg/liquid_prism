@@ -39,6 +39,7 @@ class LiquidPrism extends StatefulWidget {
     this.lensRim = 0,
     this.chromaticSplit = 0,
     this.chromaticBand = 0,
+    this.resting = false,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
        assert(lensRim >= 0),
        assert(chromaticSplit >= 0),
@@ -64,6 +65,11 @@ class LiquidPrism extends StatefulWidget {
   final double chromaticSplit;
   @internal
   final double chromaticBand;
+
+  /// A resting control lens whose optics are all zero under an opaque fill:
+  /// paint only the clipped child and skip the backdrop passes.
+  @internal
+  final bool resting;
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
@@ -233,6 +239,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
           lensRim: widget.lensRim,
           chromaticSplit: widget.chromaticSplit,
           chromaticBand: widget.chromaticBand,
+          resting: widget.resting,
           child: widget.child,
         ),
       );
@@ -250,6 +257,12 @@ class _LiquidPrismState extends State<LiquidPrism> {
             : GlassShape.rect(cornerRadius: optics.cornerRadius));
     // Presence fades the optical output and shadows through the recipe and
     // grows the lens and frost from zero, so the backdrop stays live.
+    if (widget.resting) {
+      return ClipPath(
+        clipper: GlassShapeClipper(shape),
+        child: widget.child ?? const SizedBox.shrink(),
+      );
+    }
     final presenceScope = LiquidPrismPresence.maybeData(context);
     final presence = presenceScope == null
         ? 1.0

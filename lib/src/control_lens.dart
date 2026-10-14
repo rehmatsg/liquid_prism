@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 import 'glass.dart';
+import 'glass_transition.dart';
 import 'material.dart';
 import 'recipe.dart';
 import 'style.dart';
@@ -66,6 +67,20 @@ class ControlLens extends StatelessWidget {
             : appearance.rimRefraction! * small;
         final light = appearance.rimLight ?? (slider ? _sliderRimLight : .6);
         final faceBlack = appearance.faceBlack ?? (slider ? .1 : 0.0);
+        final fill = ColoredBox(
+          color: restingColor.withValues(
+            alpha: restingColor.a * (1 - progress),
+          ),
+        );
+        // At rest every optic is scaled to zero and the fill covers the lens,
+        // so the glass would only cost a full-screen backdrop pass per thumb.
+        // Custom optics or frost, a presence fade or the tab glint keep it.
+        final resting =
+            progress == 0 &&
+            rim == 0 &&
+            appearance.optics == null &&
+            (appearance.blur ?? 0) == 0 &&
+            LiquidPrismPresence.maybeData(context) == null;
         return CustomPaint(
           // Keep the shadow out of the lens's backdrop capture. Otherwise its
           // clipped mask can refract into a second capsule inside the lens.
@@ -77,6 +92,7 @@ class ControlLens extends StatelessWidget {
           ),
           child: LiquidPrism(
             glass: (appearance.glass ?? Glass.clear).interactive(false),
+            resting: resting,
             role: materialRole,
             lensRim: rim * progress,
             chromaticSplit:
@@ -107,11 +123,7 @@ class ControlLens extends StatelessWidget {
                   tint: const Color(0xFFFFFFFF)
                       .withValues(alpha: (faceBlack * progress).clamp(0, 1)),
                 ),
-            child: ColoredBox(
-              color: restingColor.withValues(
-                alpha: restingColor.a * (1 - progress),
-              ),
-            ),
+            child: fill,
           ),
         );
       },

@@ -15,6 +15,16 @@
   The haze is now a plain blur clipped to the strips, weighted by a `dstIn`
   gradient child; captures match the previous output within 1/255. The
   `edge_haze.frag` shader asset is removed.
+- Resting switch, slider and segmented-control thumbs no longer add a
+  backdrop pass: at lift 0 every optic is zero and the white fill covers the
+  lens, so the thumb paints only its fill until it is held. Custom lens
+  optics or frost, a presence fade and the tab pill keep the glass.
+- Scrolling under `LiquidPrismScaffold` and a pinned `LiquidPrismSliverAppBar`
+  no longer repaints the bars every frame once the title has settled and the
+  scroll edge is at full strength.
+- Glass springs stop once their remaining motion is under a quarter of a
+  physical pixel and half an 8-bit color step, instead of ticking for another
+  0.3-0.4 s.
 
 ## 0.5.3
 

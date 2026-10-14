@@ -203,6 +203,12 @@ rebuild on unchanged values).
   repaints all slivers each scroll frame, and the pinned bar would otherwise be
   re-recorded with them. Glass uniforms are read at composition, so a reused
   bar layer still follows the scroll.
+- A resting control thumb has no glass. `ControlLens` at lift 0 paints only
+  its fill, clipped to the contour: every optic is scaled by lift and the
+  opaque fill covers the lens, so the backdrop pass (a full-screen store and
+  reload per thumb, every frame) bought nothing. Custom `optics`, frost, a
+  `LiquidPrismPresence` ancestor or a tab glint (`rim`) keep the glass, since
+  those are not neutral at rest. `test/resting_thumb_test.dart` covers it.
 
 `test/frame_budget_test.dart` covers these contracts.
 
