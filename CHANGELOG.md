@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Cheaper optical glass shader: a moment-matched footprint pair replaces most
+  four-tap integrations of compressed rim samples, reflection taps are placed
+  in backdrop pixels once, and the highlight and absorption arithmetic is
+  simplified. Output stays within 2/255 of 0.5.3.
+
 ## 0.5.3
 
 - The `leading` slot of `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`

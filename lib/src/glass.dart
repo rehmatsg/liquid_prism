@@ -726,7 +726,8 @@ class _RenderGlass extends RenderProxyBox {
       0.2025 * style.frost * style.frost * dpr * dpr,
       sigma,
       math.max(2.25, 0.09 * sigma * sigma),
-      0.49 * sigma * sigma,
+      // A moment-matched pair integrates footprints up to 2.2 sigma.
+      4.84 * sigma * sigma,
       0, // Chromatic split is written alongside its band after packet assembly.
       broadEnd,
       rimEnd,
