@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.0
+
 - Add `LiquidPrismSliverAppBar`, a pinned navigation bar for a
   `CustomScrollView` laid out as the scaffold's top bar: implied back
   button, inline and large titles with the measured collapse, `actions`
