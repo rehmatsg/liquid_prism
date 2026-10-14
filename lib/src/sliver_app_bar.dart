@@ -230,7 +230,12 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) => _SliverBar(delegate: this, shrinkOffset: shrinkOffset);
+  ) =>
+      // The viewport repaints every sliver on each scroll frame; pinned, the
+      // bar keeps its own layer and is re-recorded only when it changes.
+      RepaintBoundary(
+        child: _SliverBar(delegate: this, shrinkOffset: shrinkOffset),
+      );
 
   @override
   bool shouldRebuild(_SliverBarDelegate old) =>
@@ -444,17 +449,18 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
             LayoutId(
               id: _Slot.edge,
               child: IgnorePointer(
-                child: ListenableBuilder(
+                child: ScrollEdgeProgressBuilder(
                   listenable: Listenable.merge([_scrolled, _edgeStrength]),
-                  builder: (context, _) => LiquidPrismScrollEdge(
-                    progress:
-                        _edgeStrength.value *
-                        LiquidPrismScrollEdge.progressFor(
-                          _scrolled.value,
-                          revealExtent:
-                              edgeStyle.revealExtent ??
-                              GlassScrollEdgeStyle.defaultRevealExtent,
-                        ),
+                  progress: () =>
+                      _edgeStrength.value *
+                      LiquidPrismScrollEdge.progressFor(
+                        _scrolled.value,
+                        revealExtent:
+                            edgeStyle.revealExtent ??
+                            GlassScrollEdgeStyle.defaultRevealExtent,
+                      ),
+                  builder: (context, progress) => LiquidPrismScrollEdge(
+                    progress: progress,
                     color: bar.backgroundColor,
                     style: bar.scrollEdgeStyle,
                   ),
