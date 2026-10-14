@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `LiquidPrismScaffold.actionGroups` for several trailing capsules in the
+  top bar, laid out as `LiquidPrismToolbar`; `actions` remains the one-capsule
+  form.
 - Draw regular glass's thin dark outline all the way round in light
   appearance, as iOS 27 does: the top and bottom now keep about 30% of the
   ends' strength instead of fading out, so the white rim reads against it.

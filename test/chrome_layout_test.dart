@@ -555,6 +555,93 @@ void main() {
       expect(find.bySemanticsLabel('Hide sidebar'), findsNothing);
     });
   });
+  group('actionGroups', () {
+    GlassToolbarItem item(String label) => GlassToolbarItem(
+      icon: const Icon(CupertinoIcons.star),
+      label: label,
+      onPressed: () {},
+    );
+    Widget app(List<List<GlassToolbarItem>> groups) => CupertinoApp(
+      debugShowCheckedModeBanner: false,
+      home: LiquidPrismScaffold(
+        actionGroups: groups,
+        tabBar: LiquidPrismTabBar(
+          selectedIndex: 0,
+          onSelected: (_) {},
+          tabs: _tabs,
+        ),
+        body: const SizedBox.expand(key: _body),
+      ),
+    );
+
+    testWidgets('iPhone: separate capsules, trailing, in order', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(
+        app([
+          [item('Filter')],
+          [item('Share'), item('More')],
+        ]),
+      );
+      await tester.pumpAndSettle();
+      final capsules = tester
+          .widgetList<LiquidPrismToolbarGroup>(
+            find.byType(LiquidPrismToolbarGroup),
+          )
+          .toList();
+      expect(capsules, hasLength(2));
+      final first = tester.getRect(find.byType(LiquidPrismToolbarGroup).first);
+      final last = tester.getRect(find.byType(LiquidPrismToolbarGroup).last);
+      expect(last.right, 402 - 16);
+      expect(first.right, lessThan(last.left));
+      expect(first.top, 62);
+      expect(last.height, 44);
+      expect(find.bySemanticsLabel('Filter'), findsOneWidget);
+    });
+
+    testWidgets('an empty group keeps the bar and draws nothing', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(
+        app([
+          [],
+          [item('Share')],
+        ]),
+      );
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('Share'), findsOneWidget);
+      final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
+      expect(padding.top, 62 + 44 + LiquidPrismScaffold.topBarClearance);
+    });
+
+    testWidgets('iPhone Duo rail folds groups that do not fit into More', (
+      tester,
+    ) async {
+      window(tester, duo);
+      await tester.pumpWidget(
+        app([
+          [item('Filter'), item('Sort'), item('Group')],
+          [item('Share'), item('Save'), item('More actions')],
+        ]),
+      );
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('More'), findsOneWidget);
+      expect(find.bySemanticsLabel('Filter'), findsNothing);
+    });
+
+    test('actions and actionGroups are exclusive', () {
+      expect(
+        () => LiquidPrismScaffold(
+          actions: [item('A')],
+          actionGroups: const [],
+          body: const SizedBox(),
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
 }
 
 const _body = ValueKey('body');

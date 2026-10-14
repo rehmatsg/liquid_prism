@@ -103,6 +103,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions = const [],
+    this.actionGroups,
     this.accessory,
     this.tabBar,
     this.placement,
@@ -111,7 +112,10 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.resizeToAvoidBottomInset = true,
     this.scrollEdge = true,
     this.scrollEdgeStyle,
-  });
+  }) : assert(
+         actionGroups == null || actions.length == 0,
+         'Pass actions or actionGroups, not both.',
+       );
 
   /// Full-window content. Usually a scroll view.
   final Widget body;
@@ -139,6 +143,23 @@ class LiquidPrismScaffold extends StatefulWidget {
 
   /// Actions sharing one glass capsule: top trailing, or atop the rail.
   final List<GlassToolbarItem> actions;
+
+  /// Trailing actions in several capsules, leading to trailing, as a native
+  /// bar with more than one group of buttons; replaces [actions]. Each list
+  /// is one capsule, laid out as [LiquidPrismToolbar] does: declare every
+  /// group the bar can show and let the lists carry state, so an empty group
+  /// draws nothing and materializes in when it gains an item. In the rail
+  /// they stack, and fold into one "More" menu when they do not fit.
+  final List<List<GlassToolbarItem>>? actionGroups;
+
+  /// The trailing capsules: [actionGroups], or [actions] as one.
+  List<List<GlassToolbarItem>> get _actionGroups =>
+      actionGroups ?? [if (actions.isNotEmpty) actions];
+
+  /// Every trailing action, in order.
+  List<GlassToolbarItem> get _allActions => [
+    for (final group in _actionGroups) ...group,
+  ];
 
   /// A row below the top bar and inside its scroll edge effect, such as
   /// segmented tabs, sized by its preferred height and spanning the content
@@ -367,14 +388,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         : _ChromeLayout.topCorner(media.size, occlusions);
     final showTabBar =
         tabBar != null && sidebarTabs == null && (rail || !keyboard);
-    final items =
+    final groups =
         rail &&
             !_fitsRail(
               railBottom - actionsTop,
               tabs: showTabBar ? tabBar : null,
             )
-        ? [LiquidPrismScaffold._overflow(widget.actions)]
-        : widget.actions;
+        ? [
+            [LiquidPrismScaffold._overflow(widget._allActions)],
+          ]
+        : widget._actionGroups;
     final features = addFeatures
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
@@ -466,7 +489,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         // Native keeps the bar row with the sidebar shown or hidden, so
         // content does not jump when the toggle moves into it.
         sidebarTabs != null ||
-        (!rail && widget.actions.isNotEmpty);
+        (!rail && widget._allActions.isNotEmpty);
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         placement: resolved,
@@ -611,19 +634,27 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             id: _Slot.leading,
             child: GlassGroupMembers(child: leading),
           ),
-        if (items.isNotEmpty)
+        if (groups.isNotEmpty)
           LayoutId(
             id: _Slot.actions,
             child: GlassGroupMembers(
-              child: LiquidPrismToolbarGroup(
-                items: items,
-                // Measured: a 44 pt navigation capsule in the top bar, a 48 pt
-                // wide column in the rail.
-                size: rail || corner != null
-                    ? GlassToolbarSize.bottom
-                    : GlassToolbarSize.navigation,
-                axis: rail ? Axis.vertical : Axis.horizontal,
-              ),
+              child: groups.length == 1
+                  ? LiquidPrismToolbarGroup(
+                      items: groups.single,
+                      // Measured: a 44 pt navigation capsule in the top bar,
+                      // a 48 pt wide column in the rail.
+                      size: rail || corner != null
+                          ? GlassToolbarSize.bottom
+                          : GlassToolbarSize.navigation,
+                      axis: rail ? Axis.vertical : Axis.horizontal,
+                    )
+                  : LiquidPrismToolbar(
+                      groups: groups,
+                      size: rail || corner != null
+                          ? GlassToolbarSize.bottom
+                          : GlassToolbarSize.navigation,
+                      axis: rail ? Axis.vertical : Axis.horizontal,
+                    ),
             ),
           ),
         // A bottom tab bar would sit under the keyboard; native hides it too.
@@ -660,11 +691,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// Whether the actions and [tabs] both fit a rail of [height] below the
   /// actions' top, with the measured gaps.
   bool _fitsRail(double height, {required Widget? tabs}) {
-    final actions = widget.actions;
+    final actions = widget._allActions;
     if (actions.length < 2) return true;
+    final groups = widget._actionGroups.where((g) => g.isNotEmpty).length;
     final actionsLength =
         actions.fold<double>(0, (sum, item) => sum + item.width) +
-        14 * (actions.length - 1) +
+        14 * (actions.length - groups) +
+        // Each further capsule adds its own insets and the gap between.
+        (10 + 8) * (groups - 1) +
         10;
     final tabsLength = switch (tabs) {
       LiquidPrismTabBar(:final tabs) => 50.0 * tabs.length + 12,
