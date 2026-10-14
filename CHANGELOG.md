@@ -10,6 +10,10 @@
   content still scrolls under the bar.
 - Add `trailing` to `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`: a
   widget of your own before the action capsules, such as a status pill.
+- Turning `scrollEdge` on after a page appears (say, once its entering
+  transition settles) now fades the edge effects in, blur and fade together,
+  over 0.9 s (`LiquidPrismScaffold.scrollEdgeFadeDuration`), instead of
+  showing them at once; turning it off fades them out.
 
 ## 0.4.0
 

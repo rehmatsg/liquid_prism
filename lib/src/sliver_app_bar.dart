@@ -92,6 +92,8 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
   final Color? backgroundColor;
 
   /// Whether content scrolled under the bar takes the scroll edge effect.
+  /// Changing it fades the effect in or out, as
+  /// [LiquidPrismScaffold.scrollEdge].
   final bool scrollEdge;
 
   /// Overrides the theme's [GlassScrollEdgeStyle] field by field.
@@ -272,6 +274,20 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
   double get _titleBlur =>
       LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
 
+  /// The edge effect's presence, easing in and out as `scrollEdge` changes.
+  late final _edgePresence =
+      AnimationController(
+        vsync: this,
+        duration: LiquidPrismScaffold.scrollEdgeFadeDuration,
+        value: _d.bar.scrollEdge ? 1 : 0,
+      )..addStatusListener((status) {
+        if (status.isDismissed && mounted) setState(() {});
+      });
+  late final _edgeStrength = CurvedAnimation(
+    parent: _edgePresence,
+    curve: Curves.easeInOutCubic,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -300,6 +316,16 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(_SliverBar old) {
     super.didUpdateWidget(old);
+    final edge = _d.bar.scrollEdge;
+    if (old.delegate.bar.scrollEdge != edge) {
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _edgePresence.value = edge ? 1 : 0;
+      } else if (edge) {
+        _edgePresence.forward();
+      } else {
+        _edgePresence.reverse();
+      }
+    }
     final collapsed = _isCollapsed;
     if (collapsed == _collapsed) return;
     _collapsed = collapsed;
@@ -338,6 +364,8 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
   void dispose() {
     _position?.removeListener(_track);
     _scrolled.dispose();
+    _edgeStrength.dispose();
+    _edgePresence.dispose();
     _largeFade.dispose();
     _inlineFade.dispose();
     super.dispose();
@@ -412,19 +440,21 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
               : 0,
         ),
         children: [
-          if (bar.scrollEdge)
+          if (bar.scrollEdge || !_edgePresence.isDismissed)
             LayoutId(
               id: _Slot.edge,
               child: IgnorePointer(
-                child: ValueListenableBuilder<double>(
-                  valueListenable: _scrolled,
-                  builder: (context, scrolled, _) => LiquidPrismScrollEdge(
-                    progress: LiquidPrismScrollEdge.progressFor(
-                      scrolled,
-                      revealExtent:
-                          edgeStyle.revealExtent ??
-                          GlassScrollEdgeStyle.defaultRevealExtent,
-                    ),
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([_scrolled, _edgeStrength]),
+                  builder: (context, _) => LiquidPrismScrollEdge(
+                    progress:
+                        _edgeStrength.value *
+                        LiquidPrismScrollEdge.progressFor(
+                          _scrolled.value,
+                          revealExtent:
+                              edgeStyle.revealExtent ??
+                              GlassScrollEdgeStyle.defaultRevealExtent,
+                        ),
                     color: bar.backgroundColor,
                     style: bar.scrollEdgeStyle,
                   ),

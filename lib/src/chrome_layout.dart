@@ -266,7 +266,15 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// follows the body's outermost scroll view and shares the chrome's backdrop
   /// captures, so the leading control and actions refract the unblurred
   /// content beneath them. Without a top bar nothing is drawn.
+  ///
+  /// Turning it on after the page appears, as a page might once its entering
+  /// transition settles, fades the effects in, blur and fade together, over
+  /// [scrollEdgeFadeDuration]; turning it off fades them out.
   final bool scrollEdge;
+
+  /// How long the scroll edge effects take to fade in or out when
+  /// [scrollEdge] changes.
+  static const scrollEdgeFadeDuration = Duration(milliseconds: 900);
 
   /// Overrides the theme's [GlassScrollEdgeStyle] field by field. Its
   /// `fadeColor` applies when [backgroundColor] is null.
@@ -321,10 +329,39 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   final _statusBarKey = GlobalKey();
 
+  /// The scroll edge effects' presence: 1 while [LiquidPrismScaffold.scrollEdge]
+  /// holds, easing in and out when it changes.
+  late final _edgePresence =
+      AnimationController(
+        vsync: this,
+        duration: LiquidPrismScaffold.scrollEdgeFadeDuration,
+        value: widget.scrollEdge ? 1 : 0,
+      )..addStatusListener((status) {
+        // Remove the effects once they have faded out.
+        if (status.isDismissed && mounted) setState(() {});
+      });
+  late final _edgeStrength = CurvedAnimation(
+    parent: _edgePresence,
+    curve: Curves.easeInOutCubic,
+  );
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didUpdateWidget(LiquidPrismScaffold old) {
+    super.didUpdateWidget(old);
+    if (old.scrollEdge == widget.scrollEdge) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _edgePresence.value = widget.scrollEdge ? 1 : 0;
+    } else if (widget.scrollEdge) {
+      _edgePresence.forward();
+    } else {
+      _edgePresence.reverse();
+    }
   }
 
   // A tap on the iOS status bar scrolls the page to the top, as a Material
@@ -425,6 +462,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   @override
   void dispose() {
+    _edgeStrength.dispose();
+    _edgePresence.dispose();
     _reveal.dispose();
     _largeFade.dispose();
     _inlineFade.dispose();
@@ -585,6 +624,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                         6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
     final swaps = widget.largeTitle != null || widget.header != null;
+    // The edge effects stay while they fade out.
+    final edges = widget.scrollEdge || !_edgePresence.isDismissed;
     _collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
         : widget.largeTitle == null
@@ -695,8 +736,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
               child:
-                  ((widget.scrollEdge || swaps) &&
-                          (topBar || widget.accessory != null)) ||
+                  ((edges || swaps) && (topBar || widget.accessory != null)) ||
                       widget.bottomBar != null
                   ? NotificationListener<ScrollMetricsNotification>(
                       onNotification: (n) =>
@@ -714,46 +754,53 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ),
         // Behind the bar's controls, over the body: it shares their captures
         // and is cut out of their contours (see LiquidPrismEdgeBlur).
-        if (widget.scrollEdge && (topBar || widget.accessory != null))
+        if (edges && (topBar || widget.accessory != null))
           LayoutId(
             id: _Slot.scrollEdge,
             child: GlassGroupMembers(
-              child: ValueListenableBuilder<double>(
-                valueListenable: _scrollOffset,
-                builder: (context, offset, _) => LiquidPrismScrollEdge(
-                  progress: LiquidPrismScrollEdge.progressFor(
-                    offset,
-                    revealExtent:
-                        GlassScrollEdgeStyle.resolve(
-                          context,
-                          widget.scrollEdgeStyle,
-                        ).revealExtent ??
-                        GlassScrollEdgeStyle.defaultRevealExtent,
-                  ),
+              child: ListenableBuilder(
+                listenable: Listenable.merge([_scrollOffset, _edgeStrength]),
+                builder: (context, _) => LiquidPrismScrollEdge(
+                  progress:
+                      _edgeStrength.value *
+                      LiquidPrismScrollEdge.progressFor(
+                        _scrollOffset.value,
+                        revealExtent:
+                            GlassScrollEdgeStyle.resolve(
+                              context,
+                              widget.scrollEdgeStyle,
+                            ).revealExtent ??
+                            GlassScrollEdgeStyle.defaultRevealExtent,
+                      ),
                   color: widget.backgroundColor,
                   style: widget.scrollEdgeStyle,
                 ),
               ),
             ),
           ),
-        if (widget.scrollEdge && widget.bottomBar != null)
+        if (edges && widget.bottomBar != null)
           LayoutId(
             id: _Slot.bottomScrollEdge,
             child: GlassGroupMembers(
               child: IgnorePointer(
-                child: ValueListenableBuilder<double>(
-                  valueListenable: _scrollRemaining,
-                  builder: (context, remaining, _) => LiquidPrismScrollEdge(
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _scrollRemaining,
+                    _edgeStrength,
+                  ]),
+                  builder: (context, _) => LiquidPrismScrollEdge(
                     edge: GlassEdge.bottom,
-                    progress: LiquidPrismScrollEdge.progressFor(
-                      remaining,
-                      revealExtent:
-                          GlassScrollEdgeStyle.resolve(
-                            context,
-                            widget.scrollEdgeStyle,
-                          ).revealExtent ??
-                          GlassScrollEdgeStyle.defaultRevealExtent,
-                    ),
+                    progress:
+                        _edgeStrength.value *
+                        LiquidPrismScrollEdge.progressFor(
+                          _scrollRemaining.value,
+                          revealExtent:
+                              GlassScrollEdgeStyle.resolve(
+                                context,
+                                widget.scrollEdgeStyle,
+                              ).revealExtent ??
+                              GlassScrollEdgeStyle.defaultRevealExtent,
+                        ),
                     color: widget.backgroundColor,
                     style: widget.scrollEdgeStyle,
                   ),
