@@ -157,7 +157,30 @@ on one capture are rendered once over the entire capture, not per contour.
 `LiquidPrismScaffold` hosts a group around its floating chrome (leading control,
 actions and tab bar) automatically; the body paints first and is not a member.
 Wrap your own app-bar chrome, such as toolbar groups painted over a page, in a
-`LiquidPrismGroup` to get the same sharing.
+`LiquidPrismGroup` to get the same sharing. Plain clips between a member and
+its group (a scroll view's viewport, an app bar's toolbar clip) do not keep it
+out: the hoisted shadow and frost are clipped the same way. A saveLayer clip,
+an `Opacity` below 1 or a filter does.
+
+### Shared captures and edge effects
+
+A `LiquidPrismScrollEdge`, `LiquidPrismScrollFade` or `LiquidPrismEdgeBlur`
+inside a group joins its captures. The effect's horizontal blur pass is painted
+with the members' hoisted frost and reads the same capture; its vertical pass
+reads the capture the members' optical passes read, which is taken before the
+fade and before that pass writes. Both passes and the fade are cut out of
+every shared member's contour. The members' optical passes therefore see the
+page content with the members' own frost and nothing of the effect, so glass
+over a scroll edge refracts what is beneath it, as native bar buttons do, and a
+bar's effect and its capsules cost two backdrop captures together instead of
+two each. Batching is off while an effect is hoisted, since a batch would read
+its own later capture.
+
+The effect must reach the scene before the group's glass does, as a bar's
+background does before its controls. An effect with a `child` joins only when
+it paints first; one without a child (a bar's effect) joins wherever it paints.
+Outside a group, or under an isolating ancestor, an effect takes two backdrop
+passes of its own and glass painted after it refracts the finished blur.
 
 The optional batch shader targets Impeller. Builds and headless tests may print
 an SkSL compatibility warning for that shader; the Skia backend uses the frosted

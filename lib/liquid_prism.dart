@@ -14,7 +14,15 @@ export 'src/system_chrome.dart'
         GlassSystemChrome,
         GlassVerticalBarBehavior,
         LiquidPrismSystemChrome;
-export 'src/glass.dart' show LiquidPrism, LiquidPrismGroup;
+export 'src/edge_fade.dart' show GlassEdge, GlassEdgeFade, GlassFadeCurve;
+export 'src/glass.dart'
+    show GlassEdgeBlur, LiquidPrism, LiquidPrismEdgeBlur, LiquidPrismGroup;
+export 'src/scroll_edge.dart'
+    show
+        GlassScrollEdgeStyle,
+        GlassScrollEdgeVariant,
+        LiquidPrismScrollEdge,
+        LiquidPrismScrollFade;
 export 'src/glass_transition.dart'
     show
         GlassTransition,
@@ -30,6 +38,7 @@ export 'src/appearance.dart'
         GlassSwitchStyle,
         GlassSliderStyle,
         GlassSegmentedStyle,
+        GlassSegmentedSizing,
         GlassToolbarStyle,
         GlassSearchStyle;
 export 'src/pressable.dart' show LiquidPrismPressable;
@@ -45,7 +54,12 @@ export "src/slider.dart" show LiquidPrismSlider;
 export "src/segmented_control.dart" show LiquidPrismSegmentedControl;
 
 export 'src/toolbar.dart'
-    show GlassToolbarSize, GlassToolbarItem, LiquidPrismToolbarGroup;
+    show
+        GlassToolbarSize,
+        GlassToolbarItem,
+        LiquidPrismBackButton,
+        LiquidPrismToolbar,
+        LiquidPrismToolbarGroup;
 export 'src/search_field.dart'
     show
         GlassSearchFieldBuilder,
@@ -53,3 +67,10 @@ export 'src/search_field.dart'
         LiquidPrismSearchField;
 
 export 'liquid_menu.dart';
+
+export 'src/haptics.dart'
+    show GlassHaptics, GlassHapticEvent, GlassHapticComponent, GlassHapticKind;
+
+export 'src/badge.dart' show GlassBadge;
+
+export 'src/navigation_bar_style.dart' show GlassNavigationBarStyle;

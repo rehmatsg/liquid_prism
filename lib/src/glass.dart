@@ -8,12 +8,14 @@ import 'package:flutter/widgets.dart';
 import 'style.dart';
 import 'superellipse.dart';
 import 'material.dart';
+import 'edge_fade.dart';
 import 'glass_transition.dart';
 import 'layer_transform.dart';
 import 'theme.dart';
 import 'recipe.dart';
 import 'pressable.dart';
 
+part 'edge_blur.dart';
 part 'glass_group.dart';
 
 /// A live backdrop lens. Foreground content stays sharp above the material.
@@ -34,7 +36,13 @@ class LiquidPrism extends StatefulWidget {
     this.shape,
     this.child,
     this.role = GlassRole.surface,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12));
+    this.lensRim = 0,
+    this.chromaticSplit = 0,
+    this.chromaticBand = 0,
+  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
+       assert(lensRim >= 0),
+       assert(chromaticSplit >= 0),
+       assert(chromaticBand >= 0);
   final Glass? glass;
   final double? blur;
 
@@ -45,9 +53,22 @@ class LiquidPrism extends StatefulWidget {
   final GlassShape? shape;
   @internal
   final GlassRole role;
+
+  /// The selected tab pill's bright glint; only the lifted lens
+  /// recipe reads it.
+  @internal
+  final double lensRim;
+
+  /// Effective lifted-lens red–blue split and band depth, in points.
+  @internal
+  final double chromaticSplit;
+  @internal
+  final double chromaticBand;
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
+  static ui.FragmentProgram? _edgeProgram;
+  static ui.FragmentProgram? _hazeProgram;
   static ui.Image? _linearSampler;
   static Future<void>? _loading;
 
@@ -82,6 +103,17 @@ class LiquidPrism extends StatefulWidget {
         // Batching is optional. The scalar optical filter remains available.
         debugPrint('LiquidPrism: shared optical pass unavailable: $error');
       }
+      try {
+        _edgeProgram ??= await ui.FragmentProgram.fromAsset(
+          'packages/liquid_prism/shaders/edge_blur.frag',
+        );
+        _hazeProgram ??= await ui.FragmentProgram.fromAsset(
+          'packages/liquid_prism/shaders/edge_haze.frag',
+        );
+      } catch (error) {
+        // Edge blurs are optional; their fades still paint.
+        debugPrint('LiquidPrism: edge blur unavailable: $error');
+      }
     } finally {
       _loading = null;
     }
@@ -90,6 +122,32 @@ class LiquidPrism extends StatefulWidget {
   static ui.FragmentShader? _createShader() {
     final shader = _program?.fragmentShader();
     if (shader != null) {
+      shader.setImageSampler(
+        0,
+        _linearSampler!,
+        filterQuality: ui.FilterQuality.low,
+      );
+    }
+    return shader;
+  }
+
+  /// The edge blur reads pairs of texels through one bilinear sample, so its
+  /// backdrop sampler is bound linear the same way.
+  static ui.FragmentShader? _createEdgeShader() {
+    final shader = _edgeProgram?.fragmentShader();
+    if (shader != null && _linearSampler != null) {
+      shader.setImageSampler(
+        0,
+        _linearSampler!,
+        filterQuality: ui.FilterQuality.low,
+      );
+    }
+    return shader;
+  }
+
+  static ui.FragmentShader? _createHazeShader() {
+    final shader = _hazeProgram?.fragmentShader();
+    if (shader != null && _linearSampler != null) {
       shader.setImageSampler(
         0,
         _linearSampler!,
@@ -188,6 +246,9 @@ class _LiquidPrismState extends State<LiquidPrism> {
           shape: widget.shape,
           blur: widget.blur,
           role: widget.role,
+          lensRim: widget.lensRim,
+          chromaticSplit: widget.chromaticSplit,
+          chromaticBand: widget.chromaticBand,
           child: widget.child,
         ),
       );
@@ -210,12 +271,16 @@ class _LiquidPrismState extends State<LiquidPrism> {
         ? 1.0
         : presenceScope.progress.value.clamp(0.0, 1.0);
     final materialize = presenceScope?.materialize ?? false;
-    final recipe = GlassRecipe.resolve(
-      _material,
-      LiquidPrismTheme.materialBrightnessOf(context),
-      widget.role,
-      customOptics: optics != null,
-    ).withPresence(presence);
+    final recipe =
+        GlassRecipe.resolve(
+              _material,
+              LiquidPrismTheme.materialBrightnessOf(context),
+              widget.role,
+              customOptics: optics != null,
+            )
+            .withPresence(presence)
+            .withLensRim(widget.lensRim)
+            .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand);
     var style = (optics ?? recipe.optics(shape.radius)).copyWith(
       cornerRadius: shape.radius,
       frost:
@@ -333,6 +398,21 @@ class _LiquidPrismState extends State<LiquidPrism> {
           )
         : glass;
   }
+}
+
+/// Writes the reserved scalar slots; regular batch members always carry zero.
+/// Split is raster pixels before the sampling transform; depth is local points.
+@visibleForTesting
+void writeChromaticFringeUniforms(
+  List<double> values,
+  GlassRecipe recipe,
+  double pixelRatio,
+) {
+  final lens = recipe.kind == 3;
+  values[60] = lens ? recipe.chromaticBand : 0; // u_shapeD.z
+  values[46 + superellipseUniformCount + 7] = lens
+      ? recipe.chromaticSplit * pixelRatio * recipe.presence
+      : 0; // u_derived[1].w
 }
 
 /// Contact, soft and ambient shadows only darken pixels outside the glass.
@@ -612,6 +692,7 @@ class _RenderGlass extends RenderProxyBox {
       ..._contour,
       ..._derivedUniforms(rect, m),
     ];
+    writeChromaticFringeUniforms(values, recipe, pixelRatio);
     values[42] = press;
     values[43] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
     return values;
@@ -642,7 +723,12 @@ class _RenderGlass extends RenderProxyBox {
     final det = (m[0] * m[5] - m[4] * m[1]).abs();
     final pixel = 1 / (dpr * math.sqrt(math.max(det, 1e-8)));
     final bypass =
-        math.max(math.max(24.0, 2.5 * pixel), edge) + 0.5 + 0.02 * radius;
+        math.max(
+          math.max(math.max(24.0, 2.5 * pixel), edge),
+          recipe.kind == 3 ? recipe.chromaticBand : 0,
+        ) +
+        0.5 +
+        0.02 * radius;
     return [
       1 / math.max(edge, 0.001),
       displacement,
@@ -651,7 +737,7 @@ class _RenderGlass extends RenderProxyBox {
       sigma,
       math.max(2.25, 0.09 * sigma * sigma),
       0.49 * sigma * sigma,
-      0,
+      0, // Chromatic split is written alongside its band after packet assembly.
       broadEnd,
       rimEnd,
       style.frost * 0.85,
@@ -978,7 +1064,7 @@ class _GlassShadowLayer extends ContainerLayer {
     }
     if (group._hoistHost == null) {
       group._hoistHost = glass;
-      group._hoist(builder, glass);
+      group._hoist(builder, glass, glass._paintOffset);
     }
   }
 }

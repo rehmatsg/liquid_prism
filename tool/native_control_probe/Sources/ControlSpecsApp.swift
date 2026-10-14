@@ -9,7 +9,7 @@ import SwiftUI
                     try? await Task.sleep(for: .milliseconds(800))
                     let args = ProcessInfo.processInfo.arguments
                     let run = args.firstIndex(of: "--run").map { args[$0 + 1] } ?? "rest"
-                    StartMotionLog(run, ["fixture": "native controls", "appearance": args.contains("--light") ? "light" : "dark"], 14)
+                    StartMotionLog(run, ["fixture": "native controls", "appearance": args.contains("--light") ? "light" : "dark", "scroll": args.contains("--scroll") ? "yes" : "no"], run.hasPrefix("gesture-") ? 5 : 14)
                 }
         }
     }
@@ -19,9 +19,10 @@ struct ControlsFixture: View {
     @State private var value = 0.4
     @State private var segment = 0
     var body: some View {
+        let scroll = ProcessInfo.processInfo.arguments.contains("--scroll")
         ZStack {
             LinearGradient(colors: [Color(red:0.05,green:0.55,blue:0.55),Color(red:0.04,green:0.12,blue:0.33),Color(red:0.75,green:0.7,blue:0.05)], startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea()
-            VStack(alignment: .leading, spacing: 28) {
+            let content = VStack(alignment: .leading, spacing: 28) {
                 Text("Native controls").font(.system(size: 28, weight: .bold))
                 Text("Switch").font(.system(size: 17, weight: .semibold))
                 Toggle("Switch", isOn: $enabled).labelsHidden().accessibilityIdentifier("switch")
@@ -42,7 +43,11 @@ struct ControlsFixture: View {
                     Text("First").tag(0);Text("Second").tag(1);Text("Third").tag(2)
                 }.pickerStyle(.segmented).frame(width:300).disabled(true).accessibilityIdentifier("disabled-segments")
                 Spacer()
+                if scroll { Color.clear.frame(height: 1200) }
             }.padding(.horizontal,36).padding(.top,36)
+            // --scroll hosts the same controls in a vertical ScrollView, to observe
+            // which of the control and the scroll view owns a drag that begins on it.
+            if scroll { ScrollView { content }.accessibilityIdentifier("scroll") } else { content }
         }
     }
 }

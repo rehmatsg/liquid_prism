@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_gesture.dart';
 import 'control_lens_motion.dart';
 import 'motion.dart';
 
@@ -24,10 +24,12 @@ class ControlInteraction extends StatefulWidget {
     this.onChangeStart,
     this.onChangeEnd,
     this.onSelectionFeedback,
+    this.onEdgeFeedback,
     this.steps,
     this.toggle = false,
     this.continuous = false,
     this.hangTime = Duration.zero,
+    this.grabExtent,
     this.label,
     this.semanticValue,
     this.semanticFormatter,
@@ -36,6 +38,10 @@ class ControlInteraction extends StatefulWidget {
   final double value, travel;
   final ValueChanged<double>? onChanged, onChangeStart, onChangeEnd;
   final VoidCallback? onSelectionFeedback;
+
+  /// Continuous controls: called when a user drag, tap, key or accessibility
+  /// step that the parent accepts first reaches the minimum or maximum.
+  final VoidCallback? onEdgeFeedback;
   final double Function(double x) positionAt;
   final Widget Function(
     BuildContext,
@@ -49,12 +55,31 @@ class ControlInteraction extends StatefulWidget {
   final int? steps;
   final bool toggle, continuous;
   final Duration hangTime;
+
+  /// Half-extent in logical pixels, around the current value, where a contact
+  /// grabs the thumb or selection: it claims the pointer and lifts at once.
+  /// Elsewhere a contact is an inactive-part press: nothing lifts while it is
+  /// held, it yields cross-axis drags to an ancestor scrollable, and it is
+  /// resolved by a tap or an along-axis drag. Null makes every contact a grab.
+  final double? grabExtent;
   final String? label, semanticValue;
   final String Function(double)? semanticFormatter;
   final GlassControlMotion motion;
 
+  /// The value under an inactive-part press, while one is held or dragged;
+  /// discrete controls use it to highlight the pressed option.
+  static double? pressedOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_ControlPress>()?.value;
+
   @override
   State<ControlInteraction> createState() => _ControlInteractionState();
+}
+
+class _ControlPress extends InheritedWidget {
+  const _ControlPress({required this.value, required super.child});
+  final double? value;
+  @override
+  bool updateShouldNotify(_ControlPress oldWidget) => value != oldWidget.value;
 }
 
 class _ControlInteractionState extends State<ControlInteraction>
@@ -87,7 +112,36 @@ class _ControlInteractionState extends State<ControlInteraction>
   double _feedbackValue = 0;
   double? _lastEmitted;
   bool _unliftPending = false;
+
+  /// The end (0 or 1) the accepted value rests at, or null in between. An end
+  /// is announced once on arrival, so holding against it stays silent.
+  double? _edge;
+
+  /// The end a user input proposed this frame, awaiting the parent's answer.
+  double? _proposedEdge;
+  bool _proposalExpiry = false;
+  // Range mapping can round an end by an ulp; that still counts as the end.
+  static double? _edgeOf(double value) =>
+      value <= 1e-9 ? 0 : (value >= 1 - 1e-9 ? 1 : null);
+
+  /// Whether the current contact grabbed the thumb or selection. A press on
+  /// an inactive part becomes a grab when a continuous control is dragged.
+  bool _grabbed = true;
+
+  /// Discrete inactive-part press: the option under the finger, highlighted
+  /// while the selection itself stays put.
+  double? _pressed;
   bool get _enabled => widget.onChanged != null;
+  bool _grabs(double x) {
+    final extent = widget.grabExtent;
+    return extent == null ||
+        (widget.positionAt(x) - widget.value).abs() * widget.travel <= extent;
+  }
+
+  void _press(double? value) {
+    if (_pressed != value && mounted) setState(() => _pressed = value);
+  }
+
   double _quantize(double value) {
     final bounded = value.clamp(0.0, 1.0);
     return widget.steps == null
@@ -100,6 +154,12 @@ class _ControlInteractionState extends State<ControlInteraction>
     double target,
     SpringDescription spring,
   ) => springGlass(controller, target, spring, immediate: _reduceMotion);
+
+  @override
+  void initState() {
+    super.initState();
+    _edge = _edgeOf(widget.value);
+  }
 
   @override
   void didChangeDependencies() {
@@ -133,6 +193,37 @@ class _ControlInteractionState extends State<ControlInteraction>
       _cancel();
     }
     if (!_dragging) _animate(_position, widget.value, widget.spring);
+    if (widget.value != oldWidget.value) _settleEdge();
+  }
+
+  /// Announce an end only when the parent accepted exactly the end that a
+  /// user input proposed. External updates and rejected or altered values
+  /// only move the latch, so they stay silent.
+  void _settleEdge() {
+    final edge = _edgeOf(widget.value);
+    final proposed = _proposedEdge;
+    _proposedEdge = null;
+    if (edge != null &&
+        edge != _edge &&
+        edge == proposed &&
+        widget.continuous &&
+        _enabled) {
+      widget.onEdgeFeedback?.call();
+    }
+    _edge = edge;
+  }
+
+  void _proposeEdge(double value) {
+    if (!widget.continuous || widget.onEdgeFeedback == null) return;
+    _proposedEdge = _edgeOf(value);
+    if (_proposalExpiry) return;
+    // A parent that accepts rebuilds within this frame; later updates are
+    // external and must not inherit the proposal.
+    _proposalExpiry = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _proposalExpiry = false;
+      _proposedEdge = null;
+    });
   }
 
   void _down(PointerDownEvent event) {
@@ -148,6 +239,18 @@ class _ControlInteractionState extends State<ControlInteraction>
     _candidate = widget.value;
     _feedbackValue = widget.value;
     _focus.requestFocus();
+    _grabbed = _grabs(_downX);
+    if (_grabbed) {
+      _raise();
+    } else if (!widget.continuous) {
+      // As native: the touched option dims; the selection does not lift or
+      // move until release. A slider track shows nothing while held.
+      _press(_quantize(widget.positionAt(_downX)));
+    }
+  }
+
+  /// Lift the lens, counting the minimum lift window from now.
+  void _raise() {
     _release?.cancel();
     _unliftPending = false;
     if (!_reduceMotion && widget.hangTime > Duration.zero) {
@@ -182,10 +285,12 @@ class _ControlInteractionState extends State<ControlInteraction>
   }
 
   void _cancel() {
+    _proposedEdge = null;
     _flex.stop();
     final wasDragging = _dragging;
     _pointer = null;
     _dragging = false;
+    _press(null);
     _animate(_deformation, 0, _shapeSpring);
     _release?.cancel();
     _unliftPending = false;
@@ -196,6 +301,7 @@ class _ControlInteractionState extends State<ControlInteraction>
 
   void _notify(double value) {
     _lastEmitted = _quantize(value);
+    _proposeEdge(_lastEmitted!);
     _committing = true;
     try {
       widget.onChanged?.call(_quantize(value));
@@ -238,23 +344,41 @@ class _ControlInteractionState extends State<ControlInteraction>
         ? 1 - widget.value
         : widget.positionAt(details.localPosition.dx);
     _pointer = null;
+    _press(null);
+    final travels = _quantize(next) != _quantize(widget.value);
+    // A press on another option lifts the selection only for its travel,
+    // as the native segmented selection does after release.
+    if (!_grabbed && travels && !widget.continuous) _raise();
     _activate(next);
+    if (!_grabbed) _unlift();
   }
 
   void _dragStart(DragStartDetails details) {
     if (_pointer == null || !_enabled) return;
     _dragging = true;
-    _flex.follow();
     widget.onChangeStart?.call(widget.value);
-    // Slider track taps jump to the contact; a thumb grab preserves its offset.
-    if (widget.continuous &&
-        (widget.positionAt(_downX) - _downValue).abs() * widget.travel > 28.7) {
+    if (!_grabbed) {
+      if (!widget.continuous) {
+        // The highlight follows the finger; the selection commits on release.
+        _candidate = _quantize(widget.positionAt(details.localPosition.dx));
+        _press(_candidate);
+        return;
+      }
+      // A track drag takes the thumb to the finger, then follows it.
+      _grabbed = true;
       _downValue = widget.positionAt(_downX);
+      _raise();
     }
+    _flex.follow();
     _dragTo(details.localPosition.dx);
   }
 
   void _dragTo(double x) {
+    if (!_grabbed) {
+      _candidate = _quantize(widget.positionAt(x));
+      _press(_candidate);
+      return;
+    }
     final delta = (x - _downX) / widget.travel * (_rtl ? -1 : 1);
     _candidate = (_downValue + delta).clamp(0.0, 1.0);
     final target = widget.continuous ? _quantize(_candidate) : _candidate;
@@ -277,6 +401,10 @@ class _ControlInteractionState extends State<ControlInteraction>
     _animate(_deformation, 0, _shapeSpring);
     _pointer = null;
     final target = _quantize(_candidate);
+    if (_pressed != null) {
+      _press(null);
+      if (target != _quantize(widget.value)) _raise();
+    }
     if (!widget.continuous) _notify(target);
     widget.onChangeEnd?.call(target);
     _animate(_position, target, widget.spring);
@@ -291,6 +419,7 @@ class _ControlInteractionState extends State<ControlInteraction>
     _unliftPending = false;
     _pointer = null;
     _dragging = false;
+    _pressed = null;
     _position.stop();
     _lift.stop();
     _deformation.stop();
@@ -367,33 +496,31 @@ class _ControlInteractionState extends State<ControlInteraction>
             onPointerCancel: (event) {
               if (event.pointer == _pointer) _cancel();
             },
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              dragStartBehavior: DragStartBehavior.down,
-              onTapUp: _enabled ? _tap : null,
-              onTapCancel: () {
-                scheduleMicrotask(() {
-                  if (mounted && !_dragging && _pointer != null) _cancel();
-                });
+            child: ControlGestureDetector(
+              enabled: _enabled,
+              claimsContact: widget.grabExtent == null
+                  ? null
+                  : (position) => _grabs(position.dx),
+              onTapUp: _tap,
+              onStart: _dragStart,
+              onUpdate: (details) {
+                if (_dragging) _dragTo(details.localPosition.dx);
               },
-              onHorizontalDragStart: _enabled ? _dragStart : null,
-              onHorizontalDragUpdate: _enabled
-                  ? (details) {
-                      if (_dragging) _dragTo(details.localPosition.dx);
-                    }
-                  : null,
-              onHorizontalDragEnd: _enabled ? _dragEnd : null,
-              onHorizontalDragCancel: () {
-                if (_dragging) _cancel();
+              onEnd: _dragEnd,
+              onCancel: () {
+                if (_pointer != null || _dragging) _cancel();
               },
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_position, _lift, _deformation]),
-                builder: (context, _) => widget.builder(
-                  context,
-                  _position.value,
-                  _reduceMotion ? 0 : _lift.value,
-                  _reduceMotion ? 0 : _deformation.value,
-                  _activate,
+              child: _ControlPress(
+                value: _pressed,
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_position, _lift, _deformation]),
+                  builder: (context, _) => widget.builder(
+                    context,
+                    _position.value,
+                    _reduceMotion ? 0 : _lift.value,
+                    _reduceMotion ? 0 : _deformation.value,
+                    _activate,
+                  ),
                 ),
               ),
             ),

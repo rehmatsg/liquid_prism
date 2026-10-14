@@ -41,6 +41,17 @@ its own explicit reset: `Glass.tint(null)`.
   increase/decrease previews. Divisions quantize values, not physical pixel travel.
 - Switch haptics occur on iOS at user toggle boundaries. External updates and
   cancellation must not generate haptics.
+- Slider haptics occur on iOS when accepted user input first reaches the minimum
+  or maximum. `ControlInteraction` announces an end only when the parent rebuilds
+  with exactly the end a user input proposed in that frame; external updates,
+  cancellation and rejected or altered values only move the latch.
+- Each tab bar, switch, slider and segmented control has one gesture owner,
+  `ControlGestureRecognizer` (`lib/src/control_gesture.dart`). Contacts on the
+  thumb/selection (all of a switch or tab bar) claim the pointer on contact and
+  drag at any angle; an ancestor scrollable cannot take them. Inactive parts
+  (slider track, unselected segments) yield cross-axis drags to an ancestor
+  scrollable and lift nothing while held. Do not wrap controls in other
+  recognizers, and keep disabled controls recognizer-free so scrolls pass.
 - Async button callbacks may overlap. Loading/exclusive state belongs to the app.
 - Custom tab icons must currently avoid nested repaint boundaries; document this
   renderer limitation rather than silently replacing their stateful subtree.

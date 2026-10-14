@@ -137,35 +137,9 @@ class LargeTitlePage extends StatelessWidget {
         );
       }(),
     };
-    return Stack(
-      children: [
-        content,
-        // The scroll edge effect: content fades out under the status bar and
-        // top actions instead of colliding with them.
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: padding.top + 8,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    colors.groupedBackground,
-                    colors.groupedBackground.withValues(alpha: .85),
-                    colors.groupedBackground.withValues(alpha: 0),
-                  ],
-                  stops: const [0, .55, 1],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+    // The scaffold's scroll edge effect softens content under the bar; the
+    // page paints no fade of its own.
+    return content;
   }
 }
 
@@ -383,20 +357,6 @@ class SectionTitle extends StatelessWidget {
 }
 
 /// A circular glass back button, 44 pt like the native one.
-class GlassBackButton extends StatelessWidget {
-  const GlassBackButton({super.key});
-
-  @override
-  Widget build(BuildContext context) => LiquidPrismButton(
-    label: 'Back to showcase',
-    shape: GlassShape.circle,
-    padding: const EdgeInsets.all(12),
-    foregroundColor: ink(context),
-    onPressed: () => Navigator.of(context).pop(),
-    child: const Icon(CupertinoIcons.chevron_back, size: 20),
-  );
-}
-
 /// Columns of at least [minimumWidth], filling the available width.
 class FlowGrid extends StatelessWidget {
   const FlowGrid({
@@ -437,6 +397,13 @@ class Art extends StatelessWidget {
 
   /// Legible ink on each artwork.
   static const inks = [Color(0xFF233B36), Color(0xFF1F1D3D), Color(0xFF4A3029)];
+
+  /// Each artwork's base color, for fades toward it.
+  static const backgrounds = [
+    Color(0xFF8EBEB5),
+    Color(0xFF495D96),
+    Color(0xFFB57248),
+  ];
 
   @override
   Widget build(BuildContext context) =>

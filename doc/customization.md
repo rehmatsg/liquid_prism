@@ -125,6 +125,30 @@ translucent tints and explicit foreground overrides retain their literal values.
 Prominent buttons default to white; disabled controls use a muted semantic color.
 Explicitly colored icons, styled text, and custom artwork retain their colors.
 
+## Chromatic selection rims
+
+`GlassLensStyle.chromaticAberration` sets the red–blue split at full lift in
+points. Segmented selections and tab pills default to 3.5; switch thumbs and
+slider knobs default to 0 for this effect. `chromaticBand` sets its inward depth
+(default 4.8 points). Neither length scales with lens height. Nullable fields
+inherit; explicit 0 disables the fringe, leaving generic optical dispersion
+independent. The effect follows lift and the release spring, affects the
+backdrop and refracted labels/icons, and is absent at rest.
+
+```dart
+const noFringe = GlassLensStyle(chromaticAberration: 0);
+const segmentStyle = GlassSegmentedStyle(lens: noFringe);
+const tabStyle = GlassTabBarStyle(
+  lens: GlassLensStyle(chromaticAberration: 2, chromaticBand: 4.8),
+);
+```
+
+Shared theme lenses, component themes and local lenses merge field by field.
+`refractContent: false` disables both displacement and fringe in the foreground;
+`contentRefraction: 0` disables displacement while retaining the fringe.
+The tab's `rimRefraction` additionally scales the fringe and glint; disabling
+only `chromaticAberration` preserves that glint.
+
 ## Navigation
 
 `LiquidPrismTabBar` requires at least two tabs, a valid `selectedIndex`, bounded
@@ -137,7 +161,19 @@ still invokes the callback.
 and unselected colors, selection color and blur, bar and pill shapes, and haptics.
 All fields can be supplied through the app theme and overridden per bar.
 `selectionBlur` accepts 0–12 logical pixels and is independent of the enclosing
-material's blur. It also applies with a custom selection color.
+material's blur. It also applies with a custom selection color. `rimRefraction`
+(0–2, default 1) scales the held pill's along-rim fringe in the backdrop and
+foreground, plus its bright glint; set it to 0 to turn all three off,
+for example in a theme:
+
+```dart
+LiquidPrismTheme(
+  data: const LiquidPrismThemeData(
+    tabBar: GlassTabBarStyle(rimRefraction: 0),
+  ),
+  child: app,
+)
+```
 
 Custom icons are ordinary widgets, including images and SVG widgets supplied by
 your app. `selectedIcon` is optional. Unchanged icon state is retained during tab,
@@ -145,6 +181,19 @@ style, and appearance updates.
 
 RTL reverses visual positions. Arrow keys move focus and selection; Space/Enter
 activates the focused tab. Hidden visual labels remain available to accessibility.
+
+## Scroll edges and toolbars
+
+`GlassScrollEdgeStyle` (theme field `scrollEdge`, or `style` on
+`LiquidPrismScrollEdge`, `LiquidPrismScrollFade` and the scaffold's
+`scrollEdgeStyle`) sets `sigma`, `falloff`, `extension`, `fadeColor`,
+`fadeOpacity`, `revealExtent` and the `spring` scroll fades animate with. A
+direct `color` on the widget wins over the style's `fadeColor`. Fields merge
+individually; zero is respected (a zero `sigma` fades without blurring).
+
+`GlassToolbarStyle.itemTransition` and `itemTransitionStyle` govern how items
+and whole groups arrive and leave; `groupSpacing` is the gap between a
+`LiquidPrismToolbar`'s capsules, below a direct `spacing`.
 
 ## Motion
 
@@ -228,3 +277,28 @@ settings replace the default material recipe.
 `LiquidPrismSelection` provides just the selected fill/blur treatment for custom
 controls. `LiquidPrismPressable` provides the lower-level semantic interaction
 wrapper; its feedback-only constructor does not create an accessibility action.
+
+## Shared feedback and navigation chrome
+
+Theme `haptics` accepts a `GlassHaptics` callback with typed `GlassHapticEvent`
+component/kind. A nested non-null hook replaces the outer hook; component false
+silences it. No hook retains native feedback and platform gates. A custom hook
+receives switch/slider feedback on all platforms.
+
+Theme `navigationBar` and scaffold `navigationBarStyle` merge title styles,
+large-title styles, gutter, controlGap, revealExtent and revealCurve field by
+field. Titles retain explicit child text styles. As measured on iOS 27, the
+large title scrolls with the content; once the scroll passes `revealExtent`
+(its 52-point row) the titles swap on a timer, not with the scroll. Zero
+revealExtent swaps on the first positive scroll offset. The native snap of a
+half-scrolled title on release is not reproduced.
+
+Tab/toolbar `badgeColor` and `badgeTextStyle` resolve local style > component
+theme > the measured system red and white. Text-style fields merge individually.
+Segmented `sizing: GlassSegmentedSizing.fitLabels` and `labelPadding` inherit
+in the same order; explicit width/trackHeight/thumbHeight override fitting.
+`resizeToAvoidBottomInset` is a scaffold input, default true, consuming only the
+body's bottom viewInset when keyboard height is folded into padding.
+
+[Feature evidence and contracts](package_features_spec.md) lists the measured
+values and what remains fitted.

@@ -72,11 +72,24 @@ approximation. Their Gaussian conversion and opacity remain renderer calibration
 The shared broad underlay field minifies the switch, segmented track and tab
 housing while the foreground retains its normal size. The tab's selected icons
 and labels additionally refract near the rim through a separate foreground pass.
+So do the segmented control's labels while its selection is held: on iOS 27.0
+(light, iPhone 17 simulator) a selection held between two segments pulls the
+strokes under its rim inward into a dark smear with a faint colour fringe, while
+a label centred in the selection is unchanged. Liquid Prism reuses the tab's
+foreground filter and its 14 / 11.2 inputs; the colour fringe is fitted below
+(see Chromatic rim fringe).
 The slider opts out
 of that broad field: **the knob still grows to 1.55× on hold, but the track seen
-through it keeps its normal thickness**. Its rim refraction, clear face and shadow
-still use the shared material. This matches the distinction in the isolated
-small-lens capture without claiming to reproduce Apple's private operators.
+through it keeps its normal thickness**. Its clear face and shadow still use the
+shared material, but its rim and face take the captured slider inputs: inner
+refraction height 6.66 and amount 11.1, face black .1, and the layer contact
+shadow kept at the held frame (see [motion and lenses](motion_and_lenses.md)).
+This matches the distinction in the isolated small-lens capture without claiming
+to reproduce Apple's private operators.
+
+Slider edge haptics (a light impact when accepted user input reaches either end)
+are package behavior. They were not captured from the native slider; the probe
+records no slider feedback settings.
 
 The tab retains the earlier research's lens-speed stretch (0.018 points per
 point/second), independent cross-axis compression, spring lag and recoil. Sharing
@@ -119,6 +132,43 @@ one pulse on a toggle, or at each on/off boundary crossed during a drag. Releasi
 or canceling a drag adds no pulse; disabled controls and external value updates
 are silent. Simulators cannot reproduce the physical vibration.
 
+## Gesture ownership
+
+`ControlGestureTests` in the probe drives the same SwiftUI Slider and segmented
+Picker with XCUITest coordinate presses, alone and inside a vertical
+`ScrollView` (`--scroll`), and samples presentation layers every frame. Raw
+logs stay local (`_research/control_specs/raw/gestures`).
+
+Measured (iOS 27.0 simulator, iPhone 17, 60 Hz sampling):
+
+| Contact | What native does |
+| --- | --- |
+| Slider track, 146 points from the thumb: tap, 1.5 s hold, or hold then drag | Nothing. The thumb neither lifts nor moves; the value is unchanged. |
+| Slider track, vertical drag inside a ScrollView | The scroll view scrolls; the slider does nothing. |
+| Slider thumb, then a 30° or 60° drag inside a ScrollView | The slider owns it: the scroll view never moves, the thumb lifts on contact and follows the horizontal component. |
+| Slider thumb, then a vertical drag inside a ScrollView | The slider still owns it: no scroll, the thumb stays lifted in place. |
+| Slider thumb flick (90 points at ~1500 points/s, 0.05 s press) | The thumb lifts within ~0.03 s, follows the finger and then coasts past the release point (from 0.74 to the 1.0 end). |
+| Unselected segment, 1.5 s hold | The selection neither lifts nor moves. The touched label fades to opacity .4 (half-way by ~0.13 s, .4 by ~0.45 s). On release the label returns in ~0.2 s and the selection travels to it, lifting to ~129 × 39 points on the way. |
+| Unselected segment, hold then drag to another | The dimmed label follows the finger; the selection stays. Release commits the segment under the finger. |
+| Unselected segment, quick vertical drag inside a ScrollView | The scroll view scrolls; no label dims. |
+| Selected segment, quick (0.05 s) 60° drag inside a ScrollView | The scroll view scrolls; the selection does not lift. |
+
+The last two rows reflect `UIScrollView.delaysContentTouches` (touches reach
+the control only after ~150 ms without movement). UIKit documents that a scroll
+view does not cancel touches already delivered to a `UIControl`
+(`touchesShouldCancel(in:)` returns false for controls). The probe did not
+measure a held segmented control inside a scroll view, the thumb's exact hit
+extent, or the coasting projection.
+
+The package's policy (judged, see [components](components.md)): the slider
+thumb, the selected segment, the switch and every tab claim the pointer on
+contact and follow drags at any angle, as the native thumb does; the package
+also gives the selected segment that ownership for quick drags inside a scroll
+view, which native yields. The slider track and unselected segments follow the
+measured inactive-part behavior while held, yield cross-axis drags to an
+ancestor scroll view, and keep the package's track tap and track drag. The
+slider does not coast after release.
+
 ## Reproduce
 
 Use Xcode with the reference runtime installed and xcodegen. From
@@ -145,3 +195,49 @@ holds, slow drags both ways and releases for each component. Videos and raw nati
 captures stay in the ignored artifacts/research directories.
 For a focused quick-tap comparison, run `SwitchTapTests` in the native showcase
 and `example/test_driver/switch_tap_video.dart` against the showcase Flutter VM.
+
+## Chromatic rim fringe
+
+Direct measurements: iOS 27.0, iPhone 17 Pro simulator, held over 8-point
+stripes, filter inputs read 1 second into a 2.5-second hold. Only lifted
+selection lenses with `glassForeground` disperse: segmented selection height
+44 points, inputAberrationAmount 2.3158; tab pill height 70, amount 3.6842
+(both H/19). Resting amount is 0. Switch/slider held amounts are 0; glass
+buttons, interactive glass surfaces and toolbars have no such filter. Light
+and dark match. Amount rises with lift and decays with the release spring.
+Full-lift inputs: angle -0.2618 (-15 degrees), offset H/1.8, height 0,
+edgeStart -0.2H × lift. Their mapping to the fringe is unknown.
+
+Measured red–blue split runs along the rim: top +3.5 points (red right of
+blue), bottom -3.5; left cap +1.8–2.0 vertically (red below blue), right cap
+-2.1–2.5. Normal component is at most .5 points. Channel order B, G, R,
+green midway. Both pills peak near 3.5 despite the 1.59× input amount ratio.
+Tab peak is about 3.2–3.7 within about 4 points. The segmented lens also
+fringes labels under its rim.
+
+Fitted renderer: full-lift split 3.5 points, band 4.8, direction `-(n.y,n.x)`.
+Labels and icons in the foreground pass take a quarter of that split, blended
+half with the unshifted glyph, fitted by eye: at the full split thin strokes
+broke into opaque primary colours where native shows a soft tint;
+the weight is `(1-.085*min(d,band))*(1-smoothstep(.62*band,band,d))`, clamped
+nonnegative. The table compares this scalar profile before sampling/lighting;
+it is not a rendered-pixel validation or a reconstruction of Apple's operator.
+
+| Depth inside rim (pt) | Measured split (pt) | Fitted split (pt) |
+| --- | --- | --- |
+| .7 | 3.6 | 3.292 |
+| 1.3 | 3.5 | 3.113 |
+| 2.0 | 3.1 | 2.905 |
+| 2.7 | 2.8 | 2.697 |
+| 3.3 | 2.6 | 2.308 |
+| 4.0 | 1.3 | .943 |
+| 4.7 | .5 | .018 |
+| 6.0 | .2 | 0 |
+| 7.0 | .1 | 0 |
+| 8.0+ | 0 | 0 |
+
+RMS error .281 points, maximum absolute error .482 at depth 4.7. This compact
+fit underestimates the fringe and omits the small measured tail beyond 4.8.
+Switch/slider keep their existing generic `dispersion: .3 * lift` by explicit
+product choice; their new along-rim fringe defaults to zero. Tab radial rim
+channel splitting is replaced; its existing fitted bright glint is preserved.

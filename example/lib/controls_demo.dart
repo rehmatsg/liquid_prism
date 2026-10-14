@@ -36,6 +36,9 @@ class _ControlsDemoState extends State<ControlsDemo> {
           ),
           SafeArea(
             child: SingleChildScrollView(
+              // Scrolls (and bounces) like a settings list even when the
+              // content fits, so drags on the controls meet a real competitor.
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 36),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

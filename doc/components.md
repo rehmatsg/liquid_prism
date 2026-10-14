@@ -114,6 +114,8 @@ resting thumb and both insets. Track/lens contours and colors are separate.
 
 Default iOS haptics fire once on a toggle or each crossed drag boundary. A direct
 `haptics` argument wins over the style. Quick taps retain a 220 ms minimum lift.
+The whole switch is its thumb: a touch claims the pointer, so a drag at any
+angle toggles it, even inside a scroll view.
 The default track is 63 × 28; the rest/held thumbs are 37 × 24 and 58 × 38⅓.
 
 ## Sliders
@@ -147,6 +149,27 @@ The grabbed thumb follows the finger directly. The fill blends smoothly to the
 endpoints across the first/last 2%. Default thumb lift is 1.55×; the track seen
 through it keeps its normal thickness. Both are preserved under customization.
 
+The held knob uses the slider's measured lens inputs: a 6.66-point rim with
+11.1 points of refraction, a face black point of .1 that lifts dark backdrops
+seen through it, and the contact shadow kept under the lifted knob. Tune them
+with `GlassLensStyle.rimWidth`, `rimRefraction`, `rimLight`, `faceBlack` and
+`heldContactShadow` in the slider's `lens`; switches and segmented controls
+keep their own defaults.
+
+On iOS a light impact plays when a drag, tap, key or accessibility step reaches
+the minimum or maximum and the parent accepts that value. It plays once per
+arrival: holding against the end is silent until the value leaves it. External
+value updates, cancellation and rejected values are silent. Turn it off with
+`haptics: false` on the slider (which wins) or `GlassSliderStyle(haptics: false)`.
+
+Touches within the held thumb's half width (28.7 points by default, at least 22)
+grab it: the slider claims the pointer, lifts the thumb and follows a drag at
+any angle by its horizontal component, so a scroll view around it never takes
+that drag and a quick flick needs no hold. The rest of the track is inactive,
+as on iOS: holding it lifts and moves nothing, and a mostly vertical drag from
+it scrolls an enclosing list. A tap on the track still jumps the value there,
+and a horizontal drag from it takes the thumb to the finger and follows.
+
 ## Segmented controls
 
 ```dart
@@ -170,6 +193,18 @@ heights, selection inset, lift inset per side, colors and typography.
 Direct color arguments override styles. `onChangeStart`/`onChangeEnd` use your
 value type. Touch commits on release; keys and semantics commit immediately.
 
+A touch on the selected segment grabs the selection: it claims the pointer,
+lifts, and follows a drag at any angle. A touch on another segment behaves as on
+iOS: the selection neither lifts nor moves, the touched label dims to .4, a
+horizontal drag moves that highlight, and release commits the segment under the
+finger while the selection travels there, lifted. A mostly vertical drag from an
+unselected segment scrolls an enclosing list and commits nothing.
+
+While the selection is held, labels under its rim bend inward, as on iOS 27;
+a label centred in the selection stays still. `GlassSegmentedStyle`'s
+`refractContent: false` or `contentRefraction: 0` turns this off, and
+`contentDepth` sets the width of the bending band.
+
 ## Tab bars
 
 ```dart
@@ -191,17 +226,50 @@ Hidden labels still have accessibility names. `selectedIcon` accepts custom
 selected artwork. Keep custom icon widgets free of repaint boundaries: the
 selection window paints their foreground into two complementary regions.
 
+A touch anywhere on the bar claims the pointer and moves the pill to that tab.
+A drag at any angle, or a quick flick without a hold, then moves the pill along
+the bar and commits the projected tab on release; an enclosing scroll view does
+not take it. A cancelled pointer commits nothing.
+
 Housing material/motion, layout, typography, colors, contours, haptics and independent resting selection
 blur are customizable. `lens` customizes the lifted face; `refractContent: false`
 or `contentRefraction: 0` disables glyph refraction. `contentDepth` adjusts its
-rim region (native defaults 14 displacement / 11.2 depth). Widget `motion` is
+rim region (native defaults 14 displacement / 11.2 depth). `rimRefraction`
+(0–2, default 1) sets the held pill's chromatic rim: it splits the pill's view of
+the housing per color channel and adds a glint inside its contour, so the pill
+stays visible on a dark housing; 0 turns it off. Widget `motion` is
 `GlassMotion` for travel, press scale and projection; native lift/flex defaults
 remain calibrated separately. Safe-area positioning belongs to the parent.
 
 ## Adaptive layout
 
-`LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and an optional
-`leading` control over a full-window `body`:
+`LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and a
+`leading` control over a full-window `body`. Each action is a
+`GlassToolbarItem` or a list of them: `[share, more]` is one capsule,
+`[[filter], [share, more]]` two, and loose items next to each other share a
+capsule; an empty list draws nothing and materializes in when it gains an item, and
+in the iPhone Duo rail the groups stack or fold into one "More" menu. With no `leading`, a route that
+can pop gets a `LiquidPrismBackButton`: a glass back chevron, or a close mark
+on a fullscreen dialog, popping through `Navigator.maybePop`. Pass
+`automaticallyImplyLeading: false` to suppress it, or your own
+`LiquidPrismBackButton(icon: ...)` for a custom glyph.
+
+To use an icon pack's glyphs everywhere, including the implied button, set
+them in the theme:
+
+```dart
+LiquidPrismThemeData(
+  toolbar: GlassToolbarStyle(
+    backIcon: Icon(MyIcons.chevronLeft),
+    closeIcon: Icon(MyIcons.close),
+    // This chevron draws "<" in both text directions.
+    backIconMirrors: false,
+  ),
+)
+```
+
+The back glyph is shifted `backIconShift` (.5) points toward its tip so its
+mass reads centred; the close mark is not shifted.
 
 | Window | Placement |
 | --- | --- |
@@ -218,8 +286,8 @@ other. Pass `placement` to force one. The [adaptive layout
 measurements](native_adaptive_layout.md) record the native frames this follows.
 
 The body receives `MediaQuery.padding` that includes the space the chrome
-covers, so scroll views keep content clear while it still shows through the
-glass. When the device is partly folded, the fold reaches the body as a
+covers plus 14 points below the top bar's capsules, so scroll views keep
+content clear while it still shows through the glass. When the device is partly folded, the fold reaches the body as a
 `MediaQuery.displayFeatures` entry; `DisplayFeatureSubScreen` keeps content out
 of it. Read `LiquidPrismScaffold.placementOf(context)` to adapt your own layout.
 
@@ -304,6 +372,113 @@ no explicit width is a circle as tall as the bar (44 or 48 points), like a lone
 native bar button; give the item a width to keep a wider capsule. Narrow groups scroll rather
 than shrink icons. Direct `size` wins over the theme, even when explicitly bottom.
 Null callbacks disable individual actions; menu items use `enabled: false`.
+
+Items may come and go: an item added to `items` materializes in while the
+capsule widens, and a removed one leaves the same way. Items are matched by
+`key`, else by `label`. An empty list materializes the whole capsule away and
+draws nothing, so a list whose items all depend on state is fine.
+`GlassToolbarStyle.itemTransition: GlassTransition.identity` swaps at once, as
+Reduce Motion does; `itemTransitionStyle` sets the springs.
+
+Several capsules in one bar are one `LiquidPrismToolbar`, a list of groups
+laid out `spacing` (default 8) apart. Declare every group the bar can show and
+let emptiness animate, so groups keep their positions:
+
+```dart
+LiquidPrismToolbar(
+  size: GlassToolbarSize.navigation,
+  groups: [
+    [if (hasSuggestions) suggestionsItem],
+    [sortItem, moreItem],
+  ],
+)
+```
+
+## Scroll edge effects
+
+iOS softens content scrolled under a bar with a progressive blur and a partial
+fade, strongest at the edge and dissolving a little below the bar. The bar's
+glass controls refract the content beneath, not the blur.
+
+`LiquidPrismScaffold` draws this effect under its top bar while the body's
+outermost scroll view is scrolled, fading toward its `backgroundColor`
+(without one, it blurs only). `scrollEdge: false` turns it off and
+`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it. The defaults are
+measured from iOS 27's own effect ([spec](native_scroll_edge_spec.md)): a
+1.5-point variable blur and a half-opacity fade held over the top third of the
+strip and falling along a smoothstep over its last 98 points, a 16-point haze
+blended in at half opacity, 50 points of reach below the bar, and a 16-point
+scroll over which it arrives (the reveal is this package's; native shows it as
+soon as content is beneath).
+
+`GlassScrollEdgeVariant.hard` is the effect under a bar with a background, as
+SwiftUI's `.hard` style: it stops at the bar's edge with a one-pixel hairline,
+blurs 2 points keeping a quarter of that to the edge, and holds its fade and
+haze flat. Give the scaffold an `accessory` (a `PreferredSizeWidget` such as
+segmented tabs) to extend the bar below its capsules; the effect and the body's
+padding cover it. Together they make a bar like a native navigation bar with a
+palette of tabs:
+
+```dart
+LiquidPrismScaffold(
+  backgroundColor: background,
+  scrollEdgeStyle: const GlassScrollEdgeStyle(variant: GlassScrollEdgeVariant.hard),
+  accessory: PreferredSize(
+    preferredSize: const Size.fromHeight(44),
+    child: LiquidPrismSegmentedControl<int>(...),
+  ),
+  body: ...,
+)
+```
+
+For a bar of your own, lay `LiquidPrismScrollEdge` in the bar's background,
+filling the bar's box with the title and controls painted above it, and drive
+`progress` from the scroll offset:
+
+```dart
+SliverLayoutBuilder(
+  builder: (context, constraints) => SliverAppBar(
+    pinned: true,
+    backgroundColor: Colors.transparent,
+    flexibleSpace: LiquidPrismScrollEdge(
+      progress: LiquidPrismScrollEdge.progressFor(constraints.scrollOffset),
+      color: Theme.of(context).scaffoldBackgroundColor,
+    ),
+    leading: LiquidPrismToolbarGroup(size: GlassToolbarSize.navigation, items: [back]),
+    actions: [LiquidPrismToolbar(size: GlassToolbarSize.navigation, groups: groups)],
+  ),
+)
+```
+
+Wrap the page (the `CustomScrollView`, or the body around it) in a
+`LiquidPrismGroup` so the effect and the bar's capsules share two backdrop
+captures and the capsules see through the effect; see
+[rendering](rendering.md#shared-captures-and-edge-effects).
+
+`LiquidPrismScrollFade` wraps a scroll view and springs the same blur and fade
+in at each edge while content extends past it, with `extent`, `sigma`,
+`fadeOpacity` and `plateau` to tune. Both build on `LiquidPrismEdgeBlur`, which
+blurs and fades up to two opposite edges of any child per pixel along
+`GlassEdgeFade.curve`, a smootherstep whose onset the eye cannot find:
+
+```dart
+LiquidPrismEdgeBlur(
+  edges: [
+    GlassEdgeBlur(edge: GlassEdge.top, extent: 96, sigma: 3, plateau: .35, fadeColor: background),
+  ],
+  child: pinnedHeaderContent,
+)
+```
+
+Each strip can also hold a `floor` of strength at its inner end, a `fadeFloor`
+for a fade that stays flat, and a `haze`: a heavy blur blended in at
+`hazeOpacity`, masked linearly past `hazePlateau`, the way native bars lay a
+16-point blur at half opacity under their light variable blur so fine detail
+softens without vanishing. Animate by scaling `sigma`, `fadeOpacity` and
+`hazeOpacity`; an ancestor `Opacity` does not attenuate a backdrop blur. With
+nothing active the widget paints straight through without a layer, so child
+state survives. `GlassEdgeFade.gradient` builds the same fade as a plain
+`LinearGradient` for decorations.
 
 ## Search
 
@@ -406,3 +581,34 @@ triggers. UIKit owns the iOS popup; customize its model (symbols, sections,
 submenus, selected/disabled/destructive items and deferred actions), not its
 renderer. For typed imperative results use `liquidMenus.show<T>`. See the
 [menu guide](native_menus.md) for setup and callback/dismissal semantics.
+
+## Tab actions, feedback, badges and navigation titles
+
+Tabs accept `onLongPressed`; a hold uses Flutter's `kLongPressTimeout`, returns
+the pill to the selected tab and never selects on release. Use the package
+callback instead of an icon GestureDetector. A null `onSelected` disables it.
+
+Set theme `haptics: GlassHaptics((context, event) { ... })` for a shared app
+feedback policy. Component `haptics: false` still silences feedback. Null retains
+existing native calls. Segmented controls do not generate package haptics.
+
+Text/RichText segments can opt into
+`GlassSegmentedStyle(sizing: GlassSegmentedSizing.fitLabels)`; equal widths fit
+the widest label and text scaling. Custom widget labels need explicit width.
+
+Add `badge: GlassBadge.count(7)`, `GlassBadge.text('New')` or an empty
+`GlassBadge.dot()` to a tab or toolbar item. As on iOS 27, counts are never
+shortened (1000 draws `1,000`); pass `overflow: 99` to draw `99+`. The full value
+is announced; supply a localized `semanticLabel` (and `GlassBadge.text` for a
+locale's digit grouping). Styles expose `badgeColor` and `badgeTextStyle`.
+
+`LiquidPrismScaffold(title: Text('Inbox'), largeTitle: Text('Inbox'), body: list)`
+adds a header that follows the outermost vertical scroll view, even with
+`scrollEdge: false`: the large title scrolls up with the content and, once its
+row has gone, fades out as the inline title rises in, as on iOS 27. Supply only `title` for an inline header. The accessory sits
+below the title rows. Keyboard height enters body padding once; the body's
+bottom viewInset is consumed. Set `resizeToAvoidBottomInset: false` to delegate
+keyboard avoidance to descendants.
+
+See [feature contracts and adoption](package_features_spec.md) for per-item
+changes, native measurements and remaining gaps.

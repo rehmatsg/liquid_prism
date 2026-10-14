@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
@@ -12,6 +13,7 @@ import 'support/rendering.dart';
 void main() {
   _motionTests();
   _scaleBeneathFilterTest();
+  _rimTests();
   testWidgets(
     'tabs select once and update semantic foreground with live theme',
     (tester) async {
@@ -667,23 +669,34 @@ void _motionTests() {
   );
 
   testWidgets(
-    'vertical scroll and overlapping pointers cancel before release',
+    'a contact owns the drag against an ancestor scroll; overlapping pointers cancel',
     (tester) async {
       final state = await _mountTabs(tester, scrollable: true);
       final restingWidth = _pill(tester).width;
+      // A touch on the bar belongs to it: a vertical drag does not scroll the
+      // list, and the pill stays lifted on the touched tab until release.
       var pointer = await tester.startGesture(
         tester.getCenter(_tab('Favorites')),
       );
       await pointer.moveBy(const Offset(0, -40));
       await pointer.moveBy(const Offset(0, -30));
       await tester.pumpAndSettle();
-      expect(state.scroll.offset, greaterThan(0));
-      expect(_pill(tester).width, restingWidth);
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Gallery')).dx);
+      expect(state.scroll.offset, 0);
+      expect(_pill(tester).width, greaterThan(restingWidth));
+      expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
       await pointer.up();
-      expect(state.requests, isEmpty);
+      await tester.pumpAndSettle();
+      expect(state.requests, [1]);
+      // Outside the bar the list still scrolls.
+      await tester.dragFrom(const Offset(20, 400), const Offset(0, -120));
+      await tester.pumpAndSettle();
+      expect(state.scroll.offset, greaterThan(0));
       state.scroll.jumpTo(0);
-      await tester.pump();
+      state.update(() {
+        state.selected = 0;
+        state.requests.clear();
+      });
+      await tester.pumpAndSettle();
       pointer = await tester.startGesture(
         tester.getCenter(_tab('Gallery')),
         pointer: 1,
@@ -703,6 +716,69 @@ void _motionTests() {
       expect(state.requests, [1]);
     },
   );
+
+  for (final degrees in [30.0, 60.0]) {
+    testWidgets(
+      'a drag $degrees degrees off the bar axis selects inside a list',
+      (tester) async {
+        final state = await _mountTabs(tester, scrollable: true);
+        final from = tester.getCenter(_tab('Gallery'));
+        final along = tester.getCenter(_tab('Settings')).dx - from.dx;
+        final across = along * math.tan(degrees * math.pi / 180);
+        final pointer = await tester.startGesture(from);
+        for (var i = 1; i <= 10; i++) {
+          await pointer.moveTo(from + Offset(along * i / 10, across * i / 10));
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(
+          _pill(tester).center.dx,
+          greaterThan(tester.getCenter(_tab('Favorites')).dx),
+        );
+        expect(state.scroll.offset, 0);
+        await pointer.up();
+        await tester.pumpAndSettle();
+        expect(state.requests, [2]);
+        _expectSelected(tester, 2);
+      },
+    );
+  }
+
+  testWidgets('a quick flick without a hold selects the projected tab', (
+    tester,
+  ) async {
+    final state = await _mountTabs(tester, scrollable: true);
+    // About 40 points in under 30 ms: well past the touch slop, no hold.
+    await tester.flingFrom(
+      tester.getCenter(_tab('Gallery')),
+      const Offset(40, -12),
+      1500,
+    );
+    await tester.pumpAndSettle();
+    expect(state.requests, [2]);
+    expect(state.scroll.offset, 0);
+    // Rejected by the parent: the pill settles back to the parent's tab.
+    state.update(() => state.accept = false);
+    await tester.flingFrom(
+      tester.getCenter(_tab('Settings')),
+      const Offset(-40, 8),
+      1500,
+    );
+    await tester.pumpAndSettle();
+    expect(state.requests, [2, 0]);
+    _expectSelected(tester, 2);
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
+    // A cancelled drag commits nothing and settles on the selection.
+    final pointer = await tester.startGesture(
+      tester.getCenter(_tab('Settings')),
+    );
+    await pointer.moveBy(const Offset(-150, 30));
+    await tester.pump(const Duration(milliseconds: 100));
+    await pointer.cancel();
+    await tester.pumpAndSettle();
+    expect(state.requests, [2, 0]);
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
+  });
 
   testWidgets(
     'disabled contacts and external updates reject stale commits across reenabling',
@@ -934,4 +1010,167 @@ void _scaleBeneathFilterTest() {
       expect(tester.getRect(label), rest);
     },
   );
+}
+
+void _rimTests() {
+  Finder lensGlass(GlassRole role) => find.byWidgetPredicate(
+    (widget) => widget is LiquidPrism && widget.role == role,
+  );
+
+  test('the pill rim reaches the shader slot and survives presence', () {
+    final recipe = GlassRecipe.resolve(
+      Glass.clear,
+      Brightness.dark,
+      GlassRole.tabLens,
+      customOptics: false,
+    );
+    // u_state.w, slot 45 overall (19 into the recipe packet), stays zero for
+    // every surface that does not ask for it.
+    expect(recipe.uniforms[19], 0);
+    final rim = recipe.withLensRim(.8).withPresence(.5);
+    expect(rim.uniforms[19], .8);
+    expect(rim.uniforms[18], .5);
+  });
+
+  testWidgets('held pill rim resolves widget style over theme, keeps zero', (
+    tester,
+  ) async {
+    Future<double> heldRim({
+      GlassTabBarStyle? theme,
+      GlassTabBarStyle? style,
+    }) async {
+      await tester.pumpWidget(
+        glassHarness(
+          imageKey: GlobalKey(),
+          child: LiquidPrismTheme(
+            data: LiquidPrismThemeData(tabBar: theme),
+            child: LiquidPrismTabBar(
+              tabs: const [
+                LiquidPrismTab(
+                  label: 'A',
+                  icon: SizedBox(width: 22, height: 22),
+                ),
+                LiquidPrismTab(
+                  label: 'B',
+                  icon: SizedBox(width: 22, height: 22),
+                ),
+              ],
+              style: style,
+              selectedIndex: 0,
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+      final finger = await tester.startGesture(
+        tester.getCenter(find.bySemanticsLabel('A')),
+      );
+      await tester.pumpAndSettle();
+      final rim = tester.widget<LiquidPrism>(lensGlass(GlassRole.tabLens));
+      // Only the pill carries it; the housing keeps the shared recipe.
+      expect(
+        tester.widget<LiquidPrism>(lensGlass(GlassRole.tabBar)).lensRim,
+        0,
+      );
+      await finger.up();
+      await tester.pumpAndSettle();
+      expect(lensGlass(GlassRole.tabLens), findsNothing);
+      return rim.lensRim;
+    }
+
+    expect(await heldRim(), 1);
+    const half = GlassTabBarStyle(rimRefraction: .5);
+    expect(await heldRim(theme: half), .5);
+    expect(
+      await heldRim(
+        theme: half,
+        style: const GlassTabBarStyle(rimRefraction: 0),
+      ),
+      0,
+    );
+    expect(
+      half.merge(const GlassTabBarStyle(haptics: false)).rimRefraction,
+      .5,
+    );
+    expect(half.copyWith(rimRefraction: 0).rimRefraction, 0);
+  });
+
+  testWidgets('shared lenses outside the tab bar carry no pill rim', (
+    tester,
+  ) async {
+    var on = false;
+    await tester.pumpWidget(
+      glassHarness(
+        imageKey: GlobalKey(),
+        child: LiquidPrismTheme(
+          data: const LiquidPrismThemeData(
+            tabBar: GlassTabBarStyle(rimRefraction: 2),
+          ),
+          child: StatefulBuilder(
+            builder: (context, update) => LiquidPrismSwitch(
+              value: on,
+              onChanged: (value) => update(() => on = value),
+            ),
+          ),
+        ),
+      ),
+    );
+    final finger = await tester.startGesture(
+      tester.getCenter(find.byType(LiquidPrismSwitch)),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    final lenses = tester.widgetList<LiquidPrism>(find.byType(LiquidPrism));
+    expect(lenses, isNotEmpty);
+    for (final glass in lenses) {
+      expect(glass.lensRim, 0);
+    }
+    await finger.up();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('touch glow is clipped to the expanded housing, not the rest', (
+    tester,
+  ) async {
+    final imageKey = GlobalKey();
+    await tester.pumpWidget(
+      glassHarness(
+        imageKey: imageKey,
+        background: const Color(0xFF151B20),
+        child: LiquidPrismTabBar(
+          tabs: const [
+            LiquidPrismTab(label: 'A', icon: SizedBox(width: 22, height: 22)),
+            LiquidPrismTab(label: 'B', icon: SizedBox(width: 22, height: 22)),
+          ],
+          style: const GlassTabBarStyle(
+            labelBehavior: GlassTabLabelBehavior.never,
+            haptics: false,
+          ),
+          selectedIndex: 0,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+    final housing = tester.getRect(lensGlass(GlassRole.tabBar));
+    final finger = await tester.startGesture(
+      tester.getCenter(find.bySemanticsLabel('A')),
+    );
+    await tester.pumpAndSettle();
+    // Hold between the tabs: the lens and its glow sit at the centre, and the
+    // housing's resting top edge lies inside the expanded housing beside it.
+    await finger.moveTo(housing.center);
+    await tester.pumpAndSettle();
+    final origin = tester.getTopLeft(find.byKey(imageKey));
+    final x = housing.center.dx + 62;
+    final pixels = await pixelsAt(tester, imageKey, [
+      Offset(x, housing.top - 1) - origin,
+      Offset(x, housing.top + 1) - origin,
+    ]);
+    // Clipped to the resting contour, the glow ended in a hard edge inside
+    // the expanded housing: a second rim with a lighter patch within it.
+    for (var channel = 0; channel < 3; channel++) {
+      expect((pixels[0][channel] - pixels[1][channel]).abs(), lessThan(6));
+    }
+    await finger.up();
+    await tester.pumpAndSettle();
+  });
 }

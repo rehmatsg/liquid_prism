@@ -52,6 +52,7 @@ enum ComponentKind {
   segments,
   tabs,
   toolbar,
+  scrollEdges,
   menus,
   search,
 }
@@ -174,7 +175,30 @@ const components = [
         'individually while the whole group lifts together.',
     details: [
       ('LiquidPrismToolbarGroup', 'Navigation and bottom sizes'),
+      ('LiquidPrismToolbar', 'Several capsules; empty groups collapse'),
+      ('Items', 'Materialize in and out as the list changes'),
       ('Axis', 'Stacks vertically in the iPhone Duo rail'),
+    ],
+  ),
+  ComponentInfo(
+    ComponentKind.scrollEdges,
+    'Scroll Edges',
+    'Content softens under the bar.',
+    CupertinoIcons.rectangle_dock,
+    Color(0xFF0A84FF),
+    description:
+        'Scroll and the content under a bar blurs and fades, strongest at '
+        'the edge. The glass controls see straight through it, as native '
+        'bar buttons do.',
+    details: [
+      ('LiquidPrismScrollEdge', 'A bar’s effect, driven by scroll progress'),
+      ('LiquidPrismScaffold', 'Draws it under the top bar by default'),
+      ('LiquidPrismEdgeBlur', 'Progressive blur and fade of any edge'),
+      ('LiquidPrismScrollFade', 'Edges of a scroll view, as content passes'),
+      (
+        'LiquidPrismGroup',
+        'Glass over the effect refracts the content, not the blur',
+      ),
     ],
   ),
   ComponentInfo(

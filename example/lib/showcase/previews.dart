@@ -3,6 +3,8 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import 'model.dart';
 import 'widgets.dart';
+import 'package_features_demo.dart';
+import 'search_page.dart';
 
 class LensPlayground extends StatefulWidget {
   const LensPlayground({
@@ -171,6 +173,7 @@ class ComponentPreview extends StatefulWidget {
 
 class _ComponentPreviewState extends State<ComponentPreview> {
   int selectedTab = 0, selectedSurface = 0, actions = 0;
+  bool extraAction = false;
   String query = '';
   String menuResult = 'Choose something. See what happens.';
   ShowcaseModel get m => widget.model;
@@ -451,20 +454,33 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 26),
-              Wrap(
-                spacing: 14,
-                runSpacing: 14,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  LiquidPrismToolbarGroup(
-                    key: const ValueKey('demo-toolbar'),
-                    size: GlassToolbarSize.navigation,
-                    items: [
+              // One toolbar, two groups: the first fills and empties as the
+              // plus item is tapped, so its capsule and the gap materialize.
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: LiquidPrismToolbar(
+                  key: const ValueKey('demo-toolbar'),
+                  size: GlassToolbarSize.navigation,
+                  groups: [
+                    [
+                      if (extraAction)
+                        GlassToolbarItem(
+                          icon: const Icon(CupertinoIcons.star),
+                          label: 'Star',
+                          width: 42 + 1 / 3,
+                          onPressed: () => setState(() => actions++),
+                        ),
+                    ],
+                    [
                       GlassToolbarItem(
-                        icon: const Icon(CupertinoIcons.star),
-                        label: 'Star',
-                        width: 42 + 1 / 3,
-                        onPressed: () => setState(() => actions++),
+                        icon: Icon(
+                          extraAction
+                              ? CupertinoIcons.minus_circle
+                              : CupertinoIcons.plus_circle,
+                        ),
+                        label: extraAction ? 'Remove star' : 'Add star',
+                        onPressed: () =>
+                            setState(() => extraAction = !extraAction),
                       ),
                       GlassToolbarItem(
                         icon: const Icon(CupertinoIcons.share),
@@ -472,6 +488,12 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                         width: 38 + 2 / 3,
                         onPressed: () => setState(() => actions++),
                       ),
+                      if (extraAction)
+                        GlassToolbarItem(
+                          icon: const Icon(CupertinoIcons.square_pencil),
+                          label: 'Compose',
+                          onPressed: () => setState(() => actions++),
+                        ),
                       GlassToolbarItem.menu(
                         icon: const Icon(CupertinoIcons.ellipsis),
                         label: 'More',
@@ -479,17 +501,8 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                         onSelected: _menuSelected,
                       ),
                     ],
-                  ),
-                  LiquidPrismToolbarGroup(
-                    items: [
-                      GlassToolbarItem(
-                        icon: const Icon(CupertinoIcons.square_pencil),
-                        label: 'Compose',
-                        onPressed: () => setState(() => actions++),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
               Align(
@@ -515,8 +528,9 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 children: [
                   Expanded(
                     child: Text(
-                      '$actions actions. Hold an icon to lift its '
-                      'group. In a side rail, groups stack vertically.',
+                      '$actions actions. Tap the plus to add items and a '
+                      'group. Hold an icon to lift its capsule. In a side '
+                      'rail, groups stack vertically.',
                       style: const TextStyle(fontSize: 13, height: 1.35),
                     ),
                   ),
@@ -538,6 +552,28 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                   ),
                 ],
               ),
+            ],
+            ComponentKind.scrollEdges => [
+              const Text(
+                'Soft where it meets the bar.',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Scroll the list. The bar’s glass stays clear of the blur.',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              ScrollEdgePreview(model: m),
+              const SizedBox(height: 20),
+              const PackageFeaturesDemo(),
+              const SizedBox(height: 20),
+              const Text(
+                'A scroll fade softens whichever edge content runs past.',
+                style: TextStyle(fontSize: 13, height: 1.35),
+              ),
+              const SizedBox(height: 12),
+              const ScrollFadePreview(),
             ],
             ComponentKind.menus => [
               const Text(
@@ -629,6 +665,15 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     ? 'Try typing “a fresh start”.'
                     : 'Looking for “$query”',
                 style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 22),
+              LiquidPrismButton(
+                key: const ValueKey('open-search-page'),
+                label: 'Open the search page',
+                onPressed: () => Navigator.of(context).push<void>(
+                  CupertinoPageRoute(builder: (_) => SearchPage(model: m)),
+                ),
+                child: const Text('Search Page'),
               ),
             ],
             ComponentKind.surfaces => <Widget>[],
@@ -722,4 +767,201 @@ class _ComponentPreviewState extends State<ComponentPreview> {
       ),
     ],
   );
+}
+
+/// A bar over a scrolling list inside one [LiquidPrismGroup]: the scroll edge
+/// effect and the bar's capsules share captures, so the glass refracts the
+/// rows beneath it while the strip around it blurs and fades.
+class ScrollEdgePreview extends StatefulWidget {
+  const ScrollEdgePreview({super.key, required this.model});
+  final ShowcaseModel model;
+  @override
+  State<ScrollEdgePreview> createState() => _ScrollEdgePreviewState();
+}
+
+class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
+  final controller = ScrollController();
+  int likes = 0;
+  bool hard = false;
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = Art.inks[widget.model.wallpaper];
+    const barHeight = 60.0;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: SizedBox(
+        height: 300,
+        child: LiquidPrismGroup(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ListView.builder(
+                key: const ValueKey('scroll-edge-list'),
+                controller: controller,
+                padding: const EdgeInsets.fromLTRB(12, barHeight + 8, 12, 12),
+                itemCount: 24,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: ink.withValues(alpha: index.isEven ? .85 : .6),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 16,
+                      ),
+                      child: Text(
+                        'Row ${index + 1} stays sharp until it meets the bar',
+                        style: const TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // The bar: its effect fills the bar's box and reaches below it;
+              // the capsules paint above it. All of them are group members.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: barHeight,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    AnimatedBuilder(
+                      animation: controller,
+                      builder: (context, _) => LiquidPrismScrollEdge(
+                        progress: LiquidPrismScrollEdge.progressFor(
+                          controller.hasClients ? controller.offset : 0,
+                        ),
+                        color: Art.backgrounds[widget.model.wallpaper],
+                        style: GlassScrollEdgeStyle(
+                          variant: hard
+                              ? GlassScrollEdgeVariant.hard
+                              : GlassScrollEdgeVariant.soft,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        children: [
+                          LiquidPrismToolbarGroup(
+                            size: GlassToolbarSize.navigation,
+                            items: [
+                              GlassToolbarItem(
+                                icon: const Icon(CupertinoIcons.chevron_back),
+                                label: 'Back to top',
+                                onPressed: () => controller.animateTo(
+                                  0,
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.easeOutCubic,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          LiquidPrismToolbarGroup(
+                            size: GlassToolbarSize.navigation,
+                            items: [
+                              GlassToolbarItem(
+                                icon: Icon(
+                                  likes.isOdd
+                                      ? CupertinoIcons.heart_fill
+                                      : CupertinoIcons.heart,
+                                ),
+                                label: 'Like',
+                                onPressed: () => setState(() => likes++),
+                              ),
+                              GlassToolbarItem(
+                                icon: Icon(
+                                  hard
+                                      ? CupertinoIcons
+                                            .rectangle_compress_vertical
+                                      : CupertinoIcons
+                                            .rectangle_expand_vertical,
+                                ),
+                                label: hard ? 'Soft edge' : 'Hard edge',
+                                onPressed: () => setState(() => hard = !hard),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A horizontal row of chips whose edges soften while more lie past them.
+class ScrollFadePreview extends StatelessWidget {
+  const ScrollFadePreview({super.key});
+  static const _names = [
+    'Meadow',
+    'Dusk',
+    'Apricot',
+    'Harbor',
+    'Moss',
+    'Ember',
+    'Slate',
+    'Lilac',
+    'Sand',
+    'Tide',
+    'Fern',
+    'Plum',
+    'Clay',
+    'Mist',
+  ];
+  @override
+  Widget build(BuildContext context) {
+    final ink = DefaultTextStyle.of(context).style.color!;
+    return SizedBox(
+      height: 44,
+      child: LiquidPrismScrollFade(
+        key: const ValueKey('scroll-fade'),
+        axis: Axis.horizontal,
+        extent: 48,
+        sigma: 3,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: _names.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          itemBuilder: (context, index) => DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: ink.withValues(alpha: .35)),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Center(
+                child: Text(
+                  _names[index],
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

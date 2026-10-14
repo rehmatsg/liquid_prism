@@ -56,7 +56,7 @@ void main() {
     );
     expect(title.right, lessThanOrEqualTo(466 - 84));
     await tab(tester, 'Library');
-    expect(find.text('9 components'), findsOneWidget);
+    expect(find.text('10 components'), findsOneWidget);
     await press(tester, 'Explore Tab Bars');
     expect(tester.takeException(), isNull);
   });
@@ -91,7 +91,7 @@ void main() {
       await tester.pumpWidget(const LiquidPrismExample());
       expect(find.byKey(const ValueKey('page-title:Explore')), findsOneWidget);
       await tab(tester, 'Library');
-      expect(find.text('9 components'), findsOneWidget);
+      expect(find.text('10 components'), findsOneWidget);
       for (final info in components) {
         await press(tester, 'Explore ${info.title}');
         expect(
@@ -103,7 +103,7 @@ void main() {
           findsOneWidget,
         );
         expect(tester.takeException(), isNull);
-        await press(tester, 'Back to showcase');
+        await press(tester, 'Back');
       }
       await tester.ensureVisible(find.byType(CupertinoTextField));
       await tester.enterText(find.byType(CupertinoTextField), 'slider');
@@ -111,7 +111,7 @@ void main() {
       expect(find.text('1 component'), findsOneWidget);
       expect(find.text('Buttons'), findsNothing);
       await press(tester, 'Explore Sliders');
-      await press(tester, 'Back to showcase');
+      await press(tester, 'Back');
       expect(find.text('1 component'), findsOneWidget);
       await tester.enterText(
         find.byType(CupertinoTextField),
@@ -120,7 +120,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Nothing here just yet.'), findsOneWidget);
       await press(tester, 'Reset library search');
-      expect(find.text('9 components'), findsOneWidget);
+      expect(find.text('10 components'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -146,7 +146,7 @@ void main() {
       await press(tester, 'Add a prominent tap');
       await press(tester, 'Favorite');
       expect(find.text('1 tap'), findsOneWidget);
-      await press(tester, 'Back to showcase');
+      await press(tester, 'Back');
       await tab(tester, 'Studio');
       await press(tester, 'Restore defaults');
       await tab(tester, 'Library');
@@ -176,7 +176,7 @@ void main() {
       for (final info in components) {
         await press(tester, 'Explore ${info.title}');
         expect(tester.takeException(), isNull, reason: info.title);
-        await press(tester, 'Back to showcase');
+        await press(tester, 'Back');
       }
       tester.view.physicalSize = const Size(600, 900);
       await tester.pumpAndSettle();

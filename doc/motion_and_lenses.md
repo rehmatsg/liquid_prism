@@ -35,6 +35,26 @@ against a chosen preset instead of assuming unspecified fields inherit the nativ
 lens recipe. It replaces the computed optical settings; shadow/layout settings
 remain independent. Setting blur to zero is an explicit override.
 
+### Rim and face
+
+`rimWidth`, `rimRefraction`, `rimLight` and `faceBlack` tune the lens rim and
+face without replacing the whole packet; `heldContactShadow` keeps the resting
+contact shadow under a lifted lens. Lengths are for a 37.2-point-high lens and
+scale with its actual height. Explicit `optics` ignores the rim fields.
+
+The slider resolves these from the held small-lens capture in
+`doc/native_controls_spec.json`. Measured: inner refraction height 6.66 and
+amount 11.1, face color matrix black .1, the layer contact shadow (.14, radius 5,
+offset 1) still present at the held frame, and the ring shadow geometry (width 4,
+radius 3, offset 8). Mapping Apple's refraction height/amount onto this
+renderer's rim band and displacement is an interpretation, not a recovered
+algorithm. Fitted by eye against SwiftUI dark captures: rim light 1.0 (the
+shared lens uses .6), ambient opacity .12 and ring opacity .2. The native
+exterior key/fill darkening (color bias −.3) is only partly reproduced by the
+existing side lobe. The switch (6.9 / 11.5, black .1) and segmented pill
+(4.4 / 6.6, black 0) captures are recorded too, but those lenses keep their
+accepted look; opt in per component through their `lens`.
+
 ## Small-control timing
 
 ```dart
@@ -103,6 +123,23 @@ assume a shared duration changes every optical or nonspatial leg.
 The tab lens has an independent foreground filter. Configure its glyph displacement
 and depth through `GlassTabBarStyle.contentRefraction` / `contentDepth`, or turn it
 off with `refractContent: false`. The housing minification remains a lens setting.
+The segmented control's held selection runs the same filter over its label row
+(`GlassSegmentedStyle.refractContent`, `contentRefraction`, `contentDepth`).
+`GlassLensStyle.chromaticAberration` adds a lift-scaled red–blue split along the
+rim (3.5 points for segments/tabs, 0 for switches/sliders), in both the backdrop
+and foreground. `chromaticBand` defaults to 4.8 points; neither length scales
+with lens height. Explicit zero disables it independently of generic optical
+dispersion, which the switch and slider retain unchanged. `refractContent: false`
+also disables foreground fringe; zero `contentRefraction` keeps fringe without
+displacement. Tab `rimRefraction` (default 1) scales fringe in both passes and the
+existing bright glint; 0 disables all three, without disabling minification.
+
+The renderer fits stripe measurements with
+`w(d) = (1 - .085 * min(d, band)) * (1 - smoothstep(.62 * band, band, d))`,
+clamped nonnegative, and direction `-(n.y, n.x)` for outward normal `n`.
+Red samples at `p - .5 * w * split * direction`, green at `p`, blue at the
+opposite offset. This is a fitted renderer, not Apple's recovered operator.
+See [measured values and fit error](native_controls_spec.md#chromatic-rim-fringe).
 
 ## Interaction guarantees
 
@@ -112,3 +149,10 @@ retargets momentum and replaces the minimum-lift window. Cancel, disabling,
 reordering and disposal stop stale work. Parent-rejected values settle back.
 RTL reverses physical travel while logical values stay stable. Reduce Motion
 removes lift, stretch and animated travel even when custom motion is supplied.
+
+Only a touch that grabs the thumb or selection lifts on contact: the switch,
+the slider thumb, the selected segment and any tab. A held slider track or an
+unselected segment lifts nothing, as measured on iOS 27; a segment chosen that
+way lifts only while the selection travels to it after release, keeping the
+220 ms minimum lift from that moment. A track drag lifts the thumb when the
+drag starts, under the finger.

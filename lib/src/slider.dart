@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'control_interaction.dart';
 import 'control_material.dart';
 import 'theme.dart';
+import 'haptics.dart';
 import 'appearance.dart';
 import 'motion.dart';
 import 'material.dart';
@@ -29,6 +31,7 @@ class LiquidPrismSlider extends StatelessWidget {
     this.style,
     this.motion,
     this.semanticFormatterCallback,
+    this.haptics,
   }) : assert(min <= max),
        assert(value >= min && value <= max),
        assert(divisions == null || divisions > 0);
@@ -42,6 +45,11 @@ class LiquidPrismSlider extends StatelessWidget {
 
   /// Format the actual numeric value for accessibility; default is percentage.
   final String Function(double value)? semanticFormatterCallback;
+
+  /// A light impact on iOS when a drag, tap, key or accessibility step that
+  /// the parent accepts reaches [min] or [max]. Overrides
+  /// [GlassSliderStyle.haptics]; defaults on.
+  final bool? haptics;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +67,7 @@ class LiquidPrismSlider extends StatelessWidget {
     final colors = GlassColors.of(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final enabled = onChanged != null && max > min;
+    final feedback = haptics ?? appearance.haptics ?? true;
     double actual(double fraction) => min + fraction * (max - min);
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -92,6 +101,18 @@ class LiquidPrismSlider extends StatelessWidget {
             onChangeEnd: onChangeEnd == null
                 ? null
                 : (v) => onChangeEnd!(actual(v)),
+            onEdgeFeedback:
+                feedback &&
+                    (theme.haptics != null ||
+                        defaultTargetPlatform == TargetPlatform.iOS)
+                ? () => dispatchGlassHaptic(
+                    context,
+                    const GlassHapticEvent(
+                      GlassHapticComponent.slider,
+                      GlassHapticKind.limitReached,
+                    ),
+                  )
+                : null,
             positionAt: (x) =>
                 (((rtl ? width - x : x) - center) / math.max(travel, .001))
                     .clamp(0.0, 1.0),
@@ -102,6 +123,8 @@ class LiquidPrismSlider extends StatelessWidget {
             releaseSpring:
                 timing.release?.description ?? NativeControl.smallRelease,
             hangTime: timing.minimumLiftDuration ?? Duration.zero,
+            // The held thumb's half width, at least half a 44-point target.
+            grabExtent: math.max(22.0, thumb.width * heldScale / 2),
             builder: (context, position, lift, stretch, activate) {
               final p = position.clamp(0.0, 1.0);
               final x = center + travel * (rtl ? 1 - p : p);

@@ -20,6 +20,8 @@ class GlassTabBarStyle {
     this.height,
     this.padding,
     this.iconSize,
+    this.badgeColor,
+    this.badgeTextStyle,
     this.labelStyle,
     this.selectedColor,
     this.unselectedColor,
@@ -35,6 +37,7 @@ class GlassTabBarStyle {
     this.refractContent,
     this.contentRefraction,
     this.contentDepth,
+    this.rimRefraction,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
        assert(height == null || height >= 44),
        assert(iconSize == null || iconSize > 0),
@@ -47,7 +50,10 @@ class GlassTabBarStyle {
          contentRefraction == null ||
              (contentRefraction >= 0 && contentRefraction <= 64),
        ),
-       assert(contentDepth == null || contentDepth > 0);
+       assert(contentDepth == null || contentDepth > 0),
+       assert(
+         rimRefraction == null || (rimRefraction >= 0 && rimRefraction <= 2),
+       );
 
   /// Housing material overrides. Lifted lenses use [lens] independently.
   final Glass? glass;
@@ -58,6 +64,11 @@ class GlassTabBarStyle {
   final double? height, iconSize;
   final EdgeInsets? padding;
   final TextStyle? labelStyle;
+
+  /// Badge fill and count typography; null inherits the theme, then the
+  /// measured system red and 12-point medium white.
+  final Color? badgeColor;
+  final TextStyle? badgeTextStyle;
   final Color? selectedColor, unselectedColor, selectionColor;
 
   /// Extra pill blur, independent of the enclosing bar. Null inherits the
@@ -84,6 +95,12 @@ class GlassTabBarStyle {
   /// Foreground displacement magnitude and rim depth; defaults 14 and 11.2.
   final double? contentRefraction, contentDepth;
 
+  /// Multiplier (0 to 2) for the held pill's along-rim chromatic fringe in
+  /// both backdrop and foreground, and its bright glint. The lens's
+  /// chromaticAberration/chromaticBand set the split in points and band depth.
+  /// Defaults to 1; 0 turns it off. Only the tab bar's pill uses it.
+  final double? rimRefraction;
+
   GlassTabBarStyle copyWith({
     Glass? glass,
     LiquidPrismStyle? optics,
@@ -93,6 +110,8 @@ class GlassTabBarStyle {
     double? height,
     EdgeInsets? padding,
     double? iconSize,
+    Color? badgeColor,
+    TextStyle? badgeTextStyle,
     TextStyle? labelStyle,
     Color? selectedColor,
     Color? unselectedColor,
@@ -108,6 +127,7 @@ class GlassTabBarStyle {
     bool? refractContent,
     double? contentRefraction,
     double? contentDepth,
+    double? rimRefraction,
   }) => GlassTabBarStyle(
     glass: glass ?? this.glass,
     optics: optics ?? this.optics,
@@ -117,6 +137,8 @@ class GlassTabBarStyle {
     height: height ?? this.height,
     padding: padding ?? this.padding,
     iconSize: iconSize ?? this.iconSize,
+    badgeColor: badgeColor ?? this.badgeColor,
+    badgeTextStyle: badgeTextStyle ?? this.badgeTextStyle,
     labelStyle: labelStyle ?? this.labelStyle,
     selectedColor: selectedColor ?? this.selectedColor,
     unselectedColor: unselectedColor ?? this.unselectedColor,
@@ -132,6 +154,7 @@ class GlassTabBarStyle {
     refractContent: refractContent ?? this.refractContent,
     contentRefraction: contentRefraction ?? this.contentRefraction,
     contentDepth: contentDepth ?? this.contentDepth,
+    rimRefraction: rimRefraction ?? this.rimRefraction,
   );
 
   GlassTabBarStyle merge(GlassTabBarStyle? other) => other == null
@@ -145,6 +168,10 @@ class GlassTabBarStyle {
           height: other.height ?? height,
           padding: other.padding ?? padding,
           iconSize: other.iconSize ?? iconSize,
+          badgeColor: other.badgeColor ?? badgeColor,
+          badgeTextStyle:
+              badgeTextStyle?.merge(other.badgeTextStyle) ??
+              other.badgeTextStyle,
           labelStyle: labelStyle?.merge(other.labelStyle) ?? other.labelStyle,
           selectedColor: other.selectedColor ?? selectedColor,
           unselectedColor: other.unselectedColor ?? unselectedColor,
@@ -160,5 +187,6 @@ class GlassTabBarStyle {
           refractContent: other.refractContent ?? refractContent,
           contentRefraction: other.contentRefraction ?? contentRefraction,
           contentDepth: other.contentDepth ?? contentDepth,
+          rimRefraction: other.rimRefraction ?? rimRefraction,
         );
 }

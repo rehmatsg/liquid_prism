@@ -118,7 +118,7 @@ void main() {
     expect(actions.height, 44);
 
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
-    expect(padding.top, 62 + 44);
+    expect(padding.top, 62 + 44 + 14);
     expect(padding.bottom, 874 - bar.top + 3);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
@@ -487,7 +487,7 @@ void main() {
       expect(padding.left, 280);
       expect(padding.right, 84);
       // The top bar row stays reserved, so hiding never shifts content down.
-      expect(padding.top, 24 + 44);
+      expect(padding.top, 24 + 44 + 14);
 
       await tester.tap(find.text('Search'));
       await tester.pump();
@@ -523,7 +523,7 @@ void main() {
         tester.getTopLeft(find.bySemanticsLabel('Show sidebar')),
         const Offset(20, 24),
       );
-      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).top, 68);
+      expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).top, 82);
 
       await tester.tap(find.bySemanticsLabel('Show sidebar'));
       await tester.pump();
@@ -553,6 +553,105 @@ void main() {
       await tester.pumpWidget(app(onSelected: (_) {}));
       expect(find.byType(LiquidPrismTabBar), findsOneWidget);
       expect(find.bySemanticsLabel('Hide sidebar'), findsNothing);
+    });
+  });
+  group('actions in several capsules', () {
+    GlassToolbarItem item(String label) => GlassToolbarItem(
+      icon: const Icon(CupertinoIcons.star),
+      label: label,
+      onPressed: () {},
+    );
+    Widget app(List<Object> actions) => CupertinoApp(
+      debugShowCheckedModeBanner: false,
+      home: LiquidPrismScaffold(
+        actions: actions,
+        tabBar: LiquidPrismTabBar(
+          selectedIndex: 0,
+          onSelected: (_) {},
+          tabs: _tabs,
+        ),
+        body: const SizedBox.expand(key: _body),
+      ),
+    );
+
+    testWidgets('iPhone: separate capsules, trailing, in order', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(
+        app([
+          [item('Filter')],
+          [item('Share'), item('More')],
+        ]),
+      );
+      await tester.pumpAndSettle();
+      final capsules = tester
+          .widgetList<LiquidPrismToolbarGroup>(
+            find.byType(LiquidPrismToolbarGroup),
+          )
+          .toList();
+      expect(capsules, hasLength(2));
+      final first = tester.getRect(find.byType(LiquidPrismToolbarGroup).first);
+      final last = tester.getRect(find.byType(LiquidPrismToolbarGroup).last);
+      expect(last.right, 402 - 16);
+      expect(first.right, lessThan(last.left));
+      expect(first.top, 62);
+      expect(last.height, 44);
+      expect(find.bySemanticsLabel('Filter'), findsOneWidget);
+    });
+
+    testWidgets('an empty group keeps the bar and draws nothing', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(
+        app([
+          [],
+          [item('Share')],
+        ]),
+      );
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('Share'), findsOneWidget);
+      final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
+      expect(padding.top, 62 + 44 + LiquidPrismScaffold.topBarClearance);
+    });
+
+    testWidgets('iPhone Duo rail folds groups that do not fit into More', (
+      tester,
+    ) async {
+      window(tester, duo);
+      await tester.pumpWidget(
+        app([
+          [item('Filter'), item('Sort'), item('Group')],
+          [item('Share'), item('Save'), item('More actions')],
+        ]),
+      );
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsLabel('More'), findsOneWidget);
+      expect(find.bySemanticsLabel('Filter'), findsNothing);
+    });
+
+    testWidgets('a flat list is one capsule; loose items join a capsule', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(app([item('Share'), item('More')]));
+      await tester.pumpAndSettle();
+      expect(find.byType(LiquidPrismToolbarGroup), findsOneWidget);
+
+      await tester.pumpWidget(
+        app([
+          item('Filter'),
+          item('Sort'),
+          [item('Share'), item('More')],
+        ]),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(LiquidPrismToolbarGroup), findsNWidgets(2));
+      final first = tester.getRect(find.byType(LiquidPrismToolbarGroup).first);
+      final filter = tester.getCenter(find.bySemanticsLabel('Filter'));
+      final sort = tester.getCenter(find.bySemanticsLabel('Sort'));
+      expect(first.contains(filter) && first.contains(sort), isTrue);
     });
   });
 }

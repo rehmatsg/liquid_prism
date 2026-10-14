@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/recipe.dart';
 
 Widget host(
   Widget child, {
@@ -473,5 +474,105 @@ void main() {
       ),
     );
     expect(tester.widget<LiquidPrism>(find.byType(LiquidPrism)).blur, 0);
+  });
+  testWidgets('held slider rim defaults and per-component lens precedence', (
+    tester,
+  ) async {
+    LiquidPrismStyle held(GlassRole role) => tester
+        .widget<LiquidPrism>(
+          find.byWidgetPredicate(
+            (widget) => widget is LiquidPrism && widget.role == role,
+          ),
+        )
+        .optics!;
+    Future<LiquidPrismStyle> hold(
+      Widget control,
+      GlassRole role, {
+      LiquidPrismThemeData theme = const LiquidPrismThemeData(),
+    }) async {
+      await tester.pumpWidget(host(control, theme: theme));
+      final finger = await tester.startGesture(
+        tester.getCenter(find.byWidget(control)),
+      );
+      await tester.pumpAndSettle();
+      final optics = held(role);
+      await finger.up();
+      await tester.pumpAndSettle();
+      return optics;
+    }
+
+    final slider = LiquidPrismSlider(value: .5, onChanged: (_) {});
+    // Measured held slider inputs at its 37.2-point lens height.
+    var optics = await hold(slider, GlassRole.sliderLens);
+    expect(optics.edgeWidth, closeTo(6.66, 1e-6));
+    expect(optics.refraction, closeTo(11.1, 1e-6));
+    expect(optics.tint.a, closeTo(.1, 1e-6));
+    expect(optics.light, closeTo(1, 1e-6));
+
+    // Theme and component lenses merge per field; explicit zero wins.
+    optics = await hold(
+      LiquidPrismSlider(
+        value: .5,
+        onChanged: (_) {},
+        style: const GlassSliderStyle(
+          lens: GlassLensStyle(faceBlack: 0, rimRefraction: 0),
+        ),
+      ),
+      GlassRole.sliderLens,
+      theme: const LiquidPrismThemeData(
+        lens: GlassLensStyle(rimLight: .3, faceBlack: .4, rimWidth: 3.72),
+      ),
+    );
+    expect(optics.tint.a, 0);
+    expect(optics.refraction, 0);
+    expect(optics.light, closeTo(.3, 1e-6));
+    expect(optics.edgeWidth, closeTo(3.72, 1e-6));
+
+    // The switch keeps its accepted lens unless it opts in.
+    final toggle = LiquidPrismSwitch(value: false, onChanged: (_) {});
+    optics = await hold(toggle, GlassRole.controlThumb);
+    expect(optics.edgeWidth, closeTo(12 * (115 / 3) / 70, 1e-6));
+    expect(optics.light, closeTo(.6, 1e-6));
+    expect(optics.tint.a, 0);
+    optics = await hold(
+      LiquidPrismSwitch(
+        value: false,
+        onChanged: (_) {},
+        style: const GlassSwitchStyle(lens: GlassLensStyle(faceBlack: .1)),
+      ),
+      GlassRole.controlThumb,
+    );
+    expect(optics.tint.a, closeTo(.1, 1e-6));
+  });
+
+  test('lens rim fields survive copyWith and merge', () {
+    const base = GlassLensStyle(
+      rimWidth: 5,
+      rimRefraction: 8,
+      rimLight: .8,
+      faceBlack: .2,
+      heldContactShadow: true,
+    );
+    final merged = base.merge(
+      const GlassLensStyle(rimLight: 0, heldContactShadow: false),
+    );
+    expect(merged.rimWidth, 5);
+    expect(merged.rimRefraction, 8);
+    expect(merged.rimLight, 0);
+    expect(merged.faceBlack, .2);
+    expect(merged.heldContactShadow, false);
+    final copy = merged.copyWith(faceBlack: 0);
+    expect(copy.faceBlack, 0);
+    expect(copy.rimLight, 0);
+    expect(
+      const GlassSliderStyle(haptics: false)
+          .merge(const GlassSliderStyle(trackHeight: 4))
+          .haptics,
+      false,
+    );
+    expect(
+      const GlassSliderStyle(haptics: true).copyWith(haptics: false).haptics,
+      false,
+    );
   });
 }

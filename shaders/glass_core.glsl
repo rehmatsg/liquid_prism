@@ -45,6 +45,7 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
 }
 
 #include "superellipse.glsl"
+#include "chromatic_fringe.glsl"
 
 // Distance, outward direction and its length for a rounded rectangle/capsule.
 // Nothing reads the smooth field deeper than the reflections (24 points), the
@@ -217,6 +218,7 @@ void shadeGlass() {
     if (u_material.x > 2.5 && u_material.x < 3.5) {
         if (u_material.z < 8.5) interiorEnd = max(interiorEnd, 36.);
         interiorEnd = max(interiorEnd, 16.*u_extent.y/70.);
+        interiorEnd = max(interiorEnd, u_shapeD.z);
     }
     if (depth > interiorEnd + aa) {
         vec3 face = gradePressed(gradeFace(gradeInput(readScene(scenePoint(local)))));
@@ -241,6 +243,10 @@ void shadeGlass() {
         float spread = u_material.y > .5 ? 0.2588190451 : -0.2756373558;
         float facing = clamp((abs(normal.x)-spread)/(1.-spread),0.,1.);
         float side = facing/(1.+0.5*(1.-facing));
+        // In light appearance the dark line runs all the way round: iOS 27
+        // captures over white darken the top and bottom by about 30% of the
+        // ends (24-28 vs 79 levels). Fitted floor; dark appearance has none.
+        if (u_material.y < .5) side = max(side, 0.3);
         float outerCoverage = clamp(0.5-(d-0.5333333333)/aa,0.,1.);
         rimAlpha = clamp(side*u_finish.y*0.3,0.,1.)*
                    max(outerCoverage-coverage,0.);
@@ -249,8 +255,23 @@ void shadeGlass() {
     // A premultiplied fade composites the glass over the live backdrop.
     float presence = clamp(1.-u_state.z,0.,1.);
     if (coverage < 0.001) { frag_color = vec4(0.,0.,0.,rimAlpha*presence); return; }
+    // Along-rim fringe on lifted lenses only. The split arrives in device
+    // pixels; transform its local direction into the backdrop's raster basis.
+    // Keep the existing generic dispersion outside this band unchanged.
+    bool lens = u_material.x > 2.5 && u_material.x < 3.5;
+    float lensRim = lens ? u_state.w : 0.; // Tab glint, independent of split.
+    float chromaticSplit = lens ? u_derived[1].w : 0.;
+    float chromaticBand = u_shapeD.z;
     vec3 color;
-    if (u_optics.w > 0.001 && profile > 0.001) {
+    if (chromaticSplit > 0. && chromaticBand > 0. && d <= 0. && depth < chromaticBand) {
+        float weight = max(chromaticWeight(depth,chromaticBand),0.);
+        vec2 shift = mat2(u_transform.x,u_transform.z,u_transform.y,u_transform.w)
+            * (chromaticDirection(normal)*(.5*weight*chromaticSplit));
+        vec3 red = filteredScene(samplePoint-shift,dx,dy);
+        vec3 green = filteredScene(samplePoint,dx,dy);
+        vec3 blue = filteredScene(samplePoint+shift,dx,dy);
+        color = vec3(red.r,green.g,blue.b);
+    } else if (u_optics.w > 0.001 && profile > 0.001) {
         vec2 split = mat2(u_transform.x, u_transform.z, u_transform.y, u_transform.w)
                    * (direction*(u_derived[0].z*profile));
         // The outer bands are shared by both tap sets, so only the half-split
@@ -329,6 +350,15 @@ void shadeGlass() {
         float inner = smoothstep(1.*faceScale,5.*faceScale,depth)
             * (1.-smoothstep(5.*faceScale,shadeDepth,depth));
         color *= 1.-.12*u_finish.y*top*inner;
+        // A bright glint just inside the pill's contour, its blue reaching a
+        // little deeper than its red, so the rim reads against a dark housing.
+        if (lensRim > 0. && depth < 2.*faceScale + aa) {
+            float width = 1.5*faceScale;
+            float spread = .3*faceScale;
+            vec3 glint = clamp(1.-vec3(depth+spread,depth,max(depth-spread,0.))
+                               /width,0.,1.);
+            color += (1.-color)*glint*glint*(.16*lensRim);
+        }
     }
     color = gradePressed(color);
     frag_color = vec4(color*coverage,coverage+rimAlpha)*presence;

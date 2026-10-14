@@ -16,12 +16,22 @@ and [components](components.md) for usage.
 | `minifyUnderlay` | True for switch/segment/tab, false for slider |
 | `shadow` / `scaleShadows` | True / true |
 | `shadowOpacity` / `shadowBlur` / `shadowOffset` | Lifted ambient shadow: .1 / 5 / (0, 6) |
-| `ringOpacity` / `ringBlur` / `ringWidth` / `ringOffset` | Lifted shadow ring: .055 / 4 / 2 / (0, 4) |
+| `ringOpacity` / `ringBlur` / `ringWidth` / `ringOffset` | Lifted shadow ring: .055 / 4 / 2 / (0, 4); slider .2 / 3 / 4 / (0, 8) |
+| `chromaticAberration` | Full-lift red–blue split along the rim, in points: segment/tab 3.5, switch/slider 0; explicit 0 off |
+| `chromaticBand` | Band depth in points, 4.8; explicit 0 off |
+| `rimWidth` / `rimRefraction` | Rim band and its displacement for a 37.2-point lens; slider 6.66 / 11.1, others keep their fitted rim |
+| `rimLight` | Rim key/fill highlight strength at full lift: slider 1, others .6 |
+| `faceBlack` | Lens face black point, 0–1: slider .1, others 0 |
+| `heldContactShadow` | Keep the resting contact shadow while lifted: slider true, others false |
 
 Shadow blur/offset/width are reference metrics for a 37.2-point-high lens. They
 scale with actual height unless opted out; opacity does not. `shadow: false`
 also removes the resting slider shadow. Ambient/ring fields customize lifted
-shadows; the resting slider shadow retains its native recipe.
+shadows; the resting slider shadow retains its native recipe. Rim fields scale
+with lens height like shadow metrics and are ignored when `optics` is supplied.
+Chromatic split/band do not scale with lens height and remain independent of
+`optics`; split scales with lift and surface presence. They affect backdrop and
+refracted foreground. Generic optical dispersion is a separate setting.
 
 ## Buttons: `GlassButtonAppearance`
 
@@ -49,6 +59,7 @@ keeps its own colors. Disabled controls use the semantic disabled label.
 | `inactiveColor`, `thumbColor` | Tertiary label / white |
 | `haptics` | True on iOS user changes |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
+| `refractContent`, `contentRefraction`, `contentDepth` | True / 14 / 11.2; labels bend near the held selection's rim |
 
 Hit width/height remain at least 44. Width must exceed the resting thumb width
 plus both insets. Parent layout constraints still apply; leave room for the lens.
@@ -61,6 +72,7 @@ plus both insets. Parent layout constraints still apply; leave room for the lens
 | `thumbSize`, `heldScale` | 37×24 / 1.55; hold scale multiplies both thumb axes |
 | `activeColor`, `inactiveColor`, `thumbColor` | Theme accent / semantic slider track / white |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
+| `haptics` | True: iOS light impact when user input reaches the minimum or maximum |
 
 Preferred width is constrained by the parent; the resting thumb fits narrow widths
 proportionally. Hit height stays at least 44. Track fill uses the resting thumb
@@ -96,6 +108,7 @@ and artwork can override ambient styling themselves.
 | `shape`, `selectionShape`, `lens` | Capsule housing / capsule pill / shared-lens override |
 | `haptics` | True for user selection feedback |
 | `refractContent`, `contentRefraction`, `contentDepth` | True / 14 / 11.2; lifted glyph displacement and rim depth |
+| `rimRefraction` | 1, 0–2; multiplier for along-rim fringe (backdrop and foreground) and bright glint, 0 off |
 
 Height/content defaults depend on text scale and available width. Set
 `selectionShape` to override shared lens shape for this bar. Housing minification
@@ -112,6 +125,8 @@ and glyph refraction are separate effects. Tab motion is the widget/theme's
 | `foregroundColor`, `pressedColor` | Calibrated accent / 12% semantic label |
 | `shape`, `itemShape` | Capsule / capsule |
 | `glass`, `optics`, `blur`, `motion` | Component overrides of material/theme settings |
+| `backIcon`, `closeIcon` | Back chevron / close mark of `LiquidPrismBackButton` |
+| `backIconShift`, `backIconMirrors` | .5 toward the tip / true, the shift mirrors in RTL |
 
 Each `GlassToolbarItem` owns its width (38 default, at least 36), selected state,
 label, callback/menu, key and optional foreground. Group spacing is independent.
@@ -154,3 +169,28 @@ minimum lift, flex strength, maximum stretch and velocity decay. `GlassSpring`
 accepts duration/bounce or Flutter physics. `GlassMotion` controls button/toolbar
 press and tab travel. See [motion and lenses](motion_and_lenses.md) for their
 separate scopes, native timings and input guarantees.
+
+## Additional feature styles
+
+| Style / field | Default / meaning |
+| --- | --- |
+| `GlassSegmentedStyle.sizing` | `fixed`; opt into `fitLabels` for Text/RichText |
+| `GlassSegmentedStyle.labelPadding` | Horizontal 10 (measured) / vertical 8, before scale; fit mode only |
+| Tab / toolbar `badgeColor` | System red (measured) |
+| Tab / toolbar `badgeTextStyle` | 12-point medium, white (measured) |
+| `GlassNavigationBarStyle.titleStyle` | 17-point semibold, semantic label |
+| `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold, semantic label |
+| `gutter` / `controlGap` | 16 / 12 |
+| `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
+| `revealCurve` | easeOutCubic (fitted) for the inline title's 0.53 s fade and 15-point rise |
+
+Measured on iOS 27: badges are 18.33-point capsules (18 on toolbar items) with
+4 points of padding; a tab badge's leading edge sits 5 points inside the glyph's
+trailing edge, its top 24.5 above the glyph's centre; a toolbar badge sits 2.8
+points above the capsule and overhangs the item by 3. The icon-only tab pitch is
+86, as for labelled tabs.
+See [evidence and adoption](package_features_spec.md).
+
+Theme `haptics` replaces native calls with `GlassHaptics`, subject to component
+haptics flags. Scaffold titles resolve `navigationBarStyle` above theme
+`navigationBar`; scaffold `resizeToAvoidBottomInset` defaults true.

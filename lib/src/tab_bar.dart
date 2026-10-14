@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -8,12 +7,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'control_gesture.dart';
 import 'control_lens.dart';
 import 'appearance.dart';
 import 'chrome_layout.dart';
-import 'superellipse.dart';
+import 'tab_content_lens.dart';
 import 'glass.dart';
-import 'layer_transform.dart';
 import 'foreground.dart';
 import 'material.dart';
 import 'motion.dart';
@@ -23,8 +22,8 @@ import 'style.dart';
 import 'selection.dart';
 import 'tab_bar_style.dart';
 import 'theme.dart';
-
-part 'tab_content_lens.dart';
+import 'haptics.dart';
+import 'badge.dart';
 
 @immutable
 final class LiquidPrismTab {
@@ -32,6 +31,7 @@ final class LiquidPrismTab {
     required this.label,
     required this.icon,
     this.selectedIcon,
+    this.badge,
   });
 
   /// Accessible name, including when visual labels are hidden.
@@ -41,6 +41,7 @@ final class LiquidPrismTab {
   /// contain repaint boundaries: the selection window paints them twice.
   final Widget icon;
   final Widget? selectedIcon;
+  final GlassBadge? badge;
 }
 
 /// A controlled tab bar with a draggable, velocity-preserving selection pill.
@@ -60,6 +61,7 @@ class LiquidPrismTabBar extends StatefulWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
+    this.onLongPressed,
     this.style,
     this.glass,
     this.optics,
@@ -72,6 +74,10 @@ class LiquidPrismTabBar extends StatefulWidget {
   final List<LiquidPrismTab> tabs;
   final int selectedIndex;
   final ValueChanged<int>? onSelected;
+
+  /// A hold without a drag, using Flutter's kLongPressTimeout. Does not select.
+  /// Disabled along with selection when [onSelected] is null.
+  final ValueChanged<int>? onLongPressed;
   final GlassTabBarStyle? style;
   final Glass? glass;
   final LiquidPrismStyle? optics;
@@ -386,7 +392,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final settleVelocity = velocity ?? _position.velocity;
     _committing = true;
     if ((_style.haptics ?? true) && index != widget.selectedIndex) {
-      unawaited(HapticFeedback.selectionClick());
+      dispatchGlassHaptic(
+        context,
+        const GlassHapticEvent(
+          GlassHapticComponent.tabBar,
+          GlassHapticKind.selectionChange,
+        ),
+      );
     }
     widget.onSelected!(index);
     _committing = false;
@@ -397,6 +409,28 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       }
     });
     if (mounted) setState(() {});
+  }
+
+  void _longPress(int index) {
+    if (_cancelled ||
+        widget.onSelected == null ||
+        widget.onLongPressed == null) {
+      return;
+    }
+    _cancelled = true;
+    _dragging = false;
+    _feedback(false);
+    _settle();
+    if (_style.haptics ?? true) {
+      dispatchGlassHaptic(
+        context,
+        const GlassHapticEvent(
+          GlassHapticComponent.tabBar,
+          GlassHapticKind.longPress,
+        ),
+      );
+    }
+    widget.onLongPressed!(index);
   }
 
   void _pointerDown(PointerDownEvent event) {
@@ -644,6 +678,33 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ],
           ),
         );
+        final badges = widget.tabs.any((tab) => tab.badge != null)
+            ? ExcludeSemantics(
+                child: IgnorePointer(
+                  child: Flex(
+                    direction: vertical ? Axis.vertical : Axis.horizontal,
+                    children: [
+                      for (var index = 0; index < widget.tabs.length; index++)
+                        Expanded(
+                          child: _tab(
+                            index,
+                            height,
+                            iconSize,
+                            textStyle,
+                            labels,
+                            colors,
+                            selectedAccent,
+                            style,
+                            window: false,
+                            vertical: vertical,
+                            badgeLayer: true,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              )
+            : null;
         final selects = widget.onSelected != null;
         void cancelDrag() {
           if (_pointer == null && !_dragging) return;
@@ -658,41 +719,27 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
           onPointerDown: _pointerDown,
           onPointerUp: _pointerUp,
           onPointerCancel: _pointerUp,
-          child: GestureDetector(
-            excludeFromSemantics: true,
-            behavior: HitTestBehavior.opaque,
-            onTapUp: widget.onSelected == null
+          child: ControlGestureDetector(
+            enabled: selects,
+            axis: vertical ? Axis.vertical : Axis.horizontal,
+            onLongPress: widget.onLongPressed == null
                 ? null
-                : (details) {
-                    if (!_cancelled) {
-                      _commit(
-                        _logical(_slotAt(details.localPosition)),
-                        velocity: _position.velocity,
-                      );
-                    }
-                  },
-            onTapCancel: () {
-              if (!_dragging) {
-                _feedback(false);
-                _settle();
+                : (details) =>
+                      _longPress(_logical(_slotAt(details.localPosition))),
+            onTapUp: (details) {
+              if (!_cancelled) {
+                _commit(
+                  _logical(_slotAt(details.localPosition)),
+                  velocity: _position.velocity,
+                );
               }
             },
-            onHorizontalDragStart: selects && !vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onHorizontalDragUpdate: selects && !vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onHorizontalDragEnd: selects && !vertical ? _dragEnd : null,
-            onHorizontalDragCancel: vertical ? null : cancelDrag,
-            onVerticalDragStart: selects && vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onVerticalDragUpdate: selects && vertical
-                ? (details) => _drag(details.localPosition)
-                : null,
-            onVerticalDragEnd: selects && vertical ? _dragEnd : null,
-            onVerticalDragCancel: vertical ? cancelDrag : null,
+            // Any direction past the touch slop drags; the pill reads only the
+            // bar's own axis, so diagonal drags and flicks still select.
+            onStart: (details) => _drag(details.localPosition),
+            onUpdate: (details) => _drag(details.localPosition),
+            onEnd: _dragEnd,
+            onCancel: cancelDrag,
             child: AnimatedBuilder(
               animation: Listenable.merge([
                 _position,
@@ -766,17 +813,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                       if (haloLevel > .001)
                         Positioned.fill(
                           child: IgnorePointer(
-                            child: ClipPath(
-                              clipper: GlassShapeClipper(
-                                style.shape ?? GlassShape.capsule,
-                              ),
-                              child: CustomPaint(
-                                painter: _LensHalo(
-                                  lens.center,
-                                  NativeMotion.haloDiameter * haloScale,
-                                  NativeMotion.haloOpacity * haloLevel,
-                                  NativeMotion.haloBlurRadius * haloScale,
-                                ),
+                            child: CustomPaint(
+                              painter: _LensHalo(
+                                lens.center,
+                                NativeMotion.haloDiameter * haloScale,
+                                NativeMotion.haloOpacity * haloLevel,
+                                NativeMotion.haloBlurRadius * haloScale,
+                                housing: style.shape ?? GlassShape.capsule,
+                                housingScale: barScale,
                               ),
                             ),
                           ),
@@ -793,6 +837,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 lift: lift,
                                 shape: selectionShape,
                                 role: GlassRole.tabLens,
+                                rim: style.rimRefraction ?? 1,
                                 style: lensStyle.copyWith(
                                   shape: selectionShape,
                                 ),
@@ -827,7 +872,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                         key: const ValueKey('tab-foreground'),
                         child: Padding(
                           padding: padding,
-                          child: _SelectionWindow(
+                          child: ContentLensWindow(
                             scale: barScale,
                             // The housing scales about the bar's centre.
                             origin: centre - padding.topLeft,
@@ -840,10 +885,40 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 ? 0
                                 : style.contentRefraction ?? 14,
                             depth: style.contentDepth ?? 11.2,
+                            chromaticAberration: style.refractContent == false
+                                ? 0
+                                : (lensStyle.chromaticAberration ?? 3.5) *
+                                      (style.rimRefraction ?? 1),
+                            chromaticBand: lensStyle.chromaticBand ?? 4.8,
                             child: child!,
                           ),
                         ),
                       ),
+                      if (badges != null)
+                        Positioned.fill(
+                          key: const ValueKey('tab-badges'),
+                          child: Padding(
+                            padding: padding,
+                            // The same flex scale as the foreground, about
+                            // the bar's centre.
+                            child: Transform(
+                              transform:
+                                  Matrix4.translationValues(
+                                      centre.dx - padding.left,
+                                      centre.dy - padding.top,
+                                      0,
+                                    )
+                                    ..scaleByDouble(barScale, barScale, 1, 1)
+                                    ..translateByDouble(
+                                      -(centre.dx - padding.left),
+                                      -(centre.dy - padding.top),
+                                      0,
+                                      1,
+                                    ),
+                              child: badges,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 );
@@ -871,6 +946,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     GlassTabBarStyle style, {
     required bool window,
     required bool vertical,
+    bool badgeLayer = false,
   }) {
     final selected = widget.selectedIndex == index;
     final enabled = widget.onSelected != null;
@@ -884,38 +960,83 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         : selected && !window
         ? selectedAccent
         : style.unselectedColor ?? colors.label;
+    // Badges paint in their own layer over the foreground (see
+    // [badgeLayer]): inside it the selection window would recolour them with
+    // the selected accent, where native badges stay red under the pill.
+    Widget hidden(Widget child) => badgeLayer
+        ? Visibility(
+            visible: false,
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            child: child,
+          )
+        : child;
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconTheme.merge(
           data: IconThemeData(size: iconSize, color: color),
-          child: icon,
+          child: GlassBadgedIcon(
+            badge: badgeLayer ? tab.badge : null,
+            color: style.badgeColor,
+            textStyle: style.badgeTextStyle,
+            child: hidden(icon),
+          ),
         ),
         if (labels != GlassTabLabelBehavior.never &&
             (labels != GlassTabLabelBehavior.selected || selected)) ...[
           const SizedBox(height: 2),
-          Text(
-            tab.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: labelStyle.copyWith(
-              color: labelStyle.color ?? color,
-              fontWeight:
-                  labelStyle.fontWeight ??
-                  (selected ? FontWeight.w600 : FontWeight.w500),
+          if (badgeLayer)
+            hidden(
+              Text(
+                tab.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle.copyWith(
+                  fontWeight:
+                      labelStyle.fontWeight ??
+                      (selected ? FontWeight.w600 : FontWeight.w500),
+                ),
+              ),
+            )
+          else
+            Text(
+              tab.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: labelStyle.copyWith(
+                color: labelStyle.color ?? color,
+                fontWeight:
+                    labelStyle.fontWeight ??
+                    (selected ? FontWeight.w600 : FontWeight.w500),
+              ),
             ),
-          ),
         ],
       ],
     );
+    if (badgeLayer) {
+      return SizedBox(
+        width: vertical ? height : null,
+        height: vertical ? null : height,
+        child: Center(child: content),
+      );
+    }
     return Semantics(
       container: true,
       button: true,
       selected: selected,
       enabled: enabled,
       label: tab.label,
+      value: tab.badge?.semanticLabel,
       excludeSemantics: true,
       onTap: enabled ? () => _commit(index) : null,
+      onLongPress: enabled && widget.onLongPressed != null
+          ? () {
+              _cancelled = false;
+              _longPress(index);
+            }
+          : null,
       child: CallbackShortcuts(
         bindings: {
           SingleActivator(
@@ -968,354 +1089,33 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 /// 9 on the backdrop) rather than the package's default clear optics whose
 /// wide band would mirror the icons inside a lens this small.
 
-/// Paints its child once, then again clipped to [path] with every pixel
-/// recoloured to [color]: the selected tint shows wherever the pill is.
-///
-/// The housing's flex [scale] is applied here, beneath the refraction filter,
-/// rather than by an ancestor transform. A filter layer under an animating
-/// scale is placed on whole device pixels each frame, so while the pill lifted
-/// the selected copy popped between pixels against the smoothly scaling rest.
-class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
-  const _SelectionWindowPaint({
-    required this.path,
-    required this.color,
-    required this.lens,
-    required this.lift,
-    required this.shape,
-    required this.shader,
-    required this.refraction,
-    required this.depth,
-    required this.scale,
-    required this.origin,
-    required super.child,
-  });
-  final Path? path;
-  final Color color;
-  final Rect lens;
-  final double lift, refraction, depth, scale;
-  final Offset origin;
-  final GlassShape shape;
-  final ui.FragmentShader? shader;
-  @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderSelectionWindow(path, color)
-        ..configure(shader, lens, lift, shape, refraction, depth)
-        ..setScale(scale, origin);
-  @override
-  void updateRenderObject(
-    BuildContext context,
-    _RenderSelectionWindow renderObject,
-  ) {
-    renderObject
-      ..path = path
-      ..color = color
-      ..configure(shader, lens, lift, shape, refraction, depth)
-      ..setScale(scale, origin);
-  }
-}
-
-class _RenderSelectionWindow extends RenderProxyBox {
-  _RenderSelectionWindow(this._path, this._color);
-  Path? _path;
-  Color _color;
-  set path(Path? value) {
-    if (identical(value, _path)) return;
-    final toggled = (value == null) != (_path == null);
-    _path = value;
-    if (toggled) markNeedsCompositingBitsUpdate();
-    markNeedsPaint();
-  }
-
-  set color(Color value) {
-    if (value == _color) return;
-    _color = value;
-    markNeedsPaint();
-  }
-
-  double _scale = 1;
-  Offset _origin = Offset.zero;
-  void setScale(double scale, Offset origin) {
-    if (scale == _scale && origin == _origin) return;
-    _scale = scale;
-    _origin = origin;
-    markNeedsPaint();
-  }
-
-  /// The flex scale about [_origin], or null at rest.
-  Matrix4? get _transform => _scale == 1
-      ? null
-      : (Matrix4.translationValues(_origin.dx, _origin.dy, 0)
-          ..scaleByDouble(_scale, _scale, 1, 1)
-          ..translateByDouble(-_origin.dx, -_origin.dy, 0, 1));
-
-  ui.FragmentShader? _shader;
-  Rect _lens = Rect.zero;
-  double _lift = 0, _refraction = 14, _depth = 11.2;
-  GlassShape _shape = GlassShape.capsule;
-  void configure(
-    ui.FragmentShader? shader,
-    Rect lens,
-    double lift,
-    GlassShape shape,
-    double refraction,
-    double depth,
-  ) {
-    if (shader == _shader &&
-        lens == _lens &&
-        lift == _lift &&
-        shape == _shape &&
-        refraction == _refraction &&
-        depth == _depth) {
-      return;
-    }
-    _shader = shader;
-    _lens = lens;
-    _lift = lift;
-    _shape = shape;
-    _refraction = refraction;
-    _depth = depth;
-    markNeedsPaint();
-  }
-
-  @override
-  void applyPaintTransform(RenderBox child, Matrix4 transform) {
-    final local = _transform;
-    if (local != null) transform.multiply(local);
-  }
-
-  @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
-      result.addWithPaintTransform(
-        transform: _transform,
-        position: position,
-        hitTest: (result, position) =>
-            super.hitTestChildren(result, position: position),
-      );
-
-  Size? _contourSize;
-  double? _contourRadius;
-  List<double> _contour = [];
-
-  /// Whether the selected foreground is refracted by the content lens.
-  bool get _refractsContent =>
-      _shader != null && _lift >= .001 && _refraction != 0;
-
-  /// The content lens for a raster at [deviceScale] physical pixels per point.
-  ui.ImageFilter _contentFilter(double deviceScale) {
-    final shader = _shader!;
-    // The filter sits outside the flex scale, so its lens is the scaled
-    // contour; lengths in points scale with it.
-    final local = _shape.rect(_lens.size).shift(_lens.topLeft);
-    final contour = Rect.fromCenter(
-      center: _origin + (local.center - _origin) * _scale,
-      width: local.width * _scale,
-      height: local.height * _scale,
-    );
-    final radius = _shape.radius * _scale;
-    if (_contourSize != contour.size || _contourRadius != radius) {
-      _contourSize = contour.size;
-      _contourRadius = radius;
-      _contour = superellipseUniforms(contour.size, radius);
-    }
-    // The filter reads the whole foreground row, which stays put while the
-    // pill moves; the lens is expressed relative to that row.
-    final values = [
-      contour.left,
-      contour.top,
-      contour.width,
-      contour.height,
-      deviceScale,
-      _lift,
-      radius,
-      _shape.isSmooth ? 1.0 : 0.0,
-      ..._contour,
-      _refraction * _scale,
-      _depth * _scale,
-    ];
-    for (var i = 0; i < values.length; i++) {
-      shader.setFloat(i + 2, values[i]);
-    }
-    return ui.ImageFilter.shader(shader);
-  }
-
-  final _warp = LayerHandle<_ContentLensLayer>();
-  final _clip = LayerHandle<ClipPathLayer>();
-  final _outsideClip = LayerHandle<ClipPathLayer>();
-  final _filter = LayerHandle<ColorFilterLayer>();
-  final _scaled = LayerHandle<TransformLayer>();
-  final _outsideScaled = LayerHandle<TransformLayer>();
-
-  /// Paints [painter] under the flex scale, reusing [handle]'s layer.
-  void _underScale(
-    PaintingContext context,
-    Offset offset,
-    LayerHandle<TransformLayer> handle,
-    PaintingContextCallback painter,
-  ) {
-    final local = _transform;
-    if (local == null) {
-      handle.layer = null;
-      painter(context, offset);
-    } else {
-      handle.layer = context.pushTransform(
-        needsCompositing,
-        offset,
-        local,
-        painter,
-        oldLayer: handle.layer,
-      );
-    }
-  }
-
-  @override
-  bool get alwaysNeedsCompositing => _path != null;
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    final child = this.child;
-    if (child == null) return;
-    final path = _path;
-    if (path == null) {
-      _clip.layer = null;
-      _outsideClip.layer = null;
-      _filter.layer = null;
-      _warp.layer = null;
-      _scaled.layer = null;
-      _underScale(
-        context,
-        offset,
-        _outsideScaled,
-        (context, offset) => context.paintChild(child, offset),
-      );
-      return;
-    }
-    // The selected and unselected copies occupy complementary regions.
-    // Painting both at the same pixel leaves unselected fringes around glyphs.
-    final outside = Path.combine(
-      PathOperation.difference,
-      Path()..addRect(Offset.zero & size),
-      path,
-    );
-    _underScale(
-      context,
-      offset,
-      _outsideScaled,
-      (context, offset) => _outsideClip.layer = context.pushClipPath(
-        needsCompositing,
-        offset,
-        Offset.zero & size,
-        outside,
-        (context, offset) => context.paintChild(child, offset),
-        oldLayer: _outsideClip.layer,
-      ),
-    );
-    void selected(PaintingContext context, Offset offset) {
-      _filter.layer = context.pushColorFilter(
-        offset,
-        ui.ColorFilter.mode(_color, BlendMode.srcIn),
-        (context, offset) => context.paintChild(child, offset),
-        oldLayer: _filter.layer,
-      );
-    }
-
-    void clipped(PaintingContext context, Offset offset) => _underScale(
-      context,
-      offset,
-      _scaled,
-      (context, offset) => _clip.layer = context.pushClipPath(
-        needsCompositing,
-        offset,
-        path.getBounds(),
-        path,
-        selected,
-        oldLayer: _clip.layer,
-      ),
-    );
-
-    if (!_refractsContent) {
-      _warp.layer = null;
-      clipped(context, offset);
-      return;
-    }
-    // Clip inside the filter, not around it. Impeller sizes a filter's input
-    // to its clip; a clip that follows the pill moves that input by fractions
-    // of a pixel each frame, so the shader resampled the glyphs at a shifting
-    // phase and they shook in place. The shader only pulls samples inward from
-    // the contour, so clipping first leaves its output unchanged.
-    final lens = _warp.layer ??= _ContentLensLayer(this);
-    lens.invalidate();
-    final layer = lens.filter..offset = offset;
-    context.pushLayer(
-      lens,
-      (context, _) => context.pushLayer(layer, (context, _) {
-        // Establish the full foreground source extent. Glyph-only ink bounds
-        // otherwise shift the shader's lens coordinate system.
-        context.canvas.drawRect(
-          Offset.zero & size,
-          Paint()
-            ..color = const Color(0x00000000)
-            ..blendMode = BlendMode.src,
-        );
-        clipped(context, Offset.zero);
-      }, offset),
-      offset,
-    );
-  }
-
-  @override
-  void dispose() {
-    _clip.layer = null;
-    _outsideClip.layer = null;
-    _filter.layer = null;
-    _warp.layer = null;
-    _scaled.layer = null;
-    _outsideScaled.layer = null;
-    super.dispose();
-  }
-}
-
-/// Configures the content lens filter at composition. The filter maps its
-/// raster with the composited device scale, which an animating ancestor
-/// transform changes without repainting the tab bar beneath a repaint
-/// boundary. The composited scale, unlike the laid-out one, also excludes an
-/// ancestor `ImageFilter.matrix`, which scales this raster only afterwards.
-class _ContentLensLayer extends ContainerLayer {
-  _ContentLensLayer(this.window);
-  final _RenderSelectionWindow window;
-  // The handle keeps the child alive while it is detached between repaints.
-  final _filter = LayerHandle<ImageFilterLayer>(ImageFilterLayer());
-  ImageFilterLayer get filter => _filter.layer!;
-  double? _deviceScale;
-
-  /// Rebuilds the filter at the next composition; the window repainted.
-  void invalidate() => _deviceScale = null;
-
-  @override
-  bool get alwaysNeedsAddToScene => true;
-
-  @override
-  void addToScene(ui.SceneBuilder builder) {
-    final scale = compositedTransform(this).getMaxScaleOnAxis();
-    if (scale != _deviceScale || filter.imageFilter == null) {
-      _deviceScale = scale;
-      filter.imageFilter = window._contentFilter(scale);
-    }
-    addChildrenToScene(builder);
-  }
-
-  @override
-  void dispose() {
-    _filter.layer = null;
-    super.dispose();
-  }
-}
-
 class _LensHalo extends CustomPainter {
-  const _LensHalo(this.centre, this.diameter, this.opacity, this.blurRadius);
+  const _LensHalo(
+    this.centre,
+    this.diameter,
+    this.opacity,
+    this.blurRadius, {
+    required this.housing,
+    required this.housingScale,
+  });
   final Offset centre;
   final double diameter, opacity, blurRadius;
 
+  /// The housing contour and its flex expansion about the bar's centre. The
+  /// glow is clipped to the housing as drawn: clipped to the resting contour,
+  /// its hard edge sat inside the expanded housing as a second, inset rim
+  /// with a lighter patch inside it, which the lens then magnified.
+  final GlassShape housing;
+  final double housingScale;
+
   @override
   void paint(Canvas canvas, Size size) {
+    final centreOfBar = size.center(Offset.zero);
+    final expand = Matrix4.translationValues(centreOfBar.dx, centreOfBar.dy, 0)
+      ..scaleByDouble(housingScale, housingScale, 1, 1)
+      ..translateByDouble(-centreOfBar.dx, -centreOfBar.dy, 0, 1);
+    canvas.save();
+    canvas.clipPath(housing.path(size).transform(expand.storage));
     canvas.drawCircle(
       centre,
       diameter / 2,
@@ -1326,6 +1126,7 @@ class _LensHalo extends CustomPainter {
         ..color = Color.from(alpha: opacity, red: 1, green: 1, blue: 1)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurRadius),
     );
+    canvas.restore();
   }
 
   @override
@@ -1333,7 +1134,9 @@ class _LensHalo extends CustomPainter {
       centre != old.centre ||
       diameter != old.diameter ||
       opacity != old.opacity ||
-      blurRadius != old.blurRadius;
+      blurRadius != old.blurRadius ||
+      housing != old.housing ||
+      housingScale != old.housingScale;
 }
 
 /// The selection's own blur. Native adds a 2-point blur under the pill, which

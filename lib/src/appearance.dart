@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'glass_transition.dart';
 import 'material.dart';
 import 'motion.dart';
 import 'style.dart';
@@ -33,7 +34,20 @@ class GlassLensStyle {
     this.ringBlur,
     this.ringWidth,
     this.ringOffset,
+    this.rimWidth,
+    this.rimRefraction,
+    this.rimLight,
+    this.chromaticAberration,
+    this.chromaticBand,
+    this.faceBlack,
+    this.heldContactShadow,
   }) : assert(blur == null || blur >= 0 && blur <= 12),
+       assert(rimWidth == null || rimWidth >= 0),
+       assert(rimRefraction == null || rimRefraction >= 0),
+       assert(rimLight == null || rimLight >= 0),
+       assert(chromaticAberration == null || chromaticAberration >= 0),
+       assert(chromaticBand == null || chromaticBand >= 0),
+       assert(faceBlack == null || faceBlack >= 0 && faceBlack <= 1),
        assert(
          shadowOpacity == null || shadowOpacity >= 0 && shadowOpacity <= 1,
        ),
@@ -64,6 +78,39 @@ class GlassLensStyle {
   final double? ringWidth;
   final Offset? ringOffset;
 
+  /// Width of the refracting rim band, in points for a 37.2-point-tall lens
+  /// (the held small-control height); it scales with the actual lens height.
+  /// The slider defaults to its measured 6.66; other lenses keep their fitted
+  /// default. Ignored when [optics] is supplied.
+  final double? rimWidth;
+
+  /// Rim displacement of the fully lifted lens, in points for a 37.2-point-tall
+  /// lens, scaled like [rimWidth]. The slider defaults to its measured 11.1.
+  final double? rimRefraction;
+
+  /// Strength of the rim key/fill highlights and side shading at full lift.
+  /// The slider defaults to a fitted 1.0; other lenses to 0.6.
+  final double? rimLight;
+
+  /// Red–blue split along the rim at full lift, in points (not height-scaled).
+  /// Defaults to 3.5 for segmented selections and tab pills, 0 for switch
+  /// thumbs and slider knobs. Zero disables this fringe independently of
+  /// generic [optics] dispersion. The tab bar's rimRefraction scales it too.
+  final double? chromaticAberration;
+
+  /// Depth of the chromatic rim band in points; defaults to 4.8.
+  /// Zero disables the fringe. Independent of [rimWidth] and [optics].
+  final double? chromaticBand;
+
+  /// Black point of the lens face, 0–1: the face shows `b + (1 - b) * color`,
+  /// which lightens dark backdrops seen through the lens. The slider defaults
+  /// to its measured 0.1; other lenses to 0.
+  final double? faceBlack;
+
+  /// Keep the contact shadow (opacity .14, radius 5, offset 1) under the
+  /// lifted lens. The slider defaults true, as measured; others false.
+  final bool? heldContactShadow;
+
   /// Keep existing fields when an argument is null.
   GlassLensStyle copyWith({
     Glass? glass,
@@ -80,6 +127,13 @@ class GlassLensStyle {
     double? ringBlur,
     double? ringWidth,
     Offset? ringOffset,
+    double? rimWidth,
+    double? rimRefraction,
+    double? rimLight,
+    double? chromaticAberration,
+    double? chromaticBand,
+    double? faceBlack,
+    bool? heldContactShadow,
   }) => GlassLensStyle(
     glass: glass ?? this.glass,
     optics: optics ?? this.optics,
@@ -95,6 +149,13 @@ class GlassLensStyle {
     ringBlur: ringBlur ?? this.ringBlur,
     ringWidth: ringWidth ?? this.ringWidth,
     ringOffset: ringOffset ?? this.ringOffset,
+    rimWidth: rimWidth ?? this.rimWidth,
+    rimRefraction: rimRefraction ?? this.rimRefraction,
+    rimLight: rimLight ?? this.rimLight,
+    chromaticAberration: chromaticAberration ?? this.chromaticAberration,
+    chromaticBand: chromaticBand ?? this.chromaticBand,
+    faceBlack: faceBlack ?? this.faceBlack,
+    heldContactShadow: heldContactShadow ?? this.heldContactShadow,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -115,6 +176,13 @@ class GlassLensStyle {
           ringBlur: other.ringBlur ?? ringBlur,
           ringWidth: other.ringWidth ?? ringWidth,
           ringOffset: other.ringOffset ?? ringOffset,
+          rimWidth: other.rimWidth ?? rimWidth,
+          rimRefraction: other.rimRefraction ?? rimRefraction,
+          rimLight: other.rimLight ?? rimLight,
+          chromaticAberration: other.chromaticAberration ?? chromaticAberration,
+          chromaticBand: other.chromaticBand ?? chromaticBand,
+          faceBlack: other.faceBlack ?? faceBlack,
+          heldContactShadow: other.heldContactShadow ?? heldContactShadow,
         );
 }
 
@@ -316,6 +384,7 @@ class GlassSliderStyle {
     this.thumbColor,
     this.trackShape,
     this.lens,
+    this.haptics,
   }) : assert(width == null || width > 0),
        assert(scale == null || scale > 0),
        assert(hitHeight == null || hitHeight >= 44),
@@ -345,6 +414,10 @@ class GlassSliderStyle {
   /// Component-specific overrides of the shared theme lens.
   final GlassLensStyle? lens;
 
+  /// Light impact on iOS when user input reaches the minimum or maximum.
+  /// Defaults on; the slider's `haptics` argument takes precedence.
+  final bool? haptics;
+
   /// Keep existing fields when an argument is null.
   GlassSliderStyle copyWith({
     double? width,
@@ -358,6 +431,7 @@ class GlassSliderStyle {
     Color? thumbColor,
     GlassShape? trackShape,
     GlassLensStyle? lens,
+    bool? haptics,
   }) => GlassSliderStyle(
     width: width ?? this.width,
     scale: scale ?? this.scale,
@@ -370,6 +444,7 @@ class GlassSliderStyle {
     thumbColor: thumbColor ?? this.thumbColor,
     trackShape: trackShape ?? this.trackShape,
     lens: lens ?? this.lens,
+    haptics: haptics ?? this.haptics,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -387,8 +462,12 @@ class GlassSliderStyle {
           thumbColor: other.thumbColor ?? thumbColor,
           trackShape: other.trackShape ?? trackShape,
           lens: (lens ?? const GlassLensStyle()).merge(other.lens),
+          haptics: other.haptics ?? haptics,
         );
 }
+
+/// Fixed native fixture width, or equal slots fitted to Text/RichText labels.
+enum GlassSegmentedSizing { fixed, fitLabels }
 
 /// Segmented track, typography and selection geometry.
 ///
@@ -397,6 +476,8 @@ class GlassSliderStyle {
 class GlassSegmentedStyle {
   const GlassSegmentedStyle({
     this.width,
+    this.sizing,
+    this.labelPadding,
     this.scale,
     this.hitHeight,
     this.trackHeight,
@@ -410,15 +491,32 @@ class GlassSegmentedStyle {
     this.selectedForegroundColor,
     this.trackShape,
     this.lens,
+    this.refractContent,
+    this.contentRefraction,
+    this.contentDepth,
   }) : assert(width == null || width > 0),
        assert(scale == null || scale > 0),
        assert(hitHeight == null || hitHeight >= 44),
        assert(trackHeight == null || trackHeight > 0),
        assert(thumbHeight == null || thumbHeight > 0),
-       assert(selectionInset == null || selectionInset >= 0);
+       assert(selectionInset == null || selectionInset >= 0),
+       assert(
+         contentRefraction == null ||
+             (contentRefraction >= 0 && contentRefraction <= 64),
+       ),
+       assert(contentDepth == null || contentDepth > 0);
 
   /// Preferred width before scaling; parent constraints still apply.
   final double? width;
+
+  /// Defaults to fixed (300 points). Fit uses the widest Text/RichText label.
+  /// For custom widget labels, supply [width] explicitly.
+  final GlassSegmentedSizing? sizing;
+
+  /// Fit-label room around the widest label, before scale. Defaults to 10
+  /// horizontal (measured: a fixed-size iOS 27 Picker gives each segment the
+  /// widest label plus about 10 points a side) and 8 vertical.
+  final EdgeInsetsGeometry? labelPadding;
 
   /// Proportional geometry scale. Touch height remains at least 44 points.
   final double? scale;
@@ -441,9 +539,17 @@ class GlassSegmentedStyle {
   /// Component-specific overrides of the shared theme lens.
   final GlassLensStyle? lens;
 
+  /// Refract the labels near the held selection's rim. Defaults true.
+  final bool? refractContent;
+
+  /// Label displacement magnitude and rim depth; defaults 14 and 11.2.
+  final double? contentRefraction, contentDepth;
+
   /// Keep existing fields when an argument is null.
   GlassSegmentedStyle copyWith({
     double? width,
+    GlassSegmentedSizing? sizing,
+    EdgeInsetsGeometry? labelPadding,
     double? scale,
     double? hitHeight,
     double? trackHeight,
@@ -457,8 +563,13 @@ class GlassSegmentedStyle {
     Color? selectedForegroundColor,
     GlassShape? trackShape,
     GlassLensStyle? lens,
+    bool? refractContent,
+    double? contentRefraction,
+    double? contentDepth,
   }) => GlassSegmentedStyle(
     width: width ?? this.width,
+    sizing: sizing ?? this.sizing,
+    labelPadding: labelPadding ?? this.labelPadding,
     scale: scale ?? this.scale,
     hitHeight: hitHeight ?? this.hitHeight,
     trackHeight: trackHeight ?? this.trackHeight,
@@ -473,6 +584,9 @@ class GlassSegmentedStyle {
         selectedForegroundColor ?? this.selectedForegroundColor,
     trackShape: trackShape ?? this.trackShape,
     lens: lens ?? this.lens,
+    refractContent: refractContent ?? this.refractContent,
+    contentRefraction: contentRefraction ?? this.contentRefraction,
+    contentDepth: contentDepth ?? this.contentDepth,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -480,6 +594,8 @@ class GlassSegmentedStyle {
       ? this
       : GlassSegmentedStyle(
           width: other.width ?? width,
+          sizing: other.sizing ?? sizing,
+          labelPadding: other.labelPadding ?? labelPadding,
           scale: other.scale ?? scale,
           hitHeight: other.hitHeight ?? hitHeight,
           trackHeight: other.trackHeight ?? trackHeight,
@@ -494,6 +610,9 @@ class GlassSegmentedStyle {
               other.selectedForegroundColor ?? selectedForegroundColor,
           trackShape: other.trackShape ?? trackShape,
           lens: (lens ?? const GlassLensStyle()).merge(other.lens),
+          refractContent: other.refractContent ?? refractContent,
+          contentRefraction: other.contentRefraction ?? contentRefraction,
+          contentDepth: other.contentDepth ?? contentDepth,
         );
 }
 
@@ -508,6 +627,8 @@ class GlassToolbarStyle {
     this.inset,
     this.spacing,
     this.iconSize,
+    this.badgeColor,
+    this.badgeTextStyle,
     this.foregroundColor,
     this.pressedColor,
     this.shape,
@@ -516,17 +637,30 @@ class GlassToolbarStyle {
     this.optics,
     this.blur,
     this.motion,
+    this.itemTransition,
+    this.itemTransitionStyle,
+    this.groupSpacing,
+    this.backIcon,
+    this.closeIcon,
+    this.backIconShift,
+    this.backIconMirrors,
   }) : assert(height == null || height >= 44),
        assert(inset == null || inset >= 0),
        assert(spacing == null || spacing >= 0),
        assert(iconSize == null || iconSize > 0),
-       assert(blur == null || blur >= 0 && blur <= 12);
+       assert(blur == null || blur >= 0 && blur <= 12),
+       assert(groupSpacing == null || groupSpacing >= 0);
   final GlassToolbarSize? size;
   final double? height;
   final double? inset;
   final double? spacing;
   final double? iconSize;
   final Color? foregroundColor;
+
+  /// Badge fill and count typography; null inherits the theme, then the
+  /// measured system red and 12-point medium white.
+  final Color? badgeColor;
+  final TextStyle? badgeTextStyle;
   final Color? pressedColor;
   final GlassShape? shape;
   final GlassShape? itemShape;
@@ -537,6 +671,32 @@ class GlassToolbarStyle {
   final double? blur;
   final GlassMotion? motion;
 
+  /// How items added to or removed from a group arrive and leave: the capsule
+  /// resizes while the item materializes. Defaults to
+  /// [GlassTransition.materialize]; [GlassTransition.identity] swaps at once.
+  final GlassTransition? itemTransition;
+
+  /// Timing of [itemTransition] and of whole groups appearing in a
+  /// [LiquidPrismToolbar]. Defaults to the theme's transition style.
+  final GlassTransitionStyle? itemTransitionStyle;
+
+  /// Gap between the capsules of a [LiquidPrismToolbar]. Defaults to 8.
+  final double? groupSpacing;
+
+  /// The glyphs of [LiquidPrismBackButton], including the one
+  /// [LiquidPrismScaffold] implies. Default to the back chevron and the
+  /// close mark.
+  final Widget? backIcon, closeIcon;
+
+  /// How far the back glyph moves toward its point, in logical pixels, so
+  /// its visual mass sits on the circle's centre. Defaults to .5.
+  final double? backIconShift;
+
+  /// Whether the back glyph points the other way in right-to-left layouts,
+  /// as the default chevron does; the shift follows it. Set false for a
+  /// glyph that draws the same in both directions. Defaults to true.
+  final bool? backIconMirrors;
+
   /// Keep existing fields when an argument is null.
   GlassToolbarStyle copyWith({
     GlassToolbarSize? size,
@@ -544,6 +704,8 @@ class GlassToolbarStyle {
     double? inset,
     double? spacing,
     double? iconSize,
+    Color? badgeColor,
+    TextStyle? badgeTextStyle,
     Color? foregroundColor,
     Color? pressedColor,
     GlassShape? shape,
@@ -552,12 +714,21 @@ class GlassToolbarStyle {
     LiquidPrismStyle? optics,
     double? blur,
     GlassMotion? motion,
+    GlassTransition? itemTransition,
+    GlassTransitionStyle? itemTransitionStyle,
+    double? groupSpacing,
+    Widget? backIcon,
+    Widget? closeIcon,
+    double? backIconShift,
+    bool? backIconMirrors,
   }) => GlassToolbarStyle(
     size: size ?? this.size,
     height: height ?? this.height,
     inset: inset ?? this.inset,
     spacing: spacing ?? this.spacing,
     iconSize: iconSize ?? this.iconSize,
+    badgeColor: badgeColor ?? this.badgeColor,
+    badgeTextStyle: badgeTextStyle ?? this.badgeTextStyle,
     foregroundColor: foregroundColor ?? this.foregroundColor,
     pressedColor: pressedColor ?? this.pressedColor,
     shape: shape ?? this.shape,
@@ -566,6 +737,13 @@ class GlassToolbarStyle {
     optics: optics ?? this.optics,
     blur: blur ?? this.blur,
     motion: motion ?? this.motion,
+    itemTransition: itemTransition ?? this.itemTransition,
+    itemTransitionStyle: itemTransitionStyle ?? this.itemTransitionStyle,
+    groupSpacing: groupSpacing ?? this.groupSpacing,
+    backIcon: backIcon ?? this.backIcon,
+    closeIcon: closeIcon ?? this.closeIcon,
+    backIconShift: backIconShift ?? this.backIconShift,
+    backIconMirrors: backIconMirrors ?? this.backIconMirrors,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -577,6 +755,10 @@ class GlassToolbarStyle {
           inset: other.inset ?? inset,
           spacing: other.spacing ?? spacing,
           iconSize: other.iconSize ?? iconSize,
+          badgeColor: other.badgeColor ?? badgeColor,
+          badgeTextStyle:
+              badgeTextStyle?.merge(other.badgeTextStyle) ??
+              other.badgeTextStyle,
           foregroundColor: other.foregroundColor ?? foregroundColor,
           pressedColor: other.pressedColor ?? pressedColor,
           shape: other.shape ?? shape,
@@ -585,6 +767,16 @@ class GlassToolbarStyle {
           optics: other.optics ?? optics,
           blur: other.blur ?? blur,
           motion: other.motion ?? motion,
+          itemTransition: other.itemTransition ?? itemTransition,
+          itemTransitionStyle:
+              (itemTransitionStyle ?? const GlassTransitionStyle()).merge(
+                other.itemTransitionStyle,
+              ),
+          groupSpacing: other.groupSpacing ?? groupSpacing,
+          backIcon: other.backIcon ?? backIcon,
+          closeIcon: other.closeIcon ?? closeIcon,
+          backIconShift: other.backIconShift ?? backIconShift,
+          backIconMirrors: other.backIconMirrors ?? backIconMirrors,
         );
 }
 

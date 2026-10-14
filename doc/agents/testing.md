@@ -62,6 +62,12 @@ PRISM_LENS_OUT=<absolute-output-directory> \
 dart test_driver/unified_lens_video.dart
 ```
 
+For gesture ownership (angles, flicks, holds on inactive parts, a scroll view
+competing for the drag), run `test_driver/controls.dart` and then
+`dart test_driver/gesture_ownership.dart` with `DART_VM_SERVICE_URL` set; it
+prints PASS/FAIL per case. The native counterpart is `ControlGestureTests` in
+`tool/native_control_probe`.
+
 Use a fresh output directory. Optional `PRISM_LENS_CASES=tabs` selects a component;
 `PRISM_LENS_DARK=true` checks dark appearance. Compare geometry from fixture layout
 responses before comparing captures. See [native comparison](native-comparison.md).
