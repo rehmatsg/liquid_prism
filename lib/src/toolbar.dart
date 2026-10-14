@@ -367,10 +367,12 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
           if (presence < 1) {
             group = IgnorePointer(
               child: ClipRect(
+                // Shrink-wrapped across the axis too: a null factor would
+                // fill the height a bar offers and centre the capsules in it.
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
-                  widthFactor: vertical ? null : presence,
-                  heightFactor: vertical ? presence : null,
+                  widthFactor: vertical ? 1 : presence,
+                  heightFactor: vertical ? presence : 1,
                   child: group,
                 ),
               ),

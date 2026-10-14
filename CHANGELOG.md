@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.5.2
+
+- Fix the action capsules jumping to the middle of the screen while a new
+  capsule grew in (an empty group gaining an item): the entering group now
+  keeps the bar's height instead of filling the height the bar offers.
+
 ## 0.5.1
 
 - Content now starts 16 points below the bar's controls, matching the

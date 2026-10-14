@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'liquid_prism'
-  s.version          = '0.5.1'
+  s.version          = '0.5.2'
   s.summary          = 'Glass components with native UIKit popup menus.'
   s.description      = 'Liquid Prism includes the Liquid Menu UIKit bridge for real native popup presentation.'
   s.homepage         = 'https://github.com/rehmatsg/liquid_prism'
