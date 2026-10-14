@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Toolbar items entering or leaving now hold their final size and place:
+  only their slot grows or shrinks (so the capsule resizes and neighbours
+  slide), while the item blurs and fades, pinned to the side of the group
+  its parent holds still. They no longer slide, scale or crop.
+- Glass content now blurs as well as fades whenever glass enters or leaves,
+  including Reduce Motion and presences that do not grow the lens (such as
+  the search field's cancel action), as iOS does.
 - Add `LiquidPrismSearchField.cancelVisibility` (and
   `GlassSearchStyle.cancelVisibility`): `GlassSearchCancelVisibility.always`
   keeps the cancel action visible and tappable while the field is unfocused,

@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -72,7 +74,8 @@ class LiquidPrismPresence extends StatefulWidget {
   /// Blur of foreground content at zero presence.
   final double contentBlur;
 
-  /// False fades only, without growing the lens or blurring content.
+  /// False keeps the lens at full size: the material fades through its
+  /// optics without growing in. Content blurs and fades either way.
   final bool materialize;
   final Widget child;
 
@@ -244,6 +247,44 @@ class _LiquidPrismVisibilityState extends State<LiquidPrismVisibility>
           materialize: !_reduceMotion,
           child: widget.child,
         ),
+      ),
+    );
+  }
+}
+
+/// Content entering or leaving with glass, as iOS does: it blurs and fades
+/// out as [presence] falls to 0 and sharpens in as it returns, without
+/// moving or scaling. At full presence it adds no layers, so child state and
+/// paint are untouched.
+class GlassContentPresence extends StatelessWidget {
+  const GlassContentPresence({
+    super.key,
+    required this.presence,
+    required this.blur,
+    required this.child,
+  });
+
+  /// 0 (absent) to 1; clamped.
+  final double presence;
+
+  /// Gaussian blur, in logical pixels, at zero presence.
+  final double blur;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = presence.clamp(0.0, 1.0);
+    final sigma = (1 - p) * blur;
+    return Opacity(
+      opacity: p,
+      child: ImageFiltered(
+        enabled: sigma > .05,
+        imageFilter: ui.ImageFilter.blur(
+          sigmaX: sigma,
+          sigmaY: sigma,
+          tileMode: ui.TileMode.decal,
+        ),
+        child: child,
       ),
     );
   }

@@ -473,6 +473,9 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     ],
                     [
                       GlassToolbarItem(
+                        // One item whose glyph and label change, so it swaps
+                        // in place rather than leaving and re-entering.
+                        key: const ValueKey('toggle-star'),
                         icon: Icon(
                           extraAction
                               ? CupertinoIcons.minus_circle
