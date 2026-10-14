@@ -31,7 +31,6 @@ flutter:
         pluginClass: LiquidPrismPlugin
   shaders:
     - shaders/edge_blur.frag
-    - shaders/edge_haze.frag
     - shaders/glass.frag
     - shaders/glass_batch.frag
     - shaders/tab_content.frag

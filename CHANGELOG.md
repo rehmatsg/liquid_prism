@@ -9,6 +9,12 @@
 - Cheaper scroll-edge blur pass (about 15% less fragment time on the default
   strips) and tab foreground lens (about half, skipping the contour search
   outside the pill's box), with no visible change.
+- The scroll edge haze no longer blurs the whole screen every frame. It was a
+  blur composed under a mask shader, and Impeller limits only the outermost
+  backdrop filter to its clip, so the inner blur ran over the full capture.
+  The haze is now a plain blur clipped to the strips, weighted by a `dstIn`
+  gradient child; captures match the previous output within 1/255. The
+  `edge_haze.frag` shader asset is removed.
 
 ## 0.5.3
 

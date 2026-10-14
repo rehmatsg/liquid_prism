@@ -118,12 +118,16 @@ saturate) and, from a 1.5-texel sigma up, the kernel ends at 2.88 sigma
 carries too much weight to drop, so 3 sigma stays.
 
 The haze (`GlassEdgeBlur.haze`) is a third backdrop filter after the vertical
-pass: `ImageFilter.compose(outer: shader(edge_haze.frag), inner:
-ImageFilter.blur(sigma))`. The engine blurs the capture (downsampled, cheap)
-and the mask shader scales the result's premultiplied colour by a per-row
-weight (`u_start`/`u_end`: extent, opacity, plateau), so composited over the
-pass it blends the heavy blur in by that weight, as native bars composite a
-16-point blur at half opacity under a linear mask. Hoisted, it reads
+pass: a plain `ImageFilter.blur(sigma)` whose backdrop layer has one child, a
+`dstIn` linear gradient (`_paintHazeWeights`) that scales the blurred strip
+by its per-row weight (opacity over the plateau fraction, then linearly to
+zero), so composited over the pass it blends the heavy blur in by that
+weight, as native bars composite a 16-point blur at half opacity under a
+linear mask. Keep the blur the top-level filter: Impeller passes a coverage
+hint (the clip) only to the outermost filter, so a blur composed under a
+shader or colour filter is computed over the whole captured screen every
+frame. The hoisted haze uses its own backdrop layer whose gradient is
+recorded in the host's space. Hoisted, it reads
 `sharedKey` like the vertical pass. It is skipped in the texture frame. Under
 an isolating ancestor the effect filters its child's raster through a
 composed `ImageFilter` on its content layer instead, and adds no backdrop

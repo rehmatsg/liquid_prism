@@ -68,7 +68,6 @@ class LiquidPrism extends StatefulWidget {
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
   static ui.FragmentProgram? _edgeProgram;
-  static ui.FragmentProgram? _hazeProgram;
   static ui.Image? _linearSampler;
   static Future<void>? _loading;
 
@@ -107,9 +106,6 @@ class LiquidPrism extends StatefulWidget {
         _edgeProgram ??= await ui.FragmentProgram.fromAsset(
           'packages/liquid_prism/shaders/edge_blur.frag',
         );
-        _hazeProgram ??= await ui.FragmentProgram.fromAsset(
-          'packages/liquid_prism/shaders/edge_haze.frag',
-        );
       } catch (error) {
         // Edge blurs are optional; their fades still paint.
         debugPrint('LiquidPrism: edge blur unavailable: $error');
@@ -135,18 +131,6 @@ class LiquidPrism extends StatefulWidget {
   /// backdrop sampler is bound linear the same way.
   static ui.FragmentShader? _createEdgeShader() {
     final shader = _edgeProgram?.fragmentShader();
-    if (shader != null && _linearSampler != null) {
-      shader.setImageSampler(
-        0,
-        _linearSampler!,
-        filterQuality: ui.FilterQuality.low,
-      );
-    }
-    return shader;
-  }
-
-  static ui.FragmentShader? _createHazeShader() {
-    final shader = _hazeProgram?.fragmentShader();
     if (shader != null && _linearSampler != null) {
       shader.setImageSampler(
         0,
