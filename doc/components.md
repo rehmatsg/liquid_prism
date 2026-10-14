@@ -264,7 +264,10 @@ controller. Pinned `SliverPersistentHeader`s pin below the bar, and
 `SliverFillRemaining` fills the space between the insets, for empty and error
 states. `bottomBar` pins a bar above the home indicator, tab bar or keyboard;
 content under it takes a bottom scroll edge effect in the same glass group as
-the top one. A `body` still works for content that builds its own scrollable:
+the top one. Like a Material `bottomNavigationBar`, it is offered the screen's
+height and must size to its content: an `Align` or a presence animation that
+fills its constraints would cover the page, so wrap one in
+`Column(mainAxisSize: MainAxisSize.min)`. A `body` still works for content that builds its own scrollable:
 the insets arrive as `MediaQuery.padding`. When that body's lists sit one level
 down, as in a tab view, pass `scrollDepth: 1`.
 
@@ -274,6 +277,12 @@ fades in once it has, as after a large title. Titles focus in and out through
 a blur as they fade, on springs (`GlassNavigationBarStyle.revealSpring`). With
 actions in the bar the inline title leads, after the leading control; without
 them it centres.
+
+`trailing:` places a widget of your own before the action capsules, such as a
+credits pill or a counter, centred on the control row 8 points from the first
+capsule (or at the trailing edge without actions); the title leads beside it
+as beside actions. An interactive heading, such as a feed switcher with a
+menu, belongs in `leading`, which takes any widget.
 
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
 iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`
@@ -302,7 +311,7 @@ CustomScrollView(
 ```
 
 It takes `leading` (or implies a back or close button), `title`,
-`largeTitle`, `actions`, `accessory`, `backgroundColor` (the fade colour),
+`largeTitle`, `subtitle`, `actions`, `trailing`, `accessory`, `sheet`, `backgroundColor` (the fade colour),
 `scrollEdge`, `scrollEdgeStyle` and `navigationBarStyle`, with the scaffold's
 measured geometry: 16-point edges, the 44-point control row under the status
 bar, a 52-point large title row that rides the scroll before the titles swap

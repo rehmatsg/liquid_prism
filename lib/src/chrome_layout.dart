@@ -115,6 +115,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions = const [],
+    this.trailing,
     this.accessory,
     this.tabBar,
     this.placement,
@@ -222,6 +223,12 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// nothing and materializes in when it gains an item. In the rail they
   /// stack, and fold into one "More" menu when they do not fit.
   final List<Object> actions;
+
+  /// A widget in the top bar before the [actions], such as a status pill or
+  /// a counter: laid out as given, without glass of its own, centred on the
+  /// controls' row 8 points from the first capsule (or at the trailing edge
+  /// without actions). The inline title leads beside it as beside actions.
+  final Widget? trailing;
 
   /// The trailing capsules, in order.
   List<List<GlassToolbarItem>> get _actionGroups => glassActionGroups(actions);
@@ -588,7 +595,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _largeFade.value = _inlineFade.value = 0;
     }
     // With actions in the bar, the title leads instead of centring.
-    final titleLeads = widget._allActions.isNotEmpty;
+    final titleLeads = widget._allActions.isNotEmpty || widget.trailing != null;
     // The shared glass content blur, so titles focus in like glass content.
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
     Widget header(Widget child, TextStyle style, {required bool large}) {
@@ -636,6 +643,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         widget.title != null ||
         widget.largeTitle != null ||
         leading != null ||
+        widget.trailing != null ||
         // Native keeps the bar row with the sidebar shown or hidden, so
         // content does not jump when the toggle moves into it.
         sidebarTabs != null ||
@@ -871,6 +879,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     ),
             ),
           ),
+        if (widget.trailing case final trailing?)
+          LayoutId(
+            id: _Slot.trailing,
+            child: GlassGroupMembers(child: trailing),
+          ),
         // A bottom tab bar would sit under the keyboard; native hides it too.
         if (showTabBar)
           LayoutId(
@@ -1009,6 +1022,7 @@ enum _Slot {
   sidebarToggle,
   leading,
   actions,
+  trailing,
   tabBar,
 }
 
@@ -1211,6 +1225,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
   // Measured on iOS 27 simulators; see doc/native_adaptive_layout.md.
   static const _edge = 16.0;
+
+  /// Between [LiquidPrismScaffold.trailing] and the first capsule, as the
+  /// capsules space themselves.
+  static const _trailingGap = 8.0;
   static const _minimumTop = 24.0;
   // Measured: in a sheet the bar's controls sit 16 pt below its top.
   static const _sheetTop = 16.0;
@@ -1408,6 +1426,22 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           Offset(x, top + math.max(0, (barRow - actions.height) / 2)),
         );
       }
+    }
+
+    if (hasChild(_Slot.trailing)) {
+      // Before the capsules in the bar, or at its trailing edge.
+      final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
+      final x = rtl
+          ? (actionsInBar ? leadingEnd + _trailingGap : barLeft + _edge)
+          : (actionsInBar ? trailingStart - _trailingGap : barRight - _edge) -
+                child.width;
+      if (rtl) {
+        leadingEnd = x + child.width;
+      } else {
+        trailingStart = x;
+      }
+      actionsInBar = true;
+      positionChild(_Slot.trailing, Offset(x, centred(child)));
     }
 
     if (hasChild(_Slot.title)) {
@@ -1653,7 +1687,9 @@ class _SliverPageState extends State<_SliverPage> {
                   ),
                 ),
           ),
-        SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+        // Pinned and empty: content scrolls under the bar, while the app's
+        // own pinned headers stack below it rather than behind it.
+        SliverPersistentHeader(pinned: true, delegate: _TopInset(padding.top)),
         SliverPadding(
           padding: EdgeInsets.only(left: padding.left, right: padding.right),
           sliver: SliverMainAxisGroup(
@@ -1673,6 +1709,21 @@ class _SliverPageState extends State<_SliverPage> {
       ],
     );
   }
+}
+
+/// The bar's inset as a pinned sliver that paints nothing.
+class _TopInset extends SliverPersistentHeaderDelegate {
+  _TopInset(this.extent);
+  final double extent;
+  @override
+  double get minExtent => extent;
+  @override
+  double get maxExtent => extent;
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      const SizedBox.expand();
+  @override
+  bool shouldRebuild(_TopInset old) => old.extent != extent;
 }
 
 /// Reports its child's laid-out height after each layout that changes it.

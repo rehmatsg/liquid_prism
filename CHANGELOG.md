@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Pinned `SliverPersistentHeader`s in `LiquidPrismScaffold.slivers` now pin
+  below the bar, as documented, instead of behind it: the bar's inset is a
+  pinned sliver, so a page's sticky tabs stack beneath the controls while
+  content still scrolls under the bar.
+- Add `trailing` to `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`: a
+  widget of your own before the action capsules, such as a status pill.
+
 ## 0.4.0
 
 - Fix a second hoisted edge effect (a bottom bar's under a top bar's) being

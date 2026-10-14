@@ -46,6 +46,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions = const [],
+    this.trailing,
     this.accessory,
     this.backgroundColor,
     this.scrollEdge = true,
@@ -77,6 +78,9 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
   /// Top-trailing actions: [GlassToolbarItem]s or lists of them, as
   /// [LiquidPrismScaffold.actions].
   final List<Object> actions;
+
+  /// A widget before the [actions], as [LiquidPrismScaffold.trailing].
+  final Widget? trailing;
 
   /// A row below the bar and inside its scroll edge effect, such as segmented
   /// tabs. Pair it with [GlassScrollEdgeVariant.hard] for a bar with a hard
@@ -457,7 +461,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                   bar.subtitle,
                   _d.subtitleStyle,
                   large: false,
-                  leading: bar.actions.isNotEmpty,
+                  leading: bar.actions.isNotEmpty || bar.trailing != null,
                 ),
                 _d.titleStyle,
                 large: false,
@@ -478,13 +482,15 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                       size: GlassToolbarSize.navigation,
                     ),
             ),
+          if (bar.trailing case final trailing?)
+            LayoutId(id: _Slot.trailing, child: trailing),
         ],
       ),
     );
   }
 }
 
-enum _Slot { edge, leading, actions, title, largeTitle, accessory }
+enum _Slot { edge, leading, actions, trailing, title, largeTitle, accessory }
 
 class _SliverBarLayout extends MultiChildLayoutDelegate {
   _SliverBarLayout({
@@ -512,6 +518,9 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
 
   /// The controls' measured inset from the screen edges.
   static const _edge = 16.0;
+
+  /// Between the trailing widget and the first capsule.
+  static const _trailingGap = 8.0;
 
   @override
   void performLayout(Size size) {
@@ -560,6 +569,21 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       }
       positionChild(_Slot.actions, Offset(x, centred(child)));
     }
+    if (hasChild(_Slot.trailing)) {
+      // Before the capsules, or at the trailing edge without them.
+      final actions = hasChild(_Slot.actions);
+      final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
+      final x = rtl
+          ? (actions ? leadingEnd + _trailingGap : _edge)
+          : (actions ? trailingStart - _trailingGap : size.width - _edge) -
+                child.width;
+      if (rtl) {
+        leadingEnd = x + child.width;
+      } else {
+        trailingStart = x;
+      }
+      positionChild(_Slot.trailing, Offset(x, centred(child)));
+    }
     if (hasChild(_Slot.title)) {
       final centre = size.width / 2;
       final left = math.max(gutter, leadingEnd + (leadingEnd > 0 ? gap : 0));
@@ -567,7 +591,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         size.width - gutter,
         trailingStart - (trailingStart < size.width ? gap : 0),
       );
-      if (hasChild(_Slot.actions)) {
+      if (hasChild(_Slot.actions) || hasChild(_Slot.trailing)) {
         // Beside actions the title leads, after the leading control.
         final title = layoutChild(
           _Slot.title,
