@@ -15,7 +15,6 @@ vec3 readScene(vec2 px) {
     #endif
     return texture(u_backdrop, uv).rgb;
 }
-vec3 sampleLocal(vec2 p) { return readScene(scenePoint(p)); }
 
 // The backdrop has already been Gaussian filtered, before refraction. Integrate
 // the mapped pixel footprint only where the lens compresses that source.
@@ -24,18 +23,20 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
     float dyy = dot(dy, dy);
     float stretch2 = max(dxx, dyy);
     // The frost kernel bounds the backdrop's curvature: box-integrating a width
-    // under 0.3 sigma moves a channel below half an 8-bit step, and under
-    // 0.7 sigma a +-1/4 pair matches the four-point rule to the same precision.
+    // under 0.3 sigma moves a channel below half an 8-bit step. A pair at
+    // +-w/sqrt(12) matches the box's zeroth to second moments; its fourth-moment
+    // error on a frosted backdrop stays below the four-point midpoint rule's
+    // second-moment error up to 2.2 sigma (u_derived[1].z), so it replaces it there.
     float sigma = u_derived[1].x;
     if (stretch2 <= u_derived[1].y) return readScene(p);
     vec2 major = dxx > dyy ? dx : dy;
     // Bound a grazing footprint while retaining subpixel integration at the rim.
     major *= min(1., 16. / max(sqrt(stretch2), 0.0001));
     // Integrate along the major axis only. The minor axis of a compressed
-    // footprint stays within the frost kernel, where its +-1/4 pair equals the
-    // midpoint; a frost of at least 2px lets a short footprint use one pair.
+    // footprint stays within the frost kernel, where its midpoint suffices; a
+    // frost of at least 2px lets a footprint up to 2.2 sigma use one pair.
     if (sigma >= 2. && stretch2 <= u_derived[1].z) {
-        return (readScene(p - major * 0.25) + readScene(p + major * 0.25)) * 0.5;
+        return (readScene(p - major * 0.28867513) + readScene(p + major * 0.28867513)) * 0.5;
     }
     vec3 result = vec3(0.);
     for (int i = 0; i < 4; i++) {
@@ -81,39 +82,46 @@ float highlight(float direction, float depth, float width,
     float core = mix(step(0.0001,ramp),ramp,softness);
     float band = core * clamp((width-depth)/aa+0.5,0.,1.)
                       * clamp(depth/aa+0.5,0.,1.);
-    vec2 lobes = clamp((vec2(direction,-direction)-spread)/(1.-spread),0.,1.) * band;
-    vec2 shaped = lobes / (1. + focus * (1.-lobes));
-    return shaped.x + shaped.y;
+    // With spread >= 0 at most one of the two opposite lobes is nonzero.
+    float lobe = clamp((abs(direction)-spread)/(1.-spread),0.,1.) * band;
+    return lobe / (1. + focus * (1.-lobe));
 }
 // Clear-glass highlight color adjustment.
 // It transforms backdrop color under the specular mask, not white stroke RGB.
 vec3 vibrantHighlight(vec3 color, float strength) {
-    vec3 transformed = vec3(
-        dot(color,vec3(2.6492,-1.1803,-0.1189)),
-        dot(color,vec3(-0.3507,1.8199,-0.1192)),
-        dot(color,vec3(-0.3509,-1.1799,2.8809))) + 0.15;
+    // The material selects one matrix (a uniform choice); one product follows.
+    vec3 r = vec3(2.6492,-1.1803,-0.1189);
+    vec3 g = vec3(-0.3507,1.8199,-0.1192);
+    vec3 b = vec3(-0.3509,-1.1799,2.8809);
+    float bias = 0.15;
     if (u_material.x > 2.5) {
         // The lifted tab lens has its own, much quieter key/fill matrix.
-        transformed = vec3(dot(color,vec3(1.1202,-0.1894,-0.0190)),
-          dot(color,vec3(-0.0563,0.9871,-0.0191)),
-          dot(color,vec3(-0.0563,-0.1893,1.1574))) + 0.1471;
+        r = vec3(1.1202,-0.1894,-0.0190);
+        g = vec3(-0.0563,0.9871,-0.0191);
+        b = vec3(-0.0563,-0.1893,1.1574);
+        bias = 0.1471;
     } else if (u_material.x > 1.5) {
-        transformed = vec3(dot(color,vec3(1.3192,-0.0478,-0.0047)),
-          dot(color,vec3(-0.0142,1.2856,-0.0048)),
-          dot(color,vec3(-0.0142,-0.0476,1.3285))) + 0.2;
+        r = vec3(1.3192,-0.0478,-0.0047);
+        g = vec3(-0.0142,1.2856,-0.0048);
+        b = vec3(-0.0142,-0.0476,1.3285);
+        bias = 0.2;
     } else if (u_material.x > 0.5 && u_material.y < 0.5) {
-        transformed = vec3(dot(color,vec3(1.2024,-1.0014,-0.1010)),
-          dot(color,vec3(-0.2976,0.4987,-0.1011)),
-          dot(color,vec3(-0.2977,-1.0012,1.3989))) + 0.9;
+        r = vec3(1.2024,-1.0014,-0.1010);
+        g = vec3(-0.2976,0.4987,-0.1011);
+        b = vec3(-0.2977,-1.0012,1.3989);
+        bias = 0.9;
     }
+    vec3 transformed = vec3(dot(color,r),dot(color,g),dot(color,b)) + bias;
     return mix(color,clamp(transformed,0.,1.),clamp(strength,0.,1.));
 }
 vec3 radiance(vec3 base, vec3 reflected, float weight) {
     float y = dot(base,vec3(0.2126,0.7152,0.0722));
     float peak = max(max(reflected.r,reflected.g),reflected.b);
     float y2 = y*y;
-    vec3 absorption = base * (vec3(peak)-reflected) * (y2*y2) * 0.3;
-    absorption *= min(1.,0.08/max(dot(absorption,vec3(0.2126,0.7152,0.0722)),0.0001));
+    // a*c*min(1, .08/max(L*c, 1e-4)) equals a*min(c, .08/L) for every L >= 0.
+    vec3 absorption = base * (vec3(peak)-reflected);
+    absorption *= min((y2*y2)*0.3,
+        0.08/max(dot(absorption,vec3(0.2126,0.7152,0.0722)),1e-8));
     float response = weight / (1. + weight);
     return clamp(base + ((1.-base)*reflected*mix(1.,(1.-y)*(1.-y)*(1.-y)*(1.-y),0.65)-absorption)*response,0.,1.);
 }
@@ -301,8 +309,12 @@ void shadeGlass() {
     if (depth < u_derived[3].x) {
         float broadEnd = u_derived[2].x;
         float rimEnd = u_derived[2].y;
-        vec2 boundary = local-normal*d;
-        vec2 tangent = vec2(-normal.y,normal.x);
+        // Reflection taps are affine in the boundary frame: transform the boundary
+        // point and its normal/tangent into backdrop pixels once.
+        mat2 toScene = mat2(u_transform.x,u_transform.z,u_transform.y,u_transform.w)*u_geometry.y;
+        vec2 sceneBoundary = scenePoint(local-normal*d);
+        vec2 sceneNormal = toScene*normal;
+        vec2 sceneTangent = toScene*vec2(-normal.y,normal.x);
         float reach = u_geometry.z;
         if (depth < rimEnd) {
             float edge = max(1.-depth/4.,0.);
@@ -311,18 +323,19 @@ void shadeGlass() {
             // frosted; a pair of taps one sigma apart along the normal stands in
             // for it. The tangent pair of the former cross added two reads for a
             // change below two 8-bit steps on frosted content.
-            vec2 tap = boundary+normal*(1.+depth*reach/12.);
-            float s = u_derived[2].z;
-            vec3 reflected = s > 0.05
-                ? (sampleLocal(tap+normal*s) + sampleLocal(tap-normal*s)) * 0.5
-                : sampleLocal(tap);
+            vec2 tap = sceneBoundary+sceneNormal*(1.+depth*reach/12.);
+            vec2 s = sceneNormal*u_derived[2].z;
+            vec3 reflected = u_derived[2].z > 0.05
+                ? (readScene(tap+s) + readScene(tap-s)) * 0.5
+                : readScene(tap);
             color = radiance(color,reflected,u_finish.z*rim);
         }
         if (depth < broadEnd) {
             // The broad lobe keeps its two tangent taps at half reach; the far
             // normal tap contributed a third read for a near-identical average.
-            vec3 diffuse = (sampleLocal(boundary+normal*reach*0.5+tangent*reach*0.4)
-                          + sampleLocal(boundary+normal*reach*0.5-tangent*reach*0.4))*0.5;
+            vec2 lobe = sceneBoundary+sceneNormal*(reach*0.5);
+            vec2 spread = sceneTangent*(reach*0.4);
+            vec3 diffuse = (readScene(lobe+spread) + readScene(lobe-spread))*0.5;
             float fade = 1.-depth/24.;
             color = radiance(color,diffuse,u_finish.z*fade*fade*0.32);
         }

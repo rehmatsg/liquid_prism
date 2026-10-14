@@ -112,14 +112,22 @@ components are their strength floors); keep `_uniforms` and
 bilinear read, so the backdrop sampler is bound linear through the same 1 x 1
 image trick as the optical shader, and derives weights incrementally. Its ramp
 is smoothstep, fitted to the native mask (doc/native_scroll_edge_spec.md).
+The pass is ALU bound: taps are formed in uv space (the clamp is a free
+saturate) and, from a 1.5-texel sigma up, the kernel ends at 2.88 sigma
+(under 0.4% of its mass dropped, at most one 8-bit step); below that one pair
+carries too much weight to drop, so 3 sigma stays.
 
 The haze (`GlassEdgeBlur.haze`) is a third backdrop filter after the vertical
-pass: `ImageFilter.compose(outer: shader(edge_haze.frag), inner:
-ImageFilter.blur(sigma))`. The engine blurs the capture (downsampled, cheap)
-and the mask shader scales the result's premultiplied colour by a per-row
-weight (`u_start`/`u_end`: extent, opacity, plateau), so composited over the
-pass it blends the heavy blur in by that weight, as native bars composite a
-16-point blur at half opacity under a linear mask. Hoisted, it reads
+pass: a plain `ImageFilter.blur(sigma)` whose backdrop layer has one child, a
+`dstIn` linear gradient (`_paintHazeWeights`) that scales the blurred strip
+by its per-row weight (opacity over the plateau fraction, then linearly to
+zero), so composited over the pass it blends the heavy blur in by that
+weight, as native bars composite a 16-point blur at half opacity under a
+linear mask. Keep the blur the top-level filter: Impeller passes a coverage
+hint (the clip) only to the outermost filter, so a blur composed under a
+shader or colour filter is computed over the whole captured screen every
+frame. The hoisted haze uses its own backdrop layer whose gradient is
+recorded in the host's space. Hoisted, it reads
 `sharedKey` like the vertical pass. It is skipped in the texture frame. Under
 an isolating ancestor the effect filters its child's raster through a
 composed `ImageFilter` on its content layer instead, and adds no backdrop
@@ -172,6 +180,37 @@ painted underneath, their clipped masks may refract as another transparent capsu
 Shadow blur/offset/ring width scale with actual lens height unless opted out.
 Custom kernels/offsets require adequate clip extent; avoid hard-coded padding that
 clips a deeply customized shadow.
+
+## Frame budget
+
+The cheapest frame is one that is never drawn. Nothing in the package ticks
+while idle; keep it that way (no repeating controllers, no listeners that
+rebuild on unchanged values).
+
+- Springs stop when their remaining motion is invisible. Pass `precision` to
+  `springGlass` (from `GlassSettle.precision`: a quarter physical pixel of
+  movement, half an 8-bit step of colour) and the spring ends once its energy
+  bound says it can never stray further. Flutter's default tolerance waited for
+  0.001 units/s and kept a unit-range spring ticking for 0.3 to 0.4 s more. Leave
+  it null where a value's visible rate is unknown or very large (the slider
+  position: its fill blends over 2 % of the value).
+- Scrolling must not repaint the chrome. The scaffold's layout reads the scroll
+  offset only while the large title can move (`_layoutOffset` is clamped past
+  it), and `ScrollEdgeProgressBuilder` rebuilds an edge effect only when its
+  strength changes. A relayout of the scaffold's `CustomMultiChildLayout`
+  repaints its whole route boundary, re-recording every bar surface and shadow.
+- A `LiquidPrismSliverAppBar` sits under a `RepaintBoundary`: the viewport
+  repaints all slivers each scroll frame, and the pinned bar would otherwise be
+  re-recorded with them. Glass uniforms are read at composition, so a reused
+  bar layer still follows the scroll.
+- A resting control thumb has no glass. `ControlLens` at lift 0 paints only
+  its fill, clipped to the contour: every optic is scaled by lift and the
+  opaque fill covers the lens, so the backdrop pass (a full-screen store and
+  reload per thumb, every frame) bought nothing. Custom `optics`, frost, a
+  `LiquidPrismPresence` ancestor or a tab glint (`rim`) keep the glass, since
+  those are not neutral at rest. `test/resting_thumb_test.dart` covers it.
+
+`test/frame_budget_test.dart` covers these contracts.
 
 ## Fallback and lifecycle
 

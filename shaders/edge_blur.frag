@@ -51,9 +51,11 @@ float ramp(float dist, float extent, float plateau, float floorStrength) {
   return floorStrength + (1.0 - floorStrength) * fall;
 }
 
-// Samples the input at p (texture px, Flutter orientation), clamped to bounds.
-vec4 sampleTexture(vec2 p) {
-  vec2 uv = clamp(p, vec2(0.0), u_size) / u_size;
+// Samples the input at uv (normalized, Flutter orientation), clamped to
+// bounds. Taps are formed in uv space so the clamp is a free saturate and no
+// division by the size is left in the loop: the pass is ALU bound.
+vec4 sampleUV(vec2 uv) {
+  uv = clamp(uv, 0.0, 1.0);
 #ifdef IMPELLER_TARGET_OPENGLES
   uv.y = 1.0 - uv.y;
 #endif
@@ -92,7 +94,7 @@ void main() {
       u_start.y * ramp(coord, u_start.x, u_start.z, u_start.w)
       + u_end.y * ramp(len - coord, u_end.x, u_end.z, u_end.w);
   if (sigmaLogical < 0.02) {
-    frag_color = sampleTexture(xy);
+    frag_color = sampleUV(xy / u_size);
     return;
   }
 
@@ -118,8 +120,13 @@ void main() {
   // bound linear for that purpose.
   vec3 g = vec3(1.0, exp(-0.5 / (sigma * sigma)), 0.0);
   g.z = g.y * g.y;
-  float radius = 3.0 * sigma;
-  vec4 total = sampleTexture(xy);
+  // Past 2.88 sigma the taps hold under 0.4% of the kernel's mass. Below
+  // 1.5 texels one pair carries too much of it to drop: keep 3 sigma.
+  float radius = (sigma < 1.5 ? 3.0 : 2.88) * sigma;
+  vec2 texel = 1.0 / u_size;
+  vec2 uv = xy * texel;
+  vec2 tapStep = dir * texel;
+  vec4 total = sampleUV(uv);
   float totalWeight = 1.0;
   for (int i = 1; i <= MAX_PAIRS; i++) {
     float x0 = float(2 * i - 1);
@@ -130,8 +137,8 @@ void main() {
     float w1 = g.x;
     float w = w0 + w1;
     float offset = x0 + w1 / w;
-    total += (sampleTexture(xy + dir * min(offset, maxForward))
-              + sampleTexture(xy - dir * min(offset, maxBack))) * w;
+    total += (sampleUV(uv + tapStep * min(offset, maxForward))
+              + sampleUV(uv - tapStep * min(offset, maxBack))) * w;
     totalWeight += 2.0 * w;
   }
   frag_color = total / totalWeight;

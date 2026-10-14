@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+## 0.5.4
+
+- Cheaper optical glass shader: a moment-matched footprint pair replaces most
+  four-tap integrations of compressed rim samples, reflection taps are placed
+  in backdrop pixels once, and the highlight and absorption arithmetic is
+  simplified. Output stays within 2/255 of 0.5.3.
+- Cheaper scroll-edge blur pass (about 15% less fragment time on the default
+  strips) and tab foreground lens (about half, skipping the contour search
+  outside the pill's box), with no visible change.
+- The scroll edge haze no longer blurs the whole screen every frame. It was a
+  blur composed under a mask shader, and Impeller limits only the outermost
+  backdrop filter to its clip, so the inner blur ran over the full capture.
+  The haze is now a plain blur clipped to the strips, weighted by a `dstIn`
+  gradient child; captures match the previous output within 1/255. The
+  `edge_haze.frag` shader asset is removed.
+- Resting switch, slider and segmented-control thumbs no longer add a
+  backdrop pass: at lift 0 every optic is zero and the white fill covers the
+  lens, so the thumb paints only its fill until it is held. Custom lens
+  optics or frost, a presence fade and the tab pill keep the glass.
+- Scrolling under `LiquidPrismScaffold` and a pinned `LiquidPrismSliverAppBar`
+  no longer repaints the bars every frame once the title has settled and the
+  scroll edge is at full strength.
+- Glass springs stop once their remaining motion is under a quarter of a
+  physical pixel and half an 8-bit color step, instead of ticking for another
+  0.3-0.4 s.
+
 ## 0.5.3
 
 - The `leading` slot of `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`

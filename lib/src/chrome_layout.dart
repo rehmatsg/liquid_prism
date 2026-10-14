@@ -394,12 +394,19 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// [LiquidPrismScaffold.bottomBar].
   final _scrollRemaining = ValueNotifier<double>(0);
 
+  /// [_scrollOffset] limited to the range the layout reads: the large title
+  /// and its row stop moving once they have scrolled away, so further scroll
+  /// frames no longer lay out (and repaint) the chrome.
+  final _layoutOffset = ValueNotifier<double>(0);
+  double _layoutCap = double.infinity;
+
   bool _onScroll(ScrollMetrics metrics) {
     if (metrics.axis == Axis.vertical) {
       _scrollOffset.value = math.max(
         0,
         metrics.pixels - metrics.minScrollExtent,
       );
+      _layoutOffset.value = math.min(_scrollOffset.value, _layoutCap);
       _scrollRemaining.value = math.max(
         0,
         metrics.maxScrollExtent - metrics.pixels,
@@ -469,6 +476,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _largeFade.dispose();
     _inlineFade.dispose();
     _scrollOffset.dispose();
+    _layoutOffset.dispose();
     _scrollRemaining.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _reselection.dispose();
@@ -624,6 +632,15 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
                         6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
+    // Past this offset the layout no longer changes with the scroll.
+    _layoutCap = math.max(extent, expandedHeight) + largeTitleLead + 1;
+    _layoutOffset.value = math.min(_scrollOffset.value, _layoutCap);
+    final revealExtent =
+        GlassScrollEdgeStyle.resolve(
+          context,
+          widget.scrollEdgeStyle,
+        ).revealExtent ??
+        GlassScrollEdgeStyle.defaultRevealExtent;
     final swaps = widget.largeTitle != null || widget.header != null;
     // The edge effects stay while they fade out.
     final edges = widget.scrollEdge || !_edgePresence.isDismissed;
@@ -703,7 +720,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         expandedHeight: expandedHeight,
         largeTitleTop: widget.subtitle == null ? 3.67 : 6.67,
         collapseExtent: extent,
-        scrollOffset: _scrollOffset,
+        scrollOffset: _layoutOffset,
         titleGutter: navigation.gutter ?? 16,
         titleGap: navigation.controlGap ?? 12,
         actionsTop: actionsTop,
@@ -759,20 +776,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           LayoutId(
             id: _Slot.scrollEdge,
             child: GlassGroupMembers(
-              child: ListenableBuilder(
+              child: ScrollEdgeProgressBuilder(
                 listenable: Listenable.merge([_scrollOffset, _edgeStrength]),
-                builder: (context, _) => LiquidPrismScrollEdge(
-                  progress:
-                      _edgeStrength.value *
-                      LiquidPrismScrollEdge.progressFor(
-                        _scrollOffset.value,
-                        revealExtent:
-                            GlassScrollEdgeStyle.resolve(
-                              context,
-                              widget.scrollEdgeStyle,
-                            ).revealExtent ??
-                            GlassScrollEdgeStyle.defaultRevealExtent,
-                      ),
+                progress: () =>
+                    _edgeStrength.value *
+                    LiquidPrismScrollEdge.progressFor(
+                      _scrollOffset.value,
+                      revealExtent: revealExtent,
+                    ),
+                builder: (context, progress) => LiquidPrismScrollEdge(
+                  progress: progress,
                   color: widget.backgroundColor,
                   style: widget.scrollEdgeStyle,
                 ),
@@ -784,24 +797,20 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             id: _Slot.bottomScrollEdge,
             child: GlassGroupMembers(
               child: IgnorePointer(
-                child: ListenableBuilder(
+                child: ScrollEdgeProgressBuilder(
                   listenable: Listenable.merge([
                     _scrollRemaining,
                     _edgeStrength,
                   ]),
-                  builder: (context, _) => LiquidPrismScrollEdge(
+                  progress: () =>
+                      _edgeStrength.value *
+                      LiquidPrismScrollEdge.progressFor(
+                        _scrollRemaining.value,
+                        revealExtent: revealExtent,
+                      ),
+                  builder: (context, progress) => LiquidPrismScrollEdge(
                     edge: GlassEdge.bottom,
-                    progress:
-                        _edgeStrength.value *
-                        LiquidPrismScrollEdge.progressFor(
-                          _scrollRemaining.value,
-                          revealExtent:
-                              GlassScrollEdgeStyle.resolve(
-                                context,
-                                widget.scrollEdgeStyle,
-                              ).revealExtent ??
-                              GlassScrollEdgeStyle.defaultRevealExtent,
-                        ),
+                    progress: progress,
                     color: widget.backgroundColor,
                     style: widget.scrollEdgeStyle,
                   ),

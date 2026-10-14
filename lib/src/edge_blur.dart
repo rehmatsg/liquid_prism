@@ -345,8 +345,15 @@ class _RenderEdgeBlur extends RenderProxyBox {
   final _fadeLayer = LayerHandle<_EdgeFadeLayer>();
   final _hazeClipLayer = LayerHandle<ClipPathLayer>();
   final _hazeLayer = LayerHandle<_EdgeHazeLayer>();
-  _EdgePassFilter? _hazeFilter;
-  ({ui.ImageFilter mask, double sigma, ui.ImageFilter filter})? _hazeCompose;
+  ({double sigma, ui.ImageFilter filter})? _hazeBlur;
+
+  /// The hoisted haze's own backdrop layer, whose child weights it in the
+  /// host's space; [_hazeLayer]'s child weights it in this box's space.
+  final _hoistHazeFilter = LayerHandle<BackdropFilterLayer>(
+    BackdropFilterLayer(),
+  );
+  final _hoistHazeWeights = LayerHandle<PictureLayer>();
+  List<Object> _hoistHazeSignature = const [];
 
   List<_EdgePassFilter>? _screenFilters;
   List<_EdgePassFilter>? _textureFilters;
@@ -398,7 +405,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
   Iterable<GlassEdgeBlur> get _blurs =>
       _program == null ? const [] : _specs.where((spec) => spec.blurs);
   Iterable<GlassEdgeBlur> get _fades => _specs.where((spec) => spec.fades);
-  Iterable<GlassEdgeBlur> get _hazes => LiquidPrism._hazeProgram == null
+  Iterable<GlassEdgeBlur> get _hazes => LiquidPrism._edgeProgram == null
       ? const []
       : _specs.where((spec) => spec.hazes);
   bool get _blurring => _blurs.isNotEmpty;
@@ -434,6 +441,8 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _disposeFilters();
     _fadePicture?.dispose();
     _hoistFadePicture?.dispose();
+    _hoistHazeWeights.layer = null;
+    _hoistHazeFilter.layer = null;
     super.dispose();
   }
 
@@ -459,9 +468,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
     for (final filter in [...?_screenFilters, ...?_textureFilters]) {
       filter.dispose();
     }
-    _hazeFilter?.dispose();
-    _hazeFilter = null;
-    _hazeCompose = null;
+    _hazeBlur = null;
     _screenFilters = null;
     _textureFilters = null;
     _textureCompose = null;
@@ -532,7 +539,13 @@ class _RenderEdgeBlur extends RenderProxyBox {
         (context, offset) => context.pushLayer(
           haze,
           (context, offset) =>
-              context.pushLayer(haze.filter, (_, _) {}, offset),
+              context.pushLayer(haze.filter, (context, offset) {
+                final canvas = context.canvas
+                  ..save()
+                  ..translate(offset.dx, offset.dy);
+                _paintHazeWeights(canvas);
+                canvas.restore();
+              }, offset),
           offset,
         ),
         clipBehavior: Clip.hardEdge,
@@ -711,71 +724,58 @@ class _RenderEdgeBlur extends RenderProxyBox {
   static const _screenFrame = 0.0;
   static const _textureFrame = 1.0;
 
-  /// The haze: the engine's blur at the strips' sigma, weighted per row by
-  /// the mask shader, so that composited over the pass it blends the blur in.
+  /// The haze: the engine's blur at the strips' sigma, as the backdrop
+  /// filter itself. Impeller limits a top-level blur to its clip; composed
+  /// under a shader it would blur the whole captured screen every frame. Its
+  /// backdrop layer's child ([_paintHazeWeights]) then scales the blurred
+  /// strip by the per-row weight, so the layer composites the blur in.
   ui.ImageFilter _hazeScreenFilter() {
-    final filter = _hazeFilter ??= _EdgePassFilter(
-      LiquidPrism._createHazeShader()!,
-    );
-    GlassEdgeBlur? start;
-    GlassEdgeBlur? end;
     var sigma = 0.0;
     for (final spec in _hazes) {
-      if (spec.edge.isStart) {
-        start = spec;
-      } else {
-        end = spec;
-      }
       sigma = math.max(sigma, spec.haze);
     }
-    final edge = (start ?? end)!.edge;
-    final (a, b, c, d) = _screenMatrix;
-    final det = a * d - b * c;
-    final inverse = det.abs() < 1e-9
-        ? (1.0, 0.0, 0.0, 1.0)
-        : (d / det, -b / det, -c / det, a / det);
-    final mask = filter.filterFor([
-      edge.isHorizontal ? 1 : 0,
-      _screenFrame,
-      size.width,
-      size.height,
-      _screenOrigin.dx,
-      _screenOrigin.dy,
-      0,
-      0,
-      a,
-      b,
-      c,
-      d,
-      inverse.$1,
-      inverse.$2,
-      inverse.$3,
-      inverse.$4,
-      start?.extent ?? 0,
-      start?.hazeOpacity ?? 0,
-      start?.hazePlateau ?? 0,
-      0,
-      end?.extent ?? 0,
-      end?.hazeOpacity ?? 0,
-      end?.hazePlateau ?? 0,
-      0,
-    ]);
-    final cached = _hazeCompose;
-    if (cached != null &&
-        identical(cached.mask, mask) &&
-        cached.sigma == sigma) {
-      return cached.filter;
-    }
-    final composed = ui.ImageFilter.compose(
-      outer: mask,
-      inner: ui.ImageFilter.blur(
-        sigmaX: sigma,
-        sigmaY: sigma,
-        tileMode: ui.TileMode.clamp,
-      ),
+    final cached = _hazeBlur;
+    if (cached != null && cached.sigma == sigma) return cached.filter;
+    final filter = ui.ImageFilter.blur(
+      sigmaX: sigma,
+      sigmaY: sigma,
+      tileMode: ui.TileMode.clamp,
     );
-    _hazeCompose = (mask: mask, sigma: sigma, filter: composed);
-    return composed;
+    _hazeBlur = (sigma: sigma, filter: filter);
+    return filter;
+  }
+
+  /// Multiplies the haze layer's blurred strips by their weight in this box's
+  /// space (`dstIn`): the haze opacity held over the leading plateau
+  /// fraction, then falling linearly to zero at the strip's far end.
+  void _paintHazeWeights(Canvas canvas) {
+    for (final spec in _hazes) {
+      final rect = _stripRect(spec);
+      if (rect.isEmpty) continue;
+      final (begin, end) = switch (spec.edge) {
+        GlassEdge.top => (rect.topCenter, rect.bottomCenter),
+        GlassEdge.bottom => (rect.bottomCenter, rect.topCenter),
+        GlassEdge.left => (rect.centerLeft, rect.centerRight),
+        GlassEdge.right => (rect.centerRight, rect.centerLeft),
+      };
+      final weight = Color.from(
+        alpha: spec.hazeOpacity,
+        red: 0,
+        green: 0,
+        blue: 0,
+      );
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..blendMode = BlendMode.dstIn
+          ..shader = ui.Gradient.linear(
+            begin,
+            end,
+            [weight, weight, weight.withValues(alpha: 0)],
+            [0, spec.hazePlateau.clamp(0, 1), 1],
+          ),
+      );
+    }
   }
 
   /// The shader's float uniforms in declaration order after the engine-set
@@ -898,13 +898,22 @@ class _RenderEdgeBlur extends RenderProxyBox {
     }
     // The haze reads the optical capture like the vertical pass, so the
     // members' optical passes see neither.
-    final haze = hazes.isNotEmpty ? _hazeLayer.layer : null;
-    if (haze != null) {
-      haze.filter
+    if (hazes.isNotEmpty) {
+      final haze = _hoistHazeFilter.layer!
         ..filter = _hazeScreenFilter()
         ..backdropKey = group.sharedKey;
+      var weights = _hoistHazeWeights.layer;
+      if (weights == null || !listEquals(signature, _hoistHazeSignature)) {
+        _hoistHazeSignature = signature;
+        final recorder = ui.PictureRecorder();
+        _paintHazeWeights(Canvas(recorder)..transform(toHost.storage));
+        weights?.remove();
+        weights = _hoistHazeWeights.layer = PictureLayer(Rect.largest)
+          ..picture = recorder.endRecording();
+        haze.append(weights);
+      }
       builder.pushClipPath(strips);
-      haze.filter.addToScene(builder);
+      haze.addToScene(builder);
       builder.pop();
     }
     if (fades.isNotEmpty) {

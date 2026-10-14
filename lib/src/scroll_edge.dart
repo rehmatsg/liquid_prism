@@ -543,3 +543,64 @@ class _LiquidPrismScrollFadeState extends State<LiquidPrismScrollFade>
     );
   }
 }
+
+/// Builds a bar's [LiquidPrismScrollEdge] from a scroll offset that changes
+/// every scroll frame, rebuilding only when the effect's strength changes.
+///
+/// The strength saturates once content has scrolled [revealExtent] under the
+/// bar; rebuilding the edge for every further offset re-laid out its blur and
+/// repainted the chrome around it on each frame of a scroll.
+@internal
+class ScrollEdgeProgressBuilder extends StatefulWidget {
+  const ScrollEdgeProgressBuilder({
+    super.key,
+    required this.listenable,
+    required this.progress,
+    required this.builder,
+  });
+
+  /// Notifies when [progress] may have changed.
+  final Listenable listenable;
+
+  /// Reads the current strength; must not depend on a [BuildContext].
+  final ValueGetter<double> progress;
+  final Widget Function(BuildContext context, double progress) builder;
+
+  @override
+  State<ScrollEdgeProgressBuilder> createState() =>
+      _ScrollEdgeProgressBuilderState();
+}
+
+class _ScrollEdgeProgressBuilderState extends State<ScrollEdgeProgressBuilder> {
+  late double _progress = widget.progress();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.listenable.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(ScrollEdgeProgressBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.listenable != oldWidget.listenable) {
+      oldWidget.listenable.removeListener(_changed);
+      widget.listenable.addListener(_changed);
+    }
+    _progress = widget.progress();
+  }
+
+  void _changed() {
+    final progress = widget.progress();
+    if (progress != _progress) setState(() => _progress = progress);
+  }
+
+  @override
+  void dispose() {
+    widget.listenable.removeListener(_changed);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _progress);
+}

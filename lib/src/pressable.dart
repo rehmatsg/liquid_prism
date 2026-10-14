@@ -79,6 +79,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
+    _pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
     if (_reduceMotion) {
       _press.value = _pointer == null || _suppressTap ? 0 : 1;
       _glow.value = _press.value;
@@ -132,13 +133,37 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
       _press,
       held ? 1 : 0,
       held ? motion.pressSpring : motion.releaseSpring,
+      precision: _scalePrecision(motion),
     );
     springGlass(
       _glow,
       held ? 1 : 0,
       held ? NativeMotion.buttonGlowIn : NativeMotion.buttonGlowOut,
+      precision: _glowPrecision,
     );
   }
+
+  double _pixelRatio = 1;
+
+  /// The press scales the surface about its centre, so a unit of press moves
+  /// its farthest point (plus room for badges riding the corners) by the
+  /// scale change times that distance.
+  double? _scalePrecision(GlassMotion motion) {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    final reach = box.size.center(Offset.zero).distance + _badgeReach;
+    final scale = (widget._glass ? motion.pressScale - 1 : .04).abs();
+    return GlassSettle.precision(pixelsPerUnit: scale * reach * _pixelRatio);
+  }
+
+  static const _badgeReach = 16.0;
+
+  /// Glow drives the press grade: at most [NativeMotion.buttonGlowOpacity]
+  /// times the shader's 0.9 mix toward a graded colour at most 0.2 away per
+  /// channel (gradePressed in glass_core.glsl), and the fallback's 0.08 white.
+  static final _glowPrecision = GlassSettle.precision(
+    alphaPerUnit: NativeMotion.buttonGlowOpacity * .9 * .2,
+  );
 
   void _invoke() {
     if (_attached && mounted && widget.onPressed != null) widget.onPressed!();

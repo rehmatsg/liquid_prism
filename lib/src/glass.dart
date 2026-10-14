@@ -39,6 +39,7 @@ class LiquidPrism extends StatefulWidget {
     this.lensRim = 0,
     this.chromaticSplit = 0,
     this.chromaticBand = 0,
+    this.resting = false,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
        assert(lensRim >= 0),
        assert(chromaticSplit >= 0),
@@ -64,11 +65,15 @@ class LiquidPrism extends StatefulWidget {
   final double chromaticSplit;
   @internal
   final double chromaticBand;
+
+  /// A resting control lens whose optics are all zero under an opaque fill:
+  /// paint only the clipped child and skip the backdrop passes.
+  @internal
+  final bool resting;
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
   static ui.FragmentProgram? _edgeProgram;
-  static ui.FragmentProgram? _hazeProgram;
   static ui.Image? _linearSampler;
   static Future<void>? _loading;
 
@@ -107,9 +112,6 @@ class LiquidPrism extends StatefulWidget {
         _edgeProgram ??= await ui.FragmentProgram.fromAsset(
           'packages/liquid_prism/shaders/edge_blur.frag',
         );
-        _hazeProgram ??= await ui.FragmentProgram.fromAsset(
-          'packages/liquid_prism/shaders/edge_haze.frag',
-        );
       } catch (error) {
         // Edge blurs are optional; their fades still paint.
         debugPrint('LiquidPrism: edge blur unavailable: $error');
@@ -135,18 +137,6 @@ class LiquidPrism extends StatefulWidget {
   /// backdrop sampler is bound linear the same way.
   static ui.FragmentShader? _createEdgeShader() {
     final shader = _edgeProgram?.fragmentShader();
-    if (shader != null && _linearSampler != null) {
-      shader.setImageSampler(
-        0,
-        _linearSampler!,
-        filterQuality: ui.FilterQuality.low,
-      );
-    }
-    return shader;
-  }
-
-  static ui.FragmentShader? _createHazeShader() {
-    final shader = _hazeProgram?.fragmentShader();
     if (shader != null && _linearSampler != null) {
       shader.setImageSampler(
         0,
@@ -249,6 +239,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
           lensRim: widget.lensRim,
           chromaticSplit: widget.chromaticSplit,
           chromaticBand: widget.chromaticBand,
+          resting: widget.resting,
           child: widget.child,
         ),
       );
@@ -266,6 +257,12 @@ class _LiquidPrismState extends State<LiquidPrism> {
             : GlassShape.rect(cornerRadius: optics.cornerRadius));
     // Presence fades the optical output and shadows through the recipe and
     // grows the lens and frost from zero, so the backdrop stays live.
+    if (widget.resting) {
+      return ClipPath(
+        clipper: GlassShapeClipper(shape),
+        child: widget.child ?? const SizedBox.shrink(),
+      );
+    }
     final presenceScope = LiquidPrismPresence.maybeData(context);
     final presence = presenceScope == null
         ? 1.0
@@ -726,7 +723,8 @@ class _RenderGlass extends RenderProxyBox {
       0.2025 * style.frost * style.frost * dpr * dpr,
       sigma,
       math.max(2.25, 0.09 * sigma * sigma),
-      0.49 * sigma * sigma,
+      // A moment-matched pair integrates footprints up to 2.2 sigma.
+      4.84 * sigma * sigma,
       0, // Chromatic split is written alongside its band after packet assembly.
       broadEnd,
       rimEnd,
