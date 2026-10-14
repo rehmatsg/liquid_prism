@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0
+
 - Let `LiquidPrismScaffold.actions` hold several trailing capsules: each
   element is a `GlassToolbarItem` or a list of them (`[[filter], [share,
   more]]`), laid out as `LiquidPrismToolbar`. A flat list is still one
