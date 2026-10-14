@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.5.0
+
 - Pinned `SliverPersistentHeader`s in `LiquidPrismScaffold.slivers` now pin
   below the bar, as documented, instead of behind it: the bar's inset is a
   pinned sliver, so a page's sticky tabs stack beneath the controls while
