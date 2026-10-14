@@ -6,6 +6,9 @@
   four-tap integrations of compressed rim samples, reflection taps are placed
   in backdrop pixels once, and the highlight and absorption arithmetic is
   simplified. Output stays within 2/255 of 0.5.3.
+- Cheaper scroll-edge blur pass (about 15% less fragment time on the default
+  strips) and tab foreground lens (about half, skipping the contour search
+  outside the pill's box), with no visible change.
 
 ## 0.5.3
 

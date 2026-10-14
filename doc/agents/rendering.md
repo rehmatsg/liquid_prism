@@ -112,6 +112,10 @@ components are their strength floors); keep `_uniforms` and
 bilinear read, so the backdrop sampler is bound linear through the same 1 x 1
 image trick as the optical shader, and derives weights incrementally. Its ramp
 is smoothstep, fitted to the native mask (doc/native_scroll_edge_spec.md).
+The pass is ALU bound: taps are formed in uv space (the clamp is a free
+saturate) and, from a 1.5-texel sigma up, the kernel ends at 2.88 sigma
+(under 0.4% of its mass dropped, at most one 8-bit step); below that one pair
+carries too much weight to drop, so 3 sigma stays.
 
 The haze (`GlassEdgeBlur.haze`) is a third backdrop filter after the vertical
 pass: `ImageFilter.compose(outer: shader(edge_haze.frag), inner:
