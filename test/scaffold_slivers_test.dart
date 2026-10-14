@@ -49,14 +49,11 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    // Measured: the bar frame ends at 116, the large title's 52-point row
+    // follows, and content starts at its end (168).
     final top = rectOf(tester, 'row0').top;
-    expect(
-      top,
-      closeTo(
-        62 + 44 + (34 * 1.2 + 11.33) + LiquidPrismScaffold.topBarClearance,
-        .01,
-      ),
-    );
+    expect(top, closeTo(62 + 44 + 10 + (34 * 1.2 + 11.33), .01));
+    expect(tester.getTopLeft(find.text('Large')).dy, closeTo(119.67, .01));
     // Content moves one for one while the large title collapses, and the
     // titles swap once its row has scrolled away.
     controller.jumpTo(40);
@@ -354,15 +351,14 @@ void main() {
     final largeSub = tester.getRect(subtitles.at(1));
     expect(largeSub.left, large.left);
     expect(largeSub.top - large.top, closeTo(38.33, .5));
+    // Measured: the title 6.67 points into its row with a subtitle.
+    expect(large.top, closeTo(116 + 6.67, .01));
     expect(
       DefaultTextStyle.of(tester.element(subtitles.at(1))).style.fontSize,
       11,
     );
     // The row grows for the subtitle; content starts below it.
-    expect(
-      rectOf(tester, 'row0').top,
-      closeTo(62 + 44 + 71.33 + LiquidPrismScaffold.topBarClearance, .6),
-    );
+    expect(rectOf(tester, 'row0').top, closeTo(116 + 71.33, .6));
     controller.jumpTo(200);
     await tester.pumpAndSettle();
     final inline = tester.getRect(find.text('Inline'));

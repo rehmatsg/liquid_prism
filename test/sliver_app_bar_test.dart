@@ -74,16 +74,11 @@ void main() {
     expect(actions.top, 62);
     final large = tester.getTopLeft(find.text('Large'));
     expect(large.dx, 16);
-    expect(large.dy, closeTo(62 + 44 + 3.67, .01));
-    // Bar, large title row and the 14-point clearance precede the content.
+    // Measured: the bar frame ends at 116 and the large title's 52-point
+    // row follows it, its line 3.67 points in; content starts at its end.
+    expect(large.dy, closeTo(116 + 3.67, .01));
     final firstRow = tester.getTopLeft(find.byKey(const ValueKey('row0'))).dy;
-    expect(
-      firstRow,
-      closeTo(
-        62 + 44 + LiquidPrismScaffold.topBarClearance + 34 * 1.2 + 11.33,
-        .01,
-      ),
-    );
+    expect(firstRow, closeTo(116 + 34 * 1.2 + 11.33, .01));
     expect(opacityOf(tester, 'Large'), 1);
     expect(opacityOf(tester, 'Inline'), 0);
   });

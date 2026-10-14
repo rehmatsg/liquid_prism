@@ -7,6 +7,9 @@
 - Fix a second hoisted edge effect (a bottom bar's under a top bar's) being
   blurred only vertically: every effect's horizontal pass now runs before the
   vertical passes that share the group's capture.
+- The large title sits 10 points lower, in its row below the bar frame, as
+  measured on iOS 27 (it crowded the controls); content starts directly
+  below that row. With a subtitle the title sits 3 points lower still.
 - Fix the hard scroll edge's hairline, which had no width and never drew.
 - The hard hairline is white at 10% in dark appearance, as measured
   (`GlassScrollEdgeStyle.darkHairlineColor`, `hairlineColorFor`).

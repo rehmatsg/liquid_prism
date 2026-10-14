@@ -145,8 +145,22 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
                   : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
                         6.13);
     final accessoryHeight = accessory?.preferredSize.height ?? 0;
-    final minExtent =
-        top + barRow + accessoryHeight + LiquidPrismScaffold.topBarClearance;
+    // The large title's row starts at the bar frame, 10 points below the
+    // controls, and content follows it directly; collapsed, the bar keeps
+    // its frame. An accessory keeps the usual clearance.
+    final lead = largeTitle == null ? 0.0 : largeTitleLead;
+    final clearance = lead > 0 && accessoryHeight == 0
+        ? lead
+        : LiquidPrismScaffold.topBarClearance;
+    final minExtent = top + barRow + accessoryHeight + clearance;
+    final maxExtent = largeTitle == null
+        ? minExtent
+        : top +
+              barRow +
+              lead +
+              largeRow +
+              accessoryHeight +
+              (accessoryHeight == 0 ? 0 : clearance);
     final route = ModalRoute.of(context);
     final impliedLeading =
         leading ??
@@ -168,9 +182,11 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
         top: top,
         barRow: barRow,
         largeRow: largeRow,
+        lead: lead,
+        largeTitleTop: subtitle == null ? 3.67 : 6.67,
         accessoryHeight: accessoryHeight,
         minExtent: minExtent,
-        maxExtent: minExtent + largeRow,
+        maxExtent: maxExtent,
       ),
     );
   }
@@ -188,6 +204,8 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.top,
     required this.barRow,
     required this.largeRow,
+    required this.lead,
+    required this.largeTitleTop,
     required this.accessoryHeight,
     required this.minExtent,
     required this.maxExtent,
@@ -197,7 +215,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   final TextStyle titleStyle, largeTitleStyle;
   final TextStyle subtitleStyle, largeSubtitleStyle;
   final GlassNavigationBarStyle navigation;
-  final double top, barRow, largeRow, accessoryHeight;
+  final double top, barRow, largeRow, lead, largeTitleTop, accessoryHeight;
   @override
   final double minExtent, maxExtent;
 
@@ -218,8 +236,11 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
       old.top != top ||
       old.barRow != barRow ||
       old.largeRow != largeRow ||
+      old.lead != lead ||
+      old.largeTitleTop != largeTitleTop ||
       old.accessoryHeight != accessoryHeight ||
-      old.minExtent != minExtent;
+      old.minExtent != minExtent ||
+      old.maxExtent != maxExtent;
 }
 
 class _SliverBar extends StatefulWidget {
@@ -303,7 +324,10 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
     final start = position.hasContentDimensions
         ? position.minScrollExtent
         : 0.0;
-    _scrolled.value = math.max(0, position.pixels - start - _d.largeRow);
+    _scrolled.value = math.max(
+      0,
+      position.pixels - start - (_d.maxExtent - _d.minExtent),
+    );
   }
 
   @override
@@ -359,7 +383,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final bar = _d.bar;
     final groups = glassActionGroups(bar.actions);
-    final shrink = widget.shrinkOffset.clamp(0.0, _d.largeRow);
+    final shrink = widget.shrinkOffset.clamp(0.0, _d.maxExtent - _d.minExtent);
     final edgeStyle = GlassScrollEdgeStyle.resolve(
       context,
       bar.scrollEdgeStyle,
@@ -371,6 +395,8 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
           top: _d.top,
           barRow: _d.barRow,
           largeRow: _d.largeRow,
+          lead: _d.lead,
+          largeTitleTop: _d.largeTitleTop,
           shrink: shrink,
           accessoryHeight: _d.accessoryHeight,
           gutter: _d.navigation.gutter ?? 16,
@@ -466,6 +492,8 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     required this.top,
     required this.barRow,
     required this.largeRow,
+    required this.lead,
+    required this.largeTitleTop,
     required this.shrink,
     required this.accessoryHeight,
     required this.gutter,
@@ -474,6 +502,9 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
   });
   final TextDirection textDirection;
   final double top, barRow, largeRow, shrink, accessoryHeight, gutter, gap;
+
+  /// The bar frame above a large title's row, and its line within the row.
+  final double lead, largeTitleTop;
 
   /// Extra depth of a hard edge, to the bar frame 10 points below the
   /// controls, as measured; an accessory ends the frame itself.
@@ -485,7 +516,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
   @override
   void performLayout(Size size) {
     final rtl = textDirection == TextDirection.rtl;
-    final largeHeight = largeRow - shrink;
+    final largeHeight = math.max(0.0, lead + largeRow - shrink);
     double centred(Size child) => top + (barRow - child.height) / 2;
     var leadingEnd = 0.0, trailingStart = size.width;
 
@@ -497,7 +528,13 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         BoxConstraints.tight(
           Size(
             size.width,
-            top + barRow + largeHeight + accessoryHeight + edgeFrame,
+            top +
+                barRow +
+                largeHeight +
+                accessoryHeight +
+                edgeFrame -
+                // The lead is the bar frame the edge already reaches.
+                (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
           ),
         ),
       );
@@ -562,7 +599,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         _Slot.largeTitle,
         Offset(
           rtl ? size.width - gutter - child.width : gutter,
-          top + barRow + 3.67 - shrink,
+          top + barRow + lead + largeTitleTop - shrink,
         ),
       );
     }
@@ -581,6 +618,8 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       old.top != top ||
       old.barRow != barRow ||
       old.largeRow != largeRow ||
+      old.lead != lead ||
+      old.largeTitleTop != largeTitleTop ||
       old.shrink != shrink ||
       old.accessoryHeight != accessoryHeight ||
       old.gutter != gutter ||

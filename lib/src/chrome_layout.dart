@@ -562,10 +562,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     (titleStyle.height ?? 1.2) +
                 8,
           );
-    // Measured: a 52-point row holding the 40.67-point 34-point bold line,
-    // 3.67 points below the row's top.
+    // Measured: a 52-point row from the bar frame holding the 40.67-point
+    // 34-point bold line, 3.67 points below the row's top.
     // With a subtitle the row grows to 71.33 points for its 11-point line,
-    // which sits 38.33 points below the large title's top.
+    // which sits 38.33 points below the large title's top (6.67 below the
+    // row's).
     final expandedHeight = widget.largeTitle == null
         ? 0.0
         : scaler.scale(largeTitleStyle.fontSize ?? 34) *
@@ -650,6 +651,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         accessoryHeight: widget.accessory?.preferredSize.height ?? 0,
         titleRowHeight: titleRowHeight,
         expandedHeight: expandedHeight,
+        largeTitleTop: widget.subtitle == null ? 3.67 : 6.67,
         collapseExtent: extent,
         scrollOffset: _scrollOffset,
         titleGutter: navigation.gutter ?? 16,
@@ -1058,6 +1060,11 @@ class _InsetBody extends StatelessWidget {
   );
 }
 
+/// Measured on iOS 27: the bar frame ends 10 points below 44-point controls
+/// (62 to 116) and the large title's 52-point row starts there, so its line
+/// sits 13.67 points below the controls and content starts at the row's end.
+const double largeTitleLead = 10;
+
 class _ChromeLayout extends MultiChildLayoutDelegate {
   _ChromeLayout({
     required this.placement,
@@ -1069,6 +1076,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.accessoryHeight,
     required this.titleRowHeight,
     required this.expandedHeight,
+    required this.largeTitleTop,
     required this.collapseExtent,
     required this.scrollOffset,
     required this.titleGutter,
@@ -1098,6 +1106,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       expandedHeight,
       collapseExtent,
       titleGutter,
+      // The large title's line below its row's top: 3.67 points, 6.67 with
+      // a subtitle, as measured.
+      largeTitleTop,
       titleGap;
   final ValueListenable<double> scrollOffset;
 
@@ -1241,10 +1252,14 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                   shown
         : railRight;
     final barRow = topBar ? titleRowHeight : 0.0;
+    // A large title's row starts at the bar frame, below the controls, and
+    // the content directly below it; an accessory keeps its clearance.
+    final lead = expandedHeight > 0 ? largeTitleLead : 0.0;
+    final expanded = expandedHeight + lead;
     final collapse = collapseExtent == 0
         ? (scrollOffset.value > 0 ? 1.0 : 0.0)
-        : (scrollOffset.value / collapseExtent).clamp(0.0, 1.0);
-    final largeHeight = expandedHeight * (1 - collapse);
+        : (scrollOffset.value / (collapseExtent + lead)).clamp(0.0, 1.0);
+    final largeHeight = expanded * (1 - collapse);
     // The body keeps the expanded bar's inset while the large title collapses:
     // content scrolls one for one beneath the title and accessory riding up
     // over it. A shrinking inset moved content twice as fast as the finger.
@@ -1252,9 +1267,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       top: topBar || accessoryHeight > 0
           ? top +
                 barRow +
-                expandedHeight +
+                expanded +
                 accessoryHeight +
-                LiquidPrismScaffold.topBarClearance
+                (lead > 0 && accessoryHeight == 0
+                    ? 0
+                    : LiquidPrismScaffold.topBarClearance)
           : top,
     );
     // The top bar row ends where a corner status bar begins.
@@ -1273,7 +1290,13 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         BoxConstraints.tight(
           Size(
             math.max(0, contentRight - contentLeft),
-            top + barRow + largeHeight + accessoryHeight + edgeFrame,
+            top +
+                barRow +
+                largeHeight +
+                accessoryHeight +
+                edgeFrame -
+                // The lead is the bar frame the edge already reaches.
+                (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
           ),
         ),
       );
@@ -1431,7 +1454,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         _Slot.largeTitle,
         Offset(
           barLeft + titleGutter,
-          top + barRow + 3.67 - math.min(scrollOffset.value, expandedHeight),
+          top +
+              barRow +
+              lead +
+              largeTitleTop -
+              math.min(scrollOffset.value, expandedHeight + lead),
         ),
       );
     }
@@ -1520,6 +1547,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       accessoryHeight != old.accessoryHeight ||
       titleRowHeight != old.titleRowHeight ||
       expandedHeight != old.expandedHeight ||
+      largeTitleTop != old.largeTitleTop ||
       collapseExtent != old.collapseExtent ||
       titleGutter != old.titleGutter ||
       titleGap != old.titleGap ||
