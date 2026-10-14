@@ -58,4 +58,50 @@ final class PackageFeaturesSpecsTests: XCTestCase {
     }
     func testTabs4() { shotPrefix = "Tabs4"; capture(false, tabs: 4) }
     func testTabs5() { shotPrefix = "Tabs5"; capture(false, tabs: 5) }
+    // Navigation subtitle / sheet bar fixtures. Rest, slow up (scrolled, collapse),
+    // slow down (back to rest). Sheets present 0.4 s after launch.
+    func nav(_ mode: String, dark: Bool = false) {
+        shotPrefix = "\(mode)\(dark ? "Dark" : "Light")"
+        let app = XCUIApplication()
+        app.launchArguments = ["--nav", mode] + (dark ? ["--dark"] : [])
+        app.launch()
+        sleep(4)
+        shot("rest")
+        let scroll = app.scrollViews.firstMatch
+        scroll.swipeUp(velocity: .slow)
+        sleep(3)
+        shot("slow-up")
+        scroll.swipeDown(velocity: .slow)
+        sleep(3)
+        shot("slow-down")
+        sleep(1)
+        app.terminate()
+    }
+    func testSubtitleInline() { nav("subtitleInline") }
+    func testSubtitleInlineDark() { nav("subtitleInline", dark: true) }
+    func testSubtitleLarge() { nav("subtitleLarge") }
+    func testSubtitleLargeDark() { nav("subtitleLarge", dark: true) }
+    func testSubtitleLong() { nav("subtitleLong") }
+    func testSheetLarge() { nav("sheetLarge") }
+    func testSheetLargeIndicator() { nav("sheetLargeIndicator") }
+    func testSheetMedium() { nav("sheetMedium") }
+    func testSheetMediumIndicator() { nav("sheetMediumIndicator") }
+    func testSheetLargeTitle() { nav("sheetLargeTitle") }
+    func testSheetMediumLargeTitle() { nav("sheetMediumLargeTitle") }
+    // Slow scrub of the large title + subtitle collapse (20 pt/s steps, 1.5 s holds).
+    func testSubtitleScrub() {
+        shotPrefix = "SubtitleScrub"
+        let app = XCUIApplication()
+        app.launchArguments = ["--nav", "subtitleLarge"]
+        app.launch()
+        sleep(3)
+        shot("rest")
+        let origin = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+        for step in 0..<4 {
+            origin.withOffset(CGVector(dx: 0, dy: 600)).press(forDuration: 0.3, thenDragTo: origin.withOffset(CGVector(dx: 0, dy: 560)), withVelocity: 20, thenHoldForDuration: 1.5)
+            shot("step\(step + 1)")
+        }
+        sleep(2)
+        app.terminate()
+    }
 }

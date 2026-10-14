@@ -6,7 +6,13 @@ git rev-parse HEAD > "$OUT/revision.txt"
 cd "$(dirname "$0")"
 xcodegen generate
 xcodebuild build-for-testing -project PackageFeaturesSpecs.xcodeproj -scheme PackageFeaturesSpecs -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath build CODE_SIGNING_ALLOWED=NO
-for appearance in ${PROBE_CASES:-Light Dark ToolbarLight ToolbarDark Tabs4 Tabs5 Scrub}; do
+# Navigation subtitle/sheet cases: SubtitleInline SubtitleInlineDark SubtitleLarge
+# SubtitleLargeDark SubtitleLong SubtitleScrub SheetLarge SheetLargeIndicator SheetMedium
+# SheetMediumIndicator SheetLargeTitle SheetMediumLargeTitle (PROBE_CASES=... or PROBE_CASES=Nav).
+NAV_CASES="SubtitleInline SubtitleInlineDark SubtitleLarge SubtitleLargeDark SubtitleLong SubtitleScrub SheetLarge SheetLargeIndicator SheetMedium SheetMediumIndicator SheetLargeTitle SheetMediumLargeTitle"
+CASES=${PROBE_CASES:-Light Dark ToolbarLight ToolbarDark Tabs4 Tabs5 Scrub}
+[ "$CASES" = Nav ] && CASES=$NAV_CASES
+for appearance in $CASES; do
   # The UI test writes rest, slow up/down and fast collapse screenshots itself
   # (TEST_RUNNER_PROBE_OUT reaches the runner as PROBE_OUT).
   DATA=$(xcrun simctl get_app_container "$UDID" dev.prism.packagefeatures data 2>/dev/null || true)
@@ -16,4 +22,5 @@ for appearance in ${PROBE_CASES:-Light Dark ToolbarLight ToolbarDark Tabs4 Tabs5
   mkdir -p "$OUT/$appearance"
   rm -rf "$OUT/$appearance/measurements"
   cp -R "$DATA/Documents/measurements" "$OUT/$appearance/"
+  # Each per-case directory keeps frames.json (per-frame sampler) beside the 100 ms dumps.
 done
