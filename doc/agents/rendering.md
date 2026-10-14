@@ -181,6 +181,31 @@ Shadow blur/offset/ring width scale with actual lens height unless opted out.
 Custom kernels/offsets require adequate clip extent; avoid hard-coded padding that
 clips a deeply customized shadow.
 
+## Frame budget
+
+The cheapest frame is one that is never drawn. Nothing in the package ticks
+while idle; keep it that way (no repeating controllers, no listeners that
+rebuild on unchanged values).
+
+- Springs stop when their remaining motion is invisible. Pass `precision` to
+  `springGlass` (from `GlassSettle.precision`: a quarter physical pixel of
+  movement, half an 8-bit step of colour) and the spring ends once its energy
+  bound says it can never stray further. Flutter's default tolerance waited for
+  0.001 units/s and kept a unit-range spring ticking for 0.3 to 0.4 s more. Leave
+  it null where a value's visible rate is unknown or very large (the slider
+  position: its fill blends over 2 % of the value).
+- Scrolling must not repaint the chrome. The scaffold's layout reads the scroll
+  offset only while the large title can move (`_layoutOffset` is clamped past
+  it), and `ScrollEdgeProgressBuilder` rebuilds an edge effect only when its
+  strength changes. A relayout of the scaffold's `CustomMultiChildLayout`
+  repaints its whole route boundary, re-recording every bar surface and shadow.
+- A `LiquidPrismSliverAppBar` sits under a `RepaintBoundary`: the viewport
+  repaints all slivers each scroll frame, and the pinned bar would otherwise be
+  re-recorded with them. Glass uniforms are read at composition, so a reused
+  bar layer still follows the scroll.
+
+`test/frame_budget_test.dart` covers these contracts.
+
 ## Fallback and lifecycle
 
 Shader preload is an optimization, not a requirement that removes fallback paths.

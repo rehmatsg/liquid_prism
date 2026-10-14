@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -223,6 +224,21 @@ class _LiquidPrismVisibilityState extends State<LiquidPrismVisibility>
                 SpringDescription.withDurationAndBounce(
                   duration: const Duration(milliseconds: 300),
                 ),
+      precision: _precision(style),
+    );
+  }
+
+  /// Presence fades the glass and its content (a full colour change per unit)
+  /// and grows the content blur and the lens refraction, which never displaces
+  /// by more than 0.55 of the surface's shorter side. Unknown before the
+  /// first layout of an entering surface, where the default tolerance stays.
+  double? _precision(GlassTransitionStyle style) {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || box.size.isEmpty) return null;
+    final reach = math.max(style.contentBlur ?? 8, box.size.shortestSide * .55);
+    return GlassSettle.precision(
+      alphaPerUnit: 1,
+      pixelsPerUnit: reach * (MediaQuery.maybeDevicePixelRatioOf(context) ?? 1),
     );
   }
 

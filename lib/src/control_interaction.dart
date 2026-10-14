@@ -97,6 +97,7 @@ class _ControlInteractionState extends State<ControlInteraction>
         stretch,
         _shapeSpring,
         velocity: _deformation.velocity + impulse,
+        precision: _deformationPrecision,
       );
     }
   }, settings: () => widget.motion);
@@ -153,7 +154,39 @@ class _ControlInteractionState extends State<ControlInteraction>
     RetargetableGlassSpring controller,
     double target,
     SpringDescription spring,
-  ) => springGlass(controller, target, spring, immediate: _reduceMotion);
+  ) => springGlass(
+    controller,
+    target,
+    spring,
+    immediate: _reduceMotion,
+    // The position keeps the default tolerance: a slider's fill blends over
+    // 2% of its value, so its colour moves fifty times faster than the value.
+    precision: identical(controller, _lift)
+        ? _liftPrecision
+        : identical(controller, _deformation)
+        ? _deformationPrecision
+        : null,
+  );
+
+  double _pixelRatio = 1;
+
+  /// Lift dissolves the resting fill into the lens (a full colour change per
+  /// unit) and grows the thumb or pill by under [_liftReach] points a side.
+  double? get _liftPrecision => GlassSettle.precision(
+    alphaPerUnit: 1,
+    pixelsPerUnit: _liftReach * _pixelRatio,
+  );
+  static const _liftReach = 24.0;
+
+  /// Deformation stretches the lens about its centre by a fraction of its
+  /// size, which the control's own extent bounds.
+  double? get _deformationPrecision {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    return GlassSettle.precision(
+      pixelsPerUnit: (box.size.longestSide / 2 + _liftReach) * _pixelRatio,
+    );
+  }
 
   @override
   void initState() {
@@ -166,6 +199,7 @@ class _ControlInteractionState extends State<ControlInteraction>
     super.didChangeDependencies();
     final rtl = Directionality.of(context) == TextDirection.rtl;
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
+    _pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
     if (_rtl != rtl || _reduceMotion) {
       _cancel();
       _position.value = widget.value;

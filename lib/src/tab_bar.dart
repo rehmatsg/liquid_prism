@@ -230,9 +230,44 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         _liftFactor;
     if ((target - _stretchTarget).abs() < .0001 && _stretch.isAnimating) return;
     _stretchTarget = target;
-    springGlass(_stretch, target, NativeMotion.stretchFilter);
-    springGlass(_crossStretch, -target * 110 / 70, NativeMotion.stretchFilter);
+    springGlass(
+      _stretch,
+      target,
+      NativeMotion.stretchFilter,
+      precision: _barPrecision,
+    );
+    springGlass(
+      _crossStretch,
+      -target * 110 / 70,
+      NativeMotion.stretchFilter,
+      precision: _barPrecision,
+    );
   }
+
+  double _pixelRatio = 1;
+
+  /// For values that scale or stretch geometry about the bar or lens centre:
+  /// no point moves farther than the housing's half length, grown by the held
+  /// scale, per unit.
+  double? get _barPrecision =>
+      GlassSettle.precision(pixelsPerUnit: _barWidth * .6 * _pixelRatio);
+
+  /// The pill travels one slot per unit, inside the slightly grown housing.
+  double? get _positionPrecision =>
+      GlassSettle.precision(pixelsPerUnit: _slotWidth * 1.2 * _pixelRatio);
+
+  /// Lift fades the resting pill out (a full colour change per unit) and
+  /// grows and refracts the lens by under [_liftReach] points a side.
+  double? get _liftPrecision => GlassSettle.precision(
+    alphaPerUnit: 1,
+    pixelsPerUnit: _liftReach * _pixelRatio,
+  );
+  static const _liftReach = 32.0;
+
+  /// The bar glow drives the housing's press grade, as a button's glow does.
+  static final _glowPrecision = GlassSettle.precision(
+    alphaPerUnit: NativeMotion.glowOpacity * .9 * .2,
+  );
 
   void _travelShape(double target, {bool contact = false}) {
     if (_trackingDeformation ||
@@ -265,6 +300,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final vertical = _resolveVertical();
     final reduced = MediaQuery.disableAnimationsOf(context);
+    _pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
     if (!_initialized || rtl != _rtl || vertical != _vertical) {
       _rtl = rtl;
       _vertical = vertical;
@@ -338,6 +374,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       _motion.spring,
       velocity: velocity,
       immediate: _reduceMotion,
+      precision: _positionPrecision,
     );
   }
 
@@ -348,7 +385,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
   }
 
   void _dropLens() {
-    springGlass(_lift, 0, NativeMotion.liftOut, immediate: _reduceMotion);
+    springGlass(
+      _lift,
+      0,
+      NativeMotion.liftOut,
+      immediate: _reduceMotion,
+      precision: _liftPrecision,
+    );
   }
 
   void _feedback(bool held, {bool finishLift = false}) {
@@ -365,6 +408,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         held && spatial ? 1 : 0,
         held ? NativeMotion.liftIn : NativeMotion.liftOut,
         immediate: _reduceMotion,
+        precision: _liftPrecision,
       );
     }
     springGlass(
@@ -372,12 +416,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       held && spatial ? 1 + NativeMotion.barExpansion / _barWidth * factor : 1,
       held ? NativeMotion.barScaleIn : NativeMotion.barScaleOut,
       immediate: _reduceMotion,
+      precision: _barPrecision,
     );
     springGlass(
       _glow,
       held ? 1 : 0,
       held ? NativeMotion.glowIn : NativeMotion.glowOut,
       immediate: _reduceMotion,
+      precision: _glowPrecision,
     );
     if (releasing) {
       _halo.forward(from: 0);
@@ -471,7 +517,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     );
     _trackingDeformation = false;
     _travelShape(slot, contact: true);
-    springGlass(_position, slot, _motion.spring, immediate: _reduceMotion);
+    springGlass(
+      _position,
+      slot,
+      _motion.spring,
+      immediate: _reduceMotion,
+      precision: _positionPrecision,
+    );
     _feedback(true);
     _updateWindow();
   }
@@ -504,7 +556,12 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     if (_reduceMotion) {
       _position.value = _fingerSlot;
     } else {
-      springGlass(_position, _fingerSlot, NativeMotion.tracking);
+      springGlass(
+        _position,
+        _fingerSlot,
+        NativeMotion.tracking,
+        precision: _positionPrecision,
+      );
     }
   }
 

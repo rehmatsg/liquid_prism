@@ -242,7 +242,78 @@ abstract final class NativeMotion {
   );
 }
 
+/// When a glass spring may stop: once its remaining motion cannot be seen.
+///
+/// Flutter's default spring tolerance waits for the velocity to fall below
+/// 0.001 units per second, which for a unit-range spring means an amplitude
+/// near 0.0001: frames keep being produced for a few hundred milliseconds
+/// after the last visible change. A precision instead bounds what is left.
+@internal
+abstract final class GlassSettle {
+  /// Largest remaining movement, in physical pixels, a settled spring skips.
+  static const pixel = 0.25;
+
+  /// Largest remaining colour or opacity change a settled spring skips: half
+  /// an 8-bit step.
+  static const channel = 0.5 / 255;
+
+  /// The value-space precision at which a spring's remaining motion moves
+  /// nothing by more than [pixel] physical pixels, given [pixelsPerUnit], and
+  /// changes no colour by more than [channel], given [alphaPerUnit] (the
+  /// largest colour change one unit of value can make). Null when neither
+  /// bound is known, which keeps Flutter's default tolerance.
+  static double? precision({
+    double pixelsPerUnit = 0,
+    double alphaPerUnit = 0,
+  }) {
+    double? result;
+    if (pixelsPerUnit > 0 && pixelsPerUnit.isFinite) {
+      result = pixel / pixelsPerUnit;
+    }
+    if (alphaPerUnit > 0 && alphaPerUnit.isFinite) {
+      final alpha = channel / alphaPerUnit;
+      result = result == null ? alpha : math.min(result, alpha);
+    }
+    return result;
+  }
+
+  /// A tolerance under which no later moment of the spring departs from its
+  /// target by more than [precision].
+  ///
+  /// A damped spring never gains energy, so from displacement x and velocity
+  /// v it can still reach at most sqrt(x² + (v/ω)²), ω its natural angular
+  /// frequency. Bounding |x| by precision/√2 and |v| by ω·precision/√2 keeps
+  /// that reach, and so the jump made when the spring snaps to its end,
+  /// within [precision].
+  static Tolerance tolerance(SpringDescription spring, double precision) {
+    final omega = math.sqrt(spring.stiffness / spring.mass);
+    final distance = precision / math.sqrt2;
+    return Tolerance(distance: distance, velocity: distance * omega);
+  }
+}
+
+SpringSimulation _glassSimulation(
+  SpringDescription spring,
+  double start,
+  double end,
+  double velocity,
+  double? precision,
+) => SpringSimulation(
+  spring,
+  start,
+  end,
+  velocity,
+  snapToEnd: true,
+  tolerance: precision == null
+      ? Tolerance.defaultTolerance
+      : GlassSettle.tolerance(spring, precision),
+);
+
 /// Retargets from the displayed position with uninterrupted velocity.
+///
+/// [precision] is the value-space change below which the spring's remaining
+/// motion is invisible (see [GlassSettle.precision]); null keeps Flutter's
+/// default tolerance.
 @internal
 void springGlass(
   AnimationController controller,
@@ -250,20 +321,26 @@ void springGlass(
   SpringDescription spring, {
   double? velocity,
   bool immediate = false,
+  double? precision,
 }) {
   if (immediate) {
     controller.value = target;
   } else if (controller is RetargetableGlassSpring) {
-    controller.retarget(target, spring, velocity: velocity);
+    controller.retarget(
+      target,
+      spring,
+      velocity: velocity,
+      precision: precision,
+    );
   } else {
     unawaited(
       controller.animateWith(
-        SpringSimulation(
+        _glassSimulation(
           spring,
           controller.value,
           target,
           velocity ?? controller.velocity,
-          snapToEnd: true,
+          precision,
         ),
       ),
     );
@@ -279,13 +356,18 @@ class RetargetableGlassSpring extends AnimationController {
 
   _RetargetedSpring? _running;
 
-  void retarget(double target, SpringDescription spring, {double? velocity}) {
-    final next = SpringSimulation(
+  void retarget(
+    double target,
+    SpringDescription spring, {
+    double? velocity,
+    double? precision,
+  }) {
+    final next = _glassSimulation(
       spring,
       value,
       target,
       velocity ?? this.velocity,
-      snapToEnd: true,
+      precision,
     );
     if (isAnimating && _running != null) {
       _running!.retarget(next);
