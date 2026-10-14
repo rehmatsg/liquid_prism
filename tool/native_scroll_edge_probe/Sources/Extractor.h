@@ -5,3 +5,5 @@
 /// images and layer contents sampled down their centre column, gradient
 /// layers' colors and locations. Research only; never shipped.
 void ExtractScrollEdge(NSString *name, NSDictionary *configuration);
+/// Traces scroll edge effect layers' opacity every frame for `seconds`.
+void TraceScrollEdge(NSString *name, double seconds);

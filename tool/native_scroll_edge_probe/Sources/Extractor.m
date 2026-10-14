@@ -157,3 +157,46 @@ void ExtractScrollEdge(NSString *name, NSDictionary *configuration) {
   [json writeToURL:[OutDir(@"extracted") URLByAppendingPathComponent:[name stringByAppendingString:@".json"]] atomically:YES];
   [[NSData data] writeToURL:[OutDir(@"extracted") URLByAppendingPathComponent:[name stringByAppendingString:@".done"]] atomically:YES];
 }
+
+/// Hairline probe: records, every display frame for `seconds`, the model and
+/// presentation opacity, hidden flag, frame and background colour of every
+/// layer whose delegate is a scroll edge effect class, to see whether and how
+/// the hard edge hairline animates in. Writes Documents/extracted/<name>.json.
+@interface HairlineTracer : NSObject
+@property NSString *name; @property CFTimeInterval start, seconds; @property NSMutableArray *frames; @property CADisplayLink *link;
+@end
+@implementation HairlineTracer
+- (void)tick:(CADisplayLink *)l {
+  CFTimeInterval t = CACurrentMediaTime() - self.start;
+  NSMutableArray *rows = [NSMutableArray new];
+  for (UIScene *s in UIApplication.sharedApplication.connectedScenes)
+    if ([s isKindOfClass:UIWindowScene.class])
+      for (UIWindow *w in [(UIWindowScene *)s windows]) [self walk:w.layer root:w.layer path:@"w" into:rows];
+  [self.frames addObject:@{@"t": @(t), @"layers": rows}];
+  if (t > self.seconds) {
+    [l invalidate];
+    NSData *json = [NSJSONSerialization dataWithJSONObject:@{@"frames": self.frames} options:NSJSONWritingPrettyPrinted error:nil];
+    [json writeToURL:[OutDir(@"extracted") URLByAppendingPathComponent:[self.name stringByAppendingString:@".json"]] atomically:YES];
+    [[NSData data] writeToURL:[OutDir(@"extracted") URLByAppendingPathComponent:[self.name stringByAppendingString:@".done"]] atomically:YES];
+    objc_setAssociatedObject(UIApplication.sharedApplication, @selector(tick:), nil, OBJC_ASSOCIATION_RETAIN);
+  }
+}
+- (void)walk:(CALayer *)l root:(CALayer *)root path:(NSString *)path into:(NSMutableArray *)rows {
+  NSString *dc = l.delegate ? NSStringFromClass([l.delegate class]) : @"";
+  if ([dc containsString:@"ScrollEdgeEffect"] || [dc containsString:@"ScrollPocket"]) {
+    CALayer *p = l.presentationLayer ?: l;
+    [rows addObject:@{@"path": path, @"delegate": dc, @"class": NSStringFromClass(l.class),
+      @"window": NSStringFromCGRect([l convertRect:l.bounds toLayer:root]),
+      @"opacity": @(l.opacity), @"presentationOpacity": @(p.opacity), @"hidden": @(l.hidden), @"presentationHidden": @(p.hidden),
+      @"backgroundColor": Encode((__bridge id)p.backgroundColor, @"trace"),
+      @"animationKeys": l.animationKeys ?: @[]}];
+  }
+  int i = 0; for (CALayer *s in l.sublayers) [self walk:s root:root path:[path stringByAppendingFormat:@"/%d", i++] into:rows];
+}
+@end
+void TraceScrollEdge(NSString *name, double seconds) {
+  HairlineTracer *t = [HairlineTracer new]; t.name = name; t.seconds = seconds; t.start = CACurrentMediaTime(); t.frames = [NSMutableArray new];
+  t.link = [CADisplayLink displayLinkWithTarget:t selector:@selector(tick:)];
+  [t.link addToRunLoop:NSRunLoop.mainRunLoop forMode:NSRunLoopCommonModes];
+  objc_setAssociatedObject(UIApplication.sharedApplication, @selector(tick:), t, OBJC_ASSOCIATION_RETAIN);
+}
