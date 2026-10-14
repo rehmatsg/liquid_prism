@@ -663,17 +663,27 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
             children: [
               Positioned.fill(child: capsule),
               Positioned.fill(
-                child: IgnorePointer(
-                  child: ExcludeSemantics(
-                    child: OverflowBox(
-                      alignment: AlignmentDirectional.topStart,
-                      maxWidth: vertical ? null : double.infinity,
-                      maxHeight: vertical ? double.infinity : null,
-                      child: Flex(
-                        direction: vertical ? Axis.vertical : Axis.horizontal,
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: badges,
+                // The glass scales itself about its centre while pressed
+                // (LiquidPrismPressFeedback.scaleOf), so the badges take the
+                // same live scale and follow the growing capsule.
+                child: Builder(
+                  builder: (context) => Transform.scale(
+                    scale: LiquidPrismPressFeedback.scaleOf(context),
+                    child: IgnorePointer(
+                      child: ExcludeSemantics(
+                        child: OverflowBox(
+                          alignment: AlignmentDirectional.topStart,
+                          maxWidth: vertical ? null : double.infinity,
+                          maxHeight: vertical ? double.infinity : null,
+                          child: Flex(
+                            direction: vertical
+                                ? Axis.vertical
+                                : Axis.horizontal,
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: badges,
+                          ),
+                        ),
                       ),
                     ),
                   ),
