@@ -282,7 +282,11 @@ them it centres.
 credits pill or a counter, centred on the control row 8 points from the first
 capsule (or at the trailing edge without actions); the title leads beside it
 as beside actions. An interactive heading, such as a feed switcher with a
-menu, belongs in `leading`, which takes any widget.
+menu, belongs in `leading`, which takes any widget: it is bounded by the
+actions and `trailing`, 12 points before them, so a long label ellipsizes
+rather than running under them. An inline title taller than the bar's row,
+such as a logo beside two lines at a large text size, scales down to fit the
+row instead of overflowing it.
 
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
 iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`

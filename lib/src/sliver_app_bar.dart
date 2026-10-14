@@ -579,16 +579,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       );
       positionChild(_Slot.edge, Offset.zero);
     }
-    if (hasChild(_Slot.leading)) {
-      final child = layoutChild(_Slot.leading, BoxConstraints.loose(size));
-      final x = rtl ? size.width - _edge - child.width : _edge;
-      if (rtl) {
-        trailingStart = x;
-      } else {
-        leadingEnd = x + child.width;
-      }
-      positionChild(_Slot.leading, Offset(x, centred(child)));
-    }
     if (hasChild(_Slot.actions)) {
       final child = layoutChild(_Slot.actions, BoxConstraints.loose(size));
       final x = rtl ? _edge : size.width - _edge - child.width;
@@ -613,6 +603,24 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         trailingStart = x;
       }
       positionChild(_Slot.trailing, Offset(x, centred(child)));
+    }
+    if (hasChild(_Slot.leading)) {
+      // Bounded by the actions and trailing widget, a title gap before them.
+      final bounded = hasChild(_Slot.actions) || hasChild(_Slot.trailing);
+      final room = rtl
+          ? size.width - _edge - (bounded ? leadingEnd + gap : _edge)
+          : (bounded ? trailingStart - gap : size.width - _edge) - _edge;
+      final child = layoutChild(
+        _Slot.leading,
+        BoxConstraints.loose(Size(math.max(0, room), size.height)),
+      );
+      final x = rtl ? size.width - _edge - child.width : _edge;
+      if (rtl) {
+        trailingStart = x;
+      } else {
+        leadingEnd = x + child.width;
+      }
+      positionChild(_Slot.leading, Offset(x, centred(child)));
     }
     if (hasChild(_Slot.title)) {
       final centre = size.width / 2;

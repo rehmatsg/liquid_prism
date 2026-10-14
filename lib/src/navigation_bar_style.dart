@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show internal;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'motion.dart' show GlassSpring;
@@ -118,6 +119,9 @@ Widget glassTitled(
   bool leading = false,
   double subtitleOffset = 0,
 }) {
+  if (!large) {
+    return _FitsRow(child: _titled(title, subtitle, subtitleStyle, leading));
+  }
   if (subtitle == null) return title;
   final line = DefaultTextStyle(
     style: subtitleStyle,
@@ -125,15 +129,6 @@ Widget glassTitled(
     overflow: TextOverflow.ellipsis,
     child: subtitle,
   );
-  if (!large) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: leading
-          ? CrossAxisAlignment.start
-          : CrossAxisAlignment.center,
-      children: [title, line],
-    );
-  }
   return Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,4 +144,108 @@ Widget glassTitled(
       line,
     ],
   );
+}
+
+Widget _titled(
+  Widget title,
+  Widget? subtitle,
+  TextStyle subtitleStyle,
+  bool leading,
+) {
+  if (subtitle == null) return title;
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: leading
+        ? CrossAxisAlignment.start
+        : CrossAxisAlignment.center,
+    children: [
+      title,
+      DefaultTextStyle(
+        style: subtitleStyle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        child: subtitle,
+      ),
+    ],
+  );
+}
+
+/// Lays an inline title out at its own height and, when that is taller than
+/// the bar's row (a two-line title at a large text size, say), scales it down
+/// to fit rather than letting it overflow the row.
+class _FitsRow extends SingleChildRenderObjectWidget {
+  const _FitsRow({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderFitsRow();
+}
+
+class _RenderFitsRow extends RenderProxyBox {
+  double _scale = 1;
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    child.layout(
+      BoxConstraints(maxWidth: constraints.maxWidth),
+      parentUsesSize: true,
+    );
+    final height = child.size.height;
+    _scale =
+        constraints.hasBoundedHeight &&
+            height > constraints.maxHeight &&
+            height > 0
+        ? constraints.maxHeight / height
+        : 1;
+    size = constraints.constrain(child.size * _scale);
+  }
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    final child = this.child;
+    if (child == null) return constraints.smallest;
+    final natural = child.getDryLayout(
+      BoxConstraints(maxWidth: constraints.maxWidth),
+    );
+    final scale =
+        constraints.hasBoundedHeight &&
+            natural.height > constraints.maxHeight &&
+            natural.height > 0
+        ? constraints.maxHeight / natural.height
+        : 1.0;
+    return constraints.constrain(natural * scale);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null) return;
+    if (_scale == 1) return super.paint(context, offset);
+    layer = context.pushTransform(
+      needsCompositing,
+      offset,
+      Matrix4.diagonal3Values(_scale, _scale, 1),
+      super.paint,
+      oldLayer: layer is TransformLayer ? layer as TransformLayer? : null,
+    );
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    if (_scale == 1) return super.hitTestChildren(result, position: position);
+    return result.addWithPaintTransform(
+      transform: Matrix4.diagonal3Values(_scale, _scale, 1),
+      position: position,
+      hitTest: (result, position) =>
+          super.hitTestChildren(result, position: position),
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.multiply(Matrix4.diagonal3Values(_scale, _scale, 1));
+  }
 }
