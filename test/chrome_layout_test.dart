@@ -555,16 +555,16 @@ void main() {
       expect(find.bySemanticsLabel('Hide sidebar'), findsNothing);
     });
   });
-  group('actionGroups', () {
+  group('actions in several capsules', () {
     GlassToolbarItem item(String label) => GlassToolbarItem(
       icon: const Icon(CupertinoIcons.star),
       label: label,
       onPressed: () {},
     );
-    Widget app(List<List<GlassToolbarItem>> groups) => CupertinoApp(
+    Widget app(List<Object> actions) => CupertinoApp(
       debugShowCheckedModeBanner: false,
       home: LiquidPrismScaffold(
-        actionGroups: groups,
+        actions: actions,
         tabBar: LiquidPrismTabBar(
           selectedIndex: 0,
           onSelected: (_) {},
@@ -631,15 +631,27 @@ void main() {
       expect(find.bySemanticsLabel('Filter'), findsNothing);
     });
 
-    test('actions and actionGroups are exclusive', () {
-      expect(
-        () => LiquidPrismScaffold(
-          actions: [item('A')],
-          actionGroups: const [],
-          body: const SizedBox(),
-        ),
-        throwsAssertionError,
+    testWidgets('a flat list is one capsule; loose items join a capsule', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(app([item('Share'), item('More')]));
+      await tester.pumpAndSettle();
+      expect(find.byType(LiquidPrismToolbarGroup), findsOneWidget);
+
+      await tester.pumpWidget(
+        app([
+          item('Filter'),
+          item('Sort'),
+          [item('Share'), item('More')],
+        ]),
       );
+      await tester.pumpAndSettle();
+      expect(find.byType(LiquidPrismToolbarGroup), findsNWidgets(2));
+      final first = tester.getRect(find.byType(LiquidPrismToolbarGroup).first);
+      final filter = tester.getCenter(find.bySemanticsLabel('Filter'));
+      final sort = tester.getCenter(find.bySemanticsLabel('Sort'));
+      expect(first.contains(filter) && first.contains(sort), isTrue);
     });
   });
 }

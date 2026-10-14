@@ -24,7 +24,7 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
         title: const Text('Inbox'),
         largeTitle: const Text('Inbox'),
         backgroundColor: GlassColors.of(context).groupedBackground,
-        actionGroups: [
+        actions: [
           [
             GlassToolbarItem(
               icon: const Icon(CupertinoIcons.bell),

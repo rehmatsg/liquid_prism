@@ -103,7 +103,6 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions = const [],
-    this.actionGroups,
     this.accessory,
     this.tabBar,
     this.placement,
@@ -112,10 +111,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.resizeToAvoidBottomInset = true,
     this.scrollEdge = true,
     this.scrollEdgeStyle,
-  }) : assert(
-         actionGroups == null || actions.length == 0,
-         'Pass actions or actionGroups, not both.',
-       );
+  });
 
   /// Full-window content. Usually a scroll view.
   final Widget body;
@@ -141,20 +137,42 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// route can pop: a back chevron, or a close mark on a fullscreen dialog.
   final bool automaticallyImplyLeading;
 
-  /// Actions sharing one glass capsule: top trailing, or atop the rail.
-  final List<GlassToolbarItem> actions;
+  /// Top-trailing actions, or atop the rail. Each element is a
+  /// [GlassToolbarItem] or a list of them: loose items next to each other
+  /// share one capsule, and each list is a capsule of its own, so
+  /// `[share, more]` is one capsule and `[[filter], [share, more]]` two.
+  /// Capsules lay out as [LiquidPrismToolbar] does: declare every group the
+  /// bar can show and let the lists carry state, so an empty list draws
+  /// nothing and materializes in when it gains an item. In the rail they
+  /// stack, and fold into one "More" menu when they do not fit.
+  final List<Object> actions;
 
-  /// Trailing actions in several capsules, leading to trailing, as a native
-  /// bar with more than one group of buttons; replaces [actions]. Each list
-  /// is one capsule, laid out as [LiquidPrismToolbar] does: declare every
-  /// group the bar can show and let the lists carry state, so an empty group
-  /// draws nothing and materializes in when it gains an item. In the rail
-  /// they stack, and fold into one "More" menu when they do not fit.
-  final List<List<GlassToolbarItem>>? actionGroups;
-
-  /// The trailing capsules: [actionGroups], or [actions] as one.
-  List<List<GlassToolbarItem>> get _actionGroups =>
-      actionGroups ?? [if (actions.isNotEmpty) actions];
+  /// The trailing capsules, in order.
+  List<List<GlassToolbarItem>> get _actionGroups {
+    final groups = <List<GlassToolbarItem>>[];
+    List<GlassToolbarItem>? loose;
+    for (final entry in actions) {
+      switch (entry) {
+        case GlassToolbarItem():
+          if (loose == null) groups.add(loose = []);
+          loose.add(entry);
+        case List():
+          assert(
+            entry.every((item) => item is GlassToolbarItem),
+            'A list in actions holds only GlassToolbarItems.',
+          );
+          loose = null;
+          groups.add(entry.whereType<GlassToolbarItem>().toList());
+        default:
+          assert(
+            false,
+            'actions holds GlassToolbarItems or lists of them, '
+            'not ${entry.runtimeType}.',
+          );
+      }
+    }
+    return groups;
+  }
 
   /// Every trailing action, in order.
   List<GlassToolbarItem> get _allActions => [

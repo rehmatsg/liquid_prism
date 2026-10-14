@@ -244,9 +244,10 @@ remain calibrated separately. Safe-area positioning belongs to the parent.
 ## Adaptive layout
 
 `LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and a
-`leading` control over a full-window `body`. For more than one trailing
-capsule, pass `actionGroups: [[filter], [share, more]]` instead of `actions`;
-an empty group draws nothing and materializes in when it gains an item, and
+`leading` control over a full-window `body`. Each action is a
+`GlassToolbarItem` or a list of them: `[share, more]` is one capsule,
+`[[filter], [share, more]]` two, and loose items next to each other share a
+capsule; an empty list draws nothing and materializes in when it gains an item, and
 in the iPhone Duo rail the groups stack or fold into one "More" menu. With no `leading`, a route that
 can pop gets a `LiquidPrismBackButton`: a glass back chevron, or a close mark
 on a fullscreen dialog, popping through `Navigator.maybePop`. Pass

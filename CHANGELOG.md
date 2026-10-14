@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-- Add `LiquidPrismScaffold.actionGroups` for several trailing capsules in the
-  top bar, laid out as `LiquidPrismToolbar`; `actions` remains the one-capsule
-  form.
+- Let `LiquidPrismScaffold.actions` hold several trailing capsules: each
+  element is a `GlassToolbarItem` or a list of them (`[[filter], [share,
+  more]]`), laid out as `LiquidPrismToolbar`. A flat list is still one
+  capsule.
 - Draw regular glass's thin dark outline all the way round in light
   appearance, as iOS 27 does: the top and bottom now keep about 30% of the
   ends' strength instead of fading out, so the white rim reads against it.
