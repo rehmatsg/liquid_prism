@@ -4,6 +4,10 @@
 
 ## 0.4.0
 
+- Fix a second hoisted edge effect (a bottom bar's under a top bar's) being
+  blurred only vertically: every effect's horizontal pass now runs before the
+  vertical passes that share the group's capture.
+- Fix the hard scroll edge's hairline, which had no width and never drew.
 - With actions in the bar, the inline title (and subtitle) now leads, after
   the leading control, in the scaffold and the sliver bar; without actions it
   still centres.

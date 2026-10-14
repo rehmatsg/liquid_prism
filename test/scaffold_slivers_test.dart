@@ -434,6 +434,15 @@ void main() {
       tester.getRect(find.byType(LiquidPrismScrollEdge)).bottom,
       62 + 44 + 10,
     );
+    // Its hairline spans the bar at the frame.
+    final hairline = tester.getRect(
+      find.byWidgetPredicate(
+        (w) => w is ColoredBox && w.color == GlassScrollEdgeStyle.hairlineColor,
+      ),
+    );
+    expect(hairline.width, 402);
+    expect(hairline.bottom, 62 + 44 + 10);
+    expect(hairline.height, 1);
   });
 
   testWidgets('beside actions the title leads; without them it centres', (

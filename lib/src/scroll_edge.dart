@@ -329,11 +329,12 @@ class LiquidPrismScrollEdge extends StatelessWidget {
           ),
         ),
         if (hairline)
+          // Spanning the edge, a device pixel thick at its far side.
           Positioned(
-            top: edge == GlassEdge.bottom ? 0 : null,
-            bottom: edge == GlassEdge.top ? 0 : null,
-            left: edge == GlassEdge.right ? 0 : null,
-            right: edge == GlassEdge.left ? 0 : null,
+            top: edge == GlassEdge.bottom || !edge.isHorizontal ? 0 : null,
+            bottom: edge == GlassEdge.top || !edge.isHorizontal ? 0 : null,
+            left: edge == GlassEdge.right || edge.isHorizontal ? 0 : null,
+            right: edge == GlassEdge.left || edge.isHorizontal ? 0 : null,
             width: edge.isHorizontal ? null : pixel,
             height: edge.isHorizontal ? pixel : null,
             child: IgnorePointer(
