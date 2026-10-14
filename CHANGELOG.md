@@ -4,6 +4,12 @@
 
 ## 0.4.0
 
+- With actions in the bar, the inline title (and subtitle) now leads, after
+  the leading control, in the scaffold and the sliver bar; without actions it
+  still centres.
+- The title swap now runs on springs: the inline title rises into place with
+  a little bounce (`GlassNavigationBarStyle.revealSpring`, default
+  `titleSpring`); `revealCurve` is deprecated.
 - Add `subtitle` to `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`, as
   measured from SwiftUI's `navigationSubtitle`: a 15-point title over a
   12-point secondary subtitle inline, an 11-point subtitle under a large

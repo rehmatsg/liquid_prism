@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'chrome_layout.dart';
 import 'glass.dart';
 import 'glass_transition.dart';
+import 'motion.dart';
 import 'navigation_bar_style.dart';
 import 'scroll_edge.dart';
 import 'theme.dart';
@@ -231,19 +232,10 @@ class _SliverBar extends StatefulWidget {
 }
 
 class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
-  // Measured on iOS 27, as in LiquidPrismScaffold: once the large title's row
-  // has scrolled away the titles swap on a timer. The large title fades out
-  // in about 0.18 s; the inline title fades in over about 0.53 s while rising
-  // 15 points, and back out over about 0.8 s.
-  late final _largeFade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 180),
-  );
-  late final _inlineFade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 530),
-    reverseDuration: const Duration(milliseconds: 800),
-  );
+  // As in LiquidPrismScaffold: once the large title's row has scrolled away
+  // the titles swap on springs (see GlassNavigationBarStyle).
+  late final _largeFade = RetargetableGlassSpring(vsync: this);
+  late final _inlineFade = RetargetableGlassSpring(vsync: this);
   bool _collapsed = false;
 
   ScrollPosition? _position;
@@ -286,15 +278,21 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
     final collapsed = _isCollapsed;
     if (collapsed == _collapsed) return;
     _collapsed = collapsed;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _largeFade.value = _inlineFade.value = collapsed ? 1 : 0;
-    } else if (collapsed) {
-      _largeFade.forward();
-      _inlineFade.forward();
-    } else {
-      _largeFade.reverse();
-      _inlineFade.reverse();
-    }
+    final immediate = MediaQuery.disableAnimationsOf(context);
+    final target = collapsed ? 1.0 : 0.0;
+    springGlass(
+      _largeFade,
+      target,
+      GlassNavigationBarStyle.largeTitleSpring.description,
+      immediate: immediate,
+    );
+    springGlass(
+      _inlineFade,
+      target,
+      (_d.navigation.revealSpring ?? GlassNavigationBarStyle.titleSpring)
+          .description,
+      immediate: immediate,
+    );
   }
 
   /// How far content has scrolled under the collapsed bar: the large title's
@@ -328,17 +326,13 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       ),
     );
     if (_d.bar.largeTitle == null) return IgnorePointer(child: text);
-    final curve = _d.navigation.revealCurve ?? Curves.easeOutCubic;
-    final inline = CurvedAnimation(
-      parent: _inlineFade,
-      curve: curve,
-      reverseCurve: curve.flipped,
-    );
     return AnimatedBuilder(
       animation: Listenable.merge([_largeFade, _inlineFade]),
       builder: (context, child) {
         final visible = large ? !_collapsed : _collapsed;
-        final opacity = large ? 1 - _largeFade.value : inline.value;
+        // Opacity clamps; the rise keeps the spring's overshoot.
+        final inline = _inlineFade.value;
+        final opacity = large ? 1 - _largeFade.value : inline;
         return ExcludeSemantics(
           excluding: !visible,
           child: IgnorePointer(
@@ -350,7 +344,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
               child: large
                   ? child!
                   : Transform.translate(
-                      offset: Offset(0, 15 * (1 - inline.value)),
+                      offset: Offset(0, 15 * (1 - inline)),
                       child: child,
                     ),
             ),
@@ -437,6 +431,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                   bar.subtitle,
                   _d.subtitleStyle,
                   large: false,
+                  leading: bar.actions.isNotEmpty,
                 ),
                 _d.titleStyle,
                 large: false,
@@ -535,15 +530,27 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         size.width - gutter,
         trailingStart - (trailingStart < size.width ? gap : 0),
       );
-      final half = math.max(0.0, math.min(centre - left, right - centre));
-      final title = layoutChild(
-        _Slot.title,
-        BoxConstraints.loose(Size(2 * half, barRow)),
-      );
-      positionChild(
-        _Slot.title,
-        Offset(centre - title.width / 2, centred(title)),
-      );
+      if (hasChild(_Slot.actions)) {
+        // Beside actions the title leads, after the leading control.
+        final title = layoutChild(
+          _Slot.title,
+          BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
+        );
+        positionChild(
+          _Slot.title,
+          Offset(rtl ? right - title.width : left, centred(title)),
+        );
+      } else {
+        final half = math.max(0.0, math.min(centre - left, right - centre));
+        final title = layoutChild(
+          _Slot.title,
+          BoxConstraints.loose(Size(2 * half, barRow)),
+        );
+        positionChild(
+          _Slot.title,
+          Offset(centre - title.width / 2, centred(title)),
+        );
+      }
     }
     if (hasChild(_Slot.largeTitle)) {
       // The title rides the content up, as measured, while its row shrinks.

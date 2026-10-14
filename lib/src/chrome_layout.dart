@@ -365,18 +365,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   }
 
   // Measured on iOS 27: the large title scrolls with the content and, once
-  // the scroll passes its row, the titles swap on a timer rather than with the
-  // scroll. The large title fades out in about 0.18 s; the inline title fades
-  // in over about 0.53 s while rising 15 points, and back out over about 0.8 s.
-  late final _largeFade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 180),
-  );
-  late final _inlineFade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 530),
-    reverseDuration: const Duration(milliseconds: 800),
-  );
+  // the scroll passes its row, the titles swap on springs rather than with the
+  // scroll: the large title leaves in about 0.18 s, the inline title rises 15
+  // points into place over about 0.5 s (see GlassNavigationBarStyle).
+  late final _largeFade = RetargetableGlassSpring(vsync: this);
+  late final _inlineFade = RetargetableGlassSpring(vsync: this);
   bool _collapsed = false;
   double _collapseAt = double.infinity;
 
@@ -384,15 +377,25 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final collapsed = _scrollOffset.value >= _collapseAt;
     if (collapsed == _collapsed) return;
     _collapsed = collapsed;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _largeFade.value = _inlineFade.value = collapsed ? 1 : 0;
-    } else if (collapsed) {
-      _largeFade.forward();
-      _inlineFade.forward();
-    } else {
-      _largeFade.reverse();
-      _inlineFade.reverse();
-    }
+    final navigation =
+        (LiquidPrismTheme.of(context).navigationBar ??
+                const GlassNavigationBarStyle())
+            .merge(widget.navigationBarStyle);
+    final immediate = MediaQuery.disableAnimationsOf(context);
+    final target = collapsed ? 1.0 : 0.0;
+    springGlass(
+      _largeFade,
+      target,
+      GlassNavigationBarStyle.largeTitleSpring.description,
+      immediate: immediate,
+    );
+    springGlass(
+      _inlineFade,
+      target,
+      (navigation.revealSpring ?? GlassNavigationBarStyle.titleSpring)
+          .description,
+      immediate: immediate,
+    );
   }
 
   /// How far the sidebar is shown: it slides the panel and reflows the body.
@@ -583,11 +586,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _collapsed = false;
       _largeFade.value = _inlineFade.value = 0;
     }
-    final inline = CurvedAnimation(
-      parent: _inlineFade,
-      curve: navigation.revealCurve ?? Curves.easeOutCubic,
-      reverseCurve: (navigation.revealCurve ?? Curves.easeOutCubic).flipped,
-    );
+    // With actions in the bar, the title leads instead of centring.
+    final titleLeads = widget._allActions.isNotEmpty;
     // The shared glass content blur, so titles focus in like glass content.
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
     Widget header(Widget child, TextStyle style, {required bool large}) {
@@ -606,7 +606,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         animation: Listenable.merge([_largeFade, _inlineFade]),
         builder: (context, child) {
           final visible = large ? !_collapsed : _collapsed;
-          final opacity = large ? 1 - _largeFade.value : inline.value;
+          // Opacity clamps; the rise keeps the spring's overshoot.
+          final inline = _inlineFade.value;
+          final opacity = large ? 1 - _largeFade.value : inline;
           return ExcludeSemantics(
             excluding: !visible,
             child: IgnorePointer(
@@ -618,7 +620,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 child: large
                     ? child!
                     : Transform.translate(
-                        offset: Offset(0, 15 * (1 - inline.value)),
+                        offset: Offset(0, 15 * (1 - inline)),
                         child: child,
                       ),
               ),
@@ -758,7 +760,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           LayoutId(
             id: _Slot.title,
             child: header(
-              glassTitled(title, widget.subtitle, subtitleStyle, large: false),
+              glassTitled(
+                title,
+                widget.subtitle,
+                subtitleStyle,
+                large: false,
+                leading: titleLeads,
+              ),
               titleStyle,
               large: false,
             ),
@@ -1307,6 +1315,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     // reflows beneath the panel; the leading widget follows the body.
     var leadingOffset = _edge;
     var leadingEnd = barLeft;
+    var actionsInBar = false;
     var trailingStart = barRight;
     if (hasChild(_Slot.sidebarToggle)) {
       final toggle = layoutChild(
@@ -1370,6 +1379,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         } else {
           trailingStart = x;
         }
+        actionsInBar = true;
         positionChild(
           _Slot.actions,
           Offset(x, top + math.max(0, (barRow - actions.height) / 2)),
@@ -1387,15 +1397,27 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      final half = math.max(0.0, math.min(centre - left, right - centre));
-      final title = layoutChild(
-        _Slot.title,
-        BoxConstraints.loose(Size(2 * half, barRow)),
-      );
-      positionChild(
-        _Slot.title,
-        Offset(centre - title.width / 2, centred(title)),
-      );
+      if (actionsInBar) {
+        // Beside actions the title leads, after the leading control.
+        final title = layoutChild(
+          _Slot.title,
+          BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
+        );
+        positionChild(
+          _Slot.title,
+          Offset(rtl ? right - title.width : left, centred(title)),
+        );
+      } else {
+        final half = math.max(0.0, math.min(centre - left, right - centre));
+        final title = layoutChild(
+          _Slot.title,
+          BoxConstraints.loose(Size(2 * half, barRow)),
+        );
+        positionChild(
+          _Slot.title,
+          Offset(centre - title.width / 2, centred(title)),
+        );
+      }
     }
     if (hasChild(_Slot.largeTitle)) {
       // The title rides the content up, as measured, while the row shrinks.

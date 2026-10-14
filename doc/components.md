@@ -271,7 +271,9 @@ down, as in a tab view, pass `scrollDepth: 1`.
 `header:` puts your own heading at the top of the slivers, such as a detail
 page's icon and title; it scrolls away under the bar and the inline `title`
 fades in once it has, as after a large title. Titles focus in and out through
-a blur as they fade.
+a blur as they fade, on springs (`GlassNavigationBarStyle.revealSpring`). With
+actions in the bar the inline title leads, after the leading control; without
+them it centres.
 
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
 iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`

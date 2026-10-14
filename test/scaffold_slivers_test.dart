@@ -435,4 +435,88 @@ void main() {
       62 + 44 + 10,
     );
   });
+
+  testWidgets('beside actions the title leads; without them it centres', (
+    tester,
+  ) async {
+    phone(tester);
+    Widget page({required bool actions, bool sliverBar = false}) {
+      final items = [
+        if (actions)
+          GlassToolbarItem(
+            icon: const Icon(CupertinoIcons.star),
+            label: 'Star',
+            onPressed: () {},
+          ),
+      ];
+      const leading = SizedBox(key: ValueKey('leading'), width: 44, height: 44);
+      return CupertinoApp(
+        home: sliverBar
+            ? CustomScrollView(
+                slivers: [
+                  LiquidPrismSliverAppBar(
+                    leading: leading,
+                    title: const Text('Title'),
+                    actions: items,
+                  ),
+                ],
+              )
+            : LiquidPrismScaffold(
+                leading: leading,
+                title: const Text('Title'),
+                actions: items,
+                slivers: rows(),
+              ),
+      );
+    }
+
+    for (final sliverBar in [false, true]) {
+      await tester.pumpWidget(page(actions: true, sliverBar: sliverBar));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('Title')).left,
+        rectOf(tester, 'leading').right + 12,
+        reason: 'sliverBar: $sliverBar',
+      );
+      await tester.pumpWidget(page(actions: false, sliverBar: sliverBar));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text('Title')).center.dx,
+        closeTo(201, .5),
+        reason: 'sliverBar: $sliverBar',
+      );
+    }
+  });
+
+  testWidgets('the inline title springs into place', (tester) async {
+    phone(tester);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Inline'),
+          largeTitle: const Text('Large'),
+          scrollController: controller,
+          slivers: rows(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    controller.jumpTo(200);
+    await tester.pump();
+    final rest = tester.getTopLeft(find.text('Inline')).dy;
+    var highest = rest;
+    for (var i = 0; i < 60; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      highest = [
+        highest,
+        tester.getTopLeft(find.text('Inline')).dy,
+      ].reduce((a, b) => a < b ? a : b);
+    }
+    await tester.pumpAndSettle();
+    final settled = tester.getTopLeft(find.text('Inline')).dy;
+    expect(rest, greaterThan(settled), reason: 'it starts low and rises');
+    expect(highest, lessThan(settled), reason: 'and overshoots, as a spring');
+  });
 }
