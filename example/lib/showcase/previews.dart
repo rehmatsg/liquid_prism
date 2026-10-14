@@ -5,6 +5,7 @@ import 'model.dart';
 import 'widgets.dart';
 import 'package_features_demo.dart';
 import 'search_page.dart';
+import 'sliver_bar_page.dart';
 
 class LensPlayground extends StatefulWidget {
   const LensPlayground({
@@ -570,6 +571,15 @@ class _ComponentPreviewState extends State<ComponentPreview> {
               ScrollEdgePreview(model: m),
               const SizedBox(height: 20),
               const PackageFeaturesDemo(),
+              const SizedBox(height: 20),
+              LiquidPrismButton(
+                key: const ValueKey('open-sliver-bar'),
+                label: 'Open a page with a sliver app bar',
+                onPressed: () => Navigator.of(context).push<void>(
+                  CupertinoPageRoute(builder: (_) => const SliverBarPage()),
+                ),
+                child: const Text('Sliver App Bar'),
+              ),
               const SizedBox(height: 20),
               const Text(
                 'A scroll fade softens whichever edge content runs past.',

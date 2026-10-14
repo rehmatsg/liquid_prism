@@ -168,6 +168,35 @@ class LiquidPrismBackButton extends StatelessWidget {
   }
 }
 
+/// Capsules from a bar's `actions`: each element is a [GlassToolbarItem] or
+/// a list of them. Loose items next to each other share one capsule, and each
+/// list is a capsule of its own.
+List<List<GlassToolbarItem>> glassActionGroups(List<Object> actions) {
+  final groups = <List<GlassToolbarItem>>[];
+  List<GlassToolbarItem>? loose;
+  for (final entry in actions) {
+    switch (entry) {
+      case GlassToolbarItem():
+        if (loose == null) groups.add(loose = []);
+        loose.add(entry);
+      case List():
+        assert(
+          entry.every((item) => item is GlassToolbarItem),
+          'A list in actions holds only GlassToolbarItems.',
+        );
+        loose = null;
+        groups.add(entry.whereType<GlassToolbarItem>().toList());
+      default:
+        assert(
+          false,
+          'actions holds GlassToolbarItems or lists of them, '
+          'not ${entry.runtimeType}.',
+        );
+    }
+  }
+  return groups;
+}
+
 /// Several capsules of icon actions in a row, as a navigation bar's trailing
 /// toolbars: one [LiquidPrismToolbarGroup] per group, [spacing] apart.
 ///

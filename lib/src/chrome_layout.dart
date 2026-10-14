@@ -148,31 +148,7 @@ class LiquidPrismScaffold extends StatefulWidget {
   final List<Object> actions;
 
   /// The trailing capsules, in order.
-  List<List<GlassToolbarItem>> get _actionGroups {
-    final groups = <List<GlassToolbarItem>>[];
-    List<GlassToolbarItem>? loose;
-    for (final entry in actions) {
-      switch (entry) {
-        case GlassToolbarItem():
-          if (loose == null) groups.add(loose = []);
-          loose.add(entry);
-        case List():
-          assert(
-            entry.every((item) => item is GlassToolbarItem),
-            'A list in actions holds only GlassToolbarItems.',
-          );
-          loose = null;
-          groups.add(entry.whereType<GlassToolbarItem>().toList());
-        default:
-          assert(
-            false,
-            'actions holds GlassToolbarItems or lists of them, '
-            'not ${entry.runtimeType}.',
-          );
-      }
-    }
-    return groups;
-  }
+  List<List<GlassToolbarItem>> get _actionGroups => glassActionGroups(actions);
 
   /// Every trailing action, in order.
   List<GlassToolbarItem> get _allActions => [

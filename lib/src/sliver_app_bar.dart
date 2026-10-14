@@ -1,0 +1,510 @@
+import 'dart:math' as math;
+
+import 'package:flutter/widgets.dart';
+
+import 'chrome_layout.dart';
+import 'glass.dart';
+import 'navigation_bar_style.dart';
+import 'scroll_edge.dart';
+import 'theme.dart';
+import 'toolbar.dart';
+
+/// A pinned navigation bar for a [CustomScrollView], laid out as
+/// [LiquidPrismScaffold]'s top bar: a [leading] control, an inline [title],
+/// trailing [actions], a collapsing [largeTitle] and an [accessory] row, over
+/// the scroll edge effect.
+///
+/// Its glass and its edge effect share one [LiquidPrismGroup], so the bar's
+/// controls refract the content beneath them before the effect blurs and fades
+/// it. Use it as the scroll view's first sliver:
+///
+/// ```dart
+/// CustomScrollView(
+///   slivers: [
+///     LiquidPrismSliverAppBar(
+///       title: const Text('Inbox'),
+///       largeTitle: const Text('Inbox'),
+///       actions: [[filter], [share, more]],
+///     ),
+///     SliverList.builder(...),
+///   ],
+/// )
+/// ```
+///
+/// The large title rides the scroll in its 52-point row and, once that row
+/// has scrolled away, swaps to [title] on a timer, as measured on iOS 27; see
+/// [GlassNavigationBarStyle].
+class LiquidPrismSliverAppBar extends StatelessWidget {
+  const LiquidPrismSliverAppBar({
+    super.key,
+    this.title,
+    this.largeTitle,
+    this.leading,
+    this.automaticallyImplyLeading = true,
+    this.actions = const [],
+    this.accessory,
+    this.backgroundColor,
+    this.scrollEdge = true,
+    this.scrollEdgeStyle,
+    this.navigationBarStyle,
+  });
+
+  /// Inline header, centred between [leading] and [actions].
+  final Widget? title;
+
+  /// Expanded header in a row below the controls; supply [title] too for the
+  /// collapsed header. Only the visible header contributes semantics.
+  final Widget? largeTitle;
+
+  /// A top-leading control. Null implies a [LiquidPrismBackButton] when the
+  /// route can pop; see [automaticallyImplyLeading].
+  final Widget? leading;
+
+  /// Whether a null [leading] becomes a back control, or a close control on a
+  /// fullscreen dialog, when the route can pop.
+  final bool automaticallyImplyLeading;
+
+  /// Top-trailing actions: [GlassToolbarItem]s or lists of them, as
+  /// [LiquidPrismScaffold.actions].
+  final List<Object> actions;
+
+  /// A row below the bar and inside its scroll edge effect, such as segmented
+  /// tabs. Pair it with [GlassScrollEdgeVariant.hard] for a bar with a hard
+  /// edge.
+  final PreferredSizeWidget? accessory;
+
+  /// The surface content fades into under the bar. Null uses the scroll edge
+  /// style's `fadeColor`.
+  final Color? backgroundColor;
+
+  /// Whether content scrolled under the bar takes the scroll edge effect.
+  final bool scrollEdge;
+
+  /// Overrides the theme's [GlassScrollEdgeStyle] field by field.
+  final GlassScrollEdgeStyle? scrollEdgeStyle;
+
+  /// Overrides the theme's [GlassNavigationBarStyle] field by field.
+  final GlassNavigationBarStyle? navigationBarStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final navigation =
+        (LiquidPrismTheme.of(context).navigationBar ??
+                const GlassNavigationBarStyle())
+            .merge(navigationBarStyle);
+    final colors = GlassColors.of(context);
+    final titleStyle = TextStyle(
+      fontSize: 17,
+      fontWeight: FontWeight.w600,
+      color: colors.label,
+    ).merge(navigation.titleStyle);
+    final largeTitleStyle = TextStyle(
+      fontSize: 34,
+      fontWeight: FontWeight.w700,
+      color: colors.label,
+    ).merge(navigation.largeTitleStyle);
+    final scaler = media.textScaler;
+    // The same measured geometry as LiquidPrismScaffold's top bar.
+    final top = math.max(media.padding.top, 24.0);
+    final barRow = title == null
+        ? LiquidPrismScaffold.topBarHeight
+        : math.max(
+            LiquidPrismScaffold.topBarHeight,
+            scaler.scale(titleStyle.fontSize ?? 17) *
+                    (titleStyle.height ?? 1.2) +
+                8,
+          );
+    final largeRow = largeTitle == null
+        ? 0.0
+        : scaler.scale(largeTitleStyle.fontSize ?? 34) *
+                  (largeTitleStyle.height ?? 1.2) +
+              11.33;
+    final accessoryHeight = accessory?.preferredSize.height ?? 0;
+    final minExtent =
+        top + barRow + accessoryHeight + LiquidPrismScaffold.topBarClearance;
+    final route = ModalRoute.of(context);
+    final impliedLeading =
+        leading ??
+        (automaticallyImplyLeading && route != null && route.canPop
+            ? LiquidPrismBackButton(
+                close: route is PageRoute && route.fullscreenDialog,
+              )
+            : null);
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _SliverBarDelegate(
+        bar: this,
+        leading: impliedLeading,
+        titleStyle: titleStyle,
+        largeTitleStyle: largeTitleStyle,
+        navigation: navigation,
+        top: top,
+        barRow: barRow,
+        largeRow: largeRow,
+        accessoryHeight: accessoryHeight,
+        minExtent: minExtent,
+        maxExtent: minExtent + largeRow,
+      ),
+    );
+  }
+}
+
+class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverBarDelegate({
+    required this.bar,
+    required this.leading,
+    required this.titleStyle,
+    required this.largeTitleStyle,
+    required this.navigation,
+    required this.top,
+    required this.barRow,
+    required this.largeRow,
+    required this.accessoryHeight,
+    required this.minExtent,
+    required this.maxExtent,
+  });
+  final LiquidPrismSliverAppBar bar;
+  final Widget? leading;
+  final TextStyle titleStyle, largeTitleStyle;
+  final GlassNavigationBarStyle navigation;
+  final double top, barRow, largeRow, accessoryHeight;
+  @override
+  final double minExtent, maxExtent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => _SliverBar(delegate: this, shrinkOffset: shrinkOffset);
+
+  @override
+  bool shouldRebuild(_SliverBarDelegate old) =>
+      old.bar != bar ||
+      old.leading != leading ||
+      old.titleStyle != titleStyle ||
+      old.largeTitleStyle != largeTitleStyle ||
+      old.navigation != navigation ||
+      old.top != top ||
+      old.barRow != barRow ||
+      old.largeRow != largeRow ||
+      old.accessoryHeight != accessoryHeight ||
+      old.minExtent != minExtent;
+}
+
+class _SliverBar extends StatefulWidget {
+  const _SliverBar({required this.delegate, required this.shrinkOffset});
+  final _SliverBarDelegate delegate;
+  final double shrinkOffset;
+
+  @override
+  State<_SliverBar> createState() => _SliverBarState();
+}
+
+class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
+  // Measured on iOS 27, as in LiquidPrismScaffold: once the large title's row
+  // has scrolled away the titles swap on a timer. The large title fades out
+  // in about 0.18 s; the inline title fades in over about 0.53 s while rising
+  // 15 points, and back out over about 0.8 s.
+  late final _largeFade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+  );
+  late final _inlineFade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 530),
+    reverseDuration: const Duration(milliseconds: 800),
+  );
+  bool _collapsed = false;
+
+  ScrollPosition? _position;
+  final _scrolled = ValueNotifier<double>(0);
+
+  _SliverBarDelegate get _d => widget.delegate;
+
+  @override
+  void initState() {
+    super.initState();
+    _collapsed = _isCollapsed;
+    _largeFade.value = _inlineFade.value = _collapsed ? 1 : 0;
+  }
+
+  bool get _isCollapsed {
+    final reveal = _d.navigation.revealExtent ?? _d.largeRow;
+    return _d.bar.largeTitle != null &&
+        widget.shrinkOffset >= math.min(reveal, _d.largeRow) - .01 &&
+        widget.shrinkOffset > 0;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (position != _position) {
+      _position?.removeListener(_track);
+      _position = position?..addListener(_track);
+      _track();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_SliverBar old) {
+    super.didUpdateWidget(old);
+    final collapsed = _isCollapsed;
+    if (collapsed == _collapsed) return;
+    _collapsed = collapsed;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _largeFade.value = _inlineFade.value = collapsed ? 1 : 0;
+    } else if (collapsed) {
+      _largeFade.forward();
+      _inlineFade.forward();
+    } else {
+      _largeFade.reverse();
+      _inlineFade.reverse();
+    }
+  }
+
+  /// How far content has scrolled under the collapsed bar: the large title's
+  /// row scrolls away first.
+  void _track() {
+    final position = _position;
+    if (position == null || !position.hasPixels) return;
+    final start = position.hasContentDimensions
+        ? position.minScrollExtent
+        : 0.0;
+    _scrolled.value = math.max(0, position.pixels - start - _d.largeRow);
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_track);
+    _scrolled.dispose();
+    _largeFade.dispose();
+    _inlineFade.dispose();
+    super.dispose();
+  }
+
+  Widget _header(Widget child, TextStyle style, {required bool large}) {
+    final text = Semantics(
+      header: true,
+      child: DefaultTextStyle(
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        child: child,
+      ),
+    );
+    if (_d.bar.largeTitle == null) return IgnorePointer(child: text);
+    final curve = _d.navigation.revealCurve ?? Curves.easeOutCubic;
+    final inline = CurvedAnimation(
+      parent: _inlineFade,
+      curve: curve,
+      reverseCurve: curve.flipped,
+    );
+    return AnimatedBuilder(
+      animation: Listenable.merge([_largeFade, _inlineFade]),
+      builder: (context, child) {
+        final visible = large ? !_collapsed : _collapsed;
+        final opacity = large ? 1 - _largeFade.value : inline.value;
+        return ExcludeSemantics(
+          excluding: !visible,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: large
+                  ? child
+                  : Transform.translate(
+                      offset: Offset(0, 15 * (1 - inline.value)),
+                      child: child,
+                    ),
+            ),
+          ),
+        );
+      },
+      child: text,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bar = _d.bar;
+    final groups = glassActionGroups(bar.actions);
+    final shrink = widget.shrinkOffset.clamp(0.0, _d.largeRow);
+    final edgeStyle = GlassScrollEdgeStyle.resolve(
+      context,
+      bar.scrollEdgeStyle,
+    );
+    return LiquidPrismGroup(
+      child: CustomMultiChildLayout(
+        delegate: _SliverBarLayout(
+          textDirection: Directionality.of(context),
+          top: _d.top,
+          barRow: _d.barRow,
+          largeRow: _d.largeRow,
+          shrink: shrink,
+          accessoryHeight: _d.accessoryHeight,
+          gutter: _d.navigation.gutter ?? 16,
+          gap: _d.navigation.controlGap ?? 12,
+        ),
+        children: [
+          if (bar.scrollEdge)
+            LayoutId(
+              id: _Slot.edge,
+              child: IgnorePointer(
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _scrolled,
+                  builder: (context, scrolled, _) => LiquidPrismScrollEdge(
+                    progress: LiquidPrismScrollEdge.progressFor(
+                      scrolled,
+                      revealExtent:
+                          edgeStyle.revealExtent ??
+                          GlassScrollEdgeStyle.defaultRevealExtent,
+                    ),
+                    color: bar.backgroundColor,
+                    style: bar.scrollEdgeStyle,
+                  ),
+                ),
+              ),
+            ),
+          if (bar.largeTitle case final large?)
+            LayoutId(
+              id: _Slot.largeTitle,
+              child: _header(large, _d.largeTitleStyle, large: true),
+            ),
+          if (bar.accessory case final accessory?)
+            LayoutId(id: _Slot.accessory, child: accessory),
+          if (bar.title case final title?)
+            LayoutId(
+              id: _Slot.title,
+              child: _header(title, _d.titleStyle, large: false),
+            ),
+          if (_d.leading case final leading?)
+            LayoutId(id: _Slot.leading, child: leading),
+          if (groups.isNotEmpty)
+            LayoutId(
+              id: _Slot.actions,
+              child: groups.length == 1
+                  ? LiquidPrismToolbarGroup(
+                      items: groups.single,
+                      size: GlassToolbarSize.navigation,
+                    )
+                  : LiquidPrismToolbar(
+                      groups: groups,
+                      size: GlassToolbarSize.navigation,
+                    ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _Slot { edge, leading, actions, title, largeTitle, accessory }
+
+class _SliverBarLayout extends MultiChildLayoutDelegate {
+  _SliverBarLayout({
+    required this.textDirection,
+    required this.top,
+    required this.barRow,
+    required this.largeRow,
+    required this.shrink,
+    required this.accessoryHeight,
+    required this.gutter,
+    required this.gap,
+  });
+  final TextDirection textDirection;
+  final double top, barRow, largeRow, shrink, accessoryHeight, gutter, gap;
+
+  /// The controls' measured inset from the screen edges.
+  static const _edge = 16.0;
+
+  @override
+  void performLayout(Size size) {
+    final rtl = textDirection == TextDirection.rtl;
+    final largeHeight = largeRow - shrink;
+    double centred(Size child) => top + (barRow - child.height) / 2;
+    var leadingEnd = 0.0, trailingStart = size.width;
+
+    if (hasChild(_Slot.edge)) {
+      // The bar's box, status bar and accessory included; a soft effect
+      // reaches below it.
+      layoutChild(
+        _Slot.edge,
+        BoxConstraints.tight(
+          Size(size.width, top + barRow + largeHeight + accessoryHeight),
+        ),
+      );
+      positionChild(_Slot.edge, Offset.zero);
+    }
+    if (hasChild(_Slot.leading)) {
+      final child = layoutChild(_Slot.leading, BoxConstraints.loose(size));
+      final x = rtl ? size.width - _edge - child.width : _edge;
+      if (rtl) {
+        trailingStart = x;
+      } else {
+        leadingEnd = x + child.width;
+      }
+      positionChild(_Slot.leading, Offset(x, centred(child)));
+    }
+    if (hasChild(_Slot.actions)) {
+      final child = layoutChild(_Slot.actions, BoxConstraints.loose(size));
+      final x = rtl ? _edge : size.width - _edge - child.width;
+      if (rtl) {
+        leadingEnd = x + child.width;
+      } else {
+        trailingStart = x;
+      }
+      positionChild(_Slot.actions, Offset(x, centred(child)));
+    }
+    if (hasChild(_Slot.title)) {
+      final centre = size.width / 2;
+      final left = math.max(gutter, leadingEnd + (leadingEnd > 0 ? gap : 0));
+      final right = math.min(
+        size.width - gutter,
+        trailingStart - (trailingStart < size.width ? gap : 0),
+      );
+      final half = math.max(0.0, math.min(centre - left, right - centre));
+      final title = layoutChild(
+        _Slot.title,
+        BoxConstraints.loose(Size(2 * half, barRow)),
+      );
+      positionChild(
+        _Slot.title,
+        Offset(centre - title.width / 2, centred(title)),
+      );
+    }
+    if (hasChild(_Slot.largeTitle)) {
+      // The title rides the content up, as measured, while its row shrinks.
+      final child = layoutChild(
+        _Slot.largeTitle,
+        BoxConstraints(maxWidth: math.max(0, size.width - 2 * gutter)),
+      );
+      positionChild(
+        _Slot.largeTitle,
+        Offset(
+          rtl ? size.width - gutter - child.width : gutter,
+          top + barRow + 3.67 - shrink,
+        ),
+      );
+    }
+    if (hasChild(_Slot.accessory)) {
+      layoutChild(
+        _Slot.accessory,
+        BoxConstraints.tightFor(width: size.width, height: accessoryHeight),
+      );
+      positionChild(_Slot.accessory, Offset(0, top + barRow + largeHeight));
+    }
+  }
+
+  @override
+  bool shouldRelayout(_SliverBarLayout old) =>
+      old.textDirection != textDirection ||
+      old.top != top ||
+      old.barRow != barRow ||
+      old.largeRow != largeRow ||
+      old.shrink != shrink ||
+      old.accessoryHeight != accessoryHeight ||
+      old.gutter != gutter ||
+      old.gap != gap;
+}

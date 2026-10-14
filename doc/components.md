@@ -241,6 +241,34 @@ stays visible on a dark housing; 0 turns it off. Widget `motion` is
 `GlassMotion` for travel, press scale and projection; native lift/flex defaults
 remain calibrated separately. Safe-area positioning belongs to the parent.
 
+## Sliver app bar
+
+`LiquidPrismSliverAppBar` is the scaffold's top bar as a pinned sliver, for
+pages built on a `CustomScrollView`. Make it the first sliver:
+
+```dart
+CustomScrollView(
+  slivers: [
+    LiquidPrismSliverAppBar(
+      title: const Text('Library'),
+      largeTitle: const Text('Library'),
+      actions: [[activity], [share, more]],
+      accessory: PreferredSize(preferredSize: const Size.fromHeight(48), child: tabs),
+    ),
+    SliverList.builder(...),
+  ],
+)
+```
+
+It takes `leading` (or implies a back or close button), `title`,
+`largeTitle`, `actions`, `accessory`, `backgroundColor` (the fade colour),
+`scrollEdge`, `scrollEdgeStyle` and `navigationBarStyle`, with the scaffold's
+measured geometry: 16-point edges, the 44-point control row under the status
+bar, a 52-point large title row that rides the scroll before the titles swap
+on a timer, and 14 points of clearance before the content. The bar's glass and
+its edge effect share one glass group, so the controls refract the content
+before the effect.
+
 ## Adaptive layout
 
 `LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and a

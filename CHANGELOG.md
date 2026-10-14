@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add `LiquidPrismSliverAppBar`, a pinned navigation bar for a
+  `CustomScrollView` laid out as the scaffold's top bar: implied back
+  button, inline and large titles with the measured collapse, `actions`
+  (items or lists of items), an accessory row and the scroll edge effect.
+  Its glass and edge effect share one glass group, so the controls refract
+  the content before the effect blurs and fades it.
 - Toolbar items entering or leaving now hold their final size and place:
   only their slot grows or shrinks (so the capsule resizes and neighbours
   slide), while the item blurs and fades, pinned to the side of the group
