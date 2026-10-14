@@ -179,4 +179,82 @@ void main() {
     );
     expect(base.copyWith(groupSpacing: 0).groupSpacing, 0);
   });
+
+  testWidgets('an entering item holds its final size and place, and blurs in', (
+    tester,
+  ) async {
+    // A top-trailing group: its trailing edge stays put as it widens.
+    Widget group(List<GlassToolbarItem> items) => CupertinoApp(
+      home: Align(
+        alignment: Alignment.topRight,
+        child: LiquidPrismToolbarGroup(
+          size: GlassToolbarSize.navigation,
+          items: items,
+        ),
+      ),
+    );
+    final icon = find.descendant(
+      of: find.bySemanticsLabel('Edit'),
+      matching: find.byType(Icon),
+    );
+    await tester.pumpWidget(group([item('Share'), item('Edit')]));
+    await tester.pumpAndSettle();
+    final settled = tester.getRect(icon);
+
+    await tester.pumpWidget(group([item('Share')]));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(group([item('Share'), item('Edit')]));
+    for (final ms in [40, 80, 120]) {
+      await tester.pump(const Duration(milliseconds: 40));
+      expect(tester.getRect(icon), settled, reason: 'at $ms ms');
+      final blur = tester
+          .widgetList<ImageFiltered>(
+            find.ancestor(of: icon, matching: find.byType(ImageFiltered)),
+          )
+          .first;
+      expect(blur.enabled, isTrue, reason: 'it sharpens in at $ms ms');
+    }
+    expect(
+      find
+          .ancestor(of: icon, matching: find.byType(Transform))
+          .evaluate()
+          .where((e) => !(e.widget as Transform).transform.isIdentity()),
+      isEmpty,
+      reason: 'nothing scales or slides the item',
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getRect(icon), settled);
+  });
+
+  testWidgets('a leading-aligned group pins entering items to its start', (
+    tester,
+  ) async {
+    Widget group(List<GlassToolbarItem> items) => CupertinoApp(
+      home: Align(
+        alignment: Alignment.topLeft,
+        child: LiquidPrismToolbarGroup(
+          size: GlassToolbarSize.navigation,
+          items: items,
+        ),
+      ),
+    );
+    final icon = find.descendant(
+      of: find.bySemanticsLabel('Edit'),
+      matching: find.byType(Icon),
+    );
+    await tester.pumpWidget(group([item('Share'), item('Edit'), item('More')]));
+    await tester.pumpAndSettle();
+    final settled = tester.getRect(icon);
+    await tester.pumpWidget(group([item('Share'), item('More')]));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(group([item('Share'), item('Edit'), item('More')]));
+    // The first frame learns which edge holds still; from then on the item
+    // sits at its final place.
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 16));
+    for (var i = 0; i < 4; i++) {
+      await tester.pump(const Duration(milliseconds: 30));
+      expect(tester.getRect(icon), settled);
+    }
+  });
 }

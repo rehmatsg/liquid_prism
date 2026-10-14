@@ -17,6 +17,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: dev.prism.packagefeatures
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/GlassFilters.h
+        CLANG_ENABLE_OBJC_ARC: YES
   PackageFeaturesSpecsTests:
     type: bundle.ui-testing
     platform: iOS

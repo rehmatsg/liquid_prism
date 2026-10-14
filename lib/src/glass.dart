@@ -305,22 +305,12 @@ class _LiquidPrismState extends State<LiquidPrism> {
     // surface already applies to its content.
     // Content fades and sharpens with the material. The wrappers stay in the
     // tree at full presence (no layers) so child state survives.
-    final contentBlur = materialize
-        ? (1 - presence) * presenceScope!.contentBlur
-        : 0.0;
     final content = LiquidPrismPressFeedback(
       progress: press,
-      child: Opacity(
-        opacity: presence,
-        child: ImageFiltered(
-          enabled: contentBlur > .05,
-          imageFilter: ui.ImageFilter.blur(
-            sigmaX: contentBlur,
-            sigmaY: contentBlur,
-            tileMode: ui.TileMode.decal,
-          ),
-          child: widget.child ?? const SizedBox.shrink(),
-        ),
+      child: GlassContentPresence(
+        presence: presence,
+        blur: presenceScope?.contentBlur ?? 0,
+        child: widget.child ?? const SizedBox.shrink(),
       ),
     );
     final fallbackTint = Color.alphaBlend(

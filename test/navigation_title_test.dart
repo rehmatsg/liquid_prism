@@ -141,6 +141,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 90));
     expect(opacityOf('Large'), inExclusiveRange(0, 1));
     expect(opacityOf('Inline'), inExclusiveRange(0, 1));
+    // Both titles focus through a blur as they fade.
+    for (final title in ['Large', 'Inline']) {
+      expect(
+        tester
+            .widget<ImageFiltered>(
+              find.ancestor(
+                of: find.text(title),
+                matching: find.byType(ImageFiltered),
+              ),
+            )
+            .enabled,
+        isTrue,
+        reason: title,
+      );
+    }
     await tester.pumpAndSettle();
     expect(opacityOf('Large'), 0);
     expect(opacityOf('Inline'), 1);

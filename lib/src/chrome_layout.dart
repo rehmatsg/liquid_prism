@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'dart:ui' show DisplayFeature;
 
+import 'package:flutter/cupertino.dart' show CupertinoSliverRefreshControl;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'glass.dart';
@@ -9,10 +11,12 @@ import 'glass_transition.dart';
 import 'menu/menu.dart';
 import 'menu/menu_elements.dart';
 import 'motion.dart';
+import 'edge_fade.dart' show GlassEdge;
 import 'scroll_edge.dart';
 import 'sidebar.dart';
 import 'system_chrome.dart';
 import 'tab_bar.dart';
+import 'tab_reselection.dart';
 import 'toolbar.dart';
 import 'theme.dart';
 import 'navigation_bar_style.dart';
@@ -96,9 +100,17 @@ class LiquidPrismChrome extends InheritedWidget {
 class LiquidPrismScaffold extends StatefulWidget {
   const LiquidPrismScaffold({
     super.key,
-    required this.body,
+    this.body,
+    this.slivers,
+    this.scrollController,
+    this.onRefresh,
+    this.bottomBar,
+    this.scrollDepth = 0,
     this.title,
     this.largeTitle,
+    this.header,
+    this.subtitle,
+    this.sheet = false,
     this.navigationBarStyle,
     this.leading,
     this.automaticallyImplyLeading = true,
@@ -111,10 +123,57 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.resizeToAvoidBottomInset = true,
     this.scrollEdge = true,
     this.scrollEdgeStyle,
-  });
+  }) : assert(
+         (body == null) != (slivers == null),
+         'Pass either body or slivers.',
+       ),
+       assert(
+         onRefresh == null || slivers != null,
+         'onRefresh needs slivers; a body adds its own refresh control.',
+       ),
+       assert(
+         header == null || slivers != null,
+         'header needs slivers; it scrolls with them.',
+       ),
+       assert(
+         header == null || largeTitle == null,
+         'Use a header or a large title, not both.',
+       );
 
-  /// Full-window content. Usually a scroll view.
-  final Widget body;
+  /// Full-window content, usually a scroll view, laid out under the chrome.
+  /// The chrome's insets reach it as `MediaQuery.padding`: a [ListView] or
+  /// [GridView] without its own padding applies them, any other scroll view
+  /// pads itself. Prefer [slivers] for a page that scrolls.
+  final Widget? body;
+
+  /// The page's content as slivers, in place of [body]. The scaffold builds
+  /// the [CustomScrollView]: it pads the content below the bar, large title
+  /// and accessory and above the tab bar, [bottomBar] and keyboard, follows
+  /// its scroll for the edge effects and the large title, and dismisses the
+  /// keyboard on drag. A pinned [SliverPersistentHeader] among them pins
+  /// below the bar; [SliverFillRemaining] fills the space between the insets.
+  final List<Widget>? slivers;
+
+  /// The controller of the scroll view built from [slivers], for a page that
+  /// scrolls it itself. Null makes it the primary scroll view, which a
+  /// tab bar's reselection or a status bar tap scrolls to the top.
+  final ScrollController? scrollController;
+
+  /// Pull to refresh for [slivers]: a native refresh control that appears
+  /// below the bar as the content is pulled down.
+  final Future<void> Function()? onRefresh;
+
+  /// A bar pinned to the bottom of the page, above the home indicator and
+  /// the keyboard, such as a primary action. The body is padded to clear it,
+  /// and content scrolled under it takes a bottom scroll edge effect that its
+  /// glass refracts through, as at the top.
+  final Widget? bottomBar;
+
+  /// Which scroll view drives the edge effects and the large title, counted
+  /// in nested scrollables from the body: 0 is its outermost one. A page of
+  /// lists one level down, such as a horizontal tab view of vertical lists,
+  /// passes 1; the visible tab's list then drives the bar.
+  final int scrollDepth;
 
   /// Inline header, centred between leading and trailing chrome.
   final Widget? title;
@@ -123,6 +182,23 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// vertical scroll view even when [scrollEdge] is false. Supply [title] too
   /// for the collapsed header. Only the visible header contributes semantics.
   final Widget? largeTitle;
+
+  /// Content at the top of [slivers] that scrolls away under the bar, such as
+  /// a page's own heading or hero, in place of a [largeTitle]. While it shows
+  /// the bar's [title] is hidden; once it has scrolled under the bar the
+  /// title fades in, with the same timing as after a large title.
+  final Widget? header;
+
+  /// A second line under the title, as SwiftUI's `navigationSubtitle`: with
+  /// it the inline title is 15-point semibold over a 12-point secondary
+  /// subtitle, centred on the controls, and a large title gains an 11-point
+  /// subtitle below it that collapses with it (measured on iOS 27).
+  final Widget? subtitle;
+
+  /// Lays the bar out for a sheet: its controls 16 points below the sheet's
+  /// top, with no status bar inset, as a navigation stack in a sheet does on
+  /// iOS 27.
+  final bool sheet;
   final GlassNavigationBarStyle? navigationBarStyle;
 
   /// Fold the keyboard into body padding and consume its bottom view inset.
@@ -148,31 +224,7 @@ class LiquidPrismScaffold extends StatefulWidget {
   final List<Object> actions;
 
   /// The trailing capsules, in order.
-  List<List<GlassToolbarItem>> get _actionGroups {
-    final groups = <List<GlassToolbarItem>>[];
-    List<GlassToolbarItem>? loose;
-    for (final entry in actions) {
-      switch (entry) {
-        case GlassToolbarItem():
-          if (loose == null) groups.add(loose = []);
-          loose.add(entry);
-        case List():
-          assert(
-            entry.every((item) => item is GlassToolbarItem),
-            'A list in actions holds only GlassToolbarItems.',
-          );
-          loose = null;
-          groups.add(entry.whereType<GlassToolbarItem>().toList());
-        default:
-          assert(
-            false,
-            'actions holds GlassToolbarItems or lists of them, '
-            'not ${entry.runtimeType}.',
-          );
-      }
-    }
-    return groups;
-  }
+  List<List<GlassToolbarItem>> get _actionGroups => glassActionGroups(actions);
 
   /// Every trailing action, in order.
   List<GlassToolbarItem> get _allActions => [
@@ -249,11 +301,53 @@ class LiquidPrismScaffold extends StatefulWidget {
 }
 
 class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   bool _sidebarHidden = false;
+
+  /// The [LiquidPrismScaffold.header]'s laid-out height: the scroll at which
+  /// the title swaps in.
+  double _headerExtent = 0;
+
+  /// Tab reselections, shared by this scaffold's tab bar and the pages in its
+  /// body; each page's scroll view returns to the top.
+  final _reselection = LiquidPrismTabReselection();
+
+  final _statusBarKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  // A tap on the iOS status bar scrolls the page to the top, as a Material
+  // Scaffold does, for the scaffold in front only.
+  @override
+  void handleStatusBarTap() {
+    final controller =
+        widget.scrollController ?? PrimaryScrollController.maybeOf(context);
+    final box = _statusBarKey.currentContext?.findRenderObject();
+    if (controller == null || !controller.hasClients || box == null) return;
+    final result = HitTestResult();
+    WidgetsBinding.instance.hitTestInView(
+      result,
+      Offset.zero,
+      View.of(context).viewId,
+    );
+    if (!result.path.any((entry) => entry.target == box)) return;
+    controller.animateTo(
+      0,
+      duration: const Duration(milliseconds: 1000),
+      curve: Curves.easeOutCirc,
+    );
+  }
 
   /// How far the body's outermost scroll view is scrolled past its start.
   final _scrollOffset = ValueNotifier<double>(0);
+
+  /// How much of that scroll view's content lies beyond its end, under a
+  /// [LiquidPrismScaffold.bottomBar].
+  final _scrollRemaining = ValueNotifier<double>(0);
 
   bool _onScroll(ScrollMetrics metrics) {
     if (metrics.axis == Axis.vertical) {
@@ -261,24 +355,21 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         0,
         metrics.pixels - metrics.minScrollExtent,
       );
+      _scrollRemaining.value = math.max(
+        0,
+        metrics.maxScrollExtent - metrics.pixels,
+      );
       _syncTitle();
     }
     return false;
   }
 
   // Measured on iOS 27: the large title scrolls with the content and, once
-  // the scroll passes its row, the titles swap on a timer rather than with the
-  // scroll. The large title fades out in about 0.18 s; the inline title fades
-  // in over about 0.53 s while rising 15 points, and back out over about 0.8 s.
-  late final _largeFade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 180),
-  );
-  late final _inlineFade = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 530),
-    reverseDuration: const Duration(milliseconds: 800),
-  );
+  // the scroll passes its row, the titles swap on springs rather than with the
+  // scroll: the large title leaves in about 0.18 s, the inline title rises 15
+  // points into place over about 0.5 s (see GlassNavigationBarStyle).
+  late final _largeFade = RetargetableGlassSpring(vsync: this);
+  late final _inlineFade = RetargetableGlassSpring(vsync: this);
   bool _collapsed = false;
   double _collapseAt = double.infinity;
 
@@ -286,15 +377,25 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final collapsed = _scrollOffset.value >= _collapseAt;
     if (collapsed == _collapsed) return;
     _collapsed = collapsed;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      _largeFade.value = _inlineFade.value = collapsed ? 1 : 0;
-    } else if (collapsed) {
-      _largeFade.forward();
-      _inlineFade.forward();
-    } else {
-      _largeFade.reverse();
-      _inlineFade.reverse();
-    }
+    final navigation =
+        (LiquidPrismTheme.of(context).navigationBar ??
+                const GlassNavigationBarStyle())
+            .merge(widget.navigationBarStyle);
+    final immediate = MediaQuery.disableAnimationsOf(context);
+    final target = collapsed ? 1.0 : 0.0;
+    springGlass(
+      _largeFade,
+      target,
+      GlassNavigationBarStyle.largeTitleSpring.description,
+      immediate: immediate,
+    );
+    springGlass(
+      _inlineFade,
+      target,
+      (navigation.revealSpring ?? GlassNavigationBarStyle.titleSpring)
+          .description,
+      immediate: immediate,
+    );
   }
 
   /// How far the sidebar is shown: it slides the panel and reflows the body.
@@ -321,6 +422,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _largeFade.dispose();
     _inlineFade.dispose();
     _scrollOffset.dispose();
+    _scrollRemaining.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _reselection.dispose();
     super.dispose();
   }
 
@@ -419,7 +523,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final features = addFeatures
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
-    final top = math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
+    final top = widget.sheet
+        ? _ChromeLayout._sheetTop
+        : math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
     final leading =
         widget.leading ??
         (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
@@ -428,7 +534,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
     final titleStyle = TextStyle(
-      fontSize: 17,
+      fontSize: widget.subtitle == null ? 17 : 15,
       fontWeight: FontWeight.w600,
       color: GlassColors.of(context).label,
     ).merge(navigation.titleStyle);
@@ -437,6 +543,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       fontWeight: FontWeight.w700,
       color: GlassColors.of(context).label,
     ).merge(navigation.largeTitleStyle);
+    final colors = GlassColors.of(context);
+    final subtitleStyle = TextStyle(
+      fontSize: 12,
+      color: colors.secondaryLabel,
+    ).merge(navigation.subtitleStyle);
+    final largeSubtitleStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      color: colors.secondaryLabel,
+    ).merge(navigation.largeSubtitleStyle);
     final scaler = media.textScaler;
     final titleRowHeight = widget.title == null
         ? LiquidPrismScaffold.topBarHeight
@@ -446,24 +562,35 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     (titleStyle.height ?? 1.2) +
                 8,
           );
-    // Measured: a 52-point row holding the 40.67-point 34-point bold line,
-    // 3.67 points below the row's top.
+    // Measured: a 52-point row from the bar frame holding the 40.67-point
+    // 34-point bold line, 3.67 points below the row's top.
+    // With a subtitle the row grows to 71.33 points for its 11-point line,
+    // which sits 38.33 points below the large title's top (6.67 below the
+    // row's).
     final expandedHeight = widget.largeTitle == null
         ? 0.0
         : scaler.scale(largeTitleStyle.fontSize ?? 34) *
                   (largeTitleStyle.height ?? 1.2) +
-              11.33;
+              11.33 +
+              (widget.subtitle == null
+                  ? 0
+                  : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
+                        6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
-    _collapseAt = widget.largeTitle == null ? double.infinity : extent;
-    if (widget.largeTitle == null && _collapsed) {
+    final swaps = widget.largeTitle != null || widget.header != null;
+    _collapseAt = widget.header != null
+        ? (_headerExtent > 0 ? _headerExtent : double.infinity)
+        : widget.largeTitle == null
+        ? double.infinity
+        : extent;
+    if (!swaps && _collapsed) {
       _collapsed = false;
       _largeFade.value = _inlineFade.value = 0;
     }
-    final inline = CurvedAnimation(
-      parent: _inlineFade,
-      curve: navigation.revealCurve ?? Curves.easeOutCubic,
-      reverseCurve: (navigation.revealCurve ?? Curves.easeOutCubic).flipped,
-    );
+    // With actions in the bar, the title leads instead of centring.
+    final titleLeads = widget._allActions.isNotEmpty;
+    // The shared glass content blur, so titles focus in like glass content.
+    final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
     Widget header(Widget child, TextStyle style, {required bool large}) {
       Widget text = Semantics(
         header: true,
@@ -474,22 +601,27 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           child: child,
         ),
       );
-      // Without a large title the inline title simply shows.
-      if (widget.largeTitle == null) return IgnorePointer(child: text);
+      // Without a large title or header the inline title simply shows.
+      if (!swaps) return IgnorePointer(child: text);
       return AnimatedBuilder(
         animation: Listenable.merge([_largeFade, _inlineFade]),
         builder: (context, child) {
           final visible = large ? !_collapsed : _collapsed;
-          final opacity = large ? 1 - _largeFade.value : inline.value;
+          // Opacity clamps; the rise keeps the spring's overshoot.
+          final inline = _inlineFade.value;
+          final opacity = large ? 1 - _largeFade.value : inline;
           return ExcludeSemantics(
             excluding: !visible,
             child: IgnorePointer(
-              child: Opacity(
-                opacity: opacity.clamp(0.0, 1.0),
+              // The titles focus in and out as they fade, as native soft
+              // bars do: blurred when absent, sharp when present.
+              child: GlassContentPresence(
+                presence: opacity,
+                blur: titleBlur,
                 child: large
-                    ? child
+                    ? child!
                     : Transform.translate(
-                        offset: Offset(0, 15 * (1 - inline.value)),
+                        offset: Offset(0, 15 * (1 - inline)),
                         child: child,
                       ),
               ),
@@ -519,12 +651,23 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         accessoryHeight: widget.accessory?.preferredSize.height ?? 0,
         titleRowHeight: titleRowHeight,
         expandedHeight: expandedHeight,
+        largeTitleTop: widget.subtitle == null ? 3.67 : 6.67,
         collapseExtent: extent,
         scrollOffset: _scrollOffset,
         titleGutter: navigation.gutter ?? 16,
         titleGap: navigation.controlGap ?? 12,
         actionsTop: actionsTop,
         railBottom: railBottom,
+        sheet: widget.sheet,
+        edgeFrame:
+            widget.accessory == null &&
+                GlassScrollEdgeStyle.resolve(
+                      context,
+                      widget.scrollEdgeStyle,
+                    ).variant ==
+                    GlassScrollEdgeVariant.hard
+            ? 10
+            : 0,
         corner: corner,
         sidebar: sidebar
             ? (sidebarLeft ? AxisDirection.left : AxisDirection.right)
@@ -544,18 +687,20 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       displayFeatures: [...media.displayFeatures, ...features],
                     ),
               child:
-                  (widget.scrollEdge || widget.largeTitle != null) &&
-                      (topBar || widget.accessory != null)
+                  ((widget.scrollEdge || swaps) &&
+                          (topBar || widget.accessory != null)) ||
+                      widget.bottomBar != null
                   ? NotificationListener<ScrollMetricsNotification>(
                       onNotification: (n) =>
-                          n.depth == 0 && _onScroll(n.metrics),
+                          n.depth == widget.scrollDepth && _onScroll(n.metrics),
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (n) =>
-                            n.depth == 0 && _onScroll(n.metrics),
-                        child: widget.body,
+                            n.depth == widget.scrollDepth &&
+                            _onScroll(n.metrics),
+                        child: _content(),
                       ),
                     )
-                  : widget.body,
+                  : _content(),
             ),
           ),
         ),
@@ -583,10 +728,50 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               ),
             ),
           ),
+        if (widget.scrollEdge && widget.bottomBar != null)
+          LayoutId(
+            id: _Slot.bottomScrollEdge,
+            child: GlassGroupMembers(
+              child: IgnorePointer(
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _scrollRemaining,
+                  builder: (context, remaining, _) => LiquidPrismScrollEdge(
+                    edge: GlassEdge.bottom,
+                    progress: LiquidPrismScrollEdge.progressFor(
+                      remaining,
+                      revealExtent:
+                          GlassScrollEdgeStyle.resolve(
+                            context,
+                            widget.scrollEdgeStyle,
+                          ).revealExtent ??
+                          GlassScrollEdgeStyle.defaultRevealExtent,
+                    ),
+                    color: widget.backgroundColor,
+                    style: widget.scrollEdgeStyle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (widget.bottomBar case final bottomBar?)
+          LayoutId(
+            id: _Slot.bottomBar,
+            child: GlassGroupMembers(child: bottomBar),
+          ),
         if (widget.title case final title?)
           LayoutId(
             id: _Slot.title,
-            child: header(title, titleStyle, large: false),
+            child: header(
+              glassTitled(
+                title,
+                widget.subtitle,
+                subtitleStyle,
+                large: false,
+                leading: titleLeads,
+              ),
+              titleStyle,
+              large: false,
+            ),
           ),
         if (widget.largeTitle case final title?)
           LayoutId(
@@ -594,7 +779,18 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             // Unclipped: it scrolls up into the bar and fades there.
             child: Align(
               alignment: AlignmentDirectional.topStart,
-              child: header(title, largeTitleStyle, large: true),
+              child: header(
+                glassTitled(
+                  title,
+                  widget.subtitle,
+                  largeSubtitleStyle,
+                  large: true,
+                  subtitleOffset:
+                      scaler.scale(largeTitleStyle.fontSize ?? 34) * 38.33 / 34,
+                ),
+                largeTitleStyle,
+                large: true,
+              ),
             ),
           ),
         if (widget.accessory case final accessory?)
@@ -689,7 +885,31 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           ),
       ],
     );
-    final hosted = GlassGroupHost(child: layout);
+    Widget hosted = GlassGroupHost(
+      child: Stack(
+        children: [
+          Positioned.fill(child: layout),
+          // Hit at the status bar only while this scaffold is in front.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: math.max(1, media.viewPadding.top),
+            child: MetaData(
+              key: _statusBarKey,
+              behavior: HitTestBehavior.translucent,
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (widget.tabBar != null) {
+      hosted = LiquidPrismTabReselection.scope(
+        reselection: _reselection,
+        child: hosted,
+      );
+    }
     return switch (widget.backgroundColor) {
       final color? => ColoredBox(color: color, child: hosted),
       null => hosted,
@@ -703,6 +923,24 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     if (route == null || !route.canPop) return null;
     return LiquidPrismBackButton(
       close: route is PageRoute && route.fullscreenDialog,
+    );
+  }
+
+  /// The body, or a scroll view built from the slivers with the chrome's
+  /// insets as slivers of their own.
+  Widget _content() {
+    final body = widget.body;
+    if (body != null) return body;
+    return _SliverPage(
+      slivers: widget.slivers!,
+      header: widget.header,
+      controller: widget.scrollController,
+      onRefresh: widget.onRefresh,
+      onHeaderExtent: (extent) {
+        if (extent == _headerExtent || !mounted) return;
+        setState(() => _headerExtent = extent);
+        _syncTitle();
+      },
     );
   }
 
@@ -761,6 +999,8 @@ class _Ellipsis extends StatelessWidget {
 
 enum _Slot {
   body,
+  bottomScrollEdge,
+  bottomBar,
   title,
   largeTitle,
   scrollEdge,
@@ -820,6 +1060,11 @@ class _InsetBody extends StatelessWidget {
   );
 }
 
+/// Measured on iOS 27: the bar frame ends 10 points below 44-point controls
+/// (62 to 116) and the large title's 52-point row starts there, so its line
+/// sits 13.67 points below the controls and content starts at the row's end.
+const double largeTitleLead = 10;
+
 class _ChromeLayout extends MultiChildLayoutDelegate {
   _ChromeLayout({
     required this.placement,
@@ -831,12 +1076,15 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.accessoryHeight,
     required this.titleRowHeight,
     required this.expandedHeight,
+    required this.largeTitleTop,
     required this.collapseExtent,
     required this.scrollOffset,
     required this.titleGutter,
     required this.titleGap,
     required this.actionsTop,
     required this.railBottom,
+    required this.sheet,
+    required this.edgeFrame,
     required this.corner,
     required this.sidebar,
     required this.reveal,
@@ -845,6 +1093,12 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final GlassChromePlacement placement;
   final EdgeInsets viewPadding;
   final double keyboard, actionsTop, railBottom;
+  final bool sheet;
+
+  /// Extra depth of the top edge effect below the controls: measured on iOS
+  /// 27, a hard edge ends at the bar frame, 10 points below 44-point
+  /// controls; with an accessory the accessory ends the frame.
+  final double edgeFrame;
 
   /// Height of the row below the top bar, 0 without one.
   final double accessoryHeight;
@@ -852,6 +1106,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       expandedHeight,
       collapseExtent,
       titleGutter,
+      // The large title's line below its row's top: 3.67 points, 6.67 with
+      // a subtitle, as measured.
+      largeTitleTop,
       titleGap;
   final ValueListenable<double> scrollOffset;
 
@@ -955,6 +1212,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   // Measured on iOS 27 simulators; see doc/native_adaptive_layout.md.
   static const _edge = 16.0;
   static const _minimumTop = 24.0;
+  // Measured: in a sheet the bar's controls sit 16 pt below its top.
+  static const _sheetTop = 16.0;
   static const _bottomBarGap = 21.0;
   static const _railGap = 12.0;
   static const _railEdge = 24.0;
@@ -971,7 +1230,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     final right = placement == GlassChromePlacement.rightRail;
     // The top bar starts at the status bar's bottom; with the status bar in
     // the rail it keeps a 24 pt margin.
-    final top = corner == null
+    final top = sheet
+        ? _sheetTop
+        : corner == null
         ? math.max(viewPadding.top, _minimumTop)
         : _minimumTop;
     final rtl = textDirection == TextDirection.rtl;
@@ -991,17 +1252,26 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                   shown
         : railRight;
     final barRow = topBar ? titleRowHeight : 0.0;
+    // A large title's row starts at the bar frame, below the controls, and
+    // the content directly below it; an accessory keeps its clearance.
+    final lead = expandedHeight > 0 ? largeTitleLead : 0.0;
+    final expanded = expandedHeight + lead;
     final collapse = collapseExtent == 0
         ? (scrollOffset.value > 0 ? 1.0 : 0.0)
-        : (scrollOffset.value / collapseExtent).clamp(0.0, 1.0);
-    final largeHeight = expandedHeight * (1 - collapse);
+        : (scrollOffset.value / (collapseExtent + lead)).clamp(0.0, 1.0);
+    final largeHeight = expanded * (1 - collapse);
+    // The body keeps the expanded bar's inset while the large title collapses:
+    // content scrolls one for one beneath the title and accessory riding up
+    // over it. A shrinking inset moved content twice as fast as the finger.
     var covered = EdgeInsets.only(
       top: topBar || accessoryHeight > 0
           ? top +
                 barRow +
-                largeHeight +
+                expanded +
                 accessoryHeight +
-                LiquidPrismScaffold.topBarClearance
+                (lead > 0 && accessoryHeight == 0
+                    ? 0
+                    : LiquidPrismScaffold.topBarClearance)
           : top,
     );
     // The top bar row ends where a corner status bar begins.
@@ -1020,7 +1290,13 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         BoxConstraints.tight(
           Size(
             math.max(0, contentRight - contentLeft),
-            top + barRow + largeHeight + accessoryHeight,
+            top +
+                barRow +
+                largeHeight +
+                accessoryHeight +
+                edgeFrame -
+                // The lead is the bar frame the edge already reaches.
+                (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
           ),
         ),
       );
@@ -1062,6 +1338,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     // reflows beneath the panel; the leading widget follows the body.
     var leadingOffset = _edge;
     var leadingEnd = barLeft;
+    var actionsInBar = false;
     var trailingStart = barRight;
     if (hasChild(_Slot.sidebarToggle)) {
       final toggle = layoutChild(
@@ -1125,6 +1402,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         } else {
           trailingStart = x;
         }
+        actionsInBar = true;
         positionChild(
           _Slot.actions,
           Offset(x, top + math.max(0, (barRow - actions.height) / 2)),
@@ -1142,15 +1420,27 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      final half = math.max(0.0, math.min(centre - left, right - centre));
-      final title = layoutChild(
-        _Slot.title,
-        BoxConstraints.loose(Size(2 * half, barRow)),
-      );
-      positionChild(
-        _Slot.title,
-        Offset(centre - title.width / 2, centred(title)),
-      );
+      if (actionsInBar) {
+        // Beside actions the title leads, after the leading control.
+        final title = layoutChild(
+          _Slot.title,
+          BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
+        );
+        positionChild(
+          _Slot.title,
+          Offset(rtl ? right - title.width : left, centred(title)),
+        );
+      } else {
+        final half = math.max(0.0, math.min(centre - left, right - centre));
+        final title = layoutChild(
+          _Slot.title,
+          BoxConstraints.loose(Size(2 * half, barRow)),
+        );
+        positionChild(
+          _Slot.title,
+          Offset(centre - title.width / 2, centred(title)),
+        );
+      }
     }
     if (hasChild(_Slot.largeTitle)) {
       // The title rides the content up, as measured, while the row shrinks.
@@ -1164,7 +1454,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         _Slot.largeTitle,
         Offset(
           barLeft + titleGutter,
-          top + barRow + 3.67 - math.min(scrollOffset.value, expandedHeight),
+          top +
+              barRow +
+              lead +
+              largeTitleTop -
+              math.min(scrollOffset.value, expandedHeight + lead),
         ),
       );
     }
@@ -1199,6 +1493,40 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       }
     }
 
+    if (hasChild(_Slot.bottomBar)) {
+      // Above the keyboard, else above the tab bar or the home indicator.
+      final floor = keyboard > 0
+          ? keyboard
+          : covered.bottom > 0
+          ? covered.bottom + 8
+          : viewPadding.bottom;
+      final bar = layoutChild(
+        _Slot.bottomBar,
+        BoxConstraints.loose(
+          Size(math.max(0, contentRight - contentLeft), size.height),
+        ),
+      );
+      final barTop = size.height - floor - bar.height;
+      positionChild(
+        _Slot.bottomBar,
+        Offset(
+          contentLeft + (contentRight - contentLeft - bar.width) / 2,
+          barTop,
+        ),
+      );
+      covered = covered.copyWith(bottom: size.height - barTop);
+      if (hasChild(_Slot.bottomScrollEdge)) {
+        // From the bar's top to the screen's bottom; a soft effect reaches
+        // above it.
+        layoutChild(
+          _Slot.bottomScrollEdge,
+          BoxConstraints.tight(
+            Size(math.max(0, contentRight - contentLeft), size.height - barTop),
+          ),
+        );
+        positionChild(_Slot.bottomScrollEdge, Offset(contentLeft, barTop));
+      }
+    }
     covered = covered.copyWith(
       bottom: math.max(covered.bottom, keyboard),
       left: contentLeft,
@@ -1219,12 +1547,159 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       accessoryHeight != old.accessoryHeight ||
       titleRowHeight != old.titleRowHeight ||
       expandedHeight != old.expandedHeight ||
+      largeTitleTop != old.largeTitleTop ||
       collapseExtent != old.collapseExtent ||
       titleGutter != old.titleGutter ||
       titleGap != old.titleGap ||
       actionsTop != old.actionsTop ||
       railBottom != old.railBottom ||
+      sheet != old.sheet ||
+      edgeFrame != old.edgeFrame ||
       corner != old.corner ||
       sidebar != old.sidebar ||
       reveal != old.reveal;
+}
+
+/// The scroll view [LiquidPrismScaffold.slivers] builds: the chrome's insets
+/// as slivers, the header, pull to refresh and a return to the top on a tab
+/// reselection.
+class _SliverPage extends StatefulWidget {
+  const _SliverPage({
+    required this.slivers,
+    required this.header,
+    required this.controller,
+    required this.onRefresh,
+    required this.onHeaderExtent,
+  });
+  final List<Widget> slivers;
+  final Widget? header;
+  final ScrollController? controller;
+  final Future<void> Function()? onRefresh;
+  final ValueChanged<double> onHeaderExtent;
+
+  @override
+  State<_SliverPage> createState() => _SliverPageState();
+}
+
+class _SliverPageState extends State<_SliverPage> {
+  LiquidPrismTabReselection? _reselection;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reselection = LiquidPrismTabReselection.maybeOf(context);
+    if (reselection != _reselection) {
+      _reselection?.removeListener(_toTop);
+      _reselection = reselection?..addListener(_toTop);
+    }
+  }
+
+  @override
+  void dispose() {
+    _reselection?.removeListener(_toTop);
+    super.dispose();
+  }
+
+  /// Back to the top, for the visible page of the current route only.
+  void _toTop() {
+    if (!mounted || !TickerMode.valuesOf(context).enabled) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    final controller =
+        widget.controller ?? PrimaryScrollController.maybeOf(context);
+    if (controller == null || !controller.hasClients) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      controller.jumpTo(0);
+    } else {
+      controller.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final padding = MediaQuery.paddingOf(context);
+    final onRefresh = widget.onRefresh;
+    final header = widget.header;
+    return CustomScrollView(
+      controller: widget.controller,
+      primary: widget.controller == null ? true : null,
+      // Pull to refresh and the bounce need room to scroll on a short page.
+      physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        if (onRefresh != null)
+          CupertinoSliverRefreshControl(
+            onRefresh: onRefresh,
+            // The control sits above the top inset; its indicator draws below
+            // the bar, in the gap the pull opens over the content.
+            builder:
+                (
+                  context,
+                  mode,
+                  pulledExtent,
+                  triggerDistance,
+                  indicatorExtent,
+                ) => Transform.translate(
+                  offset: Offset(0, padding.top),
+                  child: CupertinoSliverRefreshControl.buildRefreshIndicator(
+                    context,
+                    mode,
+                    pulledExtent,
+                    triggerDistance,
+                    indicatorExtent,
+                  ),
+                ),
+          ),
+        SliverToBoxAdapter(child: SizedBox(height: padding.top)),
+        SliverPadding(
+          padding: EdgeInsets.only(left: padding.left, right: padding.right),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              if (header != null)
+                SliverToBoxAdapter(
+                  child: _SizeReporter(
+                    onHeight: widget.onHeaderExtent,
+                    child: header,
+                  ),
+                ),
+              ...widget.slivers,
+            ],
+          ),
+        ),
+        SliverToBoxAdapter(child: SizedBox(height: padding.bottom)),
+      ],
+    );
+  }
+}
+
+/// Reports its child's laid-out height after each layout that changes it.
+class _SizeReporter extends SingleChildRenderObjectWidget {
+  const _SizeReporter({required this.onHeight, required super.child});
+  final ValueChanged<double> onHeight;
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderSizeReporter(onHeight);
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderSizeReporter renderObject,
+  ) => renderObject.onHeight = onHeight;
+}
+
+class _RenderSizeReporter extends RenderProxyBox {
+  _RenderSizeReporter(this.onHeight);
+  ValueChanged<double> onHeight;
+  double? _reported;
+  @override
+  void performLayout() {
+    super.performLayout();
+    final height = size.height;
+    if (height == _reported) return;
+    _reported = height;
+    // Outside layout: the scaffold rebuilds with the new threshold.
+    WidgetsBinding.instance.addPostFrameCallback((_) => onHeight(height));
+  }
 }

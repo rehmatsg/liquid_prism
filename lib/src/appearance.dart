@@ -780,6 +780,16 @@ class GlassToolbarStyle {
         );
 }
 
+/// When a search field's cancel action shows.
+enum GlassSearchCancelVisibility {
+  /// While the field is focused, as a native search bar's Cancel.
+  focused,
+
+  /// Always, focused or not: a close action for a search screen of its own.
+  /// Tapping it while unfocused clears the field and calls `onCancel`.
+  always,
+}
+
 /// Search appearance. Text input behavior stays on the widget.
 ///
 /// Unspecified fields inherit the surrounding theme, then native defaults.
@@ -789,6 +799,7 @@ class GlassSearchStyle {
     this.height,
     this.restingInset,
     this.showCancelButton,
+    this.cancelVisibility,
     this.showClearButton,
     this.textStyle,
     this.placeholderStyle,
@@ -817,6 +828,10 @@ class GlassSearchStyle {
   final double? height;
   final double? restingInset;
   final bool? showCancelButton;
+
+  /// When the cancel action shows; defaults to
+  /// [GlassSearchCancelVisibility.focused]. [showCancelButton] false hides it.
+  final GlassSearchCancelVisibility? cancelVisibility;
   final bool? showClearButton;
   final TextStyle? textStyle;
   final TextStyle? placeholderStyle;
@@ -856,6 +871,7 @@ class GlassSearchStyle {
     double? height,
     double? restingInset,
     bool? showCancelButton,
+    GlassSearchCancelVisibility? cancelVisibility,
     bool? showClearButton,
     TextStyle? textStyle,
     TextStyle? placeholderStyle,
@@ -878,6 +894,7 @@ class GlassSearchStyle {
     height: height ?? this.height,
     restingInset: restingInset ?? this.restingInset,
     showCancelButton: showCancelButton ?? this.showCancelButton,
+    cancelVisibility: cancelVisibility ?? this.cancelVisibility,
     showClearButton: showClearButton ?? this.showClearButton,
     textStyle: textStyle ?? this.textStyle,
     placeholderStyle: placeholderStyle ?? this.placeholderStyle,
@@ -905,6 +922,7 @@ class GlassSearchStyle {
           height: other.height ?? height,
           restingInset: other.restingInset ?? restingInset,
           showCancelButton: other.showCancelButton ?? showCancelButton,
+          cancelVisibility: other.cancelVisibility ?? cancelVisibility,
           showClearButton: other.showClearButton ?? showClearButton,
           textStyle: textStyle?.merge(other.textStyle) ?? other.textStyle,
           placeholderStyle:

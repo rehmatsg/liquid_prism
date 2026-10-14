@@ -241,6 +241,75 @@ stays visible on a dark housing; 0 turns it off. Widget `motion` is
 `GlassMotion` for travel, press scale and projection; native lift/flex defaults
 remain calibrated separately. Safe-area positioning belongs to the parent.
 
+## Scrolling pages
+
+Pass `slivers:` instead of `body:` and the scaffold builds the scroll view:
+
+```dart
+LiquidPrismScaffold(
+  title: const Text('Applications'),
+  largeTitle: const Text('Applications'),
+  actions: [[filter], [sort, search]],
+  onRefresh: reload,
+  bottomBar: SaveButton(...),
+  slivers: [SliverList.builder(...)],
+)
+```
+
+It pads the content below the bar, large title and accessory and above the tab
+bar, `bottomBar` and keyboard; follows the scroll for the edge effects and the
+large title; dismisses the keyboard on drag; and, with `onRefresh`, adds native
+pull to refresh below the bar. `scrollController` hands the page its
+controller. Pinned `SliverPersistentHeader`s pin below the bar, and
+`SliverFillRemaining` fills the space between the insets, for empty and error
+states. `bottomBar` pins a bar above the home indicator, tab bar or keyboard;
+content under it takes a bottom scroll edge effect in the same glass group as
+the top one. A `body` still works for content that builds its own scrollable:
+the insets arrive as `MediaQuery.padding`. When that body's lists sit one level
+down, as in a tab view, pass `scrollDepth: 1`.
+
+`header:` puts your own heading at the top of the slivers, such as a detail
+page's icon and title; it scrolls away under the bar and the inline `title`
+fades in once it has, as after a large title. Titles focus in and out through
+a blur as they fade, on springs (`GlassNavigationBarStyle.revealSpring`). With
+actions in the bar the inline title leads, after the leading control; without
+them it centres.
+
+A `slivers` page scrolls back to the top when its tab is tapped again and, on
+iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`
+reports reselections for anything else, such as focusing a search field. The
+scaffold supplies the background, keyboard avoidance and these behaviours, so a
+page needs no Material `Scaffold`; keep one (or a `Material` ancestor) only for
+Material widgets that need it, such as ink effects or snack bars.
+
+## Sliver app bar
+
+`LiquidPrismSliverAppBar` is the scaffold's top bar as a pinned sliver, for
+pages built on a `CustomScrollView`. Make it the first sliver:
+
+```dart
+CustomScrollView(
+  slivers: [
+    LiquidPrismSliverAppBar(
+      title: const Text('Library'),
+      largeTitle: const Text('Library'),
+      actions: [[activity], [share, more]],
+      accessory: PreferredSize(preferredSize: const Size.fromHeight(48), child: tabs),
+    ),
+    SliverList.builder(...),
+  ],
+)
+```
+
+It takes `leading` (or implies a back or close button), `title`,
+`largeTitle`, `actions`, `accessory`, `backgroundColor` (the fade colour),
+`scrollEdge`, `scrollEdgeStyle` and `navigationBarStyle`, with the scaffold's
+measured geometry: 16-point edges, the 44-point control row under the status
+bar, a 52-point large title row that rides the scroll before the titles swap
+on a timer, and 14 points of clearance before the content. The bar's glass and
+its edge effect share one glass group, so the controls refract the content
+before the effect.
+
 ## Adaptive layout
 
 `LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and a
@@ -412,9 +481,9 @@ scroll over which it arrives (the reveal is this package's; native shows it as
 soon as content is beneath).
 
 `GlassScrollEdgeVariant.hard` is the effect under a bar with a background, as
-SwiftUI's `.hard` style: it stops at the bar's edge with a one-pixel hairline,
-blurs 2 points keeping a quarter of that to the edge, and holds its fade and
-haze flat. Give the scaffold an `accessory` (a `PreferredSizeWidget` such as
+SwiftUI's `.hard` style: it stops at the bar's edge with a one-pixel hairline
+(10% black in light, 10% white in dark), blurs 2 points keeping a quarter of
+that to the edge, and holds its fade and haze flat. Give the scaffold an `accessory` (a `PreferredSizeWidget` such as
 segmented tabs) to extend the bar below its capsules; the effect and the body's
 padding cover it. Together they make a bar like a native navigation bar with a
 palette of tabs:
@@ -505,7 +574,10 @@ its clear action; `suffixBuilder` can keep or replace it instead. `onCleared` fi
 Style can change text/placeholder colors, icon/cursor/clear colors, geometry,
 material, contour, focus spring and clear/cancel action sizing. Direct
 `showCancelButton` and `restingInset` override inherited values. Cancel is hidden
-when it cannot fit. Give search a bounded width and handle keyboard avoidance in
+when it cannot fit. Cancel shows while the field is focused; on a search screen
+of its own, `cancelVisibility: GlassSearchCancelVisibility.always` keeps it
+visible and tappable while unfocused, so `onCancel` can close the screen
+(tapping it also clears the field). Give search a bounded width and handle keyboard avoidance in
 the parent. Native bottom search uses a parent inset of 8 and resting inset of 20.
 
 ### Hosting autocomplete

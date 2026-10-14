@@ -168,6 +168,35 @@ class LiquidPrismBackButton extends StatelessWidget {
   }
 }
 
+/// Capsules from a bar's `actions`: each element is a [GlassToolbarItem] or
+/// a list of them. Loose items next to each other share one capsule, and each
+/// list is a capsule of its own.
+List<List<GlassToolbarItem>> glassActionGroups(List<Object> actions) {
+  final groups = <List<GlassToolbarItem>>[];
+  List<GlassToolbarItem>? loose;
+  for (final entry in actions) {
+    switch (entry) {
+      case GlassToolbarItem():
+        if (loose == null) groups.add(loose = []);
+        loose.add(entry);
+      case List():
+        assert(
+          entry.every((item) => item is GlassToolbarItem),
+          'A list in actions holds only GlassToolbarItems.',
+        );
+        loose = null;
+        groups.add(entry.whereType<GlassToolbarItem>().toList());
+      default:
+        assert(
+          false,
+          'actions holds GlassToolbarItems or lists of them, '
+          'not ${entry.runtimeType}.',
+        );
+    }
+  }
+  return groups;
+}
+
 /// Several capsules of icon actions in a row, as a navigation bar's trailing
 /// toolbars: one [LiquidPrismToolbarGroup] per group, [spacing] apart.
 ///
@@ -420,6 +449,48 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
   final _entries = <_ToolbarEntry>[];
   bool _synced = false;
 
+  // Which of the group's edges its parent holds still while it resizes, as
+  // observed from frame to frame: entering and leaving items pin to it, so
+  // they hold their final place however the group is aligned. Null until a
+  // resize has been seen; the reading direction's end is assumed until then.
+  bool? _fixedRight, _fixedBottom;
+  Rect? _lastRect;
+  bool _observing = false;
+
+  void _observeEdges() {
+    if (_observing) return;
+    _observing = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _observing = false;
+      if (!mounted) return;
+      final box = context.findRenderObject();
+      if (box is! RenderBox || !box.attached || !box.hasSize) return;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
+      final last = _lastRect;
+      _lastRect = rect;
+      if (last == null) return;
+      if ((rect.width - last.width).abs() > .25) {
+        _fixedRight =
+            (rect.right - last.right).abs() <= (rect.left - last.left).abs();
+      }
+      if ((rect.height - last.height).abs() > .25) {
+        _fixedBottom =
+            (rect.bottom - last.bottom).abs() <= (rect.top - last.top).abs();
+      }
+    });
+  }
+
+  /// Where an entering or leaving item sits in its growing slot.
+  Alignment _itemAnchor(bool vertical) {
+    if (vertical) {
+      return (_fixedBottom ?? false)
+          ? Alignment.bottomCenter
+          : Alignment.topCenter;
+    }
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return (_fixedRight ?? !rtl) ? Alignment.centerRight : Alignment.centerLeft;
+  }
+
   GlassToolbarStyle get _appearance =>
       (LiquidPrismTheme.of(context).toolbar ?? const GlassToolbarStyle()).merge(
         widget.style,
@@ -588,8 +659,16 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     return AnimatedBuilder(
       animation: Listenable.merge(presence),
       builder: (context, _) {
+        _observeEdges();
+        final anchor = _itemAnchor(vertical);
         // Insets follow the resting layout of the items that stay; a leaving
         // item carries its gap and collapses to nothing without a jump.
+        // Items enter and leave with the shared glass content treatment.
+        final contentBlur =
+            (theme.transition ?? const GlassTransitionStyle())
+                .merge(appearance.itemTransitionStyle)
+                .contentBlur ??
+            8;
         var width = 0.0;
         final cells = <Widget>[];
         final badges = <Widget>[];
@@ -611,13 +690,15 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
             badges.add(
               _badge(
                 entry,
-                extent * progress,
+                extent,
                 left,
                 right,
                 progress,
                 height,
                 appearance,
                 vertical,
+                contentBlur,
+                anchor,
               ),
             );
           }
@@ -633,6 +714,8 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
               foreground,
               appearance,
               vertical,
+              contentBlur,
+              anchor,
             ),
           );
         }
@@ -763,34 +846,46 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     double height,
     GlassToolbarStyle appearance,
     bool vertical,
+    double contentBlur,
+    Alignment anchor,
   ) {
     final badge = entry.item.badge;
+    // The slot grows like the item's own; the badge holds its final place on
+    // the group's fixed side, as the item does.
     return SizedBox(
-      width: vertical ? height : extent,
-      height: vertical ? extent : height,
-      child: badge == null || entry.leaving
+      width: vertical ? height : extent * progress,
+      height: vertical ? extent * progress : height,
+      child: badge == null
           ? null
-          : Padding(
-              padding: vertical
-                  ? EdgeInsets.only(top: left, bottom: right)
-                  : EdgeInsetsDirectional.only(start: left, end: right),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  PositionedDirectional(
-                    top: -2.8,
-                    end: -3,
-                    child: Opacity(
-                      opacity: progress,
-                      child: GlassBadgeView(
-                        badge: badge,
-                        height: 18,
-                        color: appearance.badgeColor,
-                        textStyle: appearance.badgeTextStyle,
+          : OverflowBox(
+              alignment: anchor,
+              minWidth: vertical ? null : extent,
+              maxWidth: vertical ? null : extent,
+              minHeight: vertical ? extent : null,
+              maxHeight: vertical ? extent : null,
+              child: Padding(
+                padding: vertical
+                    ? EdgeInsets.only(top: left, bottom: right)
+                    : EdgeInsetsDirectional.only(start: left, end: right),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    PositionedDirectional(
+                      top: -2.8,
+                      end: -3,
+                      child: GlassContentPresence(
+                        presence: progress,
+                        blur: contentBlur,
+                        child: GlassBadgeView(
+                          badge: badge,
+                          height: 18,
+                          color: appearance.badgeColor,
+                          textStyle: appearance.badgeTextStyle,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );
@@ -807,6 +902,8 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     Color foreground,
     GlassToolbarStyle appearance,
     bool vertical,
+    double contentBlur,
+    Alignment anchor,
   ) {
     final item = entry.item;
     final extent = entry.width + left + right;
@@ -885,19 +982,29 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
       ),
     );
     if (progress < 1) {
-      // The cell narrows about its centre while its glyph fades and grows in,
-      // so neighbours slide together smoothly.
+      // The slot grows or shrinks so the capsule resizes and neighbours slide
+      // together, while the item itself holds its final size and place: it is
+      // laid out whole against the edge of its slot on the group's fixed side
+      // (see _observeEdges) and only blurs and fades,
+      // as glass content does in the shared transition. The capsule's own clip
+      // bounds it; nothing scales, slides or crops the glyph.
       cell = IgnorePointer(
         ignoring: entry.leaving,
         child: ExcludeSemantics(
           excluding: entry.leaving,
-          child: ClipRect(
-            child: Align(
-              widthFactor: vertical ? null : progress,
-              heightFactor: vertical ? progress : null,
-              child: Opacity(
-                opacity: progress,
-                child: Transform.scale(scale: .6 + .4 * progress, child: cell),
+          child: SizedBox(
+            width: vertical ? null : extent * progress,
+            height: vertical ? extent * progress : null,
+            child: OverflowBox(
+              alignment: anchor,
+              minWidth: vertical ? null : 0,
+              maxWidth: vertical ? null : double.infinity,
+              minHeight: vertical ? 0 : null,
+              maxHeight: vertical ? double.infinity : null,
+              child: GlassContentPresence(
+                presence: progress,
+                blur: contentBlur,
+                child: cell,
               ),
             ),
           ),

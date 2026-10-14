@@ -36,3 +36,10 @@ revision, appearance and font scale with results before updating defaults.
 In the implementation sandbox, CoreSimulator refused its connection; no values
 were measured. Package badge/title defaults are provisional. The 86-point tab
 pitch remains unchanged. See `doc/package_features_spec.md`.
+
+Navigation subtitle and sheet bars: `PROBE_CASES=Nav ./tool/native_package_features_probe/run.sh _research/nav_subtitle_sheet`
+launches `--nav <mode>` fixtures (`.navigationSubtitle`, inline/large, long-text truncation,
+and NavigationStack in a `.sheet` with large or medium+large detents, with/without
+`.presentationDragIndicator(.visible)`, inline or large title). FrameSampler tracks the title
+and subtitle labels plus the sheet `UIDropShadowView` presentation frame. Medium-detent
+window frames include the sheet's scale; divide by sheet width/402 for sheet-local points.

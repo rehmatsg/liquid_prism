@@ -42,6 +42,7 @@ class LiquidPrismSearchField extends StatefulWidget {
     this.enabled = true,
     this.autofocus = false,
     bool? showCancelButton,
+    this.cancelVisibility,
     double? restingInset,
     this.appearance,
     this.keyboardType = TextInputType.text,
@@ -79,6 +80,13 @@ class LiquidPrismSearchField extends StatefulWidget {
   final ValueChanged<String>? onChanged, onSubmitted;
   final VoidCallback? onCancel;
   final bool enabled, autofocus, showCancelButton;
+
+  /// When the cancel action shows. Overrides
+  /// [GlassSearchStyle.cancelVisibility]; defaults to
+  /// [GlassSearchCancelVisibility.focused]. Use
+  /// [GlassSearchCancelVisibility.always] for a dedicated search screen whose
+  /// cancel closes it: it then shows, and works, while the field is unfocused.
+  final GlassSearchCancelVisibility? cancelVisibility;
   final bool _hasCancel, _hasInset;
   final GlassSearchStyle? appearance;
   final TextInputType keyboardType;
@@ -354,9 +362,13 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
               showCancel &&
               constraints.maxWidth >=
                   math.max(160, cancelWidth + cancelGap + 100);
-          final cancel = fits ? progress : 0.0;
+          final pinned =
+              (widget.cancelVisibility ?? appearance.cancelVisibility) ==
+              GlassSearchCancelVisibility.always;
+          final cancel = fits ? (pinned ? 1.0 : progress) : 0.0;
           // Unclamped so the action's bounce carries through its slide/scale.
-          final reveal = fits ? _reveal.value : 0.0;
+          final reveal = fits ? (pinned ? 1.0 : _reveal.value) : 0.0;
+          final active = pinned || _node.hasFocus;
           final inset =
               math.min(
                 widget._hasInset
@@ -392,7 +404,7 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
                     // lens while it slides; an Opacity or scale here would
                     // cut the lens off from its backdrop.
                     child: LiquidPrismPresence(
-                      progress: _reveal,
+                      progress: pinned ? kAlwaysCompleteAnimation : _reveal,
                       materialize: false,
                       child: Transform.translate(
                         // Slides in from the trailing edge, toward the field.
@@ -401,13 +413,13 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
                           0,
                         ),
                         child: ExcludeSemantics(
-                          excluding: !_node.hasFocus,
+                          excluding: !active,
                           // Cancel belongs to the field: tapping it is never
                           // a tap outside the editor's group.
                           child: TapRegion(
                             groupId: widget.groupId,
                             child: IgnorePointer(
-                              ignoring: !_node.hasFocus,
+                              ignoring: !active,
                               child: LiquidPrismToolbarGroup(
                                 glass: widget.glass ?? appearance.glass,
                                 optics: widget.optics ?? appearance.optics,

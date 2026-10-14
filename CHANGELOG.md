@@ -2,6 +2,69 @@
 
 ## Unreleased
 
+## 0.4.0
+
+- Fix a second hoisted edge effect (a bottom bar's under a top bar's) being
+  blurred only vertically: every effect's horizontal pass now runs before the
+  vertical passes that share the group's capture.
+- The large title sits 10 points lower, in its row below the bar frame, as
+  measured on iOS 27 (it crowded the controls); content starts directly
+  below that row. With a subtitle the title sits 3 points lower still.
+- Fix the hard scroll edge's hairline, which had no width and never drew.
+- The hard hairline is white at 10% in dark appearance, as measured
+  (`GlassScrollEdgeStyle.darkHairlineColor`, `hairlineColorFor`).
+- With actions in the bar, the inline title (and subtitle) now leads, after
+  the leading control, in the scaffold and the sliver bar; without actions it
+  still centres.
+- The title swap now runs on springs: the inline title rises into place with
+  a little bounce (`GlassNavigationBarStyle.revealSpring`, default
+  `titleSpring`); `revealCurve` is deprecated.
+- Add `subtitle` to `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`, as
+  measured from SwiftUI's `navigationSubtitle`: a 15-point title over a
+  12-point secondary subtitle inline, an 11-point subtitle under a large
+  title. Add `sheet: true` for bars in a sheet: controls 16 points below the
+  sheet's top, with no status bar inset.
+- In the scaffold and sliver bar, a hard edge now ends at the bar frame, 10 points below the
+  controls, with its hairline there, as measured.
+- Add `LiquidPrismScaffold.header`: content at the top of `slivers` that
+  scrolls away under the bar, after which the inline title swaps in, as after
+  a large title.
+- Scroll a `slivers` page back to the top when its tab is tapped again
+  (`LiquidPrismTabReselection`, also available to listen to) and, on iOS,
+  when the status bar is tapped, so a page needs no Material `Scaffold`.
+- Titles now focus in and out through a blur as they fade, as native soft
+  bars do.
+- Let `LiquidPrismScaffold` build the page's scroll view: `slivers:` in place
+  of `body` pads the content below the bar, large title and accessory and
+  above the tab bar, bottom bar and keyboard, follows its scroll and dismisses
+  the keyboard on drag. `onRefresh` adds native pull to refresh below the bar;
+  `scrollController` hands a page its controller.
+- Add `LiquidPrismScaffold.bottomBar`: a bar pinned above the home indicator,
+  tab bar or keyboard that pads the body, with a bottom scroll edge effect in
+  the same glass group as the top one (one set of captures for both).
+- Add `LiquidPrismScaffold.scrollDepth` so pages whose lists sit inside a tab
+  view drive the bar from the visible list.
+- Fix list content moving twice as fast as the finger while a large title
+  collapsed: the body keeps the expanded bar's inset.
+- Add `LiquidPrismSliverAppBar`, a pinned navigation bar for a
+  `CustomScrollView` laid out as the scaffold's top bar: implied back
+  button, inline and large titles with the measured collapse, `actions`
+  (items or lists of items), an accessory row and the scroll edge effect.
+  Its glass and edge effect share one glass group, so the controls refract
+  the content before the effect blurs and fades it.
+- Toolbar items entering or leaving now hold their final size and place:
+  only their slot grows or shrinks (so the capsule resizes and neighbours
+  slide), while the item blurs and fades, pinned to the side of the group
+  its parent holds still. They no longer slide, scale or crop.
+- Glass content now blurs as well as fades whenever glass enters or leaves,
+  including Reduce Motion and presences that do not grow the lens (such as
+  the search field's cancel action), as iOS does.
+- Add `LiquidPrismSearchField.cancelVisibility` (and
+  `GlassSearchStyle.cancelVisibility`): `GlassSearchCancelVisibility.always`
+  keeps the cancel action visible and tappable while the field is unfocused,
+  for a full-screen search whose cancel closes it. The default stays
+  `focused`.
+
 ## 0.3.0
 
 - Let `LiquidPrismScaffold.actions` hold several trailing capsules: each

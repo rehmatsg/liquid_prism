@@ -52,6 +52,13 @@ renderer holds the light-mode line at a fitted floor of 30% of its side
 strength (`glass_core.glsl`), which reproduces the top (241, 232 against
 native 241, 231) and the ends (−45, −73 against −40, −79).
 
+Clear glass has no top or bottom line (same probe, white, #F2F2F7 and #C7C7CC
+backgrounds): its rounded ends darken by 76–85 levels, about as regular's do,
+and the darkening falls to nothing by about 80° around the arc, where regular
+glass keeps about 30%. Its `inputKeyFillHighlightSpread` is 1.309 (75°)
+against regular's 1.676 (96°), which matches that falloff; the algorithm is
+not recovered. The renderer's clear glass therefore keeps its ends-only line.
+
 Angles are radians. Clear glass's shadow opacity/radius and all ring-shadow
 inputs are zero in the captured fixtures. It retains its optical edge lighting.
 

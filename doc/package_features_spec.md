@@ -134,7 +134,9 @@ no autonomous transition to disable because collapse is scroll-scrubbed.
 
 **Measured:** inline title 17-point semibold, centred on the 44-point control
 row; large title 34-point bold, 16 points from the edge, its 40.67-point line
-3.67 points below the top of a 52-point row. The large title moves up one for
+3.67 points below the top of a 52-point row (6.67 with a subtitle, in a
+71.33-point row). The row starts at the bar frame, 10 points below the
+controls (116 on a 402 × 874 phone), and content starts at its end (168). The large title moves up one for
 one with the scroll. When the scroll reaches the row's height (52) the titles
 swap on a timer, not with the scroll: the large title fades out in about
 0.18 s and the inline title fades in over about 0.53 s while rising 15 points,

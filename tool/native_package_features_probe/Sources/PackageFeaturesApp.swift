@@ -6,6 +6,10 @@ struct PackageFeaturesApp: App {
     var body: some Scene { WindowGroup {
         if ProcessInfo.processInfo.arguments.contains("--toolbar") {
             ToolbarBadgeScene()
+        } else if let background = GlassOutlineScene.background {
+            GlassOutlineScene(background: background)
+        } else if let mode = NavProbe.mode {
+            NavProbeScene(mode: mode)
         } else { Fixture() }
     } }
 }
@@ -141,6 +145,12 @@ func jsonSafe(_ value: Any) -> Any {
                 var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
                 color.getRed(&r, green: &g, blue: &b, alpha: &a)
                 row["textRGBA"] = [r, g, b, a]
+                row["numberOfLines"] = label.numberOfLines
+                row["lineBreakMode"] = label.lineBreakMode.rawValue
+                row["textAlignment"] = label.textAlignment.rawValue
+                row["intrinsicSize"] = [Double(label.intrinsicContentSize.width), Double(label.intrinsicContentSize.height)]
+                row["fontWeightTrait"] = ((label.font.fontDescriptor.object(forKey: .traits) as? [UIFontDescriptor.TraitKey: Any])?[.weight] as? Double) ?? NSNull()
+                row["fontTextStyle"] = (label.font.fontDescriptor.object(forKey: .textStyle) as? String) ?? ""
             }
             if let scroll = view as? UIScrollView {
                 row["scrollOffset"] = [scroll.contentOffset.x, scroll.contentOffset.y]
@@ -219,11 +229,16 @@ struct ToolbarBadgeFixture: UIViewControllerRepresentable {
     }
     @objc func tick(_ link: CADisplayLink) {
         guard let window = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.windows.first else { return }
+        // Sheet top edge (presentation layer) for presented-controller cases.
+        var sheets: [[Double]] = []
         var labels: [[String: Any]] = []
         var offsets: [Double] = []
         func visit(_ view: UIView) {
             if let scroll = view as? UIScrollView, scroll.bounds.height > 300 { offsets.append(Double(scroll.contentOffset.y)) }
-            if let label = view as? UILabel, label.text == "Feature Measurements" {
+            if NSStringFromClass(type(of: view)).contains("DropShadowView"), let l = view.layer.presentation() {
+                let r = window.layer.convert(l.bounds, from: l); sheets.append([r.origin.x, r.origin.y, r.width, r.height].map(Double.init))
+            }
+            if let label = view as? UILabel, let text = label.text, NavProbe.trackedTexts.contains(text) {
                 var opacity: Float = 1
                 var modelOpacity: Float = 1
                 var hidden = false
@@ -233,13 +248,13 @@ struct ToolbarBadgeFixture: UIViewControllerRepresentable {
                     let r = window.layer.convert(l.bounds, from: l); return [r.origin.x, r.origin.y, r.width, r.height].map(Double.init)
                 } ?? []
                 let mf = label.convert(label.bounds, to: window)
-                labels.append(["fontSize": Double(label.font.pointSize), "opacity": Double(opacity), "modelOpacity": Double(modelOpacity), "hidden": hidden,
+                labels.append(["text": text, "fontName": label.font.fontName, "fontSize": Double(label.font.pointSize), "opacity": Double(opacity), "modelOpacity": Double(modelOpacity), "hidden": hidden,
                                "frame": [mf.origin.x, mf.origin.y, mf.width, mf.height].map(Double.init), "presentationWindowFrame": pf])
             }
             view.subviews.forEach(visit)
         }
         visit(window)
-        rows.append(["t": link.timestamp, "offsets": offsets, "titles": labels])
+        rows.append(["t": link.timestamp, "offsets": offsets, "titles": labels, "sheets": sheets])
         if link.timestamp - lastFlush > 1 {
             lastFlush = link.timestamp
             let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("measurements")
@@ -248,6 +263,128 @@ struct ToolbarBadgeFixture: UIViewControllerRepresentable {
             if JSONSerialization.isValidJSONObject(safe), let data = try? JSONSerialization.data(withJSONObject: safe, options: []) {
                 try? data.write(to: directory.appendingPathComponent("frames.json"))
             }
+        }
+    }
+}
+
+// Navigation subtitle and sheet navigation-bar fixtures (--nav <mode>).
+// Modes: subtitleInline, subtitleLarge, subtitleLong, sheetLarge, sheetMedium,
+// sheetMediumIndicator, sheetLargeIndicator, sheetLargeTitle, sheetMediumLargeTitle.
+enum NavProbe {
+    static var mode: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "--nav"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    static let longTitle = "Feature Measurements With A Very Long Navigation Title"
+    static let longSubtitle = "Amazon Web Services Marketplace Order Details And More"
+    static let trackedTexts: Set<String> = ["Feature Measurements", "Amazon", "Sheet Title", longTitle, longSubtitle]
+}
+struct StripeRows: View {
+    var body: some View {
+        LazyVStack(alignment: .leading, spacing: 0) {
+            ForEach(0..<80) { row in
+                Text("Row \(row): stripe").font(.body)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .background(row % 2 == 0 ? Color.red : Color.blue)
+                    .foregroundStyle(.white)
+            }
+        }
+    }
+}
+struct NavProbeScene: View {
+    let mode: String
+    @State private var presented = false
+    private var dark: Bool { ProcessInfo.processInfo.arguments.contains("--dark") }
+    var body: some View {
+        Group {
+            if mode.hasPrefix("sheet") {
+                Color(.systemBackground).overlay(Text("Presenter")).ignoresSafeArea()
+                    .sheet(isPresented: $presented) { sheetContent }
+                    .task { try? await Task.sleep(for: .milliseconds(400)); presented = true }
+            } else {
+                NavigationStack { subtitleContent }
+            }
+        }
+        .preferredColorScheme(dark ? .dark : .light)
+        .task {
+            FrameSampler.shared.start()
+            for sample in 0..<200 {
+                try? await Task.sleep(for: .milliseconds(100))
+                await MainActor.run { Measurement.write(sample) }
+            }
+        }
+    }
+    @ToolbarContentBuilder var items: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) { Button {} label: { Image(systemName: "chevron.left") } }
+        ToolbarItem(placement: .topBarTrailing) { Button {} label: { Image(systemName: "bell") } }
+    }
+    @ViewBuilder var subtitleContent: some View {
+        let long = mode == "subtitleLong"
+        ScrollView { StripeRows() }
+            .navigationTitle(long ? NavProbe.longTitle : "Feature Measurements")
+            .navigationSubtitle(long ? NavProbe.longSubtitle : "Amazon")
+            .navigationBarTitleDisplayMode(mode == "subtitleLarge" ? .large : .inline)
+            .toolbar { items }
+    }
+    @ViewBuilder var sheetContent: some View {
+        let large = mode.hasSuffix("LargeTitle")
+        let medium = mode.contains("Medium")
+        let indicator = mode.hasSuffix("Indicator")
+        let stack = NavigationStack {
+            ScrollView { StripeRows() }
+                .navigationTitle("Sheet Title")
+                .navigationBarTitleDisplayMode(large ? .large : .inline)
+                .toolbar { items }
+        }
+        if medium {
+            stack.presentationDetents([.medium, .large]).presentationDragIndicator(indicator ? .visible : .automatic)
+        } else {
+            stack.presentationDragIndicator(indicator ? .visible : .automatic)
+        }
+    }
+}
+
+// Clear vs regular glass outline fixture (--glass white|grey|mid). Shapes sit at
+// fixed point positions (see README) on a flat background so the screenshot can
+// be profiled across their top/bottom edges and rounded ends. No public clear
+// style exists for toolbars or tab bars, so only free-standing glass is shown.
+struct GlassOutlineScene: View {
+    let background: String
+    static var background: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "--glass"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    private var color: Color {
+        switch background {
+        case "grey": return Color(red: 0xF2 / 255, green: 0xF2 / 255, blue: 0xF7 / 255)
+        case "mid": return Color(red: 0xC7 / 255, green: 0xC7 / 255, blue: 0xCC / 255)
+        default: return .white
+        }
+    }
+    private func capsule(_ glass: Glass, _ label: String) -> some View {
+        Label(label, systemImage: "star.fill").font(.body)
+            .frame(width: 200, height: 52)
+            .glassEffect(glass, in: .capsule)
+    }
+    var body: some View {
+        ZStack {
+            color.ignoresSafeArea()
+            capsule(.clear, "Clear").position(x: 201, y: 200)
+            capsule(.regular, "Regular").position(x: 201, y: 320)
+            Image(systemName: "plus").frame(width: 44, height: 44)
+                .glassEffect(.clear, in: .circle).position(x: 120, y: 440)
+            Image(systemName: "plus").frame(width: 44, height: 44)
+                .glassEffect(.regular, in: .circle).position(x: 120, y: 540)
+            Button("Clear button") {}.buttonStyle(.glass(.clear)).position(x: 280, y: 440)
+            Button("Glass button") {}.buttonStyle(.glass).position(x: 280, y: 540)
+        }
+        .preferredColorScheme(.light)
+        .task {
+            try? await Task.sleep(for: .seconds(2))
+            await MainActor.run { Measurement.write(0); DumpGlassFilters("glass-\(background)") }
         }
     }
 }

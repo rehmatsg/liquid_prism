@@ -21,6 +21,7 @@ import 'recipe.dart';
 import 'style.dart';
 import 'selection.dart';
 import 'tab_bar_style.dart';
+import 'tab_reselection.dart';
 import 'theme.dart';
 import 'haptics.dart';
 import 'badge.dart';
@@ -387,6 +388,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 
   void _commit(int index, {double? velocity, bool fromDrag = false}) {
     if (widget.onSelected == null) return;
+    // A tap on the selected tab scrolls the visible page back to the top.
+    if (index == widget.selectedIndex && !fromDrag) {
+      LiquidPrismTabReselection.maybeOf(context)?.reselect();
+    }
     if (!fromDrag) _trackingDeformation = false;
     final epoch = _epoch;
     final settleVelocity = velocity ?? _position.velocity;

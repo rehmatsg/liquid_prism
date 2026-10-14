@@ -137,6 +137,7 @@ label, callback/menu, key and optional foreground. Group spacing is independent.
 | --- | --- |
 | `height`, `restingInset` | 48 minimum, expands for text / 0, dissolves on focus |
 | `showCancelButton`, `showClearButton` | True / true; clear requires nonempty enabled input |
+| `cancelVisibility` | `focused`; `always` keeps cancel visible and tappable while unfocused |
 | `textStyle`, `placeholderStyle` | 17-point label / secondary label |
 | `iconColor`, `cursorColor`, `clearColor` | Label / theme accent / secondary label |
 | `iconSize`, `clearWidth` | 20⅓ / 36 |

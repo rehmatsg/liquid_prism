@@ -842,13 +842,20 @@ class _RenderEdgeBlur extends RenderProxyBox {
   /// members' glass contours in that space). The horizontal pass reads the
   /// frost capture and the vertical pass the optical capture, so the members'
   /// optical passes see neither the finished blur nor the fade.
+  ///
+  /// It runs in two phases, every hoisted effect's [horizontal] pass first and
+  /// then the rest: the vertical passes read the group's shared capture, which
+  /// is taken at the first of them, so it must already hold every effect's
+  /// horizontal result. Interleaved, a second effect (a bottom bar's under a
+  /// top bar's) blurred only vertically.
   void _hoistInto(
     ui.SceneBuilder builder,
     _GlassGroupData group,
     Matrix4 toHost,
     List<Path> contours,
-    List<Path> clips,
-  ) {
+    List<Path> clips, {
+    required bool horizontal,
+  }) {
     _locateOnScreen();
     final signature = <Object>[size, ...toHost.storage, ..._specs];
     for (final contour in contours) {
@@ -872,7 +879,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
       builder.pushClipPath(clip);
     }
     if (blurs.isNotEmpty) {
-      for (var pass = 0; pass < 2; pass++) {
+      for (final pass in horizontal ? const [0] : const [1]) {
         final layer = _passLayers[pass].layer;
         if (layer == null) continue;
         layer.filter
@@ -882,6 +889,12 @@ class _RenderEdgeBlur extends RenderProxyBox {
         layer.filter.addToScene(builder);
         builder.pop();
       }
+    }
+    if (horizontal) {
+      for (final _ in clips) {
+        builder.pop();
+      }
+      return;
     }
     // The haze reads the optical capture like the vertical pass, so the
     // members' optical passes see neither.

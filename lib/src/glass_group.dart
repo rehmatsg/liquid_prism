@@ -321,21 +321,29 @@ class _GlassGroupData {
         builder.pop();
       }
     }
-    for (final edge in hoistEdges) {
-      // An effect with content of its own blurs that content, which must
-      // already be painted: it joins only when it hosts the hoist itself.
-      if (edge != host && edge.hasChild) continue;
-      _hoistedEdges.add(edge);
-      edge._hoistInto(
-        builder,
-        this,
-        toHost.clone()..multiply(edge.getTransformTo(null)),
-        contours,
-        [
-          for (final clip in _clips[edge] ?? const <Path>[])
-            clip.transform(toHost.storage),
-        ],
-      );
+    // Every effect's horizontal pass before any vertical pass: the vertical
+    // passes share one capture, taken at the first of them.
+    final hoisted = [
+      for (final edge in hoistEdges)
+        // An effect with content of its own blurs that content, which must
+        // already be painted: it joins only when it hosts the hoist itself.
+        if (edge == host || !edge.hasChild) edge,
+    ];
+    for (final horizontal in const [true, false]) {
+      for (final edge in hoisted) {
+        _hoistedEdges.add(edge);
+        edge._hoistInto(
+          builder,
+          this,
+          toHost.clone()..multiply(edge.getTransformTo(null)),
+          contours,
+          [
+            for (final clip in _clips[edge] ?? const <Path>[])
+              clip.transform(toHost.storage),
+          ],
+          horizontal: horizontal,
+        );
+      }
     }
     if (shadowsLast) builder.addPicture(Offset.zero, _sharedShadows!);
   }

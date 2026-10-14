@@ -17,6 +17,8 @@ export 'src/system_chrome.dart'
 export 'src/edge_fade.dart' show GlassEdge, GlassEdgeFade, GlassFadeCurve;
 export 'src/glass.dart'
     show GlassEdgeBlur, LiquidPrism, LiquidPrismEdgeBlur, LiquidPrismGroup;
+export 'src/tab_reselection.dart' show LiquidPrismTabReselection;
+export 'src/sliver_app_bar.dart' show LiquidPrismSliverAppBar;
 export 'src/scroll_edge.dart'
     show
         GlassScrollEdgeStyle,
@@ -40,7 +42,8 @@ export 'src/appearance.dart'
         GlassSegmentedStyle,
         GlassSegmentedSizing,
         GlassToolbarStyle,
-        GlassSearchStyle;
+        GlassSearchStyle,
+        GlassSearchCancelVisibility;
 export 'src/pressable.dart' show LiquidPrismPressable;
 export 'src/selection.dart' show LiquidPrismSelection;
 export 'src/style.dart' show LiquidPrismStyle;
