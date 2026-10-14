@@ -40,7 +40,8 @@ export 'src/appearance.dart'
         GlassSegmentedStyle,
         GlassSegmentedSizing,
         GlassToolbarStyle,
-        GlassSearchStyle;
+        GlassSearchStyle,
+        GlassSearchCancelVisibility;
 export 'src/pressable.dart' show LiquidPrismPressable;
 export 'src/selection.dart' show LiquidPrismSelection;
 export 'src/style.dart' show LiquidPrismStyle;

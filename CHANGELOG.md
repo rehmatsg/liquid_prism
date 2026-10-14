@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add `LiquidPrismSearchField.cancelVisibility` (and
+  `GlassSearchStyle.cancelVisibility`): `GlassSearchCancelVisibility.always`
+  keeps the cancel action visible and tappable while the field is unfocused,
+  for a full-screen search whose cancel closes it. The default stays
+  `focused`.
+
 ## 0.3.0
 
 - Let `LiquidPrismScaffold.actions` hold several trailing capsules: each

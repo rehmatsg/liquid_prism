@@ -75,7 +75,9 @@ class _SearchPageState extends State<SearchPage> {
             focusNode: _focus,
             placeholder: 'Components and ideas',
             onChanged: (_) => setState(() {}),
-            onCancel: () => setState(() {}),
+            // The page only searches: cancel stays visible and closes it.
+            cancelVisibility: GlassSearchCancelVisibility.always,
+            onCancel: () => Navigator.of(context).maybePop(),
           ),
         ),
       ),

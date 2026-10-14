@@ -505,7 +505,10 @@ its clear action; `suffixBuilder` can keep or replace it instead. `onCleared` fi
 Style can change text/placeholder colors, icon/cursor/clear colors, geometry,
 material, contour, focus spring and clear/cancel action sizing. Direct
 `showCancelButton` and `restingInset` override inherited values. Cancel is hidden
-when it cannot fit. Give search a bounded width and handle keyboard avoidance in
+when it cannot fit. Cancel shows while the field is focused; on a search screen
+of its own, `cancelVisibility: GlassSearchCancelVisibility.always` keeps it
+visible and tappable while unfocused, so `onCancel` can close the screen
+(tapping it also clears the field). Give search a bounded width and handle keyboard avoidance in
 the parent. Native bottom search uses a parent inset of 8 and resting inset of 20.
 
 ### Hosting autocomplete
