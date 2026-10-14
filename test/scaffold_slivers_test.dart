@@ -324,4 +324,115 @@ void main() {
     expect(controller.offset, 0);
     debugDefaultTargetPlatformOverride = null;
   });
+
+  testWidgets('a subtitle: inline 15 over 12, centred; large 11 below', (
+    tester,
+  ) async {
+    phone(tester);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          leading: const SizedBox(
+            key: ValueKey('leading'),
+            width: 44,
+            height: 44,
+          ),
+          title: const Text('Inline'),
+          largeTitle: const Text('Large'),
+          subtitle: const Text('Amazon'),
+          scrollController: controller,
+          slivers: rows(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final subtitles = find.text('Amazon');
+    expect(subtitles, findsNWidgets(2));
+    final large = tester.getRect(find.text('Large'));
+    final largeSub = tester.getRect(subtitles.at(1));
+    expect(largeSub.left, large.left);
+    expect(largeSub.top - large.top, closeTo(38.33, .5));
+    expect(
+      DefaultTextStyle.of(tester.element(subtitles.at(1))).style.fontSize,
+      11,
+    );
+    // The row grows for the subtitle; content starts below it.
+    expect(
+      rectOf(tester, 'row0').top,
+      closeTo(62 + 44 + 71.33 + LiquidPrismScaffold.topBarClearance, .6),
+    );
+    controller.jumpTo(200);
+    await tester.pumpAndSettle();
+    final inline = tester.getRect(find.text('Inline'));
+    final inlineSub = tester.getRect(subtitles.at(0));
+    expect(
+      DefaultTextStyle.of(tester.element(find.text('Inline'))).style.fontSize,
+      15,
+    );
+    expect(
+      DefaultTextStyle.of(tester.element(subtitles.at(0))).style.fontSize,
+      12,
+    );
+    expect(inlineSub.top, greaterThanOrEqualTo(inline.bottom - 1));
+    // The two-line block centres on the 44-point control row.
+    final leading = rectOf(tester, 'leading');
+    expect(
+      (inline.top + inlineSub.bottom) / 2,
+      closeTo(leading.center.dy, 1.5),
+    );
+  });
+
+  testWidgets('in a sheet the bar sits 16 points below the top', (
+    tester,
+  ) async {
+    phone(tester);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          sheet: true,
+          leading: const SizedBox(
+            key: ValueKey('leading'),
+            width: 44,
+            height: 44,
+          ),
+          title: const Text('Sheet'),
+          slivers: rows(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(rectOf(tester, 'leading').top, 16);
+    expect(
+      rectOf(tester, 'row0').top,
+      16 + 44 + LiquidPrismScaffold.topBarClearance,
+    );
+  });
+
+  testWidgets('a hard edge ends at the bar frame, 10 points below', (
+    tester,
+  ) async {
+    phone(tester);
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Hard'),
+          scrollController: controller,
+          scrollEdgeStyle: const GlassScrollEdgeStyle(
+            variant: GlassScrollEdgeVariant.hard,
+          ),
+          slivers: rows(),
+        ),
+      ),
+    );
+    controller.jumpTo(200);
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.byType(LiquidPrismScrollEdge)).bottom,
+      62 + 44 + 10,
+    );
+  });
 }

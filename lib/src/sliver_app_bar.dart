@@ -40,6 +40,8 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
     super.key,
     this.title,
     this.largeTitle,
+    this.subtitle,
+    this.sheet = false,
     this.leading,
     this.automaticallyImplyLeading = true,
     this.actions = const [],
@@ -56,6 +58,12 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
   /// Expanded header in a row below the controls; supply [title] too for the
   /// collapsed header. Only the visible header contributes semantics.
   final Widget? largeTitle;
+
+  /// A second line under the title, as [LiquidPrismScaffold.subtitle].
+  final Widget? subtitle;
+
+  /// Lays the bar out for a sheet, as [LiquidPrismScaffold.sheet].
+  final bool sheet;
 
   /// A top-leading control. Null implies a [LiquidPrismBackButton] when the
   /// route can pop; see [automaticallyImplyLeading].
@@ -96,7 +104,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             .merge(navigationBarStyle);
     final colors = GlassColors.of(context);
     final titleStyle = TextStyle(
-      fontSize: 17,
+      fontSize: subtitle == null ? 17 : 15,
       fontWeight: FontWeight.w600,
       color: colors.label,
     ).merge(navigation.titleStyle);
@@ -107,7 +115,16 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
     ).merge(navigation.largeTitleStyle);
     final scaler = media.textScaler;
     // The same measured geometry as LiquidPrismScaffold's top bar.
-    final top = math.max(media.padding.top, 24.0);
+    final top = sheet ? 16.0 : math.max(media.padding.top, 24.0);
+    final subtitleStyle = TextStyle(
+      fontSize: 12,
+      color: colors.secondaryLabel,
+    ).merge(navigation.subtitleStyle);
+    final largeSubtitleStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      color: colors.secondaryLabel,
+    ).merge(navigation.largeSubtitleStyle);
     final barRow = title == null
         ? LiquidPrismScaffold.topBarHeight
         : math.max(
@@ -116,11 +133,16 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
                     (titleStyle.height ?? 1.2) +
                 8,
           );
+    // With a subtitle the row grows for its 11-point line (71.33 points).
     final largeRow = largeTitle == null
         ? 0.0
         : scaler.scale(largeTitleStyle.fontSize ?? 34) *
                   (largeTitleStyle.height ?? 1.2) +
-              11.33;
+              11.33 +
+              (subtitle == null
+                  ? 0
+                  : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
+                        6.13);
     final accessoryHeight = accessory?.preferredSize.height ?? 0;
     final minExtent =
         top + barRow + accessoryHeight + LiquidPrismScaffold.topBarClearance;
@@ -139,6 +161,8 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
         leading: impliedLeading,
         titleStyle: titleStyle,
         largeTitleStyle: largeTitleStyle,
+        subtitleStyle: subtitleStyle,
+        largeSubtitleStyle: largeSubtitleStyle,
         navigation: navigation,
         top: top,
         barRow: barRow,
@@ -157,6 +181,8 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.leading,
     required this.titleStyle,
     required this.largeTitleStyle,
+    required this.subtitleStyle,
+    required this.largeSubtitleStyle,
     required this.navigation,
     required this.top,
     required this.barRow,
@@ -168,6 +194,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   final LiquidPrismSliverAppBar bar;
   final Widget? leading;
   final TextStyle titleStyle, largeTitleStyle;
+  final TextStyle subtitleStyle, largeSubtitleStyle;
   final GlassNavigationBarStyle navigation;
   final double top, barRow, largeRow, accessoryHeight;
   @override
@@ -354,6 +381,11 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
           accessoryHeight: _d.accessoryHeight,
           gutter: _d.navigation.gutter ?? 16,
           gap: _d.navigation.controlGap ?? 12,
+          edgeFrame:
+              bar.accessory == null &&
+                  edgeStyle.variant == GlassScrollEdgeVariant.hard
+              ? 10
+              : 0,
         ),
         children: [
           if (bar.scrollEdge)
@@ -378,14 +410,37 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
           if (bar.largeTitle case final large?)
             LayoutId(
               id: _Slot.largeTitle,
-              child: _header(large, _d.largeTitleStyle, large: true),
+              child: _header(
+                glassTitled(
+                  large,
+                  bar.subtitle,
+                  _d.largeSubtitleStyle,
+                  large: true,
+                  subtitleOffset:
+                      MediaQuery.textScalerOf(context)
+                          .scale(_d.largeTitleStyle.fontSize ?? 34) *
+                      38.33 /
+                      34,
+                ),
+                _d.largeTitleStyle,
+                large: true,
+              ),
             ),
           if (bar.accessory case final accessory?)
             LayoutId(id: _Slot.accessory, child: accessory),
           if (bar.title case final title?)
             LayoutId(
               id: _Slot.title,
-              child: _header(title, _d.titleStyle, large: false),
+              child: _header(
+                glassTitled(
+                  title,
+                  bar.subtitle,
+                  _d.subtitleStyle,
+                  large: false,
+                ),
+                _d.titleStyle,
+                large: false,
+              ),
             ),
           if (_d.leading case final leading?)
             LayoutId(id: _Slot.leading, child: leading),
@@ -420,9 +475,14 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     required this.accessoryHeight,
     required this.gutter,
     required this.gap,
+    required this.edgeFrame,
   });
   final TextDirection textDirection;
   final double top, barRow, largeRow, shrink, accessoryHeight, gutter, gap;
+
+  /// Extra depth of a hard edge, to the bar frame 10 points below the
+  /// controls, as measured; an accessory ends the frame itself.
+  final double edgeFrame;
 
   /// The controls' measured inset from the screen edges.
   static const _edge = 16.0;
@@ -440,7 +500,10 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       layoutChild(
         _Slot.edge,
         BoxConstraints.tight(
-          Size(size.width, top + barRow + largeHeight + accessoryHeight),
+          Size(
+            size.width,
+            top + barRow + largeHeight + accessoryHeight + edgeFrame,
+          ),
         ),
       );
       positionChild(_Slot.edge, Offset.zero);
@@ -514,5 +577,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       old.shrink != shrink ||
       old.accessoryHeight != accessoryHeight ||
       old.gutter != gutter ||
-      old.gap != gap;
+      old.gap != gap ||
+      old.edgeFrame != edgeFrame;
 }

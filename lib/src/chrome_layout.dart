@@ -109,6 +109,8 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.title,
     this.largeTitle,
     this.header,
+    this.subtitle,
+    this.sheet = false,
     this.navigationBarStyle,
     this.leading,
     this.automaticallyImplyLeading = true,
@@ -186,6 +188,17 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// the bar's [title] is hidden; once it has scrolled under the bar the
   /// title fades in, with the same timing as after a large title.
   final Widget? header;
+
+  /// A second line under the title, as SwiftUI's `navigationSubtitle`: with
+  /// it the inline title is 15-point semibold over a 12-point secondary
+  /// subtitle, centred on the controls, and a large title gains an 11-point
+  /// subtitle below it that collapses with it (measured on iOS 27).
+  final Widget? subtitle;
+
+  /// Lays the bar out for a sheet: its controls 16 points below the sheet's
+  /// top, with no status bar inset, as a navigation stack in a sheet does on
+  /// iOS 27.
+  final bool sheet;
   final GlassNavigationBarStyle? navigationBarStyle;
 
   /// Fold the keyboard into body padding and consume its bottom view inset.
@@ -507,7 +520,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final features = addFeatures
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
-    final top = math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
+    final top = widget.sheet
+        ? _ChromeLayout._sheetTop
+        : math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
     final leading =
         widget.leading ??
         (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
@@ -516,7 +531,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
     final titleStyle = TextStyle(
-      fontSize: 17,
+      fontSize: widget.subtitle == null ? 17 : 15,
       fontWeight: FontWeight.w600,
       color: GlassColors.of(context).label,
     ).merge(navigation.titleStyle);
@@ -525,6 +540,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       fontWeight: FontWeight.w700,
       color: GlassColors.of(context).label,
     ).merge(navigation.largeTitleStyle);
+    final colors = GlassColors.of(context);
+    final subtitleStyle = TextStyle(
+      fontSize: 12,
+      color: colors.secondaryLabel,
+    ).merge(navigation.subtitleStyle);
+    final largeSubtitleStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      color: colors.secondaryLabel,
+    ).merge(navigation.largeSubtitleStyle);
     final scaler = media.textScaler;
     final titleRowHeight = widget.title == null
         ? LiquidPrismScaffold.topBarHeight
@@ -536,11 +561,17 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           );
     // Measured: a 52-point row holding the 40.67-point 34-point bold line,
     // 3.67 points below the row's top.
+    // With a subtitle the row grows to 71.33 points for its 11-point line,
+    // which sits 38.33 points below the large title's top.
     final expandedHeight = widget.largeTitle == null
         ? 0.0
         : scaler.scale(largeTitleStyle.fontSize ?? 34) *
                   (largeTitleStyle.height ?? 1.2) +
-              11.33;
+              11.33 +
+              (widget.subtitle == null
+                  ? 0
+                  : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
+                        6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
     final swaps = widget.largeTitle != null || widget.header != null;
     _collapseAt = widget.header != null
@@ -623,6 +654,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         titleGap: navigation.controlGap ?? 12,
         actionsTop: actionsTop,
         railBottom: railBottom,
+        sheet: widget.sheet,
+        edgeFrame:
+            widget.accessory == null &&
+                GlassScrollEdgeStyle.resolve(
+                      context,
+                      widget.scrollEdgeStyle,
+                    ).variant ==
+                    GlassScrollEdgeVariant.hard
+            ? 10
+            : 0,
         corner: corner,
         sidebar: sidebar
             ? (sidebarLeft ? AxisDirection.left : AxisDirection.right)
@@ -716,7 +757,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         if (widget.title case final title?)
           LayoutId(
             id: _Slot.title,
-            child: header(title, titleStyle, large: false),
+            child: header(
+              glassTitled(title, widget.subtitle, subtitleStyle, large: false),
+              titleStyle,
+              large: false,
+            ),
           ),
         if (widget.largeTitle case final title?)
           LayoutId(
@@ -724,7 +769,18 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             // Unclipped: it scrolls up into the bar and fades there.
             child: Align(
               alignment: AlignmentDirectional.topStart,
-              child: header(title, largeTitleStyle, large: true),
+              child: header(
+                glassTitled(
+                  title,
+                  widget.subtitle,
+                  largeSubtitleStyle,
+                  large: true,
+                  subtitleOffset:
+                      scaler.scale(largeTitleStyle.fontSize ?? 34) * 38.33 / 34,
+                ),
+                largeTitleStyle,
+                large: true,
+              ),
             ),
           ),
         if (widget.accessory case final accessory?)
@@ -1011,6 +1067,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.titleGap,
     required this.actionsTop,
     required this.railBottom,
+    required this.sheet,
+    required this.edgeFrame,
     required this.corner,
     required this.sidebar,
     required this.reveal,
@@ -1019,6 +1077,12 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final GlassChromePlacement placement;
   final EdgeInsets viewPadding;
   final double keyboard, actionsTop, railBottom;
+  final bool sheet;
+
+  /// Extra depth of the top edge effect below the controls: measured on iOS
+  /// 27, a hard edge ends at the bar frame, 10 points below 44-point
+  /// controls; with an accessory the accessory ends the frame.
+  final double edgeFrame;
 
   /// Height of the row below the top bar, 0 without one.
   final double accessoryHeight;
@@ -1129,6 +1193,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   // Measured on iOS 27 simulators; see doc/native_adaptive_layout.md.
   static const _edge = 16.0;
   static const _minimumTop = 24.0;
+  // Measured: in a sheet the bar's controls sit 16 pt below its top.
+  static const _sheetTop = 16.0;
   static const _bottomBarGap = 21.0;
   static const _railGap = 12.0;
   static const _railEdge = 24.0;
@@ -1145,7 +1211,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     final right = placement == GlassChromePlacement.rightRail;
     // The top bar starts at the status bar's bottom; with the status bar in
     // the rail it keeps a 24 pt margin.
-    final top = corner == null
+    final top = sheet
+        ? _sheetTop
+        : corner == null
         ? math.max(viewPadding.top, _minimumTop)
         : _minimumTop;
     final rtl = textDirection == TextDirection.rtl;
@@ -1197,7 +1265,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         BoxConstraints.tight(
           Size(
             math.max(0, contentRight - contentLeft),
-            top + barRow + largeHeight + accessoryHeight,
+            top + barRow + largeHeight + accessoryHeight + edgeFrame,
           ),
         ),
       );
@@ -1435,6 +1503,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       titleGap != old.titleGap ||
       actionsTop != old.actionsTop ||
       railBottom != old.railBottom ||
+      sheet != old.sheet ||
+      edgeFrame != old.edgeFrame ||
       corner != old.corner ||
       sidebar != old.sidebar ||
       reveal != old.reveal;

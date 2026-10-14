@@ -197,4 +197,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LiquidPrismBackButton), findsOneWidget);
   });
+
+  testWidgets('a sheet bar starts 16 points below the top', (tester) async {
+    phone(tester);
+    await tester.pumpWidget(
+      const CupertinoApp(
+        home: CustomScrollView(
+          slivers: [
+            LiquidPrismSliverAppBar(
+              sheet: true,
+              leading: SizedBox(
+                key: ValueKey('leading'),
+                width: 44,
+                height: 44,
+              ),
+              title: Text('Sheet'),
+              subtitle: Text('Details'),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getRect(find.byKey(const ValueKey('leading'))).top, 16);
+    expect(find.text('Details'), findsOneWidget);
+  });
 }

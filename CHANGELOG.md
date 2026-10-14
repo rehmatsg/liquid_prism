@@ -4,6 +4,13 @@
 
 ## 0.4.0
 
+- Add `subtitle` to `LiquidPrismScaffold` and `LiquidPrismSliverAppBar`, as
+  measured from SwiftUI's `navigationSubtitle`: a 15-point title over a
+  12-point secondary subtitle inline, an 11-point subtitle under a large
+  title. Add `sheet: true` for bars in a sheet: controls 16 points below the
+  sheet's top, with no status bar inset.
+- In the scaffold and sliver bar, a hard edge now ends at the bar frame, 10 points below the
+  controls, with its hairline there, as measured.
 - Add `LiquidPrismScaffold.header`: content at the top of `slivers` that
   scrolls away under the bar, after which the inline title swaps in, as after
   a large title.

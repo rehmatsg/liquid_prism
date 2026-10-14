@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show internal;
 import 'package:flutter/widgets.dart';
 
 /// Navigation title typography and collapse.
@@ -12,6 +13,8 @@ class GlassNavigationBarStyle {
   const GlassNavigationBarStyle({
     this.titleStyle,
     this.largeTitleStyle,
+    this.subtitleStyle,
+    this.largeSubtitleStyle,
     this.gutter,
     this.controlGap,
     this.revealExtent,
@@ -20,6 +23,10 @@ class GlassNavigationBarStyle {
        assert(controlGap == null || controlGap >= 0),
        assert(revealExtent == null || revealExtent >= 0);
   final TextStyle? titleStyle, largeTitleStyle;
+
+  /// The subtitle under the inline title (12-point regular secondary label)
+  /// and under the large title (11-point medium secondary label), measured.
+  final TextStyle? subtitleStyle, largeSubtitleStyle;
   final double? gutter, controlGap;
 
   /// Scroll distance at which the large title swaps for the inline title.
@@ -35,6 +42,8 @@ class GlassNavigationBarStyle {
   GlassNavigationBarStyle copyWith({
     TextStyle? titleStyle,
     TextStyle? largeTitleStyle,
+    TextStyle? subtitleStyle,
+    TextStyle? largeSubtitleStyle,
     double? gutter,
     double? controlGap,
     double? revealExtent,
@@ -42,6 +51,8 @@ class GlassNavigationBarStyle {
   }) => GlassNavigationBarStyle(
     titleStyle: titleStyle ?? this.titleStyle,
     largeTitleStyle: largeTitleStyle ?? this.largeTitleStyle,
+    subtitleStyle: subtitleStyle ?? this.subtitleStyle,
+    largeSubtitleStyle: largeSubtitleStyle ?? this.largeSubtitleStyle,
     gutter: gutter ?? this.gutter,
     controlGap: controlGap ?? this.controlGap,
     revealExtent: revealExtent ?? this.revealExtent,
@@ -55,9 +66,53 @@ class GlassNavigationBarStyle {
           largeTitleStyle:
               largeTitleStyle?.merge(other.largeTitleStyle) ??
               other.largeTitleStyle,
+          subtitleStyle:
+              subtitleStyle?.merge(other.subtitleStyle) ?? other.subtitleStyle,
+          largeSubtitleStyle:
+              largeSubtitleStyle?.merge(other.largeSubtitleStyle) ??
+              other.largeSubtitleStyle,
           gutter: other.gutter ?? gutter,
           controlGap: other.controlGap ?? controlGap,
           revealExtent: other.revealExtent ?? revealExtent,
           revealCurve: other.revealCurve ?? revealCurve,
         );
+}
+
+/// A title with an optional subtitle line below it: centred under the inline
+/// title; under the large one, [subtitleOffset] below the title's top (38.33
+/// points for a 34-point title, measured on iOS 27), whatever the font's line
+/// height.
+@internal
+Widget glassTitled(
+  Widget title,
+  Widget? subtitle,
+  TextStyle subtitleStyle, {
+  required bool large,
+  double subtitleOffset = 0,
+}) {
+  if (subtitle == null) return title;
+  final line = DefaultTextStyle(
+    style: subtitleStyle,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    child: subtitle,
+  );
+  if (!large) {
+    return Column(mainAxisSize: MainAxisSize.min, children: [title, line]);
+  }
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(
+        height: subtitleOffset,
+        child: OverflowBox(
+          alignment: AlignmentDirectional.topStart,
+          maxHeight: double.infinity,
+          child: title,
+        ),
+      ),
+      line,
+    ],
+  );
 }

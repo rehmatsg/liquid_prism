@@ -25,6 +25,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
   var _twoCapsules = true;
   var _badges = true;
   var _refresh = true;
+  var _subtitle = false;
   var _segment = 0;
   var _refreshed = 0;
 
@@ -32,6 +33,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       ListRow(
         title: title,
         trailing: LiquidPrismSwitch(
+          key: ValueKey('lab-$title'),
           label: title,
           value: value,
           onChanged: (v) => setState(() => onChanged(v)),
@@ -85,6 +87,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
     return LiquidPrismScaffold(
       backgroundColor: colors.groupedBackground,
       title: const Text('Scaffold Lab'),
+      subtitle: _subtitle ? const Text('Every page option, live') : null,
       largeTitle: _heading == _Heading.large
           ? const Text('Scaffold Lab')
           : null,
@@ -195,7 +198,22 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                   ),
                   _toggle('Badges', _badges, (v) => _badges = v),
                   _toggle('Pull to refresh', _refresh, (v) => _refresh = v),
+                  _toggle('Subtitle', _subtitle, (v) => _subtitle = v),
                 ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: LiquidPrismButton(
+                  key: const ValueKey('lab-open-sheet'),
+                  label: 'Open the same page in a sheet',
+                  onPressed: () => showCupertinoSheet<void>(
+                    context: context,
+                    // The sheet's controller lets a pull at the top dismiss it.
+                    scrollableBuilder: (_, controller) =>
+                        _SheetPage(controller: controller),
+                  ),
+                  child: const Text('Open in a Sheet'),
+                ),
               ),
               if (_refreshed > 0)
                 Padding(
@@ -226,6 +244,55 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                 'Row $i: scroll it under the bar',
                 style: const TextStyle(fontSize: 17, color: Color(0xFF111111)),
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A sheet built on the scaffold with `sheet: true`: the bar sits 16 points
+/// below the sheet's top, without a status bar inset.
+class _SheetPage extends StatelessWidget {
+  const _SheetPage({required this.controller});
+  final ScrollController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = GlassColors.of(context);
+    return LiquidPrismScaffold(
+      sheet: true,
+      scrollController: controller,
+      backgroundColor: colors.groupedBackground,
+      leading: LiquidPrismBackButton(
+        close: true,
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      title: const Text('Sheet'),
+      subtitle: const Text('Scaffold with sheet: true'),
+      actions: [
+        GlassToolbarItem(
+          icon: const Icon(CupertinoIcons.checkmark),
+          label: 'Done',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList.builder(
+            itemCount: 20,
+            itemBuilder: (context, i) => Container(
+              height: 56,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: AlignmentDirectional.centerStart,
+              decoration: BoxDecoration(
+                color: HSLColor.fromAHSL(1, (i * 31) % 360, .6, .62).toColor(),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text('Sheet row $i'),
             ),
           ),
         ),

@@ -15,6 +15,7 @@ class HeaderPage extends StatelessWidget {
     return LiquidPrismScaffold(
       backgroundColor: colors.groupedBackground,
       title: const Text('Glass Surfaces'),
+      subtitle: const Text('Component'),
       actions: [
         [
           GlassToolbarItem(
