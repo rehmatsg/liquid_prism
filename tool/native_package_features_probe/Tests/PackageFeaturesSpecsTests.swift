@@ -104,4 +104,17 @@ final class PackageFeaturesSpecsTests: XCTestCase {
         sleep(2)
         app.terminate()
     }
+    // Clear vs regular glass outline fixture over three flat backgrounds.
+    func glass(_ background: String) {
+        shotPrefix = "Glass-\(background)"
+        let app = XCUIApplication()
+        app.launchArguments = ["--glass", background]
+        app.launch()
+        sleep(4)
+        shot("rest")
+        app.terminate()
+    }
+    func testGlassWhite() { glass("white") }
+    func testGlassGrey() { glass("grey") }
+    func testGlassMid() { glass("mid") }
 }

@@ -6,6 +6,8 @@ struct PackageFeaturesApp: App {
     var body: some Scene { WindowGroup {
         if ProcessInfo.processInfo.arguments.contains("--toolbar") {
             ToolbarBadgeScene()
+        } else if let background = GlassOutlineScene.background {
+            GlassOutlineScene(background: background)
         } else if let mode = NavProbe.mode {
             NavProbeScene(mode: mode)
         } else { Fixture() }
@@ -340,6 +342,49 @@ struct NavProbeScene: View {
             stack.presentationDetents([.medium, .large]).presentationDragIndicator(indicator ? .visible : .automatic)
         } else {
             stack.presentationDragIndicator(indicator ? .visible : .automatic)
+        }
+    }
+}
+
+// Clear vs regular glass outline fixture (--glass white|grey|mid). Shapes sit at
+// fixed point positions (see README) on a flat background so the screenshot can
+// be profiled across their top/bottom edges and rounded ends. No public clear
+// style exists for toolbars or tab bars, so only free-standing glass is shown.
+struct GlassOutlineScene: View {
+    let background: String
+    static var background: String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: "--glass"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+    private var color: Color {
+        switch background {
+        case "grey": return Color(red: 0xF2 / 255, green: 0xF2 / 255, blue: 0xF7 / 255)
+        case "mid": return Color(red: 0xC7 / 255, green: 0xC7 / 255, blue: 0xCC / 255)
+        default: return .white
+        }
+    }
+    private func capsule(_ glass: Glass, _ label: String) -> some View {
+        Label(label, systemImage: "star.fill").font(.body)
+            .frame(width: 200, height: 52)
+            .glassEffect(glass, in: .capsule)
+    }
+    var body: some View {
+        ZStack {
+            color.ignoresSafeArea()
+            capsule(.clear, "Clear").position(x: 201, y: 200)
+            capsule(.regular, "Regular").position(x: 201, y: 320)
+            Image(systemName: "plus").frame(width: 44, height: 44)
+                .glassEffect(.clear, in: .circle).position(x: 120, y: 440)
+            Image(systemName: "plus").frame(width: 44, height: 44)
+                .glassEffect(.regular, in: .circle).position(x: 120, y: 540)
+            Button("Clear button") {}.buttonStyle(.glass(.clear)).position(x: 280, y: 440)
+            Button("Glass button") {}.buttonStyle(.glass).position(x: 280, y: 540)
+        }
+        .preferredColorScheme(.light)
+        .task {
+            try? await Task.sleep(for: .seconds(2))
+            await MainActor.run { Measurement.write(0); DumpGlassFilters("glass-\(background)") }
         }
     }
 }

@@ -12,6 +12,8 @@ xcodebuild build-for-testing -project PackageFeaturesSpecs.xcodeproj -scheme Pac
 NAV_CASES="SubtitleInline SubtitleInlineDark SubtitleLarge SubtitleLargeDark SubtitleLong SubtitleScrub SheetLarge SheetLargeIndicator SheetMedium SheetMediumIndicator SheetLargeTitle SheetMediumLargeTitle"
 CASES=${PROBE_CASES:-Light Dark ToolbarLight ToolbarDark Tabs4 Tabs5 Scrub}
 [ "$CASES" = Nav ] && CASES=$NAV_CASES
+# Clear/regular glass outline fixture: PROBE_CASES=Glass (white, #F2F2F7, #C7C7CC).
+[ "$CASES" = Glass ] && CASES="GlassWhite GlassGrey GlassMid"
 for appearance in $CASES; do
   # The UI test writes rest, slow up/down and fast collapse screenshots itself
   # (TEST_RUNNER_PROBE_OUT reaches the runner as PROBE_OUT).
