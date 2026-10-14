@@ -50,7 +50,7 @@ void main() {
     expect(find.byIcon(CupertinoIcons.chevron_back), findsOneWidget);
     // A top bar now exists: the body clears its 44-point row by 14.
     final padding = MediaQuery.paddingOf(tester.element(find.text('Detail')));
-    expect(padding.top, rootPadding.top + 44 + 14);
+    expect(padding.top, rootPadding.top + 44 + 16);
     // The chevron sits half a point toward its tip.
     final circle = tester.getCenter(find.byType(LiquidPrism));
     final glyph = tester.getCenter(find.byIcon(CupertinoIcons.chevron_back));
