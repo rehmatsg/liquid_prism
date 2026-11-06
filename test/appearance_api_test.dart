@@ -535,17 +535,17 @@ void main() {
     expect(optics.edgeWidth, closeTo(3.72, 1e-6));
 
     // The switch takes its captured held rim (inner refraction 11.5 over 6.9
-    // at its 115/3-point lens). Its underlay keeps the shared 9-point field
-    // scaled from the 70-point tab lens, separate from that rim.
+    // at its 115/3-point lens) and the native 9-point underlay field,
+    // separate from that rim and independent of the lens height.
     final toggle = LiquidPrismSwitch(value: false, onChanged: (_) {});
     optics = await hold(toggle, GlassRole.controlThumb);
     expect(optics.edgeWidth, closeTo(6.9, 1e-6));
     expect(optics.refraction, closeTo(11.5, 1e-6));
-    expect(underlay, closeTo(9 * (115 / 3) / 70, 1e-6));
+    expect(underlay, closeTo(9, 1e-6));
     expect(optics.light, closeTo(.6, 1e-6));
     expect(optics.tint.a, 0);
 
-    // The segmented selection: 6.6 over 4.4 at its 44-point lens.
+    // The segmented selection: its measured 8.8 over 7.04 at its 44-point lens.
     optics = await hold(
       LiquidPrismSegmentedControl<int>(
         children: const {0: Text('One'), 1: Text('Two')},
@@ -554,9 +554,9 @@ void main() {
       ),
       GlassRole.segmentLens,
     );
-    expect(optics.edgeWidth, closeTo(4.4, 1e-6));
-    expect(optics.refraction, closeTo(6.6, 1e-6));
-    expect(underlay, closeTo(9 * 44 / 70, 1e-6));
+    expect(optics.edgeWidth, closeTo(7.04, 1e-6));
+    expect(optics.refraction, closeTo(8.8, 1e-6));
+    expect(underlay, closeTo(9, 1e-6));
 
     // A custom rim no longer moves the underlay; custom optics drive both.
     optics = await hold(
@@ -570,7 +570,7 @@ void main() {
       GlassRole.controlThumb,
     );
     expect(optics.refraction, closeTo(3.72 * (115 / 3) / 37.2, 1e-6));
-    expect(underlay, closeTo(9 * (115 / 3) / 70, 1e-6));
+    expect(underlay, closeTo(9, 1e-6));
     optics = await hold(
       LiquidPrismSwitch(
         value: false,

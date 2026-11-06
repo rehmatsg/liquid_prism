@@ -84,8 +84,9 @@ through it keeps its normal thickness**. Its clear face and shadow still use the
 shared material, but its rim and face take the captured slider inputs: inner
 refraction height 6.66 and amount 11.1, face black .1, and the layer contact
 shadow kept at the held frame (see [motion and lenses](motion_and_lenses.md)).
-The switch and segmented lenses likewise take their captured inner refraction
-(11.5 / 6.9 and 6.6 / 4.4) for the rim, separately from the shared underlay.
+The switch takes its captured inner refraction (11.5 / 6.9) for the rim and the
+segmented selection the 8.8 / 7.04 its measured displacement fits, separately
+from the shared underlay (see [held lens displacement](#held-lens-displacement)).
 This matches the distinction in the isolated small-lens capture without claiming
 to reproduce Apple's private operators.
 
@@ -197,6 +198,36 @@ holds, slow drags both ways and releases for each component. Videos and raw nati
 captures stay in the ignored artifacts/research directories.
 For a focused quick-tap comparison, run `SwitchTapTests` in the native showcase
 and `example/test_driver/switch_tap_video.dart` against the showcase Flutter VM.
+
+## Held lens displacement
+
+Direct measurements: iOS 27.0 (24A434), iPhone 17 Pro simulator, scale 3,
+light appearance (dark within 0.13 pt), lenses held 1 s over a backdrop whose
+color encodes its own position (three phase-shifted grey patterns, decoded per
+pixel; 0 ± 0.066 pt outside any lens). Depth runs inward from the held
+`glassBackground` frame; positive values sample from farther out (minify).
+Probe: `tool/native_dispersion_probe`, `--pattern grayx|grayy`.
+
+| Depth (pt) | 1 | 2 | 3 | 4 | 6 | 8 | 12 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Switch cap | −1.73 | +0.84 | +2.35 | +3.30 | +3.90 | +3.35 | +2.30 |
+| Slider cap | −5.27 | −3.17 | −1.85 | −0.97 | −0.05 | −0.02 | −0.01 |
+| Segmented cap | +0.78 | +1.82 | +2.83 | +3.82 | +4.03 | +3.35 | +2.30 |
+| Tab pill flat (through the bar) | −1.06 | +0.33 | +2.10 | +3.19 | +4.06 | — | — |
+
+Captured inputs at the same holds: backdrop warp +9 over 36 for switch, segment
+and tab (0 for the slider); glassBackground inner refraction switch −11.5 / 6.9,
+slider −11.1 / 6.66, segment −6.6 / 4.4, tab −10.5 / 7; segment ContentLensing
+−8.8 / 7.04.
+
+Fitted, not recovered: with g(d, h) = 1 − √(1 − (1 − d/h)²), the displacement is
+−A·g(d, h) + W·g(d + A·g(d, h), 36), the rim refracting before the 36-point
+underlay field is read. The slider (W = 0) fits its captured inputs at RMS
+0.06 pt and the switch its captured 11.5 / 6.9 with W = 9 at 0.05 pt. The
+segment does not fit its glassBackground inputs (RMS 1.1) but fits 8.8 / 7.04,
+its ContentLensing values, at 0.24 pt. The tab's flat band fits its captured
+inputs at 0.42 pt, within the noise of measuring through the bar. Liquid Prism
+uses these forms and values; Apple's operators remain private.
 
 ## Chromatic rim fringe
 

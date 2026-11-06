@@ -198,12 +198,14 @@ void shadeGlass() {
     // a pass of its own beside the lens's narrow glassBackground rim above,
     // so its amount arrives separately (u_shapeD.w). Sample farther out along
     // the SDF normal, so the housing seen through the lens is smaller. The tab
-    // foreground is painted after this pass.
+    // foreground is painted after this pass. The rim refracts first: the
+    // field is read at the refracted sample's depth, which held native
+    // switch and segment lenses match within 0.05 and 0.24 points.
     vec2 underlayOffset = vec2(0.);
     bool underlay = u_material.x > 2.5 && u_material.x < 3.5 &&
                     u_material.z < 8.5 && u_shapeD.w > 0.;
     if (underlay) {
-        float underlayT = clamp(1.-depth/36.,0.,1.);
+        float underlayT = clamp(1.-(depth+length(offset))/36.,0.,1.);
         float underlayProfile = 1.-sqrt(max(1.-underlayT*underlayT,0.));
         // All selection lenses share this field. The slider (role 9) opts out:
         // its knob grows, but the track inside keeps its normal thickness.

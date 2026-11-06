@@ -19,7 +19,7 @@ and [components](components.md) for usage.
 | `ringOpacity` / `ringBlur` / `ringWidth` / `ringOffset` | Lifted shadow ring: .055 / 4 / 2 / (0, 4); slider .2 / 3 / 4 / (0, 8) |
 | `chromaticAberration` | Full-lift red–blue split along the rim, in points: segment/tab 3.5, switch/slider 0; explicit 0 off |
 | `chromaticBand` | Band depth in points, 4.8; explicit 0 off |
-| `rimWidth` / `rimRefraction` | Rim band and its displacement for a 37.2-point lens; defaults are each lens's capture at its own height: slider 6.66 / 11.1, switch 6.9 / 11.5, segment 4.4 / 6.6, tab pill 7 / 10.5 |
+| `rimWidth` / `rimRefraction` | Rim band and its displacement for a 37.2-point lens; defaults are each lens's native rim at its own height: slider 6.66 / 11.1, switch 6.9 / 11.5, segment 7.04 / 8.8, tab pill 7 / 10.5 |
 | `rimLight` | Rim key/fill highlight strength at full lift: slider 1, others .6 |
 | `faceBlack` | Lens face black point, 0–1: slider .1, others 0 |
 | `heldContactShadow` | Keep the resting contact shadow while lifted: slider true, others false |

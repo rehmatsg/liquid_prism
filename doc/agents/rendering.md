@@ -184,7 +184,8 @@ second rim.
 
 `ControlLens` owns clear optics and underlay minification; controls supply their
 bounds and lift. It resolves each role's captured rim and the separate underlay
-amount (9 points at the 70-point tab lens, scaled by height and lift). `GlassLensStyle` merges shared defaults and local overrides.
+amount (9 points over 36 for every minifying lens, scaled by lift). The shader
+reads that field at the refracted sample's depth, as native composes the two. `GlassLensStyle` merges shared defaults and local overrides.
 Explicit optics replace the recipe; explicit blur wins over their frost.
 
 Paint lens shadows externally, after capture, with an outside-contour clip. If

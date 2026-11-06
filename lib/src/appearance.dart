@@ -80,14 +80,14 @@ class GlassLensStyle {
 
   /// Width of the refracting rim band, in points for a 37.2-point-tall lens
   /// (the held small-control height); it scales with the actual lens height.
-  /// Defaults to each lens's captured inner refraction height at the lens
-  /// height it was captured at: slider 6.66, switch 6.9, segmented selection
-  /// 4.4, tab pill 7. Ignored when [optics] is supplied.
+  /// Defaults to each lens's native rim width at the lens height it was
+  /// measured at: slider 6.66, switch 6.9, segmented selection 7.04, tab pill
+  /// 7. Ignored when [optics] is supplied.
   final double? rimWidth;
 
   /// Rim displacement of the fully lifted lens, in points for a 37.2-point-tall
-  /// lens, scaled like [rimWidth]. Defaults to each lens's captured amount:
-  /// slider 11.1, switch 11.5, segmented selection 6.6, tab pill 10.5. The
+  /// lens, scaled like [rimWidth]. Defaults to each lens's native amount:
+  /// slider 11.1, switch 11.5, segmented selection 8.8, tab pill 10.5. The
   /// broad underlay minification of switch, segment and tab lenses is a
   /// separate field and does not follow it.
   final double? rimRefraction;

@@ -154,7 +154,7 @@ The held knob uses the slider's measured lens inputs: a 6.66-point rim with
 seen through it, and the contact shadow kept under the lifted knob. Tune them
 with `GlassLensStyle.rimWidth`, `rimRefraction`, `rimLight`, `faceBlack` and
 `heldContactShadow` in the slider's `lens`. Switches, segmented controls and the
-tab pill default to their own captured rims (11.5 / 6.9, 6.6 / 4.4 and
+tab pill default to their own native rims (11.5 / 6.9, 8.8 / 7.04 and
 10.5 / 7 points of refraction / band).
 
 On iOS a light impact plays when a drag, tap, key or accessibility step reaches
