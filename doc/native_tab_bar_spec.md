@@ -166,7 +166,10 @@ width-dependent stationary scale. The showcase has native 21 pt horizontal
 and bottom margins. The lifted lens now includes broad underlay minification
 using the captured 9 pt displacement and 36 pt SDF height. Its profile is
 implemented with the package's existing circular optical approximation;
-it does not claim to reproduce the private QuartzCore operator exactly.
+it does not claim to reproduce the private QuartzCore operator exactly. The
+lens's own rim takes the captured glassBackground inner amount/height
+**−10.5 / 7** as a separate input; earlier releases reused the underlay's 9 for
+the rim over a fitted 12-point band.
 
 The selected icon/label copy now has its own transparent GPU filter using the
 captured ContentLensingView displacement **−14** and SDF height **11.2**. The

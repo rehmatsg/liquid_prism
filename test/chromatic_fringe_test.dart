@@ -4,7 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/src/control_lens.dart';
-import 'package:liquid_prism/src/glass.dart' show writeChromaticFringeUniforms;
+import 'package:liquid_prism/src/glass.dart'
+    show writeChromaticFringeUniforms, writeLensUnderlayUniform;
 import 'package:liquid_prism/src/recipe.dart';
 import 'package:liquid_prism/src/tab_content_lens.dart';
 
@@ -90,6 +91,32 @@ void main() {
         .7,
       ); // Glint survives new fields and presence.
       expect(recipe.uniforms[18], .5);
+    }
+  });
+
+  test('underlay has its own slot, limited like the rim, lens only', () {
+    for (final role in [GlassRole.tabLens, GlassRole.surface]) {
+      final recipe = GlassRecipe.resolve(
+        Glass.clear,
+        Brightness.light,
+        role,
+        customOptics: false,
+      ).withChromaticFringe(3.5, 4.8).withUnderlay(9).withPresence(.5);
+      // Presence and the other lens fields keep the underlay.
+      expect(recipe.withLensRim(.7).underlay, 9);
+      final packet = List<double>.filled(338, 0);
+      writeLensUnderlayUniform(
+        packet,
+        recipe,
+        const Rect.fromLTWH(0, 0, 110, 70),
+      );
+      expect(packet[61], role == GlassRole.tabLens ? 9 : 0);
+      writeLensUnderlayUniform(
+        packet,
+        recipe,
+        const Rect.fromLTWH(0, 0, 40, 12),
+      );
+      expect(packet[61], role == GlassRole.tabLens ? closeTo(6.6, 1e-9) : 0);
     }
   });
 

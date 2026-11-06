@@ -155,6 +155,11 @@ presence × DPR, before the existing sampling transform. Reserved `u_shapeD.z`
 zero there; packet assembly replaces it only for lens kind 3. Non-lens recipes
 write both slots as zero; batching accepts only kind 1 and keeps its constant
 `u_shapeD` zero. The smooth-contour bypass and flat-center exit include the band.
+Reserved `u_shapeD.w` (float 61) carries the lifted lens's underlay
+displacement in points, limited like the rim to 0.55 of the lens's thinner side;
+it is separate from the rim refraction in `u_derived[0].y`, as native gives the
+underlay and the lens's glassBackground rim separate passes. Zero skips the
+36-point field.
 
 `chromatic_fringe.glsl` shares the fitted falloff and direction `-(n.y,n.x)`
 across both passes. Only inside the lens and band, red reads `p-s`, green `p`,
@@ -178,7 +183,8 @@ second rim.
 ## Shared lens and shadows
 
 `ControlLens` owns clear optics and underlay minification; controls supply their
-bounds and lift. `GlassLensStyle` merges shared defaults and local overrides.
+bounds and lift. It resolves each role's captured rim and the separate underlay
+amount (9 points at the 70-point tab lens, scaled by height and lift). `GlassLensStyle` merges shared defaults and local overrides.
 Explicit optics replace the recipe; explicit blur wins over their frost.
 
 Paint lens shadows externally, after capture, with an outside-contour clip. If

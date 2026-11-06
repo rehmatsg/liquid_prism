@@ -33,6 +33,7 @@ final class GlassRecipe {
     this.lensRim = 0,
     this.chromaticSplit = 0,
     this.chromaticBand = 0,
+    this.underlay = 0,
   ]);
   final double kind;
   final bool dark;
@@ -57,6 +58,11 @@ final class GlassRecipe {
   /// Chromatic band depth in points (independent of lens height).
   final double chromaticBand;
 
+  /// Broad outward displacement of the backdrop seen through a lifted lens,
+  /// in points over a 36-point field, already scaled by lift. Separate from
+  /// the optics' rim refraction: native gives each its own pass.
+  final double underlay;
+
   GlassRecipe withChromaticFringe(double split, double band) => GlassRecipe(
     kind,
     dark,
@@ -67,7 +73,23 @@ final class GlassRecipe {
     lensRim,
     split,
     band,
+    underlay,
   );
+
+  GlassRecipe withUnderlay(double value) => value == underlay
+      ? this
+      : GlassRecipe(
+          kind,
+          dark,
+          role,
+          tintMatrix,
+          tintAlpha,
+          presence,
+          lensRim,
+          chromaticSplit,
+          chromaticBand,
+          value,
+        );
 
   GlassRecipe withPresence(double value) => value == presence
       ? this
@@ -81,6 +103,7 @@ final class GlassRecipe {
           lensRim,
           chromaticSplit,
           chromaticBand,
+          underlay,
         );
 
   GlassRecipe withLensRim(double value) => value == lensRim
@@ -95,6 +118,7 @@ final class GlassRecipe {
           value,
           chromaticSplit,
           chromaticBand,
+          underlay,
         );
 
   // Native controls retain their captured profile. The requested half-strength

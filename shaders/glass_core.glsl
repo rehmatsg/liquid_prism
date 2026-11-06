@@ -194,19 +194,21 @@ void shadeGlass() {
         offset = direction*displacement*profile;
     }
     // The lifted tab lens also displaces the underlying housing across its
-    // face. Native uses a separate 36-point SDF with displacement amount 9;
-    // the narrow rim above cannot produce this minification on its own.
-    // Sample farther out along the SDF normal, so the housing seen through
-    // the lens is smaller. The tab foreground is painted after this pass.
+    // face. Native uses a separate 36-point SDF with displacement amount 9,
+    // a pass of its own beside the lens's narrow glassBackground rim above,
+    // so its amount arrives separately (u_shapeD.w). Sample farther out along
+    // the SDF normal, so the housing seen through the lens is smaller. The tab
+    // foreground is painted after this pass.
     vec2 underlayOffset = vec2(0.);
-    if (u_material.x > 2.5 && u_material.x < 3.5 && u_material.z < 8.5) {
+    bool underlay = u_material.x > 2.5 && u_material.x < 3.5 &&
+                    u_material.z < 8.5 && u_shapeD.w > 0.;
+    if (underlay) {
         float underlayT = clamp(1.-depth/36.,0.,1.);
         float underlayProfile = 1.-sqrt(max(1.-underlayT*underlayT,0.));
         // All selection lenses share this field. The slider (role 9) opts out:
         // its knob grows, but the track inside keeps its normal thickness.
         // Labels/icons are painted after the lens at their normal size.
-        float underlayAmount = displacement;
-        underlayOffset = normal*underlayAmount*underlayProfile;
+        underlayOffset = normal*u_shapeD.w*underlayProfile;
     }
     vec2 samplePoint = scenePoint(local+underlayOffset-offset);
     vec2 dx = vec2(1., 0.);
@@ -224,7 +226,7 @@ void shadeGlass() {
     float interiorEnd = max(1./u_derived[0].x, u_derived[3].x);
     interiorEnd = max(interiorEnd, (u_material.x > 1.5 ? 8. : 1.) + aa);
     if (u_material.x > 2.5 && u_material.x < 3.5) {
-        if (u_material.z < 8.5) interiorEnd = max(interiorEnd, 36.);
+        if (underlay) interiorEnd = max(interiorEnd, 36.);
         interiorEnd = max(interiorEnd, 16.*u_extent.y/70.);
         interiorEnd = max(interiorEnd, u_shapeD.z);
     }

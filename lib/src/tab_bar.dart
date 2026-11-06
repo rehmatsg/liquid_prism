@@ -1182,9 +1182,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 }
 
 /// The lifted lens: a thin refracting rim, no frost and no face grading, in
-/// the proportions of the native 110 x 70 pt lens (edge from -14, displacement
-/// 9 on the backdrop) rather than the package's default clear optics whose
-/// wide band would mirror the icons inside a lens this small.
+/// the proportions of the native 110 x 70 pt lens (glassBackground rim 10.5
+/// over 7, a separate underlay displacement 9 over 36) rather than the
+/// package's default clear optics whose wide band would mirror the icons
+/// inside a lens this small.
 
 class _LensHalo extends CustomPainter {
   const _LensHalo(

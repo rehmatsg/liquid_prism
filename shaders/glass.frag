@@ -19,7 +19,7 @@ uniform vec4 u_state;    // Press, smooth contour, absence, tab pill glint.
 uniform vec4 u_shapeA;
 uniform vec4 u_shapeB;
 uniform vec4 u_shapeC;
-uniform vec4 u_shapeD;     // cos(top arc span), cos(right arc span), chromatic band (pt), unused.
+uniform vec4 u_shapeD;     // cos(top arc span), cos(right arc span), chromatic band (pt), lens underlay (pt).
 // Superellipse arc vertices at k*pi/256, k = 0..64: top octant in xy, right in zw.
 uniform vec4 u_curve[65];
 // Uniform-only terms, computed once per surface in Dart rather than once per

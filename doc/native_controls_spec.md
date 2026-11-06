@@ -84,6 +84,8 @@ through it keeps its normal thickness**. Its clear face and shadow still use the
 shared material, but its rim and face take the captured slider inputs: inner
 refraction height 6.66 and amount 11.1, face black .1, and the layer contact
 shadow kept at the held frame (see [motion and lenses](motion_and_lenses.md)).
+The switch and segmented lenses likewise take their captured inner refraction
+(11.5 / 6.9 and 6.6 / 4.4) for the rim, separately from the shared underlay.
 This matches the distinction in the isolated small-lens capture without claiming
 to reproduce Apple's private operators.
 

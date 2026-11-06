@@ -42,6 +42,14 @@ face without replacing the whole packet; `heldContactShadow` keeps the resting
 contact shadow under a lifted lens. Lengths are for a 37.2-point-high lens and
 scale with its actual height. Explicit `optics` ignores the rim fields.
 
+Every lifted lens defaults its rim to its own captured glassBackground inner
+refraction (amount / height, points, at the lens height it was read at): slider
+11.1 / 6.66 at 37.2, switch 11.5 / 6.9 at 38⅓, segmented selection 6.6 / 4.4 at
+44 and tab pill 10.5 / 7 at 70. The broad underlay minification of switch,
+segment and tab lenses (the tab's 9-point lifted displacement over a 36-point
+field) is a separate pass with its own amount, so changing the rim does not
+change it; explicit `optics` still drive both.
+
 The slider resolves these from the held small-lens capture in
 `doc/native_controls_spec.json`. Measured: inner refraction height 6.66 and
 amount 11.1, face color matrix black .1, the layer contact shadow (.14, radius 5,
@@ -52,8 +60,8 @@ algorithm. Fitted by eye against SwiftUI dark captures: rim light 1.0 (the
 shared lens uses .6), ambient opacity .12 and ring opacity .2. The native
 exterior key/fill darkening (color bias −.3) is only partly reproduced by the
 existing side lobe. The switch (6.9 / 11.5, black .1) and segmented pill
-(4.4 / 6.6, black 0) captures are recorded too, but those lenses keep their
-accepted look; opt in per component through their `lens`.
+(4.4 / 6.6, black 0) captures also set those lenses' rims; their face black
+stays at the shared 0 unless set through their `lens`.
 
 ## Small-control timing
 

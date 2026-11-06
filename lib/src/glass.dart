@@ -39,11 +39,13 @@ class LiquidPrism extends StatefulWidget {
     this.lensRim = 0,
     this.chromaticSplit = 0,
     this.chromaticBand = 0,
+    this.underlay = 0,
     this.resting = false,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
        assert(lensRim >= 0),
        assert(chromaticSplit >= 0),
-       assert(chromaticBand >= 0);
+       assert(chromaticBand >= 0),
+       assert(underlay >= 0);
   final Glass? glass;
   final double? blur;
 
@@ -65,6 +67,12 @@ class LiquidPrism extends StatefulWidget {
   final double chromaticSplit;
   @internal
   final double chromaticBand;
+
+  /// Lifted-lens underlay displacement in points over a 36-point field,
+  /// independent of the optics' rim refraction. Only lens roles that minify
+  /// their underlay read it.
+  @internal
+  final double underlay;
 
   /// A resting control lens whose optics are all zero under an opaque fill:
   /// paint only the clipped child and skip the backdrop passes.
@@ -239,6 +247,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
           lensRim: widget.lensRim,
           chromaticSplit: widget.chromaticSplit,
           chromaticBand: widget.chromaticBand,
+          underlay: widget.underlay,
           resting: widget.resting,
           child: widget.child,
         ),
@@ -277,7 +286,9 @@ class _LiquidPrismState extends State<LiquidPrism> {
             )
             .withPresence(presence)
             .withLensRim(widget.lensRim)
-            .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand);
+            .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand)
+            // Materializing grows the lens, and with it the underlay.
+            .withUnderlay(widget.underlay * (materialize ? presence : 1));
     var style = (optics ?? recipe.optics(shape.radius)).copyWith(
       cornerRadius: shape.radius,
       frost:
@@ -400,6 +411,19 @@ void writeChromaticFringeUniforms(
   values[46 + superellipseUniformCount + 7] = lens
       ? recipe.chromaticSplit * pixelRatio * recipe.presence
       : 0; // u_derived[1].w
+}
+
+/// Writes the lifted lens's underlay displacement (u_shapeD.w), limited like
+/// the rim refraction to the available thickness. Other recipes carry zero.
+@visibleForTesting
+void writeLensUnderlayUniform(
+  List<double> values,
+  GlassRecipe recipe,
+  Rect rect,
+) {
+  values[61] = recipe.kind == 3
+      ? math.min(recipe.underlay, math.min(rect.width, rect.height) * 0.55)
+      : 0;
 }
 
 /// Contact, soft and ambient shadows only darken pixels outside the glass.
@@ -680,6 +704,7 @@ class _RenderGlass extends RenderProxyBox {
       ..._derivedUniforms(rect, m),
     ];
     writeChromaticFringeUniforms(values, recipe, pixelRatio);
+    writeLensUnderlayUniform(values, recipe, rect);
     values[42] = press;
     values[43] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
     return values;

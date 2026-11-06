@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Lifted switch, segmented and tab lenses bend the backdrop at their rim as
+  strongly as native: each takes its captured glassBackground inner
+  refraction (switch 11.5 over 6.9 points, segmented 6.6 over 4.4, tab pill
+  10.5 over 7, like the slider's 11.1 over 6.66), where they reused the
+  underlay's 9-point displacement over a fitted 12-point band. The broad
+  underlay minification is now a separate shader input and keeps its
+  previous amount; a custom `rimRefraction` no longer changes it, while
+  explicit `optics` still drive both.
+
 - Tabs seen through the held or moving tab pill now show their selected icon
   and semibold label, as native does, instead of their unselected icon
   recolored. Outside the pill every tab, including the committed one, shows its
