@@ -48,7 +48,8 @@ Native tab items overlap; the layout is not an equal-width Row.
 
 Native keeps separate selected and unselected foreground copies. The selected
 copy is viewed through a displaced portal. Recoloring one row cannot reproduce
-its weight, scale and warping.
+its icon variant, weight, scale and warping; Liquid Prism builds the selected
+copy separately (see below).
 
 The housing **expands** on contact. Our earlier inverse scale was incorrect.
 The 274 pt and 360 pt fixtures both have a stationary presentation width
@@ -177,10 +178,14 @@ extent and Impeller's clip crop are accounted for so refraction tracks the lens
 throughout a glide. Bilinear sampling softens warped antialiasing. Its circular
 profile approximates the native SDF operator; the separate −17.5 content-wrapper
 operator and selected-source 1.16× enlargement are not reproduced by this pass.
+The filtered copy is a display-only selected row: each tab's selected icon and
+the semibold portal label, so a tab under the moving pill shows its selected
+state while the unselected row outside shows every tab, including the committed
+one, unselected.
 Use `PRISM_LENS_CASES=tabs PRISM_LENS_MIDPOINT_HOLD=true` with the Flutter lens
 recorder to capture a stationary hold between adjacent icons and labels.
 
-Still approximate: adaptive overlapping layout, selected portal weight/scale/
+Still approximate: adaptive overlapping layout, selected portal scale/
 warping, SF Symbols, position tracking, two-axis flex target generation,
 housing spring timing, glow and optical operators. The existing sampled
 launch deformation remains a fit. Further changes should use property-linked

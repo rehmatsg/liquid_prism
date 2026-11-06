@@ -176,8 +176,9 @@ LiquidPrismTheme(
 ```
 
 Custom icons are ordinary widgets, including images and SVG widgets supplied by
-your app. `selectedIcon` is optional. Unchanged icon state is retained during tab,
-style, and appearance updates.
+your app. `selectedIcon` is optional; it is also shown for any tab seen through
+the moving pill. Unchanged icon state is retained during tab, style, and
+appearance updates.
 
 RTL reverses visual positions. Arrow keys move focus and selection; Space/Enter
 activates the focused tab. Hidden visual labels remain available to accessibility.
@@ -224,10 +225,10 @@ housing scale was incorrect. Travel uses a 400 ms response and 0.85 damping rati
 animation calls; the exact behavior-to-property mapping remains unresolved.
 
 Tracking, deformation, housing spring timing and glow still use fitted
-approximations. The native implementation has separate medium and semibold
-foreground copies and magnifies the selected portal while held. Our selection
-window now refracts its foreground separately, while the exact native source
-weight/scale transition remains approximate. See
+approximations. Like native, the bar keeps an unselected row and a selected copy
+(selected icon, semibold label, selected color) that shows through the pill, and
+refracts only that copy. Native also magnifies the selected portal 1.16× while
+held; that is not reproduced. See
 [native tab bar spec](native_tab_bar_spec.md) for exact extracted values,
 fixture geometry, optical passes and remaining differences.
 
@@ -244,9 +245,10 @@ density, continuous contour and movement are accounted for independently from
 the housing's minification. Unsupported shader backends retain the crisp tint
 window fallback.
 Its rim uses the native lens highlight matrix
-without the housing's face grading. The selected tint is painted
-wherever the pill is, so it travels with the lens. Icons must not contain
-repaint boundaries because that window paints them a second time.
+without the housing's face grading. The selected copy is painted
+wherever the pill is, so the selected icon, weight and tint travel with the
+lens. Keep custom icons free of repaint boundaries; the refracted copy has not
+been verified with them.
 
 Reduce Motion removes spring travel, overshoot, lift and scale while preserving
 direct finger tracking and nonspatial feedback. There is no continuous

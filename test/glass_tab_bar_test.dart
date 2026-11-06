@@ -330,16 +330,22 @@ void _motionTests() {
       LiquidPrismPressFeedback.scaleOf(tester.element(housing)),
       closeTo(1 + 14.1379310344828 / 274, .001),
     );
+    // Both the unselected row and the selected copy seen through the pill
+    // take the housing's flex.
     for (var i = 0; i < 3; i++) {
-      final icon = find.byKey(
-        ValueKey(i == 0 ? 'selected-icon-$i' : 'icon-$i'),
-      );
-      for (final foreground in [icon, find.text(_names[i])]) {
-        final box = tester.renderObject<RenderBox>(foreground);
-        expect(
-          box.getTransformTo(null).getMaxScaleOnAxis(),
-          closeTo(1 + 14.1379310344828 / 274, .001),
-        );
+      for (final foreground in [
+        find.byKey(ValueKey('icon-$i')),
+        find.byKey(ValueKey('selected-icon-$i')),
+        find.text(_names[i]),
+      ]) {
+        final boxes = tester.renderObjectList<RenderBox>(foreground);
+        expect(boxes, isNotEmpty);
+        for (final box in boxes) {
+          expect(
+            box.getTransformTo(null).getMaxScaleOnAxis(),
+            closeTo(1 + 14.1379310344828 / 274, .001),
+          );
+        }
       }
     }
     await gesture.up();
@@ -633,6 +639,69 @@ void _motionTests() {
         await tester.tap(_tab(_names[(state.selected + 1) % 3]));
         await tester.pumpAndSettle();
       }
+    },
+  );
+
+  testWidgets(
+    'the moving pill shows each tab in its selected state, as native does',
+    (tester) async {
+      final state = await _mountTabs(tester);
+      state.update(() => state.style = const GlassTabBarStyle(haptics: false));
+      await tester.pump();
+      FontWeight? weight(String name, {required bool selectedCopy}) => tester
+          .widgetList<Text>(find.text(name))
+          .singleWhere(
+            (text) =>
+                find
+                    .ancestor(
+                      of: find.byWidget(text),
+                      matching: find.byType(ExcludeSemantics),
+                    )
+                    .evaluate()
+                    .isNotEmpty ==
+                selectedCopy,
+          )
+          .style
+          ?.fontWeight;
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(_tab('Gallery')),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.moveTo(tester.getCenter(_tab('Settings')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      // Through the pill, Settings is drawn selected: its selected icon and
+      // the semibold portal label. Outside it, every tab is unselected,
+      // including the committed Gallery.
+      for (var i = 0; i < 3; i++) {
+        expect(find.byKey(ValueKey('icon-$i')), findsOneWidget);
+        expect(find.byKey(ValueKey('selected-icon-$i')), findsOneWidget);
+      }
+      expect(
+        find.descendant(
+          of: _tab('Gallery'),
+          matching: find.byKey(const ValueKey('icon-0')),
+        ),
+        findsOneWidget,
+      );
+      expect(weight('Settings', selectedCopy: true), FontWeight.w600);
+      expect(weight('Settings', selectedCopy: false), FontWeight.w500);
+      // The copy adds no semantics or focus targets; selection is unchanged
+      // until release.
+      for (final name in _names) {
+        expect(find.bySemanticsLabel(name), findsOneWidget);
+      }
+      _expectSelected(tester, 0);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(state.requests, [2]);
+      expect(find.byKey(const ValueKey('selected-icon-2')), findsOneWidget);
+      expect(find.byKey(const ValueKey('icon-2')), findsNothing);
+      expect(find.byKey(const ValueKey('icon-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('selected-icon-0')), findsNothing);
+      expect(find.text('Settings'), findsOneWidget);
     },
   );
 
@@ -938,9 +1007,11 @@ void _motionTests() {
     await held.moveBy(const Offset(86, 0));
     await tester.pumpAndSettle();
     expect(creations, {0: 1, 1: 1, 2: 1});
+    expect(find.byType(_StatefulIcon), findsNWidgets(6));
     await held.up();
     await tester.pumpAndSettle();
     expect(creations, {0: 1, 1: 1, 2: 1});
+    expect(find.byType(_StatefulIcon), findsNWidgets(3));
     expect(tester.getSemantics(_tab('Gallery')).label, 'Gallery');
   });
 }
@@ -956,7 +1027,11 @@ class _StatefulIconState extends State<_StatefulIcon> {
   @override
   void initState() {
     super.initState();
-    widget.onCreate();
+    // The selected copy seen through the pill is display-only and excluded
+    // from semantics; only the interactive row's icon state must survive.
+    if (context.findAncestorWidgetOfExactType<ExcludeSemantics>() == null) {
+      widget.onCreate();
+    }
   }
 
   @override
@@ -990,7 +1065,10 @@ void _scaleBeneathFilterTest() {
           ),
         ),
       );
-      final label = find.text('Favorites');
+      final label = find.descendant(
+        of: _tab('Favorites'),
+        matching: find.text('Favorites'),
+      );
       final rest = tester.getRect(label);
       final hold = await tester.startGesture(tester.getCenter(label));
       await tester.pump();
@@ -998,10 +1076,15 @@ void _scaleBeneathFilterTest() {
       // The housing's flex still reaches the foreground...
       final held = tester.getRect(label);
       expect(held.width, greaterThan(rest.width));
-      // ...but no ancestor transform scales it: an animating scale above the
-      // refraction filter made the selected copy pop between device pixels.
+      // ...but no ancestor transform scales either copy: an animating scale
+      // above the refraction filter made the selected copy pop between
+      // device pixels.
+      expect(find.text('Favorites'), findsNWidgets(2));
       for (final transform in tester.widgetList<Transform>(
-        find.ancestor(of: label, matching: find.byType(Transform)),
+        find.ancestor(
+          of: find.text('Favorites'),
+          matching: find.byType(Transform),
+        ),
       )) {
         expect(transform.transform.getMaxScaleOnAxis(), 1);
       }

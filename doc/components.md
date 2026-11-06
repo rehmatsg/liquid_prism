@@ -223,8 +223,10 @@ The default compact housing uses the widest measured label, with an 86-point
 minimum tab spacing and 32 points of label breathing room. Tune those with
 `minimumTabWidth` and `labelPadding`; use `expanded: true` to fill a bounded parent.
 Hidden labels still have accessibility names. `selectedIcon` accepts custom
-selected artwork. Keep custom icon widgets free of repaint boundaries: the
-selection window paints their foreground into two complementary regions.
+selected artwork, shown for the selected tab and for any tab seen through the
+moving pill. While the pill is held or moving, the bar builds a display-only
+selected copy of every tab for the inside of the pill, so a stateful icon can
+briefly have two instances. Keep custom icon widgets free of repaint boundaries.
 
 A touch anywhere on the bar claims the pointer and moves the pill to that tab.
 A drag at any angle, or a quick flick without a hold, then moves the pill along

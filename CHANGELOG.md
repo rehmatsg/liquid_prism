@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Tabs seen through the held or moving tab pill now show their selected icon
+  and semibold label, as native does, instead of their unselected icon
+  recolored. Outside the pill every tab, including the committed one, shows its
+  unselected state until release.
+
 ## 0.5.4
 
 - Cheaper optical glass shader: a moment-matched footprint pair replaces most

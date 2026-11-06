@@ -25,10 +25,15 @@ The housing lens captures backdrop/bar before icons and labels. Its broad sampli
 warp minifies the underlay. The glyph pass instead refracts transparent, tinted
 foreground with its own SDF displacement and depth.
 
-`_RenderSelectionWindow` paints the ordinary child outside the pill path and a
-selected pass inside an `ImageFilterLayer`. Keep this layer owned by the custom
-render object. Adding an ImageFiltered widget/repaint boundary can steal the first
-paint, causing unselected content to disappear.
+`ContentLensWindow.selection` stacks two `_RenderSelectionWindow`s: the
+interactive, unselected row painted outside the pill path, and a display-only
+selected copy (selected icons, semibold labels, selected color; no hit testing,
+semantics or focus) painted inside it through an `ImageFilterLayer`. Native keeps
+the same two copies, so a tab seen through the moving pill shows its selected
+icon. Keep the base row the Stack's first child so opening the window never
+rebuilds tab state, and keep the filter layer owned by the custom render object.
+Adding an ImageFiltered widget/repaint boundary can steal the first paint,
+causing content to disappear.
 
 The transparent source rect establishes full input bounds. Intersecting those
 bounds with the pill path determines the actual filter crop. Correct shader origin
@@ -44,9 +49,10 @@ origin Impeller chooses. Under an ancestor matrix filter it can only warn (debug
 builds, `transformedAfterRaster`). Consumer guidance is in
 [rendering](../rendering.md#ancestor-transforms).
 
-Custom tab icons cannot currently include their own repaint boundaries because
-this window paints their subtree twice. Preserve state identity during style or
-selection changes. Test first render, movement and resize, not only a settled pill.
+Custom tab icons should still avoid their own repaint boundaries: the refracted
+selected copy has not been verified with them on a GPU. Preserve the base row's
+state identity during style or selection changes. Test first render, movement and
+resize, not only a settled pill.
 
 ## Shared captures
 
