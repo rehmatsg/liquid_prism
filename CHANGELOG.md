@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- In dark appearance the held tab pill's selected copy keeps the lighter
+  resting tint (native measured 48, 192, 248 for system blue) instead of the
+  plain accent, and the glyph fringe fills missed channels with the dark
+  housing's grey rather than black, so icons no longer turn dark blue with
+  navy fringes.
+
 - Icons and labels under the held tab pill's rim bend like native: the
   lens's −17.5 content-wrapper displacement now runs before the −14
   ContentLensing pass over the same 11.2-point field, so glyphs near the rim

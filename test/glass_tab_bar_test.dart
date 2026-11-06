@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/foreground.dart';
 import 'package:liquid_prism/src/pressable.dart';
 import 'package:liquid_prism/src/recipe.dart';
 
@@ -696,8 +697,9 @@ void _motionTests() {
       );
       expect(weight('Settings', selectedCopy: true), FontWeight.w600);
       expect(weight('Settings', selectedCopy: false), FontWeight.w500);
-      // Held, the copy takes the plain accent rather than the darker resting
-      // calibration the committed tab uses at rest.
+      // Held in light, the copy takes the plain accent rather than the darker
+      // resting calibration the committed tab uses at rest; in dark (this
+      // harness) it keeps the lighter resting calibration, as native does.
       final copyColor = tester
           .widgetList<Text>(
             find.descendant(
@@ -708,8 +710,10 @@ void _motionTests() {
           .single
           .style!
           .color!;
-      final accent = LiquidPrismTheme.tintOf(
-        tester.element(find.byType(LiquidPrismTabBar)),
+      final context = tester.element(find.byType(LiquidPrismTabBar));
+      final accent = restingGlassAccent(
+        LiquidPrismTheme.tintOf(context),
+        LiquidPrismTheme.colorsOf(context).brightness,
       );
       expect(copyColor.r, closeTo(accent.r, .01));
       expect(copyColor.g, closeTo(accent.g, .01));

@@ -147,11 +147,12 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
   @override
   Widget build(BuildContext context) {
     // The glyph fringe fills channels its shift misses with the bar beneath:
-    // light glass in light appearance, dark in dark.
+    // light glass in light appearance, the dark housing's grey (measured
+    // about 40/255 on the dark showcase bar) in dark.
     final tone =
         LiquidPrismTheme.materialBrightnessOf(context) == Brightness.light
         ? 1.0
-        : 0.0;
+        : .16;
     Widget paint(_WindowRegion region, Widget child) => _SelectionWindowPaint(
       region: region,
       tone: tone,

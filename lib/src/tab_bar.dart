@@ -746,9 +746,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
           ),
         );
         // Display-only selected copy of every tab, seen through the pill.
-        // Native tints it with the plain accent while held (0, 136, 255 for
-        // system blue), not the darker resting calibration, so the colour
-        // follows the lift. Built per frame only while the window is open.
+        // Held in light appearance native tints it with the plain accent
+        // (0, 136, 255 for system blue), not the darker resting calibration,
+        // so the colour follows the lift. In dark it stays at the lighter
+        // resting calibration (measured 48, 192, 248 held). Built per frame
+        // only while the window is open.
+        final heldAccent = colors.brightness == Brightness.dark
+            ? selectedAccent
+            : accent;
         Widget selectedContent(double lift) => Flex(
           direction: vertical ? Axis.vertical : Axis.horizontal,
           children: [
@@ -761,7 +766,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                   textStyle,
                   labels,
                   colors,
-                  Color.lerp(selectedAccent, accent, lift)!,
+                  Color.lerp(selectedAccent, heldAccent, lift)!,
                   style,
                   window: true,
                   vertical: vertical,
