@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'layer_transform.dart';
 import 'material.dart';
 import 'superellipse.dart';
+import 'theme.dart';
 
 /// The selected foreground portal, separate from the housing's backdrop lens.
 /// Filtering the child preserves custom icon state, focus and semantics.
@@ -139,8 +140,15 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
 
   @override
   Widget build(BuildContext context) {
+    // The glyph fringe fills channels its shift misses with the bar beneath:
+    // light glass in light appearance, dark in dark.
+    final tone =
+        LiquidPrismTheme.materialBrightnessOf(context) == Brightness.light
+        ? 1.0
+        : 0.0;
     Widget paint(_WindowRegion region, Widget child) => _SelectionWindowPaint(
       region: region,
+      tone: tone,
       path: widget.path,
       lens: widget.lens,
       lift: widget.lift,
@@ -197,6 +205,7 @@ enum _WindowRegion {
 class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
   const _SelectionWindowPaint({
     required this.region,
+    required this.tone,
     required this.path,
     required this.lens,
     required this.lift,
@@ -211,6 +220,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     required super.child,
   });
   final _WindowRegion region;
+  final double tone;
   final Path? path;
   final Rect lens;
   final double lift, refraction, depth, scale;
@@ -230,6 +240,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
           depth,
           chromaticAberration,
           chromaticBand,
+          tone,
         )
         ..setScale(scale, origin);
   @override
@@ -249,6 +260,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
         depth,
         chromaticAberration,
         chromaticBand,
+        tone,
       )
       ..setScale(scale, origin);
   }
@@ -292,7 +304,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
   ui.FragmentShader? _shader;
   Rect _lens = Rect.zero;
   double _lift = 0, _refraction = 14, _depth = 11.2;
-  double _chromaticAberration = 0, _chromaticBand = 4.8;
+  double _chromaticAberration = 0, _chromaticBand = 4.8, _tone = 0;
   GlassShape _shape = GlassShape.capsule;
   void configure(
     ui.FragmentShader? shader,
@@ -303,6 +315,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     double depth,
     double chromaticAberration,
     double chromaticBand,
+    double tone,
   ) {
     if (shader == _shader &&
         lens == _lens &&
@@ -311,7 +324,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
         refraction == _refraction &&
         depth == _depth &&
         chromaticAberration == _chromaticAberration &&
-        chromaticBand == _chromaticBand) {
+        chromaticBand == _chromaticBand &&
+        tone == _tone) {
       return;
     }
     final refracted = _refractsContent;
@@ -323,6 +337,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _depth = depth;
     _chromaticAberration = chromaticAberration;
     _chromaticBand = chromaticBand;
+    _tone = tone;
     if (refracted != _refractsContent) markNeedsCompositingBitsUpdate();
     markNeedsPaint();
   }
@@ -390,6 +405,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
         scale: _scale,
         deviceScale: deviceScale,
       ),
+      _tone,
     ];
     for (var i = 0; i < values.length; i++) {
       shader.setFloat(i + 2, values[i]);

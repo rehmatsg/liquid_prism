@@ -171,13 +171,18 @@ The glyph pass has its own measured fit (`glyphFringeWeight`): channels shift
 73.6. See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe)
 and [glyph fringe](../native_controls_spec.md#glyph-fringe).
 
-The foreground packet grows from 288 to 290 floats: after the contour,
+The foreground packet grows from 288 to 291 floats: after the contour,
 `u_effect` is now vec4 at floats 286–289: displacement/depth in scaled points,
 effective split in raster pixels (split × clamped lift × flex scale × composited
 DPR), and band in scaled points. Out-of-bounds reads remain transparent. R/G/B
 come from the corresponding shifted premultiplied samples; output alpha is their
 maximum, bounding every channel even at antialiased glyph edges. Zero displacement
 can still fringe; `refractContent: false` disables both foreground effects.
+Float 290, `u_tone`, is the grey level of the bar under the foreground (1 in
+light appearance, 0 in dark): a channel whose shifted sample misses the glyph
+takes it for the coverage it lacks, as native disperses glyphs already over the
+bar. Without it, those pixels paint the remaining channels at full alpha, which
+reads as black smears on light bars.
 
 The touch glow is painted between the housing and the lens and must be
 clipped to the housing as drawn, including its flex expansion. Clipped to the

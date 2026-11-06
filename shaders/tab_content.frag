@@ -11,6 +11,7 @@ uniform vec4 u_shapeC;
 uniform vec4 u_shapeD;
 uniform vec4 u_curve[65];
 uniform vec4 u_effect; // Displacement/depth (pt), effective split (px), band (pt).
+uniform float u_tone;  // Grey level of the bar beneath the foreground.
 uniform sampler2D u_content;
 out vec4 frag_color;
 
@@ -75,9 +76,13 @@ void main() {
         vec4 red = readContent(displaced-shift);
         vec4 blue = readContent(displaced+shift);
         // Each source channel is already premultiplied and <= its own alpha,
-        // so the union alpha bounds all three; mixing two valid premultiplied
-        // colours stays valid.
+        // so the union alpha bounds all three. Native disperses the glyphs
+        // over the bar, so a channel whose shifted sample misses the glyph
+        // shows the bar there; on this transparent layer it would read zero at
+        // the union alpha and paint near black. Fill each channel's missing
+        // coverage with the bar's tone; the result stays premultiplied.
         vec4 split = vec4(red.r,green.g,blue.b,max(max(red.a,green.a),blue.a));
+        split.rgb += (split.a-vec3(red.a,green.a,blue.a))*u_tone;
         frag_color = mix(green,split,.5);
     } else { frag_color = green; }
 }

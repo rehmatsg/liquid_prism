@@ -6,7 +6,9 @@
   blue sit about 2.7 points apart (they were under 0.9) in amber and azure
   bands, and the fringe reaches about 14 points in, where it stopped at 4.8.
   The fringe scales with the pill's height, so the segmented selection's
-  labels fringe at about 0.6 of the tab's.
+  labels fringe at about 0.6 of the tab's. Where a shifted channel misses the
+  glyph it now shows the bar's tone instead of painting the other channels
+  near black.
 
 - Lifted switch, segmented and tab lenses bend the backdrop at their rim as
   strongly as native: each takes its own native rim refraction (switch 11.5
