@@ -1,6 +1,6 @@
 # Package features: evidence, contracts and adoption
 
-Package features added for the Vance app's workarounds, with the native
+Package features that replace common app-level workarounds, with the native
 measurements behind their defaults. Measurements: iOS 27.0 (24A434), iPhone 17
 Pro simulator at 3x, content size L, `tool/native_package_features_probe`;
 raw dumps under `_research/package_features/` (local evidence).
@@ -21,9 +21,9 @@ Hunks: `control_gesture.dart` timer/callback/lifecycle; `tab_bar.dart`
 constructor, `_longPress`, gesture wiring and tab semantics; `sidebar.dart`
 existing row long-press wiring. Tests: `test/tab_long_press_test.dart`.
 
-Vance: pass `onLongPressed: onLongPress` to the package bar; remove `_glyph`'s
-GestureDetector. After item 2 is adopted, remove `_onLongPress`'s separate haptic
-so it is not played twice.
+Adoption: pass `onLongPressed` to the package bar and remove any GestureDetector
+wrapped around tab glyphs. After item 2 is adopted, remove any separate
+long-press haptic so it is not played twice.
 
 ## 2. One haptics hook
 
@@ -41,8 +41,8 @@ in tabs/sidebar/switch/slider; exports. No segmented haptic was added: the nativ
 control spec establishes none. Tests: `test/haptics_hook_test.dart`; existing
 control tests continue to cover accepted endpoints and cancellation.
 
-Vance: set one theme hook that maps these events to `VanceHaptics`, checks the app
-setting, and plays the desired feedback. Remove tab `haptics: false` and its own
+Adoption: set one theme hook that maps these events to the app's haptics service,
+checks any app setting, and plays the desired feedback. Remove tab `haptics: false` and its own
 selection feedback; omit the switch's per-build enabled flag. Keep any desired
 segmented feedback in the app callback, since it is an app policy.
 
@@ -58,7 +58,8 @@ bottom tab bar still hides while the keyboard is visible.
 Hunks: `chrome_layout.dart` constructor/field, layout keyboard argument and
 `_InsetBody` MediaQuery. Test: `test/scaffold_keyboard_test.dart`, nested Material
 Scaffold with TextField and SafeArea; verifies the same available height once.
-Vance: remove `_KeyboardInsetOnce` entirely and use the default scaffold behavior.
+Adoption: remove any app wrapper that strips the duplicate keyboard inset and use
+the default scaffold behavior.
 
 ## 4. Segmented label sizing
 
@@ -76,7 +77,7 @@ Hunks: `appearance.dart` GlassSegmentedSizing/GlassSegmentedStyle;
 `segmented_control.dart` measurement/dimensions; export. Test:
 `test/segmented_sizing_test.dart` covers equal pitch, text growth, width constraints,
 fixed mode and explicit zero padding.
-Vance: replace TextPainter and computed dimension styles with
+Adoption: replace TextPainter and computed dimension styles with
 `GlassSegmentedStyle(sizing: GlassSegmentedSizing.fitLabels,
 labelPadding: labelPadding, labelStyle: style)`. Keep explicit app colors.
 
@@ -107,17 +108,16 @@ geometry grows with text scale (fitted).
 Hunks: new `badge.dart`; tab/toolbar models + icon overlays + semantics;
 GlassToolbarStyle/GlassTabBarStyle badge fields/merge/copyWith; sidebar overlay;
 export. Test: `test/badge_test.dart`.
-Vance: replace toolbar Stack dots with `GlassBadge.dot(semanticLabel: 'Filter active')`
-and MailBadgeIcon with the underlying mail glyph plus
-`hasNewMail ? GlassBadge.dot(semanticLabel: 'New mail') : null`. Use the base
-action label 'Emails' to avoid announcing the badge twice. Supply localized dot/count semantic labels.
+Adoption: replace hand-built Stack dots with `GlassBadge.dot(semanticLabel: ...)`
+and custom badged icons with the plain glyph plus a conditional `GlassBadge`.
+Keep the item's base action label so the badge is not announced twice. Supply localized dot/count semantic labels.
 
 ## 6. Icon-only tab pitch
 
 No default changed. Measured icon-only bars: 3 tabs 274-point platter, 94-point
 buttons, 86 pitch; 4 tabs 360 / 98 / 84.67; 5 tabs 360 / 77 / 68.75; buttons
 54 tall, inset 4 in a 62-point platter. Native keeps the labelled 86-point
-pitch for three tabs, so Vance's 72-point `minimumTabWidth` is an app choice.
+pitch for three tabs, so a narrower `minimumTabWidth` (such as 72) is an app choice.
 
 ## 7. Navigation titles
 
@@ -153,7 +153,7 @@ large text, collapse without edge effect). Existing leading tests cover implied
 back-button routing. `example/lib/showcase/package_features_demo.dart` exercises
 titles, badges, fit labels and long press in the scroll-edge component page.
 
-Vance: replace ordinary standard/large SliverAppBar arrangements with scaffold
+Adoption: replace ordinary standard/large SliverAppBar arrangements with scaffold
 `title: Text(title), largeTitle: Text(title)`, leading/actions/accessory and
 navigationBarStyle. Do not delete the entire wrapper yet: custom scrolled-title
 spring/deadband/blur reveal, specialized route behavior and arbitrary sliver
