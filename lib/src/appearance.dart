@@ -100,10 +100,14 @@ class GlassLensStyle {
   /// Defaults to 3.5 for segmented selections and tab pills, 0 for switch
   /// thumbs and slider knobs. Zero disables this fringe independently of
   /// generic [optics] dispersion. The tab bar's rimRefraction scales it too.
+  /// Labels and icons refracted under the rim fringe from the same value,
+  /// scaled with the pill's height (73.6-point reference).
   final double? chromaticAberration;
 
-  /// Depth of the chromatic rim band in points; defaults to 4.8.
-  /// Zero disables the fringe. Independent of [rimWidth] and [optics].
+  /// Depth of the chromatic rim band in points; defaults to 4.8. Labels and
+  /// icons fringe fully to 1.15 times this depth, then fade (also scaled with
+  /// the pill's height). Zero disables the fringe. Independent of [rimWidth]
+  /// and [optics].
   final double? chromaticBand;
 
   /// Black point of the lens face, 0–1: the face shows `b + (1 - b) * color`,

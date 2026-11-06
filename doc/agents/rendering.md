@@ -161,11 +161,15 @@ it is separate from the rim refraction in `u_derived[0].y`, as native gives the
 underlay and the lens's glassBackground rim separate passes. Zero skips the
 36-point field.
 
-`chromatic_fringe.glsl` shares the fitted falloff and direction `-(n.y,n.x)`
-across both passes. Only inside the lens and band, red reads `p-s`, green `p`,
+`chromatic_fringe.glsl` shares the direction `-(n.y,n.x)` across both passes.
+In the backdrop, only inside the lens and band, red reads `p-s`, green `p`,
 blue `p+s`, with `s = .5 * w * split * direction` transformed into the backdrop
 raster basis. The existing generic dispersion path remains outside the band.
-See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe).
+The glyph pass has its own measured fit (`glyphFringeWeight`): channels shift
+`.77 × split × size × w`, half blended with the unshifted glyph, flat to
+`1.15 band` then e-folding every `.44 band`, with `size` the pill height over
+73.6. See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe)
+and [glyph fringe](../native_controls_spec.md#glyph-fringe).
 
 The foreground packet grows from 288 to 290 floats: after the contour,
 `u_effect` is now vec4 at floats 286–289: displacement/depth in scaled points,

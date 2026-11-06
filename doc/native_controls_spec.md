@@ -249,12 +249,11 @@ Tab peak is about 3.2–3.7 within about 4 points. The segmented lens also
 fringes labels under its rim.
 
 Fitted renderer: full-lift split 3.5 points, band 4.8, direction `-(n.y,n.x)`.
-Labels and icons in the foreground pass take a quarter of that split, blended
-half with the unshifted glyph, fitted by eye: at the full split thin strokes
-broke into opaque primary colours where native shows a soft tint;
-the weight is `(1-.085*min(d,band))*(1-smoothstep(.62*band,band,d))`, clamped
-nonnegative. The table compares this scalar profile before sampling/lighting;
-it is not a rendered-pixel validation or a reconstruction of Apple's operator.
+The backdrop weight is `(1-.085*min(d,band))*(1-smoothstep(.62*band,band,d))`,
+clamped nonnegative. The table compares this scalar profile before
+sampling/lighting; it is not a rendered-pixel validation or a reconstruction of
+Apple's operator. Labels and icons in the foreground pass use their own fit
+(see Glyph fringe below).
 
 | Depth inside rim (pt) | Measured split (pt) | Fitted split (pt) |
 | --- | --- | --- |
@@ -274,3 +273,30 @@ fit underestimates the fringe and omits the small measured tail beyond 4.8.
 Switch/slider keep their existing generic `dispersion: .3 * lift` by explicit
 product choice; their new along-rim fringe defaults to zero. Tab radial rim
 channel splitting is replaced; its existing fitted bright glint is preserved.
+
+## Glyph fringe
+
+Direct measurements: iOS 27.0 (24A434), iPhone 17 Pro simulator, light, tab bar
+with a black selection tint on white (so every channel has contrast), pill
+dragged to the midpoint between two tabs and held 2 s (115.9 × 73.4 pt;
+aberration input 3.68). Red and blue 50% crossings of glyph edges, measured
+along arcs at fixed depth on the caps, relative to green:
+
+| Depth (pt) | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 14 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Left cap R−B (pt) | 3.01 | 2.47 | 2.71 | 2.72 | 2.33 | 0.86 | 0.31 | 0.12 | 0.03 |
+| Right cap R−B (pt) | 4.09 | — | 2.81 | 2.30 | 1.74 | 0.79 | 0.35 | 0.14 | 0.02 |
+
+Green sits midway. Red moves counter-clockwise on the caps, as on the backdrop.
+Bands at 4–6 pt: amber (193–218, 139–160, 60–83) and azure (66–93, 160–173,
+199–211). Glyph chroma (99th percentile) falls from 171 at 3 pt to 42 at 12 and
+is gone by 15 pt; within ~1.5 pt of the rim glyphs fold and are not measured.
+
+Fitted renderer: each channel is shifted `.77 × split × size × w` along the rim
+and blended half with the unshifted glyph, which puts the red and blue 50%
+crossings 2.7 points apart at full weight on a 1.8-point glyph edge and gives
+(79, 158, 206) on the azure side. `w` is 1 to `1.15 band` deep, then falls by e
+every `.44 band` (5.5 and 2.1 points at the default 4.8). `size` is the pill's
+height over 73.6, following native's aberration inputs (H/19), so the segmented
+selection's labels fringe at about 0.6 of the tab's; the segmented glyph fringe
+itself was not measured.

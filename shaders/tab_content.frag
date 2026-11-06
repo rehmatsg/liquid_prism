@@ -59,13 +59,19 @@ void main() {
     vec2 displaced = pixel-field.yz*(u_effect.x*u_geometry.y*profile*u_geometry.x);
     vec4 green = readContent(displaced);
     float depth = -field.x;
-    if (u_effect.z > 0. && u_effect.w > 0. && depth < u_effect.w) {
-        // Glyphs fringe at half the backdrop's split, half blended with the
-        // unshifted sample: a full split on thin strokes left opaque pure
-        // primaries wherever one channel alone hit the glyph, where native
-        // shows a soft tint. Fitted by eye to the iOS 27 segmented capture.
+    // Native aberration inputs grow with the lens (H/19): fringe size and
+    // reach follow the pill's height, against the 73.6-point held tab pill
+    // they were measured on.
+    float size = min(u_extent.x,u_extent.y)/73.6;
+    float band = u_effect.w*size;
+    if (u_effect.z > 0. && band > 0. && depth < 3.1*band) {
+        // Each channel is shifted by .77 of the backdrop's split and blended
+        // half with the unshifted sample. Measured on held iOS 27 tab glyphs:
+        // red and blue 50% crossings 2.7 points apart, green midway, amber
+        // and azure bands; the half blend keeps those colours (a full split
+        // turns them into pure primaries) and soft tints on thin strokes.
         vec2 shift = chromaticDirection(field.yz) *
-            (.25*max(chromaticWeight(depth,u_effect.w),0.)*u_effect.z);
+            (.77*glyphFringeWeight(depth,band)*size*u_effect.z);
         vec4 red = readContent(displaced-shift);
         vec4 blue = readContent(displaced+shift);
         // Each source channel is already premultiplied and <= its own alpha,

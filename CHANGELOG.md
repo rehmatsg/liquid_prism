@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Icons and labels under the held tab pill's rim fringe like native: red and
+  blue sit about 2.7 points apart (they were under 0.9) in amber and azure
+  bands, and the fringe reaches about 14 points in, where it stopped at 4.8.
+  The fringe scales with the pill's height, so the segmented selection's
+  labels fringe at about 0.6 of the tab's.
+
 - Lifted switch, segmented and tab lenses bend the backdrop at their rim as
   strongly as native: each takes its own native rim refraction (switch 11.5
   over 6.9 points, segmented 8.8 over 7.04, tab pill 10.5 over 7, like the
