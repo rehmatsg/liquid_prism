@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The held tab pill tints its selected icons and labels with the plain accent,
+  as native does (system blue 0, 136, 255), instead of the darker resting
+  selection color; the color follows the lift.
+
 - Icons and labels under the held tab pill's rim fringe like native: red and
   blue sit about 2.7 points apart (they were under 0.9) in amber and azure
   bands, and the fringe reaches about 14 points in, where it stopped at 4.8.

@@ -687,6 +687,24 @@ void _motionTests() {
       );
       expect(weight('Settings', selectedCopy: true), FontWeight.w600);
       expect(weight('Settings', selectedCopy: false), FontWeight.w500);
+      // Held, the copy takes the plain accent rather than the darker resting
+      // calibration the committed tab uses at rest.
+      final copyColor = tester
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byType(ExcludeSemantics),
+              matching: find.text('Settings'),
+            ),
+          )
+          .single
+          .style!
+          .color!;
+      final accent = LiquidPrismTheme.tintOf(
+        tester.element(find.byType(LiquidPrismTabBar)),
+      );
+      expect(copyColor.r, closeTo(accent.r, .01));
+      expect(copyColor.g, closeTo(accent.g, .01));
+      expect(copyColor.b, closeTo(accent.b, .01));
       // The copy adds no semantics or focus targets; selection is unchanged
       // until release.
       for (final name in _names) {

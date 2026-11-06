@@ -184,7 +184,9 @@ operator and selected-source 1.16× enlargement are not reproduced by this pass.
 The filtered copy is a display-only selected row: each tab's selected icon and
 the semibold portal label, so a tab under the moving pill shows its selected
 state while the unselected row outside shows every tab, including the committed
-one, unselected.
+one, unselected. Held, native tints that copy with the plain accent (0, 136, 255
+for system blue, measured on iOS 27.0); the copy blends to it from the resting
+selected color with the lift.
 Use `PRISM_LENS_CASES=tabs PRISM_LENS_MIDPOINT_HOLD=true` with the Flutter lens
 recorder to capture a stationary hold between adjacent icons and labels.
 
