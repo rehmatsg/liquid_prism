@@ -138,10 +138,11 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
           label: 'Studio',
           icon: Icon(CupertinoIcons.slider_horizontal_3),
         ),
+        // SwiftUI tab bars draw every item with the symbol's fill variant,
+        // selected or not; the native showcase's Library is always filled.
         LiquidPrismTab(
           label: 'Library',
-          icon: Icon(CupertinoIcons.square_grid_2x2),
-          selectedIcon: Icon(CupertinoIcons.square_grid_2x2_fill),
+          icon: Icon(CupertinoIcons.square_grid_2x2_fill),
         ),
       ],
     ),
