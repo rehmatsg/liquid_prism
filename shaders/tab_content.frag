@@ -12,12 +12,18 @@ uniform vec4 u_shapeD;
 uniform vec4 u_curve[65];
 uniform vec4 u_effect; // Displacement/depth (pt), effective split (px), band (pt).
 uniform float u_tone;  // Grey level of the bar beneath the foreground.
+uniform float u_wrapper; // Outer content-wrapper displacement (pt, scaled).
 uniform sampler2D u_content;
 out vec4 frag_color;
 
 #include "superellipse.glsl"
 #include "chromatic_fringe.glsl"
 
+// Circular SDF displacement profile: 1 at the contour, 0 past depth h.
+float fieldProfile(float depth, float h) {
+    float t = clamp(1.-depth/h,0.,1.);
+    return 1.-sqrt(max(1.-t*t,0.));
+}
 vec4 readContent(vec2 p) {
     vec2 uv = p / u_textureSize;
     #ifdef IMPELLER_TARGET_OPENGLES
@@ -51,15 +57,21 @@ void main() {
         field = vec3(d,n);
     }
     if (field.x >= 0.) { frag_color = readContent(pixel); return; }
-    // Native ContentLensingView uses -14 displacement with an 11.2-point SDF.
-    // Pull source samples inward near the rim: glyphs bulge across the contour
-    // while the flat center keeps its ordinary size. This pass never samples
-    // or grades the page/housing below the foreground.
-    float t = clamp(1.+field.x/u_effect.y,0.,1.);
-    float profile = 1.-sqrt(max(1.-t*t,0.));
-    vec2 displaced = pixel-field.yz*(u_effect.x*u_geometry.y*profile*u_geometry.x);
-    vec4 green = readContent(displaced);
+    // Native warps the selected copy twice over the same 11.2-point SDF: the
+    // lens's content wrapper (-17.5, u_wrapper) and inside it the
+    // ContentLensingView (-14, u_effect.x), read where the outer pass has
+    // already moved the sample, as the backdrop's passes compose. Both pull
+    // source samples inward near the rim: glyphs bulge across the contour
+    // while the flat center keeps its ordinary size. On held iOS 27 glyphs
+    // the 3-7 point band shows only the stretched door of the house icon,
+    // which this composition reproduces and the single -14 pass folds back
+    // into the wall. This pass never samples or grades the page/housing.
     float depth = -field.x;
+    float lift = u_geometry.y;
+    float outer = u_wrapper*lift*fieldProfile(depth,u_effect.y);
+    float inner = u_effect.x*lift*fieldProfile(depth+outer,u_effect.y);
+    vec2 displaced = pixel-field.yz*((outer+inner)*u_geometry.x);
+    vec4 green = readContent(displaced);
     // Native aberration inputs grow with the lens (H/19): fringe size and
     // reach follow the pill's height, against the 73.6-point held tab pill
     // they were measured on.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Icons and labels under the held tab pill's rim bend like native: the
+  lens's −17.5 content-wrapper displacement now runs before the −14
+  ContentLensing pass over the same 11.2-point field, so glyphs near the rim
+  stretch smoothly into it instead of folding back as mirrored copies.
+
 - Glass inside a `LiquidPrismGroup` or `LiquidPrismScaffold` now sits on top of
   scroll edge effects and edge blurs, refracting the blurred, faded content as
   SwiftUI glass does. The effects are no longer cut out of the glass, which

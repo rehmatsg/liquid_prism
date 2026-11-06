@@ -985,6 +985,9 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 ? 0
                                 : style.contentRefraction ?? 14,
                             depth: style.contentDepth ?? 11.2,
+                            // The lens's content wrapper, a second native
+                            // pass over the same depth.
+                            wrapper: style.refractContent == false ? 0 : 17.5,
                             chromaticAberration: style.refractContent == false
                                 ? 0
                                 : (lensStyle.chromaticAberration ?? 3.5) *

@@ -25,6 +25,7 @@ class ContentLensWindow extends StatefulWidget {
     required this.shape,
     required this.refraction,
     required this.depth,
+    this.wrapper = 0,
     this.chromaticAberration = 0,
     this.chromaticBand = 4.8,
     this.scale = 1,
@@ -43,6 +44,7 @@ class ContentLensWindow extends StatefulWidget {
     required this.shape,
     required this.refraction,
     required this.depth,
+    this.wrapper = 0,
     this.chromaticAberration = 0,
     this.chromaticBand = 4.8,
     this.scale = 1,
@@ -59,6 +61,10 @@ class ContentLensWindow extends StatefulWidget {
   final bool _selection;
   final Rect lens;
   final double lift, refraction, depth, scale;
+
+  /// Outer content-wrapper displacement in points (native −17.5 for the tab
+  /// pill), applied before [refraction] over the same [depth].
+  final double wrapper;
   final double chromaticAberration, chromaticBand;
   final Offset origin;
   final GlassShape shape;
@@ -157,6 +163,7 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
       shader: region == _WindowRegion.outside ? null : _shader,
       refraction: widget.refraction,
       depth: widget.depth,
+      wrapper: widget.wrapper,
       chromaticAberration: widget.chromaticAberration,
       chromaticBand: widget.chromaticBand,
       scale: widget.scale,
@@ -213,6 +220,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     required this.shader,
     required this.refraction,
     required this.depth,
+    required this.wrapper,
     required this.chromaticAberration,
     required this.chromaticBand,
     required this.scale,
@@ -223,7 +231,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
   final double tone;
   final Path? path;
   final Rect lens;
-  final double lift, refraction, depth, scale;
+  final double lift, refraction, depth, wrapper, scale;
   final double chromaticAberration, chromaticBand;
   final Offset origin;
   final GlassShape shape;
@@ -241,6 +249,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
           chromaticAberration,
           chromaticBand,
           tone,
+          wrapper,
         )
         ..setScale(scale, origin);
   @override
@@ -261,6 +270,7 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
         chromaticAberration,
         chromaticBand,
         tone,
+        wrapper,
       )
       ..setScale(scale, origin);
   }
@@ -305,6 +315,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
   Rect _lens = Rect.zero;
   double _lift = 0, _refraction = 14, _depth = 11.2;
   double _chromaticAberration = 0, _chromaticBand = 4.8, _tone = 0;
+  double _wrapper = 0;
   GlassShape _shape = GlassShape.capsule;
   void configure(
     ui.FragmentShader? shader,
@@ -316,6 +327,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     double chromaticAberration,
     double chromaticBand,
     double tone,
+    double wrapper,
   ) {
     if (shader == _shader &&
         lens == _lens &&
@@ -325,7 +337,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
         depth == _depth &&
         chromaticAberration == _chromaticAberration &&
         chromaticBand == _chromaticBand &&
-        tone == _tone) {
+        tone == _tone &&
+        wrapper == _wrapper) {
       return;
     }
     final refracted = _refractsContent;
@@ -338,6 +351,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _chromaticAberration = chromaticAberration;
     _chromaticBand = chromaticBand;
     _tone = tone;
+    _wrapper = wrapper;
     if (refracted != _refractsContent) markNeedsCompositingBitsUpdate();
     markNeedsPaint();
   }
@@ -365,7 +379,9 @@ class _RenderSelectionWindow extends RenderProxyBox {
   bool get _refractsContent =>
       _shader != null &&
       _lift >= .001 &&
-      (_refraction != 0 || (_chromaticAberration > 0 && _chromaticBand > 0));
+      (_refraction != 0 ||
+          _wrapper != 0 ||
+          (_chromaticAberration > 0 && _chromaticBand > 0));
 
   /// The content lens for a raster at [deviceScale] physical pixels per point.
   ui.ImageFilter _contentFilter(double deviceScale) {
@@ -406,6 +422,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
         deviceScale: deviceScale,
       ),
       _tone,
+      _wrapper * _scale,
     ];
     for (var i = 0; i < values.length; i++) {
       shader.setFloat(i + 2, values[i]);
