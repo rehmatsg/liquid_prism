@@ -406,23 +406,10 @@ class _GlassGroupData {
     _clips.clear();
     _hoistHost = null;
     if (_disposed) return;
-    for (final edge in edges) {
-      if (!edge.attached ||
-          !edge.hasSize ||
-          edge.size.isEmpty ||
-          !edge._isActive ||
-          edge.getTransformTo(null).determinant() == 0) {
-        continue;
-      }
-      final content = edge._contentLayer.layer;
-      if (content == null || _isolatesBackdrop(content)) continue;
-      // From the content layer's parent, as for members: the content layer
-      // is this effect's own and holds no clip.
-      final clips = _clipsToGroup(content.parent, groupLayer, edge.pixelRatio);
-      if (clips == null) continue;
-      _clips[edge] = clips;
-      hoistEdges.add(edge);
-    }
+    // Edge effects are not hoisted: each paints its own passes in place, and
+    // glass painted after it captures the blurred, faded content and refracts
+    // it, as SwiftUI glass sits over a scroll edge effect. hoistEdges stays
+    // empty, so the hoist hosts only the members' shadows and frost.
     // Members read captures taken before the hoisted effects' fades and
     // finished blurs; a batch would read its own later capture instead.
     final canBatch = LiquidPrism._batchProgram != null && hoistEdges.isEmpty;

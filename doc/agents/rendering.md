@@ -86,9 +86,15 @@ requires no intermediate layer at all.
 
 ## Edge effects in a group
 
+Edge effects are no longer hoisted: `prepare()` leaves `hoistEdges` empty, so
+each effect paints its own passes and the group's glass, painted after it,
+captures and refracts the blurred content, as SwiftUI does. The hoisting
+machinery below is unused and kept only until it is removed; the description
+records how it worked.
+
 `_RenderEdgeBlur` (edge_blur.dart, a part of glass.dart) registers in
-`_GlassGroupData.edges`. `prepare()` puts active, non-isolated, hoistable
-effects in `hoistEdges` and turns batching off. The hoist host is whichever
+`_GlassGroupData.edges`. `prepare()` put active, non-isolated, hoistable
+effects in `hoistEdges` and turned batching off. The hoist host is whichever
 reaches the scene first: a shared member's `_GlassShadowLayer` or an effect's
 `_EdgeHoistLayer`, which sits between the effect's content layer and its strip
 clips so the hoisted shadows are not clipped to the strips. `_hoist` paints

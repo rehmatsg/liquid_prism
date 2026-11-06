@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Glass inside a `LiquidPrismGroup` or `LiquidPrismScaffold` now sits on top of
+  scroll edge effects and edge blurs, refracting the blurred, faded content as
+  SwiftUI glass does. The effects are no longer cut out of the glass, which
+  had made it read more see-through over blurred content; each effect takes its
+  own two backdrop captures again.
+
 - The held tab pill magnifies its selected icons and labels 1.16× about each
   item, native's held selected item source transform, scaled with the lift.
 

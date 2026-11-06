@@ -165,20 +165,15 @@ an `Opacity` below 1 or a filter does.
 ### Shared captures and edge effects
 
 A `LiquidPrismScrollEdge`, `LiquidPrismScrollFade` or `LiquidPrismEdgeBlur`
-inside a group joins its captures. The effect's horizontal blur pass is painted
-with the members' hoisted frost and reads the same capture; its vertical pass
-reads the capture the members' optical passes read, which is taken before the
-fade and before that pass writes. Both passes and the fade are cut out of
-every shared member's contour. The members' optical passes therefore see the
-page content with the members' own frost and nothing of the effect, so glass
-over a scroll edge refracts what is beneath it, as native bar buttons do, and a
-bar's effect and its capsules cost two backdrop captures together instead of
-two each. Batching is off while an effect is hoisted, since a batch would read
-its own later capture.
+inside a group paints its own passes in place, and glass painted after it sits
+on top: the members' captures include the blurred, faded content, which their
+optical passes refract, as SwiftUI glass does over a scroll edge effect. The
+effect costs its own two backdrop captures beside the group's.
 
-The effect must reach the scene before the group's glass does, as a bar's
-background does before its controls. An effect with a `child` joins only when
-it paints first; one without a child (a bar's effect) joins wherever it paints.
+Earlier releases hoisted the effect into the group's captures and cut it out of
+every member's contour, so glass refracted the unblurred content; that is off,
+and the hoisting code is unused. Paint the effect before the group's glass, as
+a bar's background comes before its controls.
 Outside a group, or under an isolating ancestor, an effect takes two backdrop
 passes of its own and glass painted after it refracts the finished blur.
 
