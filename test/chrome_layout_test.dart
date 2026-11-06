@@ -82,6 +82,49 @@ void main() {
     );
   });
 
+  testWidgets('iPhone Duo: a back button heads the rail, above the actions', (
+    tester,
+  ) async {
+    window(tester, duo);
+    const back = Key('back');
+    Widget app({required bool leading}) => CupertinoApp(
+      home: LiquidPrismScaffold(
+        leading: leading
+            ? const SizedBox(key: back, width: 48, height: 48)
+            : null,
+        actions: [
+          for (final label in ['Share', 'More'])
+            GlassToolbarItem(
+              icon: const Icon(CupertinoIcons.star),
+              label: label,
+              onPressed: () {},
+            ),
+        ],
+        body: const SizedBox.expand(key: _body),
+      ),
+    );
+    await tester.pumpWidget(app(leading: true));
+    // Native (Apple Music, closed Duo): the back button takes the column's
+    // top under the status bar; the actions follow 12 pt below.
+    expect(
+      tester.getRect(find.byKey(back)),
+      const Rect.fromLTWH(394, 170, 48, 48),
+    );
+    expect(
+      tester.getRect(find.byType(LiquidPrismToolbarGroup)),
+      const Rect.fromLTWH(394, 230, 48, 100),
+    );
+    // Nothing is left in a top bar row, so content starts at the top margin.
+    expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).top, 24);
+
+    // On iPhone it stays at the top bar's leading edge.
+    window(tester, phone);
+    await tester.pumpWidget(app(leading: true));
+    final rect = tester.getRect(find.byKey(back));
+    expect(rect.left, 16);
+    expect(rect.top, lessThan(120));
+  });
+
   testWidgets('unfolded iPhone Duo keeps the rail, actions sit higher', (
     tester,
   ) async {

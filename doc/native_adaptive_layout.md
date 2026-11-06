@@ -145,6 +145,13 @@ poses changed):
 | Split View, left half | x 24, y 24, 48 × 100 | x 24, y 433, 48 × 212 |
 | Split View, right half | x 397, y 120, 48 × 100 | x 397, y 433, 48 × 212 |
 
+A navigation back button moves into the rail too. In Apple Music on the
+closed iPhone Duo (iOS 27, device screenshot, about ±1 pt) it is a 48 pt
+circle at the column's top, y 174 under the status bar, where a trailing group
+would otherwise start, with the share/more capsule about 12 pt below it; the
+top bar row is empty. `LiquidPrismScaffold` places `leading` the same way (at
+the actions' top, the 12 pt rail gap above them).
+
 The rail therefore runs from below any system region in its top half to above
 any in its bottom half. With horizontal bars, a status bar in a top corner
 shares the top bar's row.

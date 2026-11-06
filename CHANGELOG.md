@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- On iPhone Duo, `LiquidPrismScaffold` moves `leading` (the back button)
+  into the vertical rail with the actions: at the top of the column, under
+  the status bar, the actions 12 points below it, as native apps do. It no
+  longer keeps a top bar row to itself there. With horizontal bars nothing
+  changes.
+
 - In dark appearance the held tab pill's selected copy keeps the lighter
   resting tint (native measured 48, 192, 248 for system blue) instead of the
   plain accent, and the glyph fringe fills missed channels with the dark

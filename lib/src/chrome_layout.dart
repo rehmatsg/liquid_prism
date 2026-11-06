@@ -206,8 +206,11 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// False leaves keyboard avoidance to descendants.
   final bool resizeToAvoidBottomInset;
 
-  /// A top-leading control, such as a back button. It stays in the top bar in
-  /// every placement. Null implies one; see [automaticallyImplyLeading].
+  /// A top-leading control, such as a back button. With horizontal bars it
+  /// sits at the top bar's leading edge; with a vertical rail (iPhone Duo) it
+  /// moves to the top of the rail, above the actions, as native back buttons
+  /// do, within the 48 pt column. Null implies one; see
+  /// [automaticallyImplyLeading].
   final Widget? leading;
 
   /// Whether a null [leading] becomes a [LiquidPrismBackButton] when the
@@ -565,10 +568,18 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         : _ChromeLayout.topCorner(media.size, occlusions);
     final showTabBar =
         tabBar != null && sidebarTabs == null && (rail || !keyboard);
+    final leading =
+        widget.leading ??
+        (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
+    // In the rail the leading control (a back button) takes the column's
+    // top, a 48 pt circle and the rail gap above the actions.
+    final railLeading = rail && leading != null
+        ? 48 + _ChromeLayout._railGap
+        : 0;
     final groups =
         rail &&
             !_fitsRail(
-              railBottom - actionsTop,
+              railBottom - actionsTop - railLeading,
               tabs: showTabBar ? tabBar : null,
             )
         ? [
@@ -581,9 +592,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final top = widget.sheet
         ? _ChromeLayout._sheetTop
         : math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
-    final leading =
-        widget.leading ??
-        (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
     final navigation =
         (LiquidPrismTheme.of(context).navigationBar ??
                 const GlassNavigationBarStyle())
@@ -701,7 +709,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final topBar =
         widget.title != null ||
         widget.largeTitle != null ||
-        leading != null ||
+        // Like the actions, a leading control in the rail needs no bar row.
+        (!rail && leading != null) ||
         widget.trailing != null ||
         // Native keeps the bar row with the sidebar shown or hidden, so
         // content does not jump when the toggle moves into it.
@@ -1443,10 +1452,24 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? railRight + _railGap + (48 - width) / 2
         : railLeft - _railGap - 48 + (48 - width) / 2;
 
+    // With a rail, native moves the leading control (a back button) to the
+    // top of the column, where the actions would start, and the actions the
+    // rail gap below it (Apple Music on the closed iPhone Duo: a 48 pt back
+    // button under the status bar, the next capsule about 12 pt below).
+    var railTop = actionsTop;
+    if (rail && hasChild(_Slot.leading)) {
+      final child = layoutChild(
+        _Slot.leading,
+        BoxConstraints.loose(Size(48, size.height)),
+      );
+      positionChild(_Slot.leading, Offset(railX(child.width), actionsTop));
+      if (!child.isEmpty) railTop = actionsTop + child.height + _railGap;
+    }
+
     if (hasChild(_Slot.actions)) {
       final actions = layoutChild(_Slot.actions, BoxConstraints.loose(size));
       if (rail) {
-        positionChild(_Slot.actions, Offset(railX(actions.width), actionsTop));
+        positionChild(_Slot.actions, Offset(railX(actions.width), railTop));
       } else {
         // Beside a corner status bar the group meets its edge, as measured.
         final x = rtl
@@ -1483,7 +1506,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       positionChild(_Slot.trailing, Offset(x, centred(child)));
     }
 
-    if (hasChild(_Slot.leading)) {
+    if (!rail && hasChild(_Slot.leading)) {
       // Bounded by the actions and trailing widget, a title gap before them,
       // so a wide leading widget (a menu trigger, say) ellipsizes rather
       // than running under them.
