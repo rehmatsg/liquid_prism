@@ -331,21 +331,30 @@ void _motionTests() {
       closeTo(1 + 14.1379310344828 / 274, .001),
     );
     // Both the unselected row and the selected copy seen through the pill
-    // take the housing's flex.
+    // take the housing's flex; the copy is also magnified 1.16x as native's
+    // held selected item source is.
+    const flex = 1 + 14.1379310344828 / 274;
     for (var i = 0; i < 3; i++) {
-      for (final foreground in [
-        find.byKey(ValueKey('icon-$i')),
-        find.byKey(ValueKey('selected-icon-$i')),
-        find.text(_names[i]),
+      for (final (foreground, scale) in [
+        (find.byKey(ValueKey('icon-$i')), flex),
+        (find.byKey(ValueKey('selected-icon-$i')), flex * 1.16),
+        (
+          find.descendant(of: _tab(_names[i]), matching: find.text(_names[i])),
+          flex,
+        ),
+        (
+          find.descendant(
+            of: find.byType(ExcludeSemantics),
+            matching: find.text(_names[i]),
+          ),
+          flex * 1.16,
+        ),
       ]) {
-        final boxes = tester.renderObjectList<RenderBox>(foreground);
-        expect(boxes, isNotEmpty);
-        for (final box in boxes) {
-          expect(
-            box.getTransformTo(null).getMaxScaleOnAxis(),
-            closeTo(1 + 14.1379310344828 / 274, .001),
-          );
-        }
+        final box = tester.renderObject<RenderBox>(foreground);
+        expect(
+          box.getTransformTo(null).getMaxScaleOnAxis(),
+          closeTo(scale, .002),
+        );
       }
     }
     await gesture.up();
@@ -373,7 +382,7 @@ void _motionTests() {
       // Glass applies its flex scale inside its renderer, while the
       // foreground exposes the same transform as a RenderTransform.
       final foreground = tester.renderObject<RenderBox>(
-        find.byKey(const ValueKey('selected-icon-0')),
+        find.byKey(const ValueKey('icon-0')),
       );
       final transform = foreground.getTransformTo(null);
       final size = MatrixUtils.transformRect(
@@ -1099,13 +1108,30 @@ void _scaleBeneathFilterTest() {
       // device pixels.
       expect(find.text('Favorites'), findsNWidgets(2));
       for (final transform in tester.widgetList<Transform>(
-        find.ancestor(
-          of: find.text('Favorites'),
-          matching: find.byType(Transform),
-        ),
+        find.ancestor(of: label, matching: find.byType(Transform)),
       )) {
         expect(transform.transform.getMaxScaleOnAxis(), 1);
       }
+      // The selected copy's only scale is its native magnification, inside
+      // the window and therefore beneath the content filter.
+      final copy = find.descendant(
+        of: find.byType(ExcludeSemantics),
+        matching: find.text('Favorites'),
+      );
+      final scales = [
+        for (final transform in tester.widgetList<Transform>(
+          find.ancestor(of: copy, matching: find.byType(Transform)),
+        ))
+          transform.transform.getMaxScaleOnAxis(),
+      ].where((scale) => scale != 1);
+      expect(scales, [closeTo(1.16, .01)]);
+      expect(
+        find.ancestor(
+          of: find.ancestor(of: copy, matching: find.byType(Transform)).first,
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
       await hold.up();
       await tester.pumpAndSettle();
       expect(tester.getRect(label), rest);

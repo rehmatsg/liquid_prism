@@ -229,8 +229,8 @@ approximations. Like native, the bar keeps an unselected row and a selected copy
 (selected icon, semibold label, selected color) that shows through the pill, and
 refracts only that copy. While held that copy takes the plain accent, as native
 does (0, 136, 255 for system blue), rather than the darker resting calibration
-the committed tab uses at rest; the colour follows the lift. Native also magnifies the selected portal 1.16× while
-held; that is not reproduced. See
+the committed tab uses at rest, and is magnified 1.16× about each item, native's
+held selected item source transform; both follow the lift. See
 [native tab bar spec](native_tab_bar_spec.md) for exact extracted values,
 fixture geometry, optical passes and remaining differences.
 

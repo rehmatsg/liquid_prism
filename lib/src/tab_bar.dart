@@ -766,6 +766,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                   window: true,
                   vertical: vertical,
                   selectedCopy: true,
+                  magnify: 1 + (NativeMotion.heldSelectedScale - 1) * lift,
                 ),
               ),
           ],
@@ -1047,6 +1048,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     required bool vertical,
     bool badgeLayer = false,
     bool selectedCopy = false,
+    double magnify = 1,
   }) {
     final committed = widget.selectedIndex == index;
     // Native keeps an unselected and a selected copy of the foreground. While
@@ -1121,7 +1123,13 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       return SizedBox(
         width: vertical ? height : null,
         height: vertical ? null : height,
-        child: Center(child: content),
+        // The held selected copy is magnified about each item's centre,
+        // beneath the content lens filter.
+        child: Center(
+          child: magnify == 1
+              ? content
+              : Transform.scale(scale: magnify, child: content),
+        ),
       );
     }
     return Semantics(

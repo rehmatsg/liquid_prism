@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The held tab pill magnifies its selected icons and labels 1.16× about each
+  item, native's held selected item source transform, scaled with the lift.
+
 - The held tab pill tints its selected icons and labels with the plain accent,
   as native does (system blue 0, 136, 255), instead of the darker resting
   selection color; the color follows the lift.

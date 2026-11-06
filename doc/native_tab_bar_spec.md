@@ -180,7 +180,8 @@ the housing's broad underlay minification to the icons and labels. The source
 extent and Impeller's clip crop are accounted for so refraction tracks the lens
 throughout a glide. Bilinear sampling softens warped antialiasing. Its circular
 profile approximates the native SDF operator; the separate −17.5 content-wrapper
-operator and selected-source 1.16× enlargement are not reproduced by this pass.
+operator is not reproduced by this pass. The selected source's 1.16× enlargement
+is applied to the copy about each item, beneath the filter, scaled with lift.
 The filtered copy is a display-only selected row: each tab's selected icon and
 the semibold portal label, so a tab under the moving pill shows its selected
 state while the unselected row outside shows every tab, including the committed
@@ -190,8 +191,8 @@ selected color with the lift.
 Use `PRISM_LENS_CASES=tabs PRISM_LENS_MIDPOINT_HOLD=true` with the Flutter lens
 recorder to capture a stationary hold between adjacent icons and labels.
 
-Still approximate: adaptive overlapping layout, selected portal scale/
-warping, SF Symbols, position tracking, two-axis flex target generation,
+Still approximate: adaptive overlapping layout, selected portal warping
+(the −17.5 content-wrapper pass), SF Symbols, position tracking, two-axis flex target generation,
 housing spring timing, glow and optical operators. The existing sampled
 launch deformation remains a fit. Further changes should use property-linked
 instrumentation and the captured pipeline without labelling fits exact.
