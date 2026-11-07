@@ -246,12 +246,29 @@ above are interpolated linearly between the measured amounts
 | Part | Measured | Fitted (this package) |
 | --- | --- | --- |
 | Light regular face fill | white alpha 0 / .1 / .2 / .5 | — (used as captured) |
-| Light regular face luma cap | `inputFaceColorMatrixMaxLumaSDR` 0.94 at every amount (`inputFaceColorMatrixMaxLuma` 1); clear glass 1 | Applied after the fill as linear-light luma, scaled to keep hue. Over (242, 241, 246) native draws a face of (247, 246, 252); the cap gives (248, 248, 253), where the uncapped face was (254, 254, 255) and hid the rim's white band. Dark appearance is unmeasured and uncapped. |
+| Light regular face tone | black 0.4, white 1.03, saturation 1.2 (`inputFaceColorMatrix*`); `inputFaceColorMatrixMaxLumaSDR` 0.94 at every amount (`inputFaceColorMatrixMaxLuma` 1; clear glass 1) | The face level is fitted to native glass over flat greys (below). The fitted curve starts at the measured black, 0.4, and rolls off to 0.995 at white, where `mix(black, white)` reached 1.03 and left a light face pure white. How iOS applies the 0.94 limit is not recovered. Clear glass matches `mix(black, white)` exactly. Dark appearance keeps `mix(black, white)` and is unmeasured. |
 | Regular blur fill | lighten (darken in dark) and normal opacities above; radius 8 | The blur-fill sigma is the recipe's fitted frost (3.3, bars 5), which was calibrated at 0.5 and already stood for the blur fill there. Its normal opacity is the measured one divided by its 0.5 value, capped at 1, so 0.5 and above stay the plain frost they were and 0 is the sharp backdrop lightened at 0.675. |
 | Clear blur | radius 0 / .375 / .75 / .75 | The fitted frost (1.8, bars 5) scales with radius ÷ 0.75. |
 | Clear blur fill | normal 0 → 1 at tint 1, radius 8 | Same sigma as the regular blur fill. |
 | Dark appearance | at 0.5 only: darken 0.9, lighten 0, normal 0.5, fill clear | The light curves with darken for lighten; the fill stays clear. Not measured away from 0.5. |
 | Reduce Transparency | reported, not measured | Not applied: no capture shows what it changes in glass. |
+
+Native glass over flat sRGB greys (`tool/native_dispersion_probe --scene
+levels --light`, iOS 27.0 simulator, default tint), the face at each band's
+middle in 8-bit sRGB. The band at 0 is left out because it reads light from
+the white strip above it.
+
+| Backdrop | 32 | 64 | 96 | 128 | 160 | 192 | 208 | 224 | 232 | 238 | 242 | 246 | 250 | 253 | 255 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Regular face | 151 | 168 | 184 | 200 | 215 | 229 | 236 | 242 | 245 | 248 | 249 | 251 | 252 | 253 | 253.5 |
+| Clear face | 62 | 93 | 124 | 154 | 185 | 215 | 231 | 246 | 253.5 | 255 | 255 | 255 | 255 | 255 | 255 |
+
+Over (242, 242, 247) regular glass draws (250, 249, 254). The package fits the
+regular face before the white fill as `0.4 + v (0.7239 − 0.129 v)` for luma
+`v`, which gives these values within half a level at the default fill of 0.2.
+Clear glass's `mix(0.125, 1.08, v)` matches its row exactly. On an iPhone Duo
+with iOS 27.2, native toolbar glass measured about 2 levels lower: 247 over
+(242, 241, 246) and 252–253 over white.
 
 The blur fill is a backdrop filter layer per blend (normal, lighten or darken),
 each a Gaussian blur faded to its opacity and composited with that blend mode;
