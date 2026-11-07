@@ -287,6 +287,8 @@ void main() {
               scale: 1,
               deviceScale: 1,
             ),
+            0, // u_tone: missed channels stay empty, as on a dark bar.
+            0, // u_wrapper: no outer displacement.
           ];
           for (var i = 0; i < uniforms.length; i++) {
             shader.setFloat(i, uniforms[i]);
