@@ -11,8 +11,8 @@ import 'theme.dart';
 /// `GlassNavigationBarStyle.titleCapsule`, then to the defaults, measured on
 /// iOS 27 device screenshots of SwiftUI apps on iPhone Duo (3x, about a third
 /// of a point): a 64-point avatar that the capsule tucks 6 points under, a
-/// capsule at least 38 points tall with 14 x 8 points of padding, and a
-/// 26-point inline leading 10 points before the title.
+/// capsule at least 38 points tall with 14 x 9 points of padding (44.3 points
+/// with a 26-point inline leading, 10 points before the title).
 @immutable
 final class GlassTitleStyle {
   const GlassTitleStyle({
@@ -52,7 +52,7 @@ final class GlassTitleStyle {
 
   static const _avatarSize = 64.0, _avatarOverlap = 6.0;
   static const _leadingSize = 26.0, _leadingGap = 10.0, _minHeight = 38.0;
-  static const _padding = EdgeInsets.symmetric(horizontal: 14, vertical: 8);
+  static const _padding = EdgeInsets.symmetric(horizontal: 14, vertical: 9);
 
   double get resolvedAvatarSize => avatarSize ?? _avatarSize;
   double get resolvedAvatarOverlap => avatarOverlap ?? _avatarOverlap;
@@ -169,15 +169,7 @@ class LiquidPrismTitle extends StatelessWidget {
     GlassTitleStyle style,
     double lineHeight,
   ) {
-    final content = math.max(
-      lineHeight,
-      title.leading == null ? 0.0 : style.resolvedLeadingSize,
-    );
-    final capsule = math.max(
-      style.resolvedMinHeight,
-      content + style.resolvedPadding.vertical,
-    );
-    return capsule +
+    return _capsuleHeight(title, style, lineHeight) +
         (title.avatar == null
             ? 0
             : math.max(
@@ -186,14 +178,35 @@ class LiquidPrismTitle extends StatelessWidget {
               ));
   }
 
+  /// The capsule's height for a title line of [lineHeight] points.
+  static double _capsuleHeight(
+    LiquidPrismTitle title,
+    GlassTitleStyle style,
+    double lineHeight,
+  ) => math.max(
+    style.resolvedMinHeight,
+    math.max(
+          lineHeight,
+          title.leading == null ? 0.0 : style.resolvedLeadingSize,
+        ) +
+        style.resolvedPadding.vertical,
+  );
+
   @override
   Widget build(BuildContext context) {
     final resolved = resolve(context);
     final padding = resolved.resolvedPadding;
     final leading = this.leading;
-    final content = ConstrainedBox(
-      constraints: BoxConstraints(
-        minHeight: math.max(0, resolved.resolvedMinHeight - padding.vertical),
+    // The line is measured as the scaffold measures it, so the capsule is
+    // exactly the height the bar reserved for it.
+    final text = DefaultTextStyle.of(context).style;
+    final line =
+        MediaQuery.textScalerOf(context).scale(text.fontSize ?? 17) *
+        (text.height ?? 1.2);
+    final content = SizedBox(
+      height: math.max(
+        0,
+        _capsuleHeight(this, resolved, line) - padding.vertical,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

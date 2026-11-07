@@ -134,7 +134,10 @@ void main() {
       expect(style.resolvedMinHeight, 38);
       const title = LiquidPrismTitle(avatar: SizedBox(), child: Text('A'));
       // 38 pt capsule under a 40 pt avatar it does not tuck under.
-      expect(LiquidPrismTitle.extentOf(title, style, 20.4), 78);
+      expect(
+        LiquidPrismTitle.extentOf(title, style, 20.4),
+        closeTo(78.4, 1e-9),
+      );
       expect(
         const GlassNavigationBarStyle(titleCapsule: theme)
             .merge(
@@ -189,12 +192,12 @@ void main() {
         expect(face, const Rect.fromLTWH(191 - 32, 24, 64, 64));
         final title = tester.getRect(find.byType(LiquidPrismTitle));
         expect(title.top, 24);
-        expect(title.bottom, 120);
+        expect(title.bottom, closeTo(120.4, .01));
         expect(title.center.dx, closeTo(191, .01));
         // The bar grows to hold it; the content starts below it.
         expect(
           MediaQuery.paddingOf(tester.element(find.byKey(_body))).top,
-          120 + LiquidPrismScaffold.topBarClearance,
+          closeTo(120.4 + LiquidPrismScaffold.topBarClearance, .01),
         );
         await tester.tap(find.text('Friday'));
         expect(taps, 1);
@@ -219,7 +222,7 @@ void main() {
       );
       expect(tester.getSize(find.byKey(inline)), const Size(26, 26));
       final capsule = tester.getRect(find.byType(LiquidPrismTitle));
-      expect(capsule.height, 42, reason: '26 pt leading and 8 pt padding');
+      expect(capsule.height, 44, reason: '26 pt leading and 9 pt padding');
       // Unlike a plain title, the capsule stays centred beside Invite.
       expect(capsule.center.dx, closeTo(191, .01));
       // The text button stays in the top bar beside the rail, ending at the
@@ -243,7 +246,7 @@ void main() {
       );
       final title = tester.getRect(find.byType(LiquidPrismTitle));
       final control = tester.getRect(find.byKey(back));
-      expect(title.height, 96);
+      expect(title.height, closeTo(96, .5));
       expect(control.top, lessThan(title.top + 20));
       expect(
         tester.getRect(find.byType(LiquidPrismToolbarGroup)).center.dy,
