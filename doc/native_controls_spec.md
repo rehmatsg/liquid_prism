@@ -37,7 +37,13 @@ segmented selection are opaque white at rest. The segmented track resolves to
 tertiarySystemFill. Disabled native visual elements have alpha .5. The slider thumb has a native
 layer shadow with opacity .14, radius 5 and offset (0, 1); the held lens adds
 opacity .06, radius 3 and offset (0, 7). Its filter ring shadow has width 4,
-radius 3, offset 8 and opacity .4 for small controls or .1 for the segmented pill. Slider tracks
+radius 3, offset 8 and opacity .4 for small controls or .1 for the segmented pill.
+Over white in light appearance (`testControlsWhiteLight`, iOS 27.0), native's
+held slider darkens the backdrop 8 levels just below the lens, 19 at 5 points
+and none by 13 points. Liquid Prism's light held slider keeps the measured
+geometry with no held contact shadow and fitted opacities (held layer .045,
+ring .09), within 2.3 levels RMS of that profile. Dark appearance keeps the
+earlier fit to the native dark capture (contact .14, ambient .12, ring .2). Slider tracks
 resolve to black at .1 in light appearance and white at .1 in dark appearance.
 Control fills use the shared GlassColors palette. The switch defaults to the
 palette green and honors an explicit inherited tint, as does the slider. The resting fills, tracks,
