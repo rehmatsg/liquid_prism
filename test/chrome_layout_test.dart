@@ -82,6 +82,233 @@ void main() {
     );
   });
 
+  testWidgets('iPhone Duo: a back button heads the rail, above the actions', (
+    tester,
+  ) async {
+    window(tester, duo);
+    const back = Key('back');
+    Widget app({required bool leading}) => CupertinoApp(
+      home: LiquidPrismScaffold(
+        leading: leading
+            ? const SizedBox(key: back, width: 48, height: 48)
+            : null,
+        actions: [
+          for (final label in ['Share', 'More'])
+            GlassToolbarItem(
+              icon: const Icon(CupertinoIcons.star),
+              label: label,
+              onPressed: () {},
+            ),
+        ],
+        body: const SizedBox.expand(key: _body),
+      ),
+    );
+    await tester.pumpWidget(app(leading: true));
+    // Native (Apple Music, closed Duo): the back button takes the column's
+    // top under the status bar; the actions follow 12 pt below.
+    expect(
+      tester.getRect(find.byKey(back)),
+      const Rect.fromLTWH(394, 170, 48, 48),
+    );
+    expect(
+      tester.getRect(find.byType(LiquidPrismToolbarGroup)),
+      const Rect.fromLTWH(394, 230, 48, 100),
+    );
+    // Nothing is left in a top bar row, so content starts at the top margin.
+    expect(MediaQuery.paddingOf(tester.element(find.byKey(_body))).top, 24);
+
+    // On iPhone it stays at the top bar's leading edge.
+    window(tester, phone);
+    await tester.pumpWidget(app(leading: true));
+    final rect = tester.getRect(find.byKey(back));
+    expect(rect.left, 16);
+    expect(rect.top, lessThan(120));
+  });
+
+  group('LiquidPrismTitle', () {
+    test('local style wins per field over the theme, keeping zero', () {
+      const theme = GlassTitleStyle(avatarSize: 40, avatarOverlap: 4);
+      final style = theme.merge(const GlassTitleStyle(avatarOverlap: 0));
+      expect(style.resolvedAvatarSize, 40);
+      expect(style.resolvedAvatarOverlap, 0);
+      expect(style.resolvedMinHeight, 38);
+      const title = LiquidPrismTitle(avatar: SizedBox(), child: Text('A'));
+      // 38 pt capsule under a 40 pt avatar it does not tuck under.
+      expect(
+        LiquidPrismTitle.extentOf(title, style, 20.4),
+        closeTo(78.4, 1e-9),
+      );
+      expect(
+        const GlassNavigationBarStyle(titleCapsule: theme)
+            .merge(
+              const GlassNavigationBarStyle(
+                titleCapsule: GlassTitleStyle(avatarSize: 50),
+              ),
+            )
+            .titleCapsule,
+        const GlassTitleStyle(avatarSize: 50, avatarOverlap: 4),
+      );
+    });
+
+    const avatar = Key('avatar'),
+        inline = Key('inline'),
+        invite = Key('invite');
+    var taps = 0;
+    Widget app({required bool withAvatar, Widget? trailing, Widget? leading}) =>
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            leading: leading,
+            title: LiquidPrismTitle(
+              avatar: withAvatar
+                  ? const ColoredBox(key: avatar, color: Color(0xFFEE8866))
+                  : null,
+              leading: withAvatar
+                  ? null
+                  : const ColoredBox(key: inline, color: Color(0xFFEE8866)),
+              onPressed: () => taps++,
+              child: const Text('Friday'),
+            ),
+            trailing: trailing,
+            actions: [
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.phone),
+                label: 'Call',
+                onPressed: () {},
+              ),
+            ],
+            body: const SizedBox.expand(key: _body),
+          ),
+        );
+
+    testWidgets(
+      'an avatar heads the bar on iPhone Duo; the capsule tucks under',
+      (tester) async {
+        window(tester, duo);
+        await tester.pumpWidget(app(withAvatar: true));
+        // Measured (SwiftUI app, closed Duo): a 64 pt avatar from y 24 centred
+        // on the content beside the rail, the capsule 6 pt under it, ending at
+        // y 120.
+        final face = tester.getRect(find.byKey(avatar));
+        expect(face, const Rect.fromLTWH(191 - 32, 24, 64, 64));
+        final title = tester.getRect(find.byType(LiquidPrismTitle));
+        expect(title.top, 24);
+        expect(title.bottom, closeTo(120.4, .01));
+        expect(title.center.dx, closeTo(191, .01));
+        // The bar grows to hold it; the content starts below it.
+        expect(
+          MediaQuery.paddingOf(tester.element(find.byKey(_body))).top,
+          closeTo(120.4 + LiquidPrismScaffold.topBarClearance, .01),
+        );
+        await tester.tap(find.text('Friday'));
+        expect(taps, 1);
+        expect(find.bySemanticsLabel('Friday'), findsOneWidget);
+      },
+    );
+
+    testWidgets('an inline leading and a text button share the top row', (
+      tester,
+    ) async {
+      window(tester, duo);
+      await tester.pumpWidget(
+        app(
+          withAvatar: false,
+          trailing: LiquidPrismButton(
+            key: invite,
+            label: 'Invite',
+            onPressed: () {},
+            child: const Text('Invite'),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byKey(inline)), const Size(22, 22));
+      final capsule = tester.getRect(find.byType(LiquidPrismTitle));
+      expect(
+        capsule.height,
+        44,
+        reason: '22 pt leading, 11 pt above and below',
+      );
+      // Native: the avatar 12 pt from the capsule's start, nearly as far as
+      // from its top and bottom.
+      final face = tester.getRect(find.byKey(inline));
+      expect(face.left - capsule.left, 12);
+      expect(face.top - capsule.top, 11);
+      // Unlike a plain title, the capsule stays centred beside Invite.
+      expect(capsule.center.dx, closeTo(191, .01));
+      // The text button stays in the top bar beside the rail, ending at the
+      // content's edge, level with the title; the icon action is in the rail.
+      final button = tester.getRect(find.byKey(invite));
+      expect(button.right, 382);
+      expect(button.center.dy, closeTo(capsule.center.dy, .01));
+      expect(tester.getRect(find.byType(LiquidPrismToolbarGroup)).left, 394);
+    });
+
+    testWidgets('a capsule title centres its subtitle beside controls', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: const LiquidPrismTitle(child: Text('Book Club')),
+            subtitle: const Text('5 members'),
+            actions: [
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.ellipsis),
+                label: 'More',
+                onPressed: () {},
+              ),
+            ],
+            body: const SizedBox.expand(key: _body),
+          ),
+        ),
+      );
+      final capsule = tester.getRect(find.byType(LiquidPrismTitle));
+      final subtitle = tester.getRect(find.text('5 members'));
+      expect(subtitle.center.dx, closeTo(capsule.center.dx, .01));
+    });
+
+    testWidgets('on iPhone the controls keep their row above a tall title', (
+      tester,
+    ) async {
+      window(tester, phone);
+      const back = Key('back');
+      await tester.pumpWidget(
+        app(
+          withAvatar: true,
+          leading: const SizedBox(key: back, width: 44, height: 44),
+        ),
+      );
+      final title = tester.getRect(find.byType(LiquidPrismTitle));
+      final control = tester.getRect(find.byKey(back));
+      expect(title.height, closeTo(96, .5));
+      expect(control.top, lessThan(title.top + 20));
+      expect(
+        tester.getRect(find.byType(LiquidPrismToolbarGroup)).center.dy,
+        closeTo(control.center.dy, .01),
+      );
+    });
+  });
+
+  testWidgets(
+    'on iOS a bottom bar sits on the tab bar line, not above the inset',
+    (tester) async {
+      window(tester, phone);
+      const bar = Key('bar');
+      await tester.pumpWidget(
+        const CupertinoApp(
+          home: LiquidPrismScaffold(
+            bottomBar: SizedBox(key: bar, width: 200, height: 48),
+            body: SizedBox.expand(key: _body),
+          ),
+        ),
+      );
+      // Native bottom glass sits inside the home indicator's 34 pt inset:
+      // a tab bar 21 pt above the screen's edge (a search field 28).
+      expect(tester.getRect(find.byKey(bar)).bottom, 874 - 21);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+
   testWidgets('unfolded iPhone Duo keeps the rail, actions sit higher', (
     tester,
   ) async {
@@ -297,6 +524,22 @@ void main() {
       unawaited(SystemChromeListener.instance.reset());
     }
 
+    testWidgets('device glass settings arrive even without the rail APIs', (
+      tester,
+    ) async {
+      // iOS 27.0 has the Liquid Glass setting but not the rail APIs.
+      await report(tester, {
+        'supported': false,
+        'glassTintAmount': .4,
+        'reduceTransparency': true,
+      });
+      await tester.pumpWidget(const _App());
+      await tester.pump();
+      expect(LiquidPrismSystemChrome.deviceGlassTintAmount.value, .4);
+      expect(LiquidPrismSystemChrome.reduceTransparency.value, isTrue);
+      expect(LiquidPrismSystemChrome.listenable.value, isNull);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
     testWidgets('the vertical bar edge wins over safe-area insets', (
       tester,
     ) async {
@@ -486,8 +729,9 @@ void main() {
       final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
       expect(padding.left, 280);
       expect(padding.right, 84);
-      // The top bar row stays reserved, so hiding never shifts content down.
-      expect(padding.top, 24 + 44 + 16);
+      // The top bar row (48 pt in the rail layout, as the measured 48 pt
+      // toggle) stays reserved, so hiding never shifts content down.
+      expect(padding.top, 24 + 48 + 16);
 
       await tester.tap(find.text('Search'));
       await tester.pump();
@@ -525,7 +769,7 @@ void main() {
       );
       expect(
         MediaQuery.paddingOf(tester.element(find.byKey(_body))).top,
-        24 + 44 + 16,
+        24 + 48 + 16,
       );
 
       await tester.tap(find.bySemanticsLabel('Show sidebar'));

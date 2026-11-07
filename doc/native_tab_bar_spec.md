@@ -48,7 +48,8 @@ Native tab items overlap; the layout is not an equal-width Row.
 
 Native keeps separate selected and unselected foreground copies. The selected
 copy is viewed through a displaced portal. Recoloring one row cannot reproduce
-its weight, scale and warping.
+its icon variant, weight, scale and warping; Liquid Prism builds the selected
+copy separately (see below).
 
 The housing **expands** on contact. Our earlier inverse scale was incorrect.
 The 274 pt and 360 pt fixtures both have a stationary presentation width
@@ -165,7 +166,10 @@ width-dependent stationary scale. The showcase has native 21 pt horizontal
 and bottom margins. The lifted lens now includes broad underlay minification
 using the captured 9 pt displacement and 36 pt SDF height. Its profile is
 implemented with the package's existing circular optical approximation;
-it does not claim to reproduce the private QuartzCore operator exactly.
+it does not claim to reproduce the private QuartzCore operator exactly. The
+lens's own rim takes the captured glassBackground inner amount/height
+**−10.5 / 7** as a separate input; earlier releases reused the underlay's 9 for
+the rim over a fitted 12-point band.
 
 The selected icon/label copy now has its own transparent GPU filter using the
 captured ContentLensingView displacement **−14** and SDF height **11.2**. The
@@ -175,13 +179,26 @@ unselected copy is painted separately, outside the pill. This avoids applying
 the housing's broad underlay minification to the icons and labels. The source
 extent and Impeller's clip crop are accounted for so refraction tracks the lens
 throughout a glide. Bilinear sampling softens warped antialiasing. Its circular
-profile approximates the native SDF operator; the separate −17.5 content-wrapper
-operator and selected-source 1.16× enlargement are not reproduced by this pass.
+profile approximates the native SDF operator. The −17.5 content-wrapper
+displacement runs first over the same 11.2-point field, and the −14 pass reads
+where it moved the sample, as the backdrop's passes compose (fitted, not
+recovered): on held iOS 27 glyphs (house icon, mid-drag, black tint) the 3–7
+point band shows only the stretched door, which this reproduces and the single
+−14 pass folded back into the wall. The selected source's 1.16× enlargement
+is applied to the copy about each item, beneath the filter, scaled with lift.
+The filtered copy is a display-only selected row: each tab's selected icon and
+the semibold portal label, so a tab under the moving pill shows its selected
+state while the unselected row outside shows every tab, including the committed
+one, unselected. Held in light appearance, native tints that copy with the
+plain accent (0, 136, 255 for system blue, measured on iOS 27.0); the copy
+blends to it from the resting selected color with the lift. In dark the held
+copy measured 48, 192, 248, the lighter dark resting calibration, so it stays
+there.
 Use `PRISM_LENS_CASES=tabs PRISM_LENS_MIDPOINT_HOLD=true` with the Flutter lens
 recorder to capture a stationary hold between adjacent icons and labels.
 
-Still approximate: adaptive overlapping layout, selected portal weight/scale/
-warping, SF Symbols, position tracking, two-axis flex target generation,
+Still approximate: adaptive overlapping layout, the glyph warp's exact
+operator, SF Symbols, position tracking, two-axis flex target generation,
 housing spring timing, glow and optical operators. The existing sampled
 launch deformation remains a fit. Further changes should use property-linked
 instrumentation and the captured pipeline without labelling fits exact.

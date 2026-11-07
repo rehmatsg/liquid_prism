@@ -153,8 +153,9 @@ The held knob uses the slider's measured lens inputs: a 6.66-point rim with
 11.1 points of refraction, a face black point of .1 that lifts dark backdrops
 seen through it, and the contact shadow kept under the lifted knob. Tune them
 with `GlassLensStyle.rimWidth`, `rimRefraction`, `rimLight`, `faceBlack` and
-`heldContactShadow` in the slider's `lens`; switches and segmented controls
-keep their own defaults.
+`heldContactShadow` in the slider's `lens`. Switches, segmented controls and the
+tab pill default to their own native rims (11.5 / 6.9, 8.8 / 7.04 and
+10.5 / 7 points of refraction / band).
 
 On iOS a light impact plays when a drag, tap, key or accessibility step reaches
 the minimum or maximum and the parent accepts that value. It plays once per
@@ -223,8 +224,10 @@ The default compact housing uses the widest measured label, with an 86-point
 minimum tab spacing and 32 points of label breathing room. Tune those with
 `minimumTabWidth` and `labelPadding`; use `expanded: true` to fill a bounded parent.
 Hidden labels still have accessibility names. `selectedIcon` accepts custom
-selected artwork. Keep custom icon widgets free of repaint boundaries: the
-selection window paints their foreground into two complementary regions.
+selected artwork, shown for the selected tab and for any tab seen through the
+moving pill. While the pill is held or moving, the bar builds a display-only
+selected copy of every tab for the inside of the pill, so a stateful icon can
+briefly have two instances. Keep custom icon widgets free of repaint boundaries.
 
 A touch anywhere on the bar claims the pointer and moves the pill to that tab.
 A drag at any angle, or a quick flick without a hold, then moves the pill along
@@ -287,6 +290,45 @@ actions and `trailing`, 12 points before them, so a long label ellipsizes
 rather than running under them. An inline title taller than the bar's row,
 such as a logo beside two lines at a large text size, scales down to fit the
 row instead of overflowing it.
+
+A text button in glass, such as Invite, also goes in `trailing:`; it stays in
+the top bar on iPhone Duo, where only the icon actions move to the rail, and
+there ends at the content's edge, the rail's 12 points from its column.
+
+### Glass titles and avatars
+
+`LiquidPrismTitle` puts the title in a glass capsule, as SwiftUI chat and
+contact screens do. `child` is the title (usually `Text`, or any widget),
+`leading` sits inside the capsule before it (a small avatar), and `avatar` sits
+above it, with the capsule tucked 6 points under (a conversation header). Each
+is optional except the title; `onPressed` makes the whole capsule one button.
+
+```dart
+LiquidPrismScaffold(
+  title: LiquidPrismTitle(
+    avatar: ClipOval(child: Image.asset('friday.png')),
+    onPressed: openContact,
+    child: const Text('Friday'),
+  ),
+  actions: [GlassToolbarItem(icon: const Icon(CupertinoIcons.phone), label: 'Call', onPressed: call)],
+  body: conversation,
+)
+
+LiquidPrismScaffold(
+  title: LiquidPrismTitle(
+    leading: ClipOval(child: Image.asset('spacy.png')),
+    child: const Text('Spacy'),
+  ),
+  trailing: LiquidPrismButton(label: 'Invite', onPressed: invite, child: const Text('Invite')),
+  body: conversation,
+)
+```
+
+The avatar and leading are laid out in squares (64 and 22 points by default)
+so the bar knows its height: with an avatar it grows below the control row,
+which the leading control, actions and `trailing` keep, and the content starts
+below the capsule. Sizes, padding and glass come from `GlassTitleStyle`, on the
+title or app-wide in `GlassNavigationBarStyle.titleCapsule`.
 
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
 iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`
@@ -418,6 +460,9 @@ CupertinoApp(
   flag. Use them to place custom bars or sheet controls on the same edge as the
   system's vertical bar and below the status bar.
 - `LiquidPrismSystemChrome.listenable` gives the same report outside widgets.
+- `LiquidPrismSystemChrome.deviceGlassTintAmount` is the device's Liquid Glass
+  setting (0–1, null where iOS has none). Glass follows it already; read it to
+  match your own surfaces, or override it with `LiquidPrismThemeData.glassTint`.
 - A `LiquidPrismScaffold` inside a sheet lays out its own rail too.
 - To keep interactive content off a bent fold, read
   `MediaQuery.displayFeaturesOf(context)` for a feature in

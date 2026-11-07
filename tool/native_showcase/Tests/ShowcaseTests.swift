@@ -9,6 +9,11 @@ final class ShowcaseTests: XCTestCase {
         XCTAssertTrue(app.buttons["Toggle appearance"].waitForExistence(timeout: 10))
         return app
     }
+    /// The system back button, in the top bar or the iPhone Duo rail.
+    private func back(_ app: XCUIApplication) -> XCUIElement {
+        let button = app.buttons["BackButton"]
+        return button.exists ? button : app.navigationBars.buttons.firstMatch
+    }
     private func snapshot(_ name: String) {
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
@@ -17,7 +22,7 @@ final class ShowcaseTests: XCTestCase {
         let app = launch()
         snapshot("explore-light")
         app.tabBars.buttons["Studio"].tap()
-        XCTAssertTrue(app.staticTexts["Find your feel."].exists)
+        XCTAssertTrue(app.staticTexts["Shape the glass. Every screen follows."].waitForExistence(timeout: 5))
         snapshot("studio-light")
         app.tabBars.buttons["Library"].tap()
         let search = app.searchFields.firstMatch
@@ -28,11 +33,11 @@ final class ShowcaseTests: XCTestCase {
         XCTAssertTrue(app.sliders["Intensity"].waitForExistence(timeout: 5))
         app.sliders["Intensity"].adjust(toNormalizedSliderPosition: 0.8)
         snapshot("slider-changed")
-        app.buttons["Back to showcase"].tap()
+        back(app).tap()
         app.terminate()
-        for screen in ["surfaces", "buttons", "switches", "sliders", "segments", "tabs", "toolbar", "menus", "search"] {
+        for screen in ["surfaces", "buttons", "switches", "sliders", "segments", "tabs", "toolbar", "scrollEdges", "pages", "menus", "search"] {
             let page = launch(screen)
-            XCTAssertTrue(page.buttons["Back to showcase"].exists)
+            XCTAssertTrue(page.scrollViews["detail-\(screen)"].waitForExistence(timeout: 5))
             snapshot("\(screen)-light")
             page.terminate()
         }

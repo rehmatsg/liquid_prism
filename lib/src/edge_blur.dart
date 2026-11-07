@@ -155,15 +155,10 @@ class GlassEdgeBlur {
 /// composited above the child, so the child paints as it would unwrapped and
 /// glass inside it stays live. The fade paints over the blur.
 ///
-/// Inside a [LiquidPrismGroup] or [LiquidPrismScaffold], the strips join the
-/// group's shared captures: their passes are painted with the members'
-/// hoisted frost and the members' optical passes read a capture taken before
-/// the fade, with the strips cut out of every member's contour. Glass over
-/// the strip therefore refracts the unblurred, unfaded content beneath it, as
-/// native bar buttons do over a scroll edge effect, and a bar's effect and
-/// capsules cost two backdrop captures together instead of two each. Place
-/// the effect before the group's glass in paint order; an effect with a
-/// [child] joins only when it paints first.
+/// Inside a [LiquidPrismGroup] or [LiquidPrismScaffold] the strips paint their
+/// own passes in place, and glass painted after them sits on top: it captures
+/// and refracts the blurred, faded content, as SwiftUI glass does over a scroll
+/// edge effect. Place the effect before the group's glass in paint order.
 ///
 /// Under an ancestor that isolates the subtree in its own pass (an `Opacity`
 /// below 1, an `ImageFiltered`, a filtered `Transform`) the strips filter the

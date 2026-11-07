@@ -170,6 +170,10 @@ abstract final class NativeMotion {
   /// Lens inset outside the resting pill while held, in logical pixels.
   static const lensInset = 8.0;
 
+  /// Held selected item source transform: the selected copy seen through
+  /// the lifted pill is magnified 1.16x in both axes about each item.
+  static const heldSelectedScale = 1.16;
+
   /// Exact large-lens spec: .25 s response, damping ratio 1 on both edges.
   static final liftIn = SpringDescription.withDurationAndBounce(
     duration: const Duration(milliseconds: 250),

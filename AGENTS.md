@@ -39,7 +39,7 @@ remains available for menu-only consumers. `lib/src/` is implementation detail.
 - Shader role IDs are explicit ABI values; never replace them with enum indices.
   Update both Dart uniforms and GLSL when changing a shader packet.
 - Do not add another gesture owner around a button, menu trigger or control.
-- Never ship private UIKit inspection hooks. Reference probes belong under `tool/`.
+- Reference probes belong under `tool/`.
 - Do not infer exact native algorithms from screenshots or constructor arguments.
   Record direct measurements separately from fitted renderer behavior.
 

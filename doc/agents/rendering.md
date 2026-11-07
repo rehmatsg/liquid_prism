@@ -25,10 +25,15 @@ The housing lens captures backdrop/bar before icons and labels. Its broad sampli
 warp minifies the underlay. The glyph pass instead refracts transparent, tinted
 foreground with its own SDF displacement and depth.
 
-`_RenderSelectionWindow` paints the ordinary child outside the pill path and a
-selected pass inside an `ImageFilterLayer`. Keep this layer owned by the custom
-render object. Adding an ImageFiltered widget/repaint boundary can steal the first
-paint, causing unselected content to disappear.
+`ContentLensWindow.selection` stacks two `_RenderSelectionWindow`s: the
+interactive, unselected row painted outside the pill path, and a display-only
+selected copy (selected icons, semibold labels, selected color; no hit testing,
+semantics or focus) painted inside it through an `ImageFilterLayer`. Native keeps
+the same two copies, so a tab seen through the moving pill shows its selected
+icon. Keep the base row the Stack's first child so opening the window never
+rebuilds tab state, and keep the filter layer owned by the custom render object.
+Adding an ImageFiltered widget/repaint boundary can steal the first paint,
+causing content to disappear.
 
 The transparent source rect establishes full input bounds. Intersecting those
 bounds with the pill path determines the actual filter crop. Correct shader origin
@@ -44,9 +49,37 @@ origin Impeller chooses. Under an ancestor matrix filter it can only warn (debug
 builds, `transformedAfterRaster`). Consumer guidance is in
 [rendering](../rendering.md#ancestor-transforms).
 
-Custom tab icons cannot currently include their own repaint boundaries because
-this window paints their subtree twice. Preserve state identity during style or
-selection changes. Test first render, movement and resize, not only a settled pill.
+Custom tab icons should still avoid their own repaint boundaries: the refracted
+selected copy has not been verified with them on a GPU. Preserve the base row's
+state identity during style or selection changes. Test first render, movement and
+resize, not only a settled pill.
+
+## Face block and frost passes
+
+`u_face` closes the scalar packet (floats 338–341, `glassUniformCount` 342):
+x is the white face fill alpha of light regular glass (it follows the tint
+amount; the shader ignores it for clear and dark), y the inner ring shadow's
+opacity (`NativeGlassShadow.ringOpacity` × shadow strength, zero for custom
+optics and lenses), z and w reserved zeros. The batch shader carries it as
+each lens's seventeenth vec4 (`batchLensStride` 68 floats), so a batch holds
+at most `batchMaxLenses` 15 lenses in its 256 vec4. `test/glass_tint_test.dart`
+parses both shaders against these constants.
+
+The ring is evaluated in `ringShadow()` under the key/fill highlight; the
+canvas stroke it replaces is gone. Its band mask (`facing`, `gain`) is a fit
+documented in [native shadows](../native_shadows.md#the-rim-over-white-on-ios-272).
+
+A surface's frost is a list of `FrostPass`es (`lib/src/recipe.dart`), resolved
+from the tint amount for the material's own frost and plain otherwise. Each
+pass is a `BackdropFilterLayer` under the `_FrostLayer` (blur, faded by a
+colour-matrix alpha, composited with the pass's blend mode). An unshared
+surface's passes share the layer's own `BackdropKey`, so the backdrop is
+captured once and each pass blurs the same pixels; hoisted members' passes use
+`frostKey`. Each pass gets a distinct sigma offset (1e-4) so Impeller never
+treats two as equal filters on one key. `style.frost` handed to the optical
+pass is `FrostPass.effectiveSigma`: zero while sharp detail shows through. A
+batch composes one plain frost, so only members whose frost is a single
+covering pass batch (the default tint and above); the rest share captures.
 
 ## Shared captures
 
@@ -80,9 +113,15 @@ requires no intermediate layer at all.
 
 ## Edge effects in a group
 
+Edge effects are no longer hoisted: `prepare()` leaves `hoistEdges` empty, so
+each effect paints its own passes and the group's glass, painted after it,
+captures and refracts the blurred content, as SwiftUI does. The hoisting
+machinery below is unused and kept only until it is removed; the description
+records how it worked.
+
 `_RenderEdgeBlur` (edge_blur.dart, a part of glass.dart) registers in
-`_GlassGroupData.edges`. `prepare()` puts active, non-isolated, hoistable
-effects in `hoistEdges` and turns batching off. The hoist host is whichever
+`_GlassGroupData.edges`. `prepare()` put active, non-isolated, hoistable
+effects in `hoistEdges` and turned batching off. The hoist host is whichever
 reaches the scene first: a shared member's `_GlassShadowLayer` or an effect's
 `_EdgeHoistLayer`, which sits between the effect's content layer and its strip
 clips so the hoisted shadows are not clipped to the strips. `_hoist` paints
@@ -142,27 +181,42 @@ also scales the new fringe in backdrop and foreground; 0 disables all three.
 The existing 1.5-point glint (blue reaching .3 deeper) and .16 strength still
 scale with lens height over 70; this is a fitted treatment, not a native operator.
 
-The scalar packet remains 338 floats. Reserved `u_derived[1].w` (float 329)
+The scalar packet was 338 floats when this was added (342 since the face block
+below). Reserved `u_derived[1].w` (float 329)
 now carries effective red–blue split in device pixels: style split × lift ×
 presence × DPR, before the existing sampling transform. Reserved `u_shapeD.z`
 (float 60) carries band depth in local points. The contour generator still writes
 zero there; packet assembly replaces it only for lens kind 3. Non-lens recipes
 write both slots as zero; batching accepts only kind 1 and keeps its constant
 `u_shapeD` zero. The smooth-contour bypass and flat-center exit include the band.
+Reserved `u_shapeD.w` (float 61) carries the lifted lens's underlay
+displacement in points, limited like the rim to 0.55 of the lens's thinner side;
+it is separate from the rim refraction in `u_derived[0].y`, as native gives the
+underlay and the lens's glassBackground rim separate passes. Zero skips the
+36-point field.
 
-`chromatic_fringe.glsl` shares the fitted falloff and direction `-(n.y,n.x)`
-across both passes. Only inside the lens and band, red reads `p-s`, green `p`,
+`chromatic_fringe.glsl` shares the direction `-(n.y,n.x)` across both passes.
+In the backdrop, only inside the lens and band, red reads `p-s`, green `p`,
 blue `p+s`, with `s = .5 * w * split * direction` transformed into the backdrop
 raster basis. The existing generic dispersion path remains outside the band.
-See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe).
+The glyph pass has its own measured fit (`glyphFringeWeight`): channels shift
+`.77 × split × size × w`, half blended with the unshifted glyph, flat to
+`1.15 band` then e-folding every `.44 band`, with `size` the pill height over
+73.6. See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe)
+and [glyph fringe](../native_controls_spec.md#glyph-fringe).
 
-The foreground packet grows from 288 to 290 floats: after the contour,
+The foreground packet grows from 288 to 291 floats: after the contour,
 `u_effect` is now vec4 at floats 286–289: displacement/depth in scaled points,
 effective split in raster pixels (split × clamped lift × flex scale × composited
 DPR), and band in scaled points. Out-of-bounds reads remain transparent. R/G/B
 come from the corresponding shifted premultiplied samples; output alpha is their
 maximum, bounding every channel even at antialiased glyph edges. Zero displacement
 can still fringe; `refractContent: false` disables both foreground effects.
+Float 290, `u_tone`, is the grey level of the bar under the foreground (1 in
+light appearance, 0 in dark): a channel whose shifted sample misses the glyph
+takes it for the coverage it lacks, as native disperses glyphs already over the
+bar. Without it, those pixels paint the remaining channels at full alpha, which
+reads as black smears on light bars.
 
 The touch glow is painted between the housing and the lens and must be
 clipped to the housing as drawn, including its flex expansion. Clipped to the
@@ -172,7 +226,9 @@ second rim.
 ## Shared lens and shadows
 
 `ControlLens` owns clear optics and underlay minification; controls supply their
-bounds and lift. `GlassLensStyle` merges shared defaults and local overrides.
+bounds and lift. It resolves each role's captured rim and the separate underlay
+amount (9 points over 36 for every minifying lens, scaled by lift). The shader
+reads that field at the refracted sample's depth, as native composes the two. `GlassLensStyle` merges shared defaults and local overrides.
 Explicit optics replace the recipe; explicit blur wins over their frost.
 
 Paint lens shadows externally, after capture, with an outside-contour clip. If

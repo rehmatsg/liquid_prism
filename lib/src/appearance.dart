@@ -80,12 +80,16 @@ class GlassLensStyle {
 
   /// Width of the refracting rim band, in points for a 37.2-point-tall lens
   /// (the held small-control height); it scales with the actual lens height.
-  /// The slider defaults to its measured 6.66; other lenses keep their fitted
-  /// default. Ignored when [optics] is supplied.
+  /// Defaults to each lens's native rim width at the lens height it was
+  /// measured at: slider 6.66, switch 6.9, segmented selection 7.04, tab pill
+  /// 7. Ignored when [optics] is supplied.
   final double? rimWidth;
 
   /// Rim displacement of the fully lifted lens, in points for a 37.2-point-tall
-  /// lens, scaled like [rimWidth]. The slider defaults to its measured 11.1.
+  /// lens, scaled like [rimWidth]. Defaults to each lens's native amount:
+  /// slider 11.1, switch 11.5, segmented selection 8.8, tab pill 10.5. The
+  /// broad underlay minification of switch, segment and tab lenses is a
+  /// separate field and does not follow it.
   final double? rimRefraction;
 
   /// Strength of the rim key/fill highlights and side shading at full lift.
@@ -96,10 +100,14 @@ class GlassLensStyle {
   /// Defaults to 3.5 for segmented selections and tab pills, 0 for switch
   /// thumbs and slider knobs. Zero disables this fringe independently of
   /// generic [optics] dispersion. The tab bar's rimRefraction scales it too.
+  /// Labels and icons refracted under the rim fringe from the same value,
+  /// scaled with the pill's height (73.6-point reference).
   final double? chromaticAberration;
 
-  /// Depth of the chromatic rim band in points; defaults to 4.8.
-  /// Zero disables the fringe. Independent of [rimWidth] and [optics].
+  /// Depth of the chromatic rim band in points; defaults to 4.8. Labels and
+  /// icons fringe fully to 1.15 times this depth, then fade (also scaled with
+  /// the pill's height). Zero disables the fringe. Independent of [rimWidth]
+  /// and [optics].
   final double? chromaticBand;
 
   /// Black point of the lens face, 0–1: the face shows `b + (1 - b) * color`,

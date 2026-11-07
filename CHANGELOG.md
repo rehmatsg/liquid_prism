@@ -2,6 +2,117 @@
 
 ## Unreleased
 
+- The iOS plugin reports the device's Liquid Glass setting (iOS 27's
+  Settings > Appearance > Liquid Glass slider, UIKit's glass tint amount) as
+  `LiquidPrismSystemChrome.deviceGlassTintAmount`, and Reduce Transparency as
+  `LiquidPrismSystemChrome.reduceTransparency`, updating when either changes.
+  The tint amount uses private UIKit API looked up at runtime under names
+  assembled from fragments; it is null where iOS has no such setting, so
+  earlier versions are unaffected. Reduce Transparency is public on every
+  version.
+
+- Regular and clear glass follow the device's Liquid Glass setting, live:
+  below iOS's default the frost becomes the native blur fill (the blurred
+  backdrop over the sharp one with normal and lighten blends at the measured
+  opacities) and the white face fill thins, so glass shows more of the
+  backdrop; above it the face whitens and clear glass frosts. At the default
+  glass looks as before. `LiquidPrismThemeData.glassTint` fixes the amount;
+  an explicit `blur` or `optics` keeps a plain frost. Reduce Transparency is
+  not applied to glass yet: no capture shows what it changes.
+
+- Regular glass rims read on white as native ones do: a full-white band
+  inside the dark line at the top and bottom. Regular glass now draws the
+  vertical key/fill highlight with the matrix iOS 27.2 uses for it, instead of
+  a diagonal top-left lobe, and the inner ring shadow is drawn in the optical
+  pass under that highlight. Clear glass's dark line is lighter, matching the
+  measured −0.3 bias.
+
+- Light regular glass keeps its face off-white, as native does: iOS caps the
+  face's brightness (luma 0.94 in SDR), which this package now applies. Over
+  a light backdrop the face was near pure white, which hid the rim's white
+  band.
+
+- `LiquidPrismThemeData.refraction` sets the rim refraction of every glass
+  surface that uses its material's optics, as `blur` sets their frost, keeping
+  the rest of each recipe. The showcase's Studio gains a Whole app switch that
+  applies its Frost and Refraction to every screen.
+
+- On iOS, a scaffold `bottomBar` without a tab bar sits on the tab bar's line,
+  21 points above the screen's edge, inside the home indicator's inset as
+  native bottom glass does (a bottom search field rests 28 points up), instead
+  of above the 34-point inset. Above a tab bar or the keyboard it is unchanged.
+
+- In the iPhone Duo rail layout the scaffold's top bar row is 48 points, the
+  height of the rail's circles, so top bar controls and titles sit on native's
+  line (a SwiftUI text button there is 48.3 points from the 24-point margin).
+
+- `LiquidPrismButton`'s standard and menu text buttons default to 14 points of
+  vertical padding instead of 15, so a 17-point label is 48 points tall, the
+  height of a SwiftUI bar text button (Invite measured 48.3 on iPhone Duo) and
+  of the package's icon buttons. Pass `padding` to keep the old size.
+
+- `LiquidPrismTitle` puts a navigation title in a glass capsule, with an
+  optional `leading` inside it (a small avatar) and an optional `avatar`
+  above it that the capsule tucks under, as SwiftUI chat screens do;
+  `onPressed` makes it a button. The scaffold grows its bar to fit while the
+  leading control and actions keep their row. Geometry is configurable with
+  `GlassTitleStyle`, locally or in `GlassNavigationBarStyle.titleCapsule`.
+- On iPhone Duo, a `trailing` widget such as a glass text button ends at the
+  content's edge beside the rail, as measured, instead of 16 points in.
+
+- On iPhone Duo, `LiquidPrismScaffold` moves `leading` (the back button)
+  into the vertical rail with the actions: at the top of the column, under
+  the status bar, the actions 12 points below it, as native apps do. It no
+  longer keeps a top bar row to itself there. With horizontal bars nothing
+  changes.
+
+- In dark appearance the held tab pill's selected copy keeps the lighter
+  resting tint (native measured 48, 192, 248 for system blue) instead of the
+  plain accent, and the glyph fringe fills missed channels with the dark
+  housing's grey rather than black, so icons no longer turn dark blue with
+  navy fringes.
+
+- Icons and labels under the held tab pill's rim bend like native: the
+  lens's −17.5 content-wrapper displacement now runs before the −14
+  ContentLensing pass over the same 11.2-point field, so glyphs near the rim
+  stretch smoothly into it instead of folding back as mirrored copies.
+
+- Glass inside a `LiquidPrismGroup` or `LiquidPrismScaffold` now sits on top of
+  scroll edge effects and edge blurs, refracting the blurred, faded content as
+  SwiftUI glass does. The effects are no longer cut out of the glass, which
+  had made it read more see-through over blurred content; each effect takes its
+  own two backdrop captures again.
+
+- The held tab pill magnifies its selected icons and labels 1.16× about each
+  item, native's held selected item source transform, scaled with the lift.
+
+- The held tab pill tints its selected icons and labels with the plain accent,
+  as native does (system blue 0, 136, 255), instead of the darker resting
+  selection color; the color follows the lift.
+
+- Icons and labels under the held tab pill's rim fringe like native: red and
+  blue sit about 2.7 points apart (they were under 0.9) in amber and azure
+  bands, and the fringe reaches about 14 points in, where it stopped at 4.8.
+  The fringe scales with the pill's height, so the segmented selection's
+  labels fringe at about 0.6 of the tab's. Where a shifted channel misses the
+  glyph it now shows the bar's tone instead of painting the other channels
+  near black.
+
+- Lifted switch, segmented and tab lenses bend the backdrop at their rim as
+  strongly as native: each takes its own native rim refraction (switch 11.5
+  over 6.9 points, segmented 8.8 over 7.04, tab pill 10.5 over 7, like the
+  slider's 11.1 over 6.66), where they reused the underlay's 9-point
+  displacement over a fitted 12-point band. The broad underlay minification
+  is now a separate shader input, at native strength (9 points for every
+  minifying lens, where small lenses used less), and is read after the rim
+  refracts, so it no longer cancels the rim's bend at the edge. A custom
+  `rimRefraction` no longer changes it; explicit `optics` still drive both.
+
+- Tabs seen through the held or moving tab pill now show their selected icon
+  and semibold label, as native does, instead of their unselected icon
+  recolored. Outside the pill every tab, including the committed one, shows its
+  unselected state until release.
+
 ## 0.5.4
 
 - Cheaper optical glass shader: a moment-matched footprint pair replaces most

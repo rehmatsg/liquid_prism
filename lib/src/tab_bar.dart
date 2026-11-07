@@ -38,9 +38,14 @@ final class LiquidPrismTab {
   /// Accessible name, including when visual labels are hidden.
   final String label;
 
-  /// Any Flutter widget: Icon, Image, SVG or a custom painter. Icons must not
-  /// contain repaint boundaries: the selection window paints them twice.
+  /// Any Flutter widget: Icon, Image, SVG or a custom painter. While the pill
+  /// is held or moving, the bar also builds a display-only copy of every tab
+  /// in its selected state for the inside of the pill, so a stateful icon can
+  /// briefly have two live instances.
   final Widget icon;
+
+  /// Shown for the selected tab, and for any tab seen through the moving
+  /// pill, as native does. Defaults to [icon].
   final Widget? selectedIcon;
   final GlassBadge? badge;
 }
@@ -740,29 +745,65 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ],
           ),
         );
+        // Display-only selected copy of every tab, seen through the pill.
+        // Held in light appearance native tints it with the plain accent
+        // (0, 136, 255 for system blue), not the darker resting calibration,
+        // so the colour follows the lift. In dark it stays at the lighter
+        // resting calibration (measured 48, 192, 248 held). Built per frame
+        // only while the window is open.
+        final heldAccent = colors.brightness == Brightness.dark
+            ? selectedAccent
+            : accent;
+        Widget selectedContent(double lift) => Flex(
+          direction: vertical ? Axis.vertical : Axis.horizontal,
+          children: [
+            for (var index = 0; index < widget.tabs.length; index++)
+              Expanded(
+                child: _tab(
+                  index,
+                  height,
+                  iconSize,
+                  textStyle,
+                  labels,
+                  colors,
+                  Color.lerp(selectedAccent, heldAccent, lift)!,
+                  style,
+                  window: true,
+                  vertical: vertical,
+                  selectedCopy: true,
+                  magnify: 1 + (NativeMotion.heldSelectedScale - 1) * lift,
+                ),
+              ),
+          ],
+        );
+        // Badges lay out against the base row, which turns unselected while
+        // the window is open.
         final badges = widget.tabs.any((tab) => tab.badge != null)
             ? ExcludeSemantics(
                 child: IgnorePointer(
-                  child: Flex(
-                    direction: vertical ? Axis.vertical : Axis.horizontal,
-                    children: [
-                      for (var index = 0; index < widget.tabs.length; index++)
-                        Expanded(
-                          child: _tab(
-                            index,
-                            height,
-                            iconSize,
-                            textStyle,
-                            labels,
-                            colors,
-                            selectedAccent,
-                            style,
-                            window: false,
-                            vertical: vertical,
-                            badgeLayer: true,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _window,
+                    builder: (context, window, _) => Flex(
+                      direction: vertical ? Axis.vertical : Axis.horizontal,
+                      children: [
+                        for (var index = 0; index < widget.tabs.length; index++)
+                          Expanded(
+                            child: _tab(
+                              index,
+                              height,
+                              iconSize,
+                              textStyle,
+                              labels,
+                              colors,
+                              selectedAccent,
+                              style,
+                              window: window,
+                              vertical: vertical,
+                              badgeLayer: true,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               )
@@ -934,12 +975,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                         key: const ValueKey('tab-foreground'),
                         child: Padding(
                           padding: padding,
-                          child: ContentLensWindow(
+                          child: ContentLensWindow.selection(
                             scale: barScale,
                             // The housing scales about the bar's centre.
                             origin: centre - padding.topLeft,
                             path: window,
-                            color: selectedAccent,
+                            selected: window == null
+                                ? null
+                                : selectedContent(lift),
                             lens: foregroundPill,
                             lift: lift,
                             shape: selectionShape,
@@ -947,6 +990,9 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 ? 0
                                 : style.contentRefraction ?? 14,
                             depth: style.contentDepth ?? 11.2,
+                            // The lens's content wrapper, a second native
+                            // pass over the same depth.
+                            wrapper: style.refractContent == false ? 0 : 17.5,
                             chromaticAberration: style.refractContent == false
                                 ? 0
                                 : (lensStyle.chromaticAberration ?? 3.5) *
@@ -1009,17 +1055,21 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     required bool window,
     required bool vertical,
     bool badgeLayer = false,
+    bool selectedCopy = false,
+    double magnify = 1,
   }) {
-    final selected = widget.selectedIndex == index;
+    final committed = widget.selectedIndex == index;
+    // Native keeps an unselected and a selected copy of the foreground. While
+    // the selection window is open this row is the unselected copy, including
+    // the committed tab, and [selectedCopy] builds the one seen through the
+    // pill, so the selected icon, weight and colour travel with the lens.
+    final selected = selectedCopy || (committed && !window);
     final enabled = widget.onSelected != null;
     final tab = widget.tabs[index];
     final icon = selected ? tab.selectedIcon ?? tab.icon : tab.icon;
-    // While the selection window is active the base row is uniformly
-    // unselected; the window repaints whatever lies under the pill in the
-    // selected colour, so the colour travels with the lens.
     final color = !enabled
         ? colors.disabledLabel
-        : selected && !window
+        : selected
         ? selectedAccent
         : style.unselectedColor ?? colors.label;
     // Badges paint in their own layer over the foreground (see
@@ -1077,17 +1127,23 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         ],
       ],
     );
-    if (badgeLayer) {
+    if (badgeLayer || selectedCopy) {
       return SizedBox(
         width: vertical ? height : null,
         height: vertical ? null : height,
-        child: Center(child: content),
+        // The held selected copy is magnified about each item's centre,
+        // beneath the content lens filter.
+        child: Center(
+          child: magnify == 1
+              ? content
+              : Transform.scale(scale: magnify, child: content),
+        ),
       );
     }
     return Semantics(
       container: true,
       button: true,
-      selected: selected,
+      selected: committed,
       enabled: enabled,
       label: tab.label,
       value: tab.badge?.semanticLabel,
@@ -1147,9 +1203,10 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 }
 
 /// The lifted lens: a thin refracting rim, no frost and no face grading, in
-/// the proportions of the native 110 x 70 pt lens (edge from -14, displacement
-/// 9 on the backdrop) rather than the package's default clear optics whose
-/// wide band would mirror the icons inside a lens this small.
+/// the proportions of the native 110 x 70 pt lens (glassBackground rim 10.5
+/// over 7, a separate underlay displacement 9 over 36) rather than the
+/// package's default clear optics whose wide band would mirror the icons
+/// inside a lens this small.
 
 class _LensHalo extends CustomPainter {
   const _LensHalo(

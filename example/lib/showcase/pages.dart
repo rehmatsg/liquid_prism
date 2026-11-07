@@ -290,7 +290,9 @@ class StudioPage extends StatelessWidget {
         ),
         InsetSection(
           header: 'Optics',
-          footer: 'Frost and refraction apply to the canvas above.',
+          footer:
+              'Frost and refraction apply to the canvas above, and to every '
+              'glass surface when Whole app is on.',
           children: [
             SliderRow(
               title: 'Frost',
@@ -307,6 +309,43 @@ class StudioPage extends StatelessWidget {
               max: 64,
               display: '${model.refraction.round()}',
               onChanged: (v) => model.change(() => model.refraction = v),
+            ),
+            // The device's own Liquid Glass setting, as the package reads it.
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                LiquidPrismSystemChrome.deviceGlassTintAmount,
+                LiquidPrismSystemChrome.reduceTransparency,
+              ]),
+              builder: (context, _) {
+                final tint =
+                    LiquidPrismSystemChrome.deviceGlassTintAmount.value;
+                final reduced =
+                    LiquidPrismSystemChrome.reduceTransparency.value;
+                return ListRow(
+                  key: const ValueKey('device-glass'),
+                  title: 'Device glass',
+                  subtitle: reduced
+                      ? 'Reduce Transparency on'
+                      : 'Settings › Appearance › Liquid Glass',
+                  icon: CupertinoIcons.device_phone_portrait,
+                  iconColor: colors.indigo,
+                  trailing: Text(
+                    // Short, so the row fits narrow screens at large text.
+                    tint == null ? '—' : tint.toStringAsFixed(2),
+                    style: TextStyle(color: colors.secondaryLabel),
+                  ),
+                );
+              },
+            ),
+            ListRow(
+              title: 'Whole app',
+              icon: CupertinoIcons.square_stack_3d_up,
+              iconColor: colors.teal,
+              trailing: LiquidPrismSwitch(
+                label: 'Whole app',
+                value: model.globalOptics,
+                onChanged: (v) => model.change(() => model.globalOptics = v),
+              ),
             ),
           ],
         ),

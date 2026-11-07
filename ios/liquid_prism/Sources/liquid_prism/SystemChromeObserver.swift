@@ -39,6 +39,11 @@ public struct SystemChrome: Equatable, Sendable {
   public var occlusions: [Region]
   /// Regions content should divide around, such as the fold.
   public var divisions: [Region]
+  /// The device's Liquid Glass setting (UIKit's glass tint amount), or nil
+  /// where the system has none. Read on every iOS version that has it.
+  public var glassTintAmount: Double? = DeviceGlass.tintAmount
+  /// Accessibility's Reduce Transparency, public on every iOS version.
+  public var reduceTransparency: Bool = UIAccessibility.isReduceTransparencyEnabled
 
   public static let unsupported = SystemChrome(
     supported: false, verticalBarEdge: nil, occlusions: [], divisions: [])
@@ -121,6 +126,8 @@ public struct SystemChrome: Equatable, Sendable {
       "verticalSizeClass": Self.name(verticalSizeClass),
       "occlusions": occlusions.map(encode),
       "divisions": divisions.map(encode),
+      "glassTintAmount": glassTintAmount.map { $0 as Any } ?? NSNull(),
+      "reduceTransparency": reduceTransparency,
     ]
   }
 }
@@ -136,8 +143,29 @@ public final class SystemChromeObserver {
   public private(set) var current: SystemChrome?
   private weak var view: UIView?
   private var sentinel: SentinelView?
+  private var glassObservers: [NSObjectProtocol] = []
 
-  public init() {}
+  public init() {
+    // The Liquid Glass and Reduce Transparency settings change without any
+    // layout or trait change.
+    // Returning from Settings re-reads them too.
+    let names = [
+      DeviceGlass.didChange,
+      UIAccessibility.reduceTransparencyStatusDidChangeNotification,
+      UIApplication.didBecomeActiveNotification,
+    ]
+    for name in names.compactMap({ $0 }) {
+      glassObservers.append(
+        NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) {
+          [weak self] _ in
+          Task { @MainActor in self?.refresh() }
+        })
+    }
+  }
+
+  deinit {
+    for observer in glassObservers { NotificationCenter.default.removeObserver(observer) }
+  }
 
   public func attach(to view: UIView) {
     if self.view === view {

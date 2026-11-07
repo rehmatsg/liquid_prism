@@ -3,9 +3,9 @@
 #import <objc/runtime.h>
 #import <math.h>
 // Research only: records every layer's filters (all input keys, found from the
-// class properties and the keyed archive) 1.0 s after each touch begins, then
-// writes a marker so the runner can screenshot the held state.
-static NSString *Run; static int TouchCount;
+// class properties and the keyed archive) DumpDelay (default 1.0 s) after each
+// touch begins, then writes a marker so the runner can screenshot the held state.
+static NSString *Run; static int TouchCount; static double DumpDelay=1.0;
 static id Safe(id o, NSString *k){ @try { return [o valueForKey:k]; } @catch(NSException *e){ return nil; } }
 static id Enc(id o){
  if(!o) return [NSNull null];
@@ -60,10 +60,11 @@ void DumpFilters(NSString *name){
  [self prism_dispersion_sendEvent:e];
  for(UITouch *t in e.allTouches) if(t.phase==UITouchPhaseBegan){
   int n=++TouchCount;
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(1.0*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ DumpFilters([NSString stringWithFormat:@"touch%d",n]); });
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(DumpDelay*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ DumpFilters([NSString stringWithFormat:@"touch%d",n]); });
  }
 }
 @end
+void SetDispersionDumpDelay(double seconds){ if(seconds>0) DumpDelay=seconds; }
 void StartDispersionCapture(NSString *run){
  Run=run; TouchCount=0;
  static dispatch_once_t once; dispatch_once(&once, ^{ method_exchangeImplementations(class_getInstanceMethod(UIWindow.class,@selector(sendEvent:)), class_getInstanceMethod(UIWindow.class,@selector(prism_dispersion_sendEvent:))); });

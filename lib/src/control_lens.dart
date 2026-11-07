@@ -54,17 +54,25 @@ class ControlLens extends StatelessWidget {
         // The accepted tab lens is the 70-point reference. Scale the optics
         // and shadow with the actual lens rather than reusing fixed kernels.
         final scale = constraints.maxHeight / 70;
-        // Rim inputs are expressed for the 37.2-point held small lens.
+        // Custom rim inputs are expressed for the 37.2-point held small lens.
         final small = constraints.maxHeight / 37.2;
-        // The slider's held glassBackground: inner refraction height 6.66 and
-        // amount 11.1, face black .1 (doc/native_controls_spec.json). Other
-        // lenses keep their accepted, fitted rim until measured separately.
+        // Each lens's held glassBackground inner refraction, scaled from the
+        // lens height it was captured at (doc/native_controls_spec.json and
+        // doc/native_tab_bar_spec.md).
+        final captured = _nativeRim(role);
+        final native = constraints.maxHeight / captured.height;
         final rimWidth = appearance.rimWidth == null
-            ? (slider ? 6.66 * small : 12 * scale)
+            ? captured.width * native
             : appearance.rimWidth! * small;
         final rimRefraction = appearance.rimRefraction == null
-            ? (slider ? 11.1 * small : 9 * scale)
+            ? captured.amount * native
             : appearance.rimRefraction! * small;
+        // The broad underlay field is its own native pass: displacement 9
+        // over a 36-point SDF for every minifying lens, whatever its height.
+        // Custom optics keep driving both, as before.
+        final underlay = minify
+            ? (appearance.optics?.refraction ?? 9 * progress)
+            : 0.0;
         final light = appearance.rimLight ?? (slider ? _sliderRimLight : .6);
         final faceBlack = appearance.faceBlack ?? (slider ? .1 : 0.0);
         final fill = ColoredBox(
@@ -103,6 +111,7 @@ class ControlLens extends StatelessWidget {
                 progress *
                 (role == GlassRole.tabLens ? rim : 1),
             chromaticBand: appearance.chromaticBand ?? 4.8,
+            underlay: underlay,
             shape: contour,
             blur: appearance.blur ?? appearance.optics?.frost ?? 0,
             optics:
@@ -130,6 +139,19 @@ class ControlLens extends StatelessWidget {
     );
   }
 }
+
+/// Rim refraction of each held lens: amount and width in points at the native
+/// lens height they were read at. The tab, slider and switch use their
+/// captured glassBackground inner refraction. The segment's measured
+/// displacement instead fits its ContentLensing inputs, 8.8 over 7.04, not its
+/// glassBackground 6.6 over 4.4. Other lifted roles use the switch's values.
+({double amount, double width, double height}) _nativeRim(GlassRole role) =>
+    switch (role) {
+      GlassRole.tabLens => (amount: 10.5, width: 7, height: 70),
+      GlassRole.segmentLens => (amount: 8.8, width: 7.04, height: 44),
+      GlassRole.sliderLens => (amount: 11.1, width: 6.66, height: 37.2),
+      _ => (amount: 11.5, width: 6.9, height: 115 / 3),
+    };
 
 /// Fitted key/fill strength of the held slider rim; see doc/motion_and_lenses.md.
 const _sliderRimLight = 1.0;

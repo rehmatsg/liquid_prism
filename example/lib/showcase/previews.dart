@@ -6,6 +6,7 @@ import 'widgets.dart';
 import 'package_features_demo.dart';
 import 'search_page.dart';
 import 'sliver_bar_page.dart';
+import 'conversation_page.dart';
 import 'header_page.dart';
 import 'scaffold_lab_page.dart';
 
@@ -606,6 +607,12 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                       'Header Page',
                       'A header that scrolls away and a bottom bar',
                       const HeaderPage(),
+                    ),
+                    (
+                      'open-conversation',
+                      'Conversation',
+                      'A glass title with an avatar, and a text button',
+                      const ConversationPage(),
                     ),
                     (
                       'open-sliver-bar',

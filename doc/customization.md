@@ -19,6 +19,22 @@ LiquidPrism(
 spring touch feedback to a surface, without inventing an action. Use
 `LiquidPrismButton` for touch, keyboard, and accessibility activation.
 
+App-wide, `LiquidPrismThemeData(blur: 6, refraction: 30)` sets the frost and
+the rim refraction of every surface that uses its material's optics, one field
+each, keeping the rest of each native recipe. A surface's own `optics` or
+`blur`, and the held lenses of switches, sliders, segments and tabs, keep
+theirs.
+
+Regular and clear glass follow iOS 27's Liquid Glass setting (Settings >
+Appearance > Liquid Glass) by default: lower settings show more of the
+backdrop, higher ones frost and whiten the glass, and glass updates as soon as
+the setting changes. `LiquidPrismThemeData(glassTint: .5)` fixes the amount
+(0–1) for an app or subtree; null follows the device, then iOS's default 0.5,
+where the materials look as they always have. It changes the material's own
+frost and white face fill only: an explicit `blur` or `optics` keeps a plain
+frost, and held control lenses keep their optics. Other platforms and earlier
+iOS versions report no setting, so glass renders at 0.5.
+
 Shapes: `GlassShape.capsule`, `GlassShape.circle`,
 `GlassShape.rect(cornerRadius: ...)` for continuous corners, and
 `GlassShape.roundedRect(cornerRadius: ...)` for circular corners. A circle is
@@ -27,7 +43,8 @@ inscribed in the available rectangle without changing layout dimensions.
 ## Defaults and precedence
 
 `LiquidPrismThemeData` accepts `brightness`, `glass`, `tint`, `foregroundColor`,
-`optics`, `blur`, `shape`, `motion`, and component styles: `button`, `switchStyle`,
+`optics`, `blur`, `refraction`, `glassTint`, `shape`, `motion`, and component
+styles: `button`, `switchStyle`,
 `slider`, `segmentedControl`, `tabBar`, `toolbar`, `search`, shared `lens` and
 `controlMotion`.
 
@@ -176,8 +193,9 @@ LiquidPrismTheme(
 ```
 
 Custom icons are ordinary widgets, including images and SVG widgets supplied by
-your app. `selectedIcon` is optional. Unchanged icon state is retained during tab,
-style, and appearance updates.
+your app. `selectedIcon` is optional; it is also shown for any tab seen through
+the moving pill. Unchanged icon state is retained during tab, style, and
+appearance updates.
 
 RTL reverses visual positions. Arrow keys move focus and selection; Space/Enter
 activates the focused tab. Hidden visual labels remain available to accessibility.
@@ -224,10 +242,14 @@ housing scale was incorrect. Travel uses a 400 ms response and 0.85 damping rati
 animation calls; the exact behavior-to-property mapping remains unresolved.
 
 Tracking, deformation, housing spring timing and glow still use fitted
-approximations. The native implementation has separate medium and semibold
-foreground copies and magnifies the selected portal while held. Our selection
-window now refracts its foreground separately, while the exact native source
-weight/scale transition remains approximate. See
+approximations. Like native, the bar keeps an unselected row and a selected copy
+(selected icon, semibold label, selected color) that shows through the pill, and
+refracts only that copy. While held in light appearance that copy takes the
+plain accent, as native does (0, 136, 255 for system blue), rather than the
+darker resting calibration the committed tab uses at rest; in dark it keeps the
+lighter resting calibration (native measured 48, 192, 248). It is also
+magnified 1.16× about each item, native's held selected item source transform;
+both follow the lift. See
 [native tab bar spec](native_tab_bar_spec.md) for exact extracted values,
 fixture geometry, optical passes and remaining differences.
 
@@ -244,9 +266,10 @@ density, continuous contour and movement are accounted for independently from
 the housing's minification. Unsupported shader backends retain the crisp tint
 window fallback.
 Its rim uses the native lens highlight matrix
-without the housing's face grading. The selected tint is painted
-wherever the pill is, so it travels with the lens. Icons must not contain
-repaint boundaries because that window paints them a second time.
+without the housing's face grading. The selected copy is painted
+wherever the pill is, so the selected icon, weight and tint travel with the
+lens. Keep custom icons free of repaint boundaries; the refracted copy has not
+been verified with them.
 
 Reduce Motion removes spring travel, overshoot, lift and scale while preserving
 direct finger tracking and nonspatial feedback. There is no continuous

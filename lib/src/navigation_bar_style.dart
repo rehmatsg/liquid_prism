@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'motion.dart' show GlassSpring;
+import 'title.dart' show GlassTitleStyle;
 
 /// Navigation title typography and collapse.
 ///
@@ -24,6 +25,7 @@ class GlassNavigationBarStyle {
     @Deprecated('The swap now runs on a spring; use revealSpring.')
     this.revealCurve,
     this.revealSpring,
+    this.titleCapsule,
   }) : assert(gutter == null || gutter >= 0),
        assert(controlGap == null || controlGap >= 0),
        assert(revealExtent == null || revealExtent >= 0);
@@ -49,6 +51,10 @@ class GlassNavigationBarStyle {
   /// and back out. Defaults to [titleSpring].
   final GlassSpring? revealSpring;
 
+  /// Geometry and glass of `LiquidPrismTitle` capsules in these bars; a
+  /// title's own style wins per field.
+  final GlassTitleStyle? titleCapsule;
+
   /// Fitted to the measured rise: settles in about half a second with a
   /// little bounce.
   static const titleSpring = GlassSpring(
@@ -72,6 +78,7 @@ class GlassNavigationBarStyle {
     double? revealExtent,
     Curve? revealCurve,
     GlassSpring? revealSpring,
+    GlassTitleStyle? titleCapsule,
   }) => GlassNavigationBarStyle(
     titleStyle: titleStyle ?? this.titleStyle,
     largeTitleStyle: largeTitleStyle ?? this.largeTitleStyle,
@@ -83,6 +90,7 @@ class GlassNavigationBarStyle {
     // ignore: deprecated_member_use_from_same_package
     revealCurve: revealCurve ?? this.revealCurve,
     revealSpring: revealSpring ?? this.revealSpring,
+    titleCapsule: titleCapsule ?? this.titleCapsule,
   );
 
   GlassNavigationBarStyle merge(GlassNavigationBarStyle? other) => other == null
@@ -103,6 +111,8 @@ class GlassNavigationBarStyle {
           // ignore: deprecated_member_use_from_same_package
           revealCurve: other.revealCurve ?? revealCurve,
           revealSpring: other.revealSpring ?? revealSpring,
+          titleCapsule:
+              titleCapsule?.merge(other.titleCapsule) ?? other.titleCapsule,
         );
 }
 

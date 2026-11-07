@@ -76,6 +76,32 @@ vec4 shape(vec2 p) {
     }
     return vec4(d,n,len);
 }
+// Abramowitz and Stegun 7.1.26, within 1.5e-7.
+float erfApprox(float x) {
+    float a = abs(x);
+    float t = 1./(1.+0.3275911*a);
+    float y = 1.-((((1.061405429*t-1.453152027)*t+1.421413741)*t
+                   -0.284496736)*t+0.254829592)*t*exp(-a*a);
+    return x < 0. ? -y : y;
+}
+// The inner ring shadow of regular glass (glassBackground's ring: a 4-point
+// stroke of the contour moved 8 points down, opacity 0.06, blur radius 5),
+// as the canvas drew it before: the stroke blurred with sigma 5 and clipped
+// to the contour. The moved contour's distance is first order in the normal,
+// exact along straight edges. iOS 27.2 keeps light glass over white at full
+// white to 2.67 points under the top and 3.3 above the bottom, then darkens
+// to the ring by 8 points, so the ring stays out of that band, which reads
+// as the bright rim inside the dark exterior line. The band mask is fitted to
+// those captures; Apple's ring operator is not recovered.
+float ringShadow(float d, vec2 normal, float depth) {
+    float x = d-8.*normal.y;
+    // Past 3 sigma of the stroke's edges the blur leaves under 0.1%.
+    if (abs(x) > 17.) return 0.;
+    float g = 0.5*(erfApprox((x+2.)*0.14142136)-erfApprox((x-2.)*0.14142136));
+    float facing = clamp((abs(normal.y)-0.5)/0.43969262,0.,1.);
+    float gain = normal.y < 0. ? 1.5 : 1.70212766;
+    return g*(1.-facing*clamp(gain*(1.-depth/8.),0.,1.));
+}
 float highlight(float direction, float depth, float width,
                 float spread, float focus, float softness, float aa) {
     float ramp = 1. - clamp(depth / width, 0., 1.);
@@ -86,7 +112,7 @@ float highlight(float direction, float depth, float width,
     float lobe = clamp((abs(direction)-spread)/(1.-spread),0.,1.) * band;
     return lobe / (1. + focus * (1.-lobe));
 }
-// Clear-glass highlight color adjustment.
+// Key/fill highlight color adjustment.
 // It transforms backdrop color under the specular mask, not white stroke RGB.
 vec3 vibrantHighlight(vec3 color, float strength) {
     // The material selects one matrix (a uniform choice); one product follows.
@@ -94,8 +120,13 @@ vec3 vibrantHighlight(vec3 color, float strength) {
     vec3 g = vec3(-0.3507,1.8199,-0.1192);
     vec3 b = vec3(-0.3509,-1.1799,2.8809);
     float bias = 0.15;
-    if (u_material.x > 2.5) {
-        // The lifted tab lens has its own, much quieter key/fill matrix.
+    if (u_material.x > 2.5 || (u_material.x > 0.5 && u_material.x < 1.5 &&
+                               u_material.y < 0.5)) {
+        // The lifted tab lens's quieter key/fill matrix. iOS 27.2 draws light
+        // regular glass's key/fill with it too (capsule, button, toolbar item,
+        // tab bar and prominent button, tool/native_dispersion_probe --scene
+        // tint); dark regular glass keeps the default matrix above until
+        // measured.
         r = vec3(1.1202,-0.1894,-0.0190);
         g = vec3(-0.0563,0.9871,-0.0191);
         b = vec3(-0.0563,-0.1893,1.1574);
@@ -105,11 +136,6 @@ vec3 vibrantHighlight(vec3 color, float strength) {
         g = vec3(-0.0142,1.2856,-0.0048);
         b = vec3(-0.0142,-0.0476,1.3285);
         bias = 0.2;
-    } else if (u_material.x > 0.5 && u_material.y < 0.5) {
-        r = vec3(1.2024,-1.0014,-0.1010);
-        g = vec3(-0.2976,0.4987,-0.1011);
-        b = vec3(-0.2977,-1.0012,1.3989);
-        bias = 0.9;
     }
     vec3 transformed = vec3(dot(color,r),dot(color,g),dot(color,b)) + bias;
     return mix(color,clamp(transformed,0.,1.),clamp(strength,0.,1.));
@@ -145,8 +171,28 @@ vec3 gradeFace(vec3 color) {
         float saturation = clear ? 1.059999942779541 :
             (dark ? 1.399999976158142 : 1.2000000476837158);
         color = (color-vec3(value))*saturation + mix(black,white,value);
-        float fill = clear || dark ? 0. : .20000000298023224;
-        color = clamp(mix(color,vec3(1.),fill),0.,1.);
+        // The white fill follows the device's Liquid Glass setting (0.2 at
+        // iOS's default); clear glass and dark appearance measure none.
+        float fill = clear || dark ? 0. : u_face.x;
+        color = mix(color,vec3(1.),fill);
+        // Light regular glass caps the face's luma at 0.94 in SDR
+        // (inputFaceColorMatrixMaxLumaSDR, every tint amount on iOS 27.2; clear
+        // glass measures 1, dark is unmeasured). Read as linear-light luma,
+        // scaled to keep hue, it leaves a light face off-white, so the rim's
+        // white band shows: over (242, 241, 246) native draws (247, 246, 252)
+        // and this gives (249, 248, 252), against (254, 254, 255) uncapped.
+        if (!clear && !dark) {
+            vec3 c = max(color,0.);
+            vec3 lin = mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),
+                           step(.04045,c));
+            float y = dot(lin,vec3(.2126,.7152,.0722));
+            if (y > .94) {
+                lin *= .94/y;
+                color = mix(lin*12.92,1.055*pow(lin,vec3(1./2.4))-.055,
+                            step(.0031308,lin));
+            }
+        }
+        color = clamp(color,0.,1.);
     }
     if (u_material.w > 0.) {
         vec4 inputColor = vec4(color,1.);
@@ -194,19 +240,23 @@ void shadeGlass() {
         offset = direction*displacement*profile;
     }
     // The lifted tab lens also displaces the underlying housing across its
-    // face. Native uses a separate 36-point SDF with displacement amount 9;
-    // the narrow rim above cannot produce this minification on its own.
-    // Sample farther out along the SDF normal, so the housing seen through
-    // the lens is smaller. The tab foreground is painted after this pass.
+    // face. Native uses a separate 36-point SDF with displacement amount 9,
+    // a pass of its own beside the lens's narrow glassBackground rim above,
+    // so its amount arrives separately (u_shapeD.w). Sample farther out along
+    // the SDF normal, so the housing seen through the lens is smaller. The tab
+    // foreground is painted after this pass. The rim refracts first: the
+    // field is read at the refracted sample's depth, which held native
+    // switch and segment lenses match within 0.05 and 0.24 points.
     vec2 underlayOffset = vec2(0.);
-    if (u_material.x > 2.5 && u_material.x < 3.5 && u_material.z < 8.5) {
-        float underlayT = clamp(1.-depth/36.,0.,1.);
+    bool underlay = u_material.x > 2.5 && u_material.x < 3.5 &&
+                    u_material.z < 8.5 && u_shapeD.w > 0.;
+    if (underlay) {
+        float underlayT = clamp(1.-(depth+length(offset))/36.,0.,1.);
         float underlayProfile = 1.-sqrt(max(1.-underlayT*underlayT,0.));
         // All selection lenses share this field. The slider (role 9) opts out:
         // its knob grows, but the track inside keeps its normal thickness.
         // Labels/icons are painted after the lens at their normal size.
-        float underlayAmount = displacement;
-        underlayOffset = normal*underlayAmount*underlayProfile;
+        underlayOffset = normal*u_shapeD.w*underlayProfile;
     }
     vec2 samplePoint = scenePoint(local+underlayOffset-offset);
     vec2 dx = vec2(1., 0.);
@@ -222,14 +272,16 @@ void shadeGlass() {
     // its grading. The derivatives above are evaluated first, and an extra AA
     // step keeps this exit clear of the coverage ramp and the band edges.
     float interiorEnd = max(1./u_derived[0].x, u_derived[3].x);
-    interiorEnd = max(interiorEnd, (u_material.x > 1.5 ? 8. : 1.) + aa);
+    interiorEnd = max(interiorEnd, (u_material.x > .5 ? 8. : 1.) + aa);
     if (u_material.x > 2.5 && u_material.x < 3.5) {
-        if (u_material.z < 8.5) interiorEnd = max(interiorEnd, 36.);
+        if (underlay) interiorEnd = max(interiorEnd, 36.);
         interiorEnd = max(interiorEnd, 16.*u_extent.y/70.);
         interiorEnd = max(interiorEnd, u_shapeD.z);
     }
     if (depth > interiorEnd + aa) {
-        vec3 face = gradePressed(gradeFace(gradeInput(readScene(scenePoint(local)))));
+        vec3 face = gradeFace(gradeInput(readScene(scenePoint(local))));
+        if (u_face.y > 0.) face *= 1.-u_face.y*ringShadow(d,normal,depth);
+        face = gradePressed(face);
         frag_color = vec4(face, 1.) * clamp(1.-u_state.z,0.,1.);
         return;
     }
@@ -241,7 +293,11 @@ void shadeGlass() {
         float facing = clamp((abs(normal.x)-0.258819)/0.741181,0.,1.);
         float side = facing/(1.+0.5*(1.-facing));
         float outerCoverage = clamp(0.5-(d-0.533333)/aa,0.,1.);
-        rimAlpha = clamp(side*u_finish.y*0.46,0.,1.)*max(outerCoverage-coverage,0.);
+        // Clear glass's line carries the measured -0.3 colour bias: iOS 27.2
+        // over white darkens its ends by 38 and 76 levels across two device
+        // pixels, as regular glass's do. The lifted lens keeps its own fit.
+        float strength = u_material.x > 2.5 ? 0.46 : 0.3;
+        rimAlpha = clamp(side*u_finish.y*strength,0.,1.)*max(outerCoverage-coverage,0.);
     }
     // Native regular glassBackground negative key/fill highlight. The effect
     // occupies the exterior 0.533333-point band; its -0.3 color bias darkens
@@ -341,12 +397,19 @@ void shadeGlass() {
         }
     }
     color = gradeFace(color);
+    // The ring sits inside glassBackground, under the key/fill layers.
+    if (u_face.y > 0.) color *= 1.-u_face.y*ringShadow(d,normal,depth);
     // Vertical key/fill lighting has a sharp rim and a softer eight-point lobe.
-    // Every lobe's band is zero past its width plus half the AA step.
-    bool clear = u_material.x > 1.5;
-    if (depth < (clear ? 8. : 1.) + aa) {
+    // Every lobe's band is zero past its width plus half the AA step. Native
+    // regular glass draws the same CASDFKeyFillHighlightEffect as clear glass
+    // (key/fill angles 0 and pi, 80-degree spreads, 8-point diffuse height).
+    // With the matrix above this lobe pair brings the iOS 27.2 prominent
+    // button's rim within three levels from 1 to 4 points deep; its first
+    // point stays dimmer than native's. Only explicit custom optics keep the
+    // diagonal light.
+    if (depth < (u_material.x > .5 ? 8. : 1.) + aa) {
         float light;
-        if (clear) {
+        if (u_material.x > .5) {
             float sharp = highlight(-normal.y,depth,1.,0.130526,0.,0.75,aa);
             float diffuse = highlight(-normal.y,depth,8.,0.593419,11.333333,1.,aa);
             light = sharp + diffuse;

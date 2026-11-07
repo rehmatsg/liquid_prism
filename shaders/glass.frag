@@ -19,7 +19,7 @@ uniform vec4 u_state;    // Press, smooth contour, absence, tab pill glint.
 uniform vec4 u_shapeA;
 uniform vec4 u_shapeB;
 uniform vec4 u_shapeC;
-uniform vec4 u_shapeD;     // cos(top arc span), cos(right arc span), chromatic band (pt), unused.
+uniform vec4 u_shapeD;     // cos(top arc span), cos(right arc span), chromatic band (pt), lens underlay (pt).
 // Superellipse arc vertices at k*pi/256, k = 0..64: top octant in xy, right in zw.
 uniform vec4 u_curve[65];
 // Uniform-only terms, computed once per surface in Dart rather than once per
@@ -28,6 +28,10 @@ uniform vec4 u_curve[65];
 // thresholds (px^2), chromatic split (px); [2] broad and rim reflection ends, rim tap
 // spacing, radius; [3] reflection end, 1/dpr, extent aspect, smooth bypass depth.
 uniform vec4 u_derived[4];
+// Face inputs: x is the white face fill alpha of light regular glass, which
+// follows the device's Liquid Glass setting; y is the inner ring shadow's
+// opacity; z and w are reserved (zero).
+uniform vec4 u_face;
 uniform sampler2D u_backdrop;
 out vec4 frag_color;
 

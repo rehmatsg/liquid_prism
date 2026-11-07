@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/foreground.dart';
 import 'package:liquid_prism/src/pressable.dart';
 import 'package:liquid_prism/src/recipe.dart';
 
@@ -330,15 +331,30 @@ void _motionTests() {
       LiquidPrismPressFeedback.scaleOf(tester.element(housing)),
       closeTo(1 + 14.1379310344828 / 274, .001),
     );
+    // Both the unselected row and the selected copy seen through the pill
+    // take the housing's flex; the copy is also magnified 1.16x as native's
+    // held selected item source is.
+    const flex = 1 + 14.1379310344828 / 274;
     for (var i = 0; i < 3; i++) {
-      final icon = find.byKey(
-        ValueKey(i == 0 ? 'selected-icon-$i' : 'icon-$i'),
-      );
-      for (final foreground in [icon, find.text(_names[i])]) {
+      for (final (foreground, scale) in [
+        (find.byKey(ValueKey('icon-$i')), flex),
+        (find.byKey(ValueKey('selected-icon-$i')), flex * 1.16),
+        (
+          find.descendant(of: _tab(_names[i]), matching: find.text(_names[i])),
+          flex,
+        ),
+        (
+          find.descendant(
+            of: find.byType(ExcludeSemantics),
+            matching: find.text(_names[i]),
+          ),
+          flex * 1.16,
+        ),
+      ]) {
         final box = tester.renderObject<RenderBox>(foreground);
         expect(
           box.getTransformTo(null).getMaxScaleOnAxis(),
-          closeTo(1 + 14.1379310344828 / 274, .001),
+          closeTo(scale, .002),
         );
       }
     }
@@ -367,7 +383,7 @@ void _motionTests() {
       // Glass applies its flex scale inside its renderer, while the
       // foreground exposes the same transform as a RenderTransform.
       final foreground = tester.renderObject<RenderBox>(
-        find.byKey(const ValueKey('selected-icon-0')),
+        find.byKey(const ValueKey('icon-0')),
       );
       final transform = foreground.getTransformTo(null);
       final size = MatrixUtils.transformRect(
@@ -633,6 +649,90 @@ void _motionTests() {
         await tester.tap(_tab(_names[(state.selected + 1) % 3]));
         await tester.pumpAndSettle();
       }
+    },
+  );
+
+  testWidgets(
+    'the moving pill shows each tab in its selected state, as native does',
+    (tester) async {
+      final state = await _mountTabs(tester);
+      state.update(() => state.style = const GlassTabBarStyle(haptics: false));
+      await tester.pump();
+      FontWeight? weight(String name, {required bool selectedCopy}) => tester
+          .widgetList<Text>(find.text(name))
+          .singleWhere(
+            (text) =>
+                find
+                    .ancestor(
+                      of: find.byWidget(text),
+                      matching: find.byType(ExcludeSemantics),
+                    )
+                    .evaluate()
+                    .isNotEmpty ==
+                selectedCopy,
+          )
+          .style
+          ?.fontWeight;
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(_tab('Gallery')),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.moveTo(tester.getCenter(_tab('Settings')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      // Through the pill, Settings is drawn selected: its selected icon and
+      // the semibold portal label. Outside it, every tab is unselected,
+      // including the committed Gallery.
+      for (var i = 0; i < 3; i++) {
+        expect(find.byKey(ValueKey('icon-$i')), findsOneWidget);
+        expect(find.byKey(ValueKey('selected-icon-$i')), findsOneWidget);
+      }
+      expect(
+        find.descendant(
+          of: _tab('Gallery'),
+          matching: find.byKey(const ValueKey('icon-0')),
+        ),
+        findsOneWidget,
+      );
+      expect(weight('Settings', selectedCopy: true), FontWeight.w600);
+      expect(weight('Settings', selectedCopy: false), FontWeight.w500);
+      // Held in light, the copy takes the plain accent rather than the darker
+      // resting calibration the committed tab uses at rest; in dark (this
+      // harness) it keeps the lighter resting calibration, as native does.
+      final copyColor = tester
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byType(ExcludeSemantics),
+              matching: find.text('Settings'),
+            ),
+          )
+          .single
+          .style!
+          .color!;
+      final context = tester.element(find.byType(LiquidPrismTabBar));
+      final accent = restingGlassAccent(
+        LiquidPrismTheme.tintOf(context),
+        LiquidPrismTheme.colorsOf(context).brightness,
+      );
+      expect(copyColor.r, closeTo(accent.r, .01));
+      expect(copyColor.g, closeTo(accent.g, .01));
+      expect(copyColor.b, closeTo(accent.b, .01));
+      // The copy adds no semantics or focus targets; selection is unchanged
+      // until release.
+      for (final name in _names) {
+        expect(find.bySemanticsLabel(name), findsOneWidget);
+      }
+      _expectSelected(tester, 0);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(state.requests, [2]);
+      expect(find.byKey(const ValueKey('selected-icon-2')), findsOneWidget);
+      expect(find.byKey(const ValueKey('icon-2')), findsNothing);
+      expect(find.byKey(const ValueKey('icon-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('selected-icon-0')), findsNothing);
+      expect(find.text('Settings'), findsOneWidget);
     },
   );
 
@@ -938,9 +1038,11 @@ void _motionTests() {
     await held.moveBy(const Offset(86, 0));
     await tester.pumpAndSettle();
     expect(creations, {0: 1, 1: 1, 2: 1});
+    expect(find.byType(_StatefulIcon), findsNWidgets(6));
     await held.up();
     await tester.pumpAndSettle();
     expect(creations, {0: 1, 1: 1, 2: 1});
+    expect(find.byType(_StatefulIcon), findsNWidgets(3));
     expect(tester.getSemantics(_tab('Gallery')).label, 'Gallery');
   });
 }
@@ -956,7 +1058,11 @@ class _StatefulIconState extends State<_StatefulIcon> {
   @override
   void initState() {
     super.initState();
-    widget.onCreate();
+    // The selected copy seen through the pill is display-only and excluded
+    // from semantics; only the interactive row's icon state must survive.
+    if (context.findAncestorWidgetOfExactType<ExcludeSemantics>() == null) {
+      widget.onCreate();
+    }
   }
 
   @override
@@ -990,7 +1096,10 @@ void _scaleBeneathFilterTest() {
           ),
         ),
       );
-      final label = find.text('Favorites');
+      final label = find.descendant(
+        of: _tab('Favorites'),
+        matching: find.text('Favorites'),
+      );
       final rest = tester.getRect(label);
       final hold = await tester.startGesture(tester.getCenter(label));
       await tester.pump();
@@ -998,13 +1107,35 @@ void _scaleBeneathFilterTest() {
       // The housing's flex still reaches the foreground...
       final held = tester.getRect(label);
       expect(held.width, greaterThan(rest.width));
-      // ...but no ancestor transform scales it: an animating scale above the
-      // refraction filter made the selected copy pop between device pixels.
+      // ...but no ancestor transform scales either copy: an animating scale
+      // above the refraction filter made the selected copy pop between
+      // device pixels.
+      expect(find.text('Favorites'), findsNWidgets(2));
       for (final transform in tester.widgetList<Transform>(
         find.ancestor(of: label, matching: find.byType(Transform)),
       )) {
         expect(transform.transform.getMaxScaleOnAxis(), 1);
       }
+      // The selected copy's only scale is its native magnification, inside
+      // the window and therefore beneath the content filter.
+      final copy = find.descendant(
+        of: find.byType(ExcludeSemantics),
+        matching: find.text('Favorites'),
+      );
+      final scales = [
+        for (final transform in tester.widgetList<Transform>(
+          find.ancestor(of: copy, matching: find.byType(Transform)),
+        ))
+          transform.transform.getMaxScaleOnAxis(),
+      ].where((scale) => scale != 1);
+      expect(scales, [closeTo(1.16, .01)]);
+      expect(
+        find.ancestor(
+          of: find.ancestor(of: copy, matching: find.byType(Transform)).first,
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
       await hold.up();
       await tester.pumpAndSettle();
       expect(tester.getRect(label), rest);

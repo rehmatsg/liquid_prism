@@ -6,33 +6,65 @@ import 'package:flutter/widgets.dart';
 import 'layer_transform.dart';
 import 'material.dart';
 import 'superellipse.dart';
+import 'theme.dart';
 
 /// The selected foreground portal, separate from the housing's backdrop lens.
 /// Filtering the child preserves custom icon state, focus and semantics.
 ///
-/// With a [color], the child is painted again inside [path] in that colour
-/// and only that copy is refracted (tabs). Without one, the whole child is
-/// refracted where it lies under [lens] (segment labels).
+/// The default constructor refracts the whole child where it lies under
+/// [lens] (segment labels). [ContentLensWindow.selection] (tabs) paints
+/// [child] outside [path] and the display-only [selected] copy inside it,
+/// refracting only that copy: native keeps an unselected and a selected copy
+/// of the bar's foreground and shows the selected one through the pill, so a
+/// tab seen through the moving pill takes its selected icon and weight.
 class ContentLensWindow extends StatefulWidget {
   const ContentLensWindow({
     super.key,
-    this.path,
-    this.color,
     required this.lens,
     required this.lift,
     required this.shape,
     required this.refraction,
     required this.depth,
+    this.wrapper = 0,
     this.chromaticAberration = 0,
     this.chromaticBand = 4.8,
     this.scale = 1,
     this.origin = Offset.zero,
     required this.child,
-  });
+  }) : path = null,
+       selected = null,
+       _selection = false;
+
+  const ContentLensWindow.selection({
+    super.key,
+    required this.path,
+    required this.selected,
+    required this.lens,
+    required this.lift,
+    required this.shape,
+    required this.refraction,
+    required this.depth,
+    this.wrapper = 0,
+    this.chromaticAberration = 0,
+    this.chromaticBand = 4.8,
+    this.scale = 1,
+    this.origin = Offset.zero,
+    required this.child,
+  }) : _selection = true;
+
+  /// The pill's window; null paints only [child], unrefracted.
   final Path? path;
-  final Color? color;
+
+  /// Painted inside [path], without hit testing or semantics; [child] keeps
+  /// both. Built only while the window is open.
+  final Widget? selected;
+  final bool _selection;
   final Rect lens;
   final double lift, refraction, depth, scale;
+
+  /// Outer content-wrapper displacement in points (native −17.5 for the tab
+  /// pill), applied before [refraction] over the same [depth].
+  final double wrapper;
   final double chromaticAberration, chromaticBand;
   final Offset origin;
   final GlassShape shape;
@@ -113,25 +145,66 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
   }
 
   @override
-  Widget build(BuildContext context) => _SelectionWindowPaint(
-    path: widget.path,
-    color: widget.color,
-    lens: widget.lens,
-    lift: widget.lift,
-    shape: widget.shape,
-    shader: _shader,
-    refraction: widget.refraction,
-    depth: widget.depth,
-    chromaticAberration: widget.chromaticAberration,
-    chromaticBand: widget.chromaticBand,
-    scale: widget.scale,
-    origin: widget.origin,
-    child: widget.child,
-  );
+  Widget build(BuildContext context) {
+    // The glyph fringe fills channels its shift misses with the bar beneath:
+    // light glass in light appearance, the dark housing's grey (measured
+    // about 40/255 on the dark showcase bar) in dark.
+    final tone =
+        LiquidPrismTheme.materialBrightnessOf(context) == Brightness.light
+        ? 1.0
+        : .16;
+    Widget paint(_WindowRegion region, Widget child) => _SelectionWindowPaint(
+      region: region,
+      tone: tone,
+      path: widget.path,
+      lens: widget.lens,
+      lift: widget.lift,
+      shape: widget.shape,
+      // Only the refracted copy needs the content lens.
+      shader: region == _WindowRegion.outside ? null : _shader,
+      refraction: widget.refraction,
+      depth: widget.depth,
+      wrapper: widget.wrapper,
+      chromaticAberration: widget.chromaticAberration,
+      chromaticBand: widget.chromaticBand,
+      scale: widget.scale,
+      origin: widget.origin,
+      child: child,
+    );
+    if (!widget._selection) return paint(_WindowRegion.whole, widget.child);
+    final selected = widget.selected;
+    // The base copy stays the first child whether or not the window is open,
+    // so opening it never rebuilds the tabs' focus or icon state.
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        paint(_WindowRegion.outside, widget.child),
+        if (selected != null && widget.path != null)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ExcludeSemantics(
+                child: paint(_WindowRegion.inside, selected),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
-/// Paints its child once, then again clipped to [path] with every pixel
-/// recoloured to [color]: the selected tint shows wherever the pill is.
+/// Which part of its child a [_SelectionWindowPaint] shows.
+enum _WindowRegion {
+  /// Everything, refracted where it lies under the lens (segment labels).
+  whole,
+
+  /// Everything outside the window, unrefracted (the unselected tab copy).
+  outside,
+
+  /// Only the window, refracted (the selected tab copy).
+  inside,
+}
+
+/// Paints one region of its child relative to the pill's [path].
 ///
 /// The housing's flex [scale] is applied here, beneath the refraction filter,
 /// rather than by an ancestor transform. A filter layer under an animating
@@ -139,31 +212,34 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
 /// the selected copy popped between pixels against the smoothly scaling rest.
 class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
   const _SelectionWindowPaint({
+    required this.region,
+    required this.tone,
     required this.path,
-    required this.color,
     required this.lens,
     required this.lift,
     required this.shape,
     required this.shader,
     required this.refraction,
     required this.depth,
+    required this.wrapper,
     required this.chromaticAberration,
     required this.chromaticBand,
     required this.scale,
     required this.origin,
     required super.child,
   });
+  final _WindowRegion region;
+  final double tone;
   final Path? path;
-  final Color? color;
   final Rect lens;
-  final double lift, refraction, depth, scale;
+  final double lift, refraction, depth, wrapper, scale;
   final double chromaticAberration, chromaticBand;
   final Offset origin;
   final GlassShape shape;
   final ui.FragmentShader? shader;
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderSelectionWindow(path, color)
+      _RenderSelectionWindow(region, path)
         ..configure(
           shader,
           lens,
@@ -173,6 +249,8 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
           depth,
           chromaticAberration,
           chromaticBand,
+          tone,
+          wrapper,
         )
         ..setScale(scale, origin);
   @override
@@ -181,8 +259,8 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
     _RenderSelectionWindow renderObject,
   ) {
     renderObject
+      ..region = region
       ..path = path
-      ..color = color
       ..configure(
         shader,
         lens,
@@ -192,27 +270,28 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
         depth,
         chromaticAberration,
         chromaticBand,
+        tone,
+        wrapper,
       )
       ..setScale(scale, origin);
   }
 }
 
 class _RenderSelectionWindow extends RenderProxyBox {
-  _RenderSelectionWindow(this._path, this._color);
+  _RenderSelectionWindow(this._region, this._path);
+  _WindowRegion _region;
   Path? _path;
-  Color? _color;
+  set region(_WindowRegion value) {
+    if (value == _region) return;
+    _region = value;
+    markNeedsCompositingBitsUpdate();
+    markNeedsPaint();
+  }
+
   set path(Path? value) {
     if (identical(value, _path)) return;
     final toggled = (value == null) != (_path == null);
     _path = value;
-    if (toggled) markNeedsCompositingBitsUpdate();
-    markNeedsPaint();
-  }
-
-  set color(Color? value) {
-    if (value == _color) return;
-    final toggled = (value == null) != (_color == null);
-    _color = value;
     if (toggled) markNeedsCompositingBitsUpdate();
     markNeedsPaint();
   }
@@ -236,7 +315,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
   ui.FragmentShader? _shader;
   Rect _lens = Rect.zero;
   double _lift = 0, _refraction = 14, _depth = 11.2;
-  double _chromaticAberration = 0, _chromaticBand = 4.8;
+  double _chromaticAberration = 0, _chromaticBand = 4.8, _tone = 0;
+  double _wrapper = 0;
   GlassShape _shape = GlassShape.capsule;
   void configure(
     ui.FragmentShader? shader,
@@ -247,6 +327,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
     double depth,
     double chromaticAberration,
     double chromaticBand,
+    double tone,
+    double wrapper,
   ) {
     if (shader == _shader &&
         lens == _lens &&
@@ -255,7 +337,9 @@ class _RenderSelectionWindow extends RenderProxyBox {
         refraction == _refraction &&
         depth == _depth &&
         chromaticAberration == _chromaticAberration &&
-        chromaticBand == _chromaticBand) {
+        chromaticBand == _chromaticBand &&
+        tone == _tone &&
+        wrapper == _wrapper) {
       return;
     }
     final refracted = _refractsContent;
@@ -267,6 +351,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _depth = depth;
     _chromaticAberration = chromaticAberration;
     _chromaticBand = chromaticBand;
+    _tone = tone;
+    _wrapper = wrapper;
     if (refracted != _refractsContent) markNeedsCompositingBitsUpdate();
     markNeedsPaint();
   }
@@ -294,7 +380,9 @@ class _RenderSelectionWindow extends RenderProxyBox {
   bool get _refractsContent =>
       _shader != null &&
       _lift >= .001 &&
-      (_refraction != 0 || (_chromaticAberration > 0 && _chromaticBand > 0));
+      (_refraction != 0 ||
+          _wrapper != 0 ||
+          (_chromaticAberration > 0 && _chromaticBand > 0));
 
   /// The content lens for a raster at [deviceScale] physical pixels per point.
   ui.ImageFilter _contentFilter(double deviceScale) {
@@ -334,6 +422,8 @@ class _RenderSelectionWindow extends RenderProxyBox {
         scale: _scale,
         deviceScale: deviceScale,
       ),
+      _tone,
+      _wrapper * _scale,
     ];
     for (var i = 0; i < values.length; i++) {
       shader.setFloat(i + 2, values[i]);
@@ -344,7 +434,6 @@ class _RenderSelectionWindow extends RenderProxyBox {
   final _warp = LayerHandle<_ContentLensLayer>();
   final _clip = LayerHandle<ClipPathLayer>();
   final _outsideClip = LayerHandle<ClipPathLayer>();
-  final _filter = LayerHandle<ColorFilterLayer>();
   final _scaled = LayerHandle<TransformLayer>();
   final _outsideScaled = LayerHandle<TransformLayer>();
 
@@ -371,8 +460,10 @@ class _RenderSelectionWindow extends RenderProxyBox {
   }
 
   @override
-  bool get alwaysNeedsCompositing =>
-      _path != null || (_color == null && _refractsContent);
+  bool get alwaysNeedsCompositing => switch (_region) {
+    _WindowRegion.whole => _refractsContent,
+    _WindowRegion.outside || _WindowRegion.inside => _path != null,
+  };
 
   /// Paints [inner] through the content lens filter.
   void _refract(
@@ -408,13 +499,14 @@ class _RenderSelectionWindow extends RenderProxyBox {
   @override
   void paint(PaintingContext context, Offset offset) {
     final child = this.child;
-    if (child == null) return;
     final path = _path;
-    if (path == null) {
+    if (child == null || (_region == _WindowRegion.inside && path == null)) {
+      _clearLayers();
+      return;
+    }
+    if (_region == _WindowRegion.whole || path == null) {
       _clip.layer = null;
       _outsideClip.layer = null;
-      _filter.layer = null;
-      _warp.layer = null;
       _scaled.layer = null;
       void plain(PaintingContext context, Offset offset) => _underScale(
         context,
@@ -422,7 +514,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
         _outsideScaled,
         (context, offset) => context.paintChild(child, offset),
       );
-      if (_color == null && _refractsContent) {
+      if (_region == _WindowRegion.whole && _refractsContent) {
         _refract(context, offset, plain);
       } else {
         _warp.layer = null;
@@ -430,41 +522,35 @@ class _RenderSelectionWindow extends RenderProxyBox {
       }
       return;
     }
-    // The selected and unselected copies occupy complementary regions.
-    // Painting both at the same pixel leaves unselected fringes around glyphs.
-    final outside = Path.combine(
-      PathOperation.difference,
-      Path()..addRect(Offset.zero & size),
-      path,
-    );
-    _underScale(
-      context,
-      offset,
-      _outsideScaled,
-      (context, offset) => _outsideClip.layer = context.pushClipPath(
-        needsCompositing,
-        offset,
-        Offset.zero & size,
-        outside,
-        (context, offset) => context.paintChild(child, offset),
-        oldLayer: _outsideClip.layer,
-      ),
-    );
-    void selected(PaintingContext context, Offset offset) {
-      final color = _color;
-      if (color == null) {
-        _filter.layer = null;
-        context.paintChild(child, offset);
-        return;
-      }
-      _filter.layer = context.pushColorFilter(
-        offset,
-        ui.ColorFilter.mode(color, BlendMode.srcIn),
-        (context, offset) => context.paintChild(child, offset),
-        oldLayer: _filter.layer,
+    if (_region == _WindowRegion.outside) {
+      // The selected and unselected copies occupy complementary regions.
+      // Painting both at the same pixel leaves unselected fringes around
+      // glyphs.
+      _warp.layer = null;
+      _clip.layer = null;
+      _scaled.layer = null;
+      final outside = Path.combine(
+        PathOperation.difference,
+        Path()..addRect(Offset.zero & size),
+        path,
       );
+      _underScale(
+        context,
+        offset,
+        _outsideScaled,
+        (context, offset) => _outsideClip.layer = context.pushClipPath(
+          needsCompositing,
+          offset,
+          Offset.zero & size,
+          outside,
+          (context, offset) => context.paintChild(child, offset),
+          oldLayer: _outsideClip.layer,
+        ),
+      );
+      return;
     }
-
+    _outsideClip.layer = null;
+    _outsideScaled.layer = null;
     void clipped(PaintingContext context, Offset offset) => _underScale(
       context,
       offset,
@@ -474,7 +560,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
         offset,
         path.getBounds(),
         path,
-        selected,
+        (context, offset) => context.paintChild(child, offset),
         oldLayer: _clip.layer,
       ),
     );
@@ -487,14 +573,17 @@ class _RenderSelectionWindow extends RenderProxyBox {
     _refract(context, offset, clipped);
   }
 
-  @override
-  void dispose() {
+  void _clearLayers() {
     _clip.layer = null;
     _outsideClip.layer = null;
-    _filter.layer = null;
     _warp.layer = null;
     _scaled.layer = null;
     _outsideScaled.layer = null;
+  }
+
+  @override
+  void dispose() {
+    _clearLayers();
     super.dispose();
   }
 }

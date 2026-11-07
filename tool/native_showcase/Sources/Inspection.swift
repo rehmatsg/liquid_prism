@@ -64,11 +64,8 @@ struct InspectionHost: UIViewRepresentable {
                 modified = date
                 if let dark = command["dark"] as? Bool { model.dark = dark }
                 if let accent = command["accent"] as? String { model.accent = accent }
-                if let tab = command["tab"] as? Int { model.tab = tab; model.path = [] }
-                if let screen = command["screen"] as? String {
-                    if let kind = ComponentKind(rawValue: screen) { model.path = [kind] }
-                    else { model.path = []; model.tab = ["explore", "studio", "library"].firstIndex(of: screen) ?? 0 }
-                }
+                if let tab = command["tab"] as? Int { model.paths = [[], [], []]; model.tab = tab }
+                if let screen = command["screen"] as? String { model.open(screen: screen) }
                 if let query = command["query"] as? String { model.query = query }
                 if let frost = command["frost"] as? Double { model.frost = frost }
                 if let level = command["level"] as? Double { model.level = level }
@@ -136,7 +133,7 @@ struct InspectionHost: UIViewRepresentable {
                         "width": ("A lot of possibility." as NSString).size(withAttributes: [.font: font, .kern: -1.8]).width] as [String: Any]
                 },
                 "level": model.level, "sliderLayers": sliderLayers,
-                "path": model.path.map(\.rawValue), "geometry": GeometryStore.shared.frames, "views": views]
+                "path": model.path.map(\.id), "geometry": GeometryStore.shared.frames, "views": views]
             if let data = try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]) {
                 try? data.write(to: documents.appendingPathComponent("\(snapshotName).json"), options: .atomic)
             }

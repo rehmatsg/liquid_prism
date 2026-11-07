@@ -17,6 +17,7 @@ import 'sidebar.dart';
 import 'system_chrome.dart';
 import 'tab_bar.dart';
 import 'tab_reselection.dart';
+import 'title.dart';
 import 'toolbar.dart';
 import 'theme.dart';
 import 'navigation_bar_style.dart';
@@ -206,8 +207,11 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// False leaves keyboard avoidance to descendants.
   final bool resizeToAvoidBottomInset;
 
-  /// A top-leading control, such as a back button. It stays in the top bar in
-  /// every placement. Null implies one; see [automaticallyImplyLeading].
+  /// A top-leading control, such as a back button. With horizontal bars it
+  /// sits at the top bar's leading edge; with a vertical rail (iPhone Duo) it
+  /// moves to the top of the rail, above the actions, as native back buttons
+  /// do, within the 48 pt column. Null implies one; see
+  /// [automaticallyImplyLeading].
   final Widget? leading;
 
   /// Whether a null [leading] becomes a [LiquidPrismBackButton] when the
@@ -565,10 +569,18 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         : _ChromeLayout.topCorner(media.size, occlusions);
     final showTabBar =
         tabBar != null && sidebarTabs == null && (rail || !keyboard);
+    final leading =
+        widget.leading ??
+        (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
+    // In the rail the leading control (a back button) takes the column's
+    // top, a 48 pt circle and the rail gap above the actions.
+    final railLeading = rail && leading != null
+        ? 48 + _ChromeLayout._railGap
+        : 0;
     final groups =
         rail &&
             !_fitsRail(
-              railBottom - actionsTop,
+              railBottom - actionsTop - railLeading,
               tabs: showTabBar ? tabBar : null,
             )
         ? [
@@ -581,9 +593,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final top = widget.sheet
         ? _ChromeLayout._sheetTop
         : math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
-    final leading =
-        widget.leading ??
-        (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
     final navigation =
         (LiquidPrismTheme.of(context).navigationBar ??
                 const GlassNavigationBarStyle())
@@ -609,14 +618,30 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       color: colors.secondaryLabel,
     ).merge(navigation.largeSubtitleStyle);
     final scaler = media.textScaler;
-    final titleRowHeight = widget.title == null
-        ? LiquidPrismScaffold.topBarHeight
-        : math.max(
-            LiquidPrismScaffold.topBarHeight,
-            scaler.scale(titleStyle.fontSize ?? 17) *
-                    (titleStyle.height ?? 1.2) +
-                8,
-          );
+    final titleLine =
+        scaler.scale(titleStyle.fontSize ?? 17) * (titleStyle.height ?? 1.2);
+    // The leading control, actions and trailing widget keep this row.
+    // In the iPhone Duo rail layout the row matches the rail's 48 pt circles:
+    // a SwiftUI text button there is 48.3 pt tall from the 24 pt top margin.
+    final barHeight = rail ? 48.0 : LiquidPrismScaffold.topBarHeight;
+    final controlRowHeight = widget.title == null
+        ? barHeight
+        : math.max(barHeight, titleLine + 8);
+    // A glass title capsule, and an avatar above it, can make the title
+    // taller than that row: the bar grows below the controls to hold it.
+    final titleRowHeight = switch (widget.title) {
+      final LiquidPrismTitle title => math.max(
+        controlRowHeight,
+        LiquidPrismTitle.extentOf(
+          title,
+          (navigation.titleCapsule ?? const GlassTitleStyle()).merge(
+            title.style,
+          ),
+          titleLine,
+        ),
+      ),
+      _ => controlRowHeight,
+    };
     // Measured: a 52-point row from the bar frame holding the 40.67-point
     // 34-point bold line, 3.67 points below the row's top.
     // With a subtitle the row grows to 71.33 points for its 11-point line,
@@ -657,7 +682,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final titleLeads = widget._allActions.isNotEmpty || widget.trailing != null;
     // The shared glass content blur, so titles focus in like glass content.
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
-    Widget header(Widget child, TextStyle style, {required bool large}) {
+    Widget header(
+      Widget child,
+      TextStyle style, {
+      required bool large,
+      bool interactive = false,
+    }) {
       Widget text = Semantics(
         header: true,
         child: DefaultTextStyle(
@@ -668,7 +698,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ),
       );
       // Without a large title or header the inline title simply shows.
-      if (!swaps) return IgnorePointer(child: text);
+      // A tappable glass title takes touches whenever it shows.
+      if (!swaps) return IgnorePointer(ignoring: !interactive, child: text);
       return AnimatedBuilder(
         animation: Listenable.merge([_largeFade, _inlineFade]),
         builder: (context, child) {
@@ -679,6 +710,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           return ExcludeSemantics(
             excluding: !visible,
             child: IgnorePointer(
+              ignoring: !interactive || !visible,
               // The titles focus in and out as they fade, as native soft
               // bars do: blurred when absent, sharp when present.
               child: GlassContentPresence(
@@ -701,7 +733,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final topBar =
         widget.title != null ||
         widget.largeTitle != null ||
-        leading != null ||
+        // Like the actions, a leading control in the rail needs no bar row.
+        (!rail && leading != null) ||
         widget.trailing != null ||
         // Native keeps the bar row with the sidebar shown or hidden, so
         // content does not jump when the toggle moves into it.
@@ -717,6 +750,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         topBar: topBar,
         accessoryHeight: widget.accessory?.preferredSize.height ?? 0,
         titleRowHeight: titleRowHeight,
+        controlRowHeight: controlRowHeight,
+        centreTitle: widget.title is LiquidPrismTitle,
         expandedHeight: expandedHeight,
         largeTitleTop: widget.subtitle == null ? 3.67 : 6.67,
         collapseExtent: extent,
@@ -832,10 +867,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 widget.subtitle,
                 subtitleStyle,
                 large: false,
-                leading: titleLeads,
+                // A glass title capsule stays centred beside controls, so its
+                // subtitle centres under it too.
+                leading: titleLeads && title is! LiquidPrismTitle,
               ),
               titleStyle,
               large: false,
+              interactive: switch (title) {
+                LiquidPrismTitle(:final onPressed) => onPressed != null,
+                _ => false,
+              },
             ),
           ),
         if (widget.largeTitle case final title?)
@@ -1146,6 +1187,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.topBar,
     required this.accessoryHeight,
     required this.titleRowHeight,
+    required this.controlRowHeight,
+    required this.centreTitle,
     required this.expandedHeight,
     required this.largeTitleTop,
     required this.collapseExtent,
@@ -1173,7 +1216,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
   /// Height of the row below the top bar, 0 without one.
   final double accessoryHeight;
+
+  /// A glass title capsule centres even beside controls, as measured.
+  final bool centreTitle;
   final double titleRowHeight,
+      controlRowHeight,
       expandedHeight,
       collapseExtent,
       titleGutter,
@@ -1408,7 +1455,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       );
     }
 
-    double centred(Size child) => top + (barRow - child.height) / 2;
+    // Controls centre on their own row at the bar's top; a taller title
+    // (a capsule under an avatar) extends the bar below it.
+    final controlRow = topBar ? controlRowHeight : 0.0;
+    double centred(Size child) => top + (controlRow - child.height) / 2;
     // The show-sidebar toggle holds its measured place while the body
     // reflows beneath the panel; the leading widget follows the body.
     var leadingOffset = _edge;
@@ -1443,10 +1493,24 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? railRight + _railGap + (48 - width) / 2
         : railLeft - _railGap - 48 + (48 - width) / 2;
 
+    // With a rail, native moves the leading control (a back button) to the
+    // top of the column, where the actions would start, and the actions the
+    // rail gap below it (Apple Music on the closed iPhone Duo: a 48 pt back
+    // button under the status bar, the next capsule about 12 pt below).
+    var railTop = actionsTop;
+    if (rail && hasChild(_Slot.leading)) {
+      final child = layoutChild(
+        _Slot.leading,
+        BoxConstraints.loose(Size(48, size.height)),
+      );
+      positionChild(_Slot.leading, Offset(railX(child.width), actionsTop));
+      if (!child.isEmpty) railTop = actionsTop + child.height + _railGap;
+    }
+
     if (hasChild(_Slot.actions)) {
       final actions = layoutChild(_Slot.actions, BoxConstraints.loose(size));
       if (rail) {
-        positionChild(_Slot.actions, Offset(railX(actions.width), actionsTop));
+        positionChild(_Slot.actions, Offset(railX(actions.width), railTop));
       } else {
         // Beside a corner status bar the group meets its edge, as measured.
         final x = rtl
@@ -1462,7 +1526,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         actionsInBar = true;
         positionChild(
           _Slot.actions,
-          Offset(x, top + math.max(0, (barRow - actions.height) / 2)),
+          Offset(x, top + math.max(0, (controlRow - actions.height) / 2)),
         );
       }
     }
@@ -1470,9 +1534,12 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     if (hasChild(_Slot.trailing)) {
       // Before the capsules in the bar, or at its trailing edge.
       final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
+      // Beside the rail the column's 12 pt gap is the margin: a text button
+      // (Invite, measured on iPhone Duo) ends at the content's edge.
+      final edge = rail && right != rtl ? 0.0 : _edge;
       final x = rtl
-          ? (actionsInBar ? leadingEnd + _trailingGap : barLeft + _edge)
-          : (actionsInBar ? trailingStart - _trailingGap : barRight - _edge) -
+          ? (actionsInBar ? leadingEnd + _trailingGap : barLeft + edge)
+          : (actionsInBar ? trailingStart - _trailingGap : barRight - edge) -
                 child.width;
       if (rtl) {
         leadingEnd = x + child.width;
@@ -1483,7 +1550,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       positionChild(_Slot.trailing, Offset(x, centred(child)));
     }
 
-    if (hasChild(_Slot.leading)) {
+    if (!rail && hasChild(_Slot.leading)) {
       // Bounded by the actions and trailing widget, a title gap before them,
       // so a wide leading widget (a menu trigger, say) ellipsizes rather
       // than running under them.
@@ -1524,7 +1591,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      if (actionsInBar) {
+      if (actionsInBar && !centreTitle) {
         // Beside actions the title leads, after the leading control.
         final title = layoutChild(
           _Slot.title,
@@ -1532,7 +1599,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         );
         positionChild(
           _Slot.title,
-          Offset(rtl ? right - title.width : left, centred(title)),
+          Offset(
+            rtl ? right - title.width : left,
+            top + (barRow - title.height) / 2,
+          ),
         );
       } else {
         final half = math.max(0.0, math.min(centre - left, right - centre));
@@ -1542,7 +1612,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         );
         positionChild(
           _Slot.title,
-          Offset(centre - title.width / 2, centred(title)),
+          Offset(centre - title.width / 2, top + (barRow - title.height) / 2),
         );
       }
     }
@@ -1598,11 +1668,16 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     }
 
     if (hasChild(_Slot.bottomBar)) {
-      // Above the keyboard, else above the tab bar or the home indicator.
+      // Above the keyboard, else above the tab bar, else on the tab bar's
+      // own line: native bottom glass sits inside the home indicator's
+      // inset (a bottom search field rests 28 points above the screen's
+      // edge, a tab bar 21), not above it.
       final floor = keyboard > 0
           ? keyboard
           : covered.bottom > 0
           ? covered.bottom + 8
+          : iOS
+          ? _bottomBarGap
           : viewPadding.bottom;
       final bar = layoutChild(
         _Slot.bottomBar,
@@ -1650,6 +1725,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       topBar != old.topBar ||
       accessoryHeight != old.accessoryHeight ||
       titleRowHeight != old.titleRowHeight ||
+      controlRowHeight != old.controlRowHeight ||
+      centreTitle != old.centreTitle ||
       expandedHeight != old.expandedHeight ||
       largeTitleTop != old.largeTitleTop ||
       collapseExtent != old.collapseExtent ||

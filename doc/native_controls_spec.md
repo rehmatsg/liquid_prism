@@ -84,6 +84,9 @@ through it keeps its normal thickness**. Its clear face and shadow still use the
 shared material, but its rim and face take the captured slider inputs: inner
 refraction height 6.66 and amount 11.1, face black .1, and the layer contact
 shadow kept at the held frame (see [motion and lenses](motion_and_lenses.md)).
+The switch takes its captured inner refraction (11.5 / 6.9) for the rim and the
+segmented selection the 8.8 / 7.04 its measured displacement fits, separately
+from the shared underlay (see [held lens displacement](#held-lens-displacement)).
 This matches the distinction in the isolated small-lens capture without claiming
 to reproduce Apple's private operators.
 
@@ -196,6 +199,36 @@ captures stay in the ignored artifacts/research directories.
 For a focused quick-tap comparison, run `SwitchTapTests` in the native showcase
 and `example/test_driver/switch_tap_video.dart` against the showcase Flutter VM.
 
+## Held lens displacement
+
+Direct measurements: iOS 27.0 (24A434), iPhone 17 Pro simulator, scale 3,
+light appearance (dark within 0.13 pt), lenses held 1 s over a backdrop whose
+color encodes its own position (three phase-shifted grey patterns, decoded per
+pixel; 0 ± 0.066 pt outside any lens). Depth runs inward from the held
+`glassBackground` frame; positive values sample from farther out (minify).
+Probe: `tool/native_dispersion_probe`, `--pattern grayx|grayy`.
+
+| Depth (pt) | 1 | 2 | 3 | 4 | 6 | 8 | 12 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Switch cap | −1.73 | +0.84 | +2.35 | +3.30 | +3.90 | +3.35 | +2.30 |
+| Slider cap | −5.27 | −3.17 | −1.85 | −0.97 | −0.05 | −0.02 | −0.01 |
+| Segmented cap | +0.78 | +1.82 | +2.83 | +3.82 | +4.03 | +3.35 | +2.30 |
+| Tab pill flat (through the bar) | −1.06 | +0.33 | +2.10 | +3.19 | +4.06 | — | — |
+
+Captured inputs at the same holds: backdrop warp +9 over 36 for switch, segment
+and tab (0 for the slider); glassBackground inner refraction switch −11.5 / 6.9,
+slider −11.1 / 6.66, segment −6.6 / 4.4, tab −10.5 / 7; segment ContentLensing
+−8.8 / 7.04.
+
+Fitted, not recovered: with g(d, h) = 1 − √(1 − (1 − d/h)²), the displacement is
+−A·g(d, h) + W·g(d + A·g(d, h), 36), the rim refracting before the 36-point
+underlay field is read. The slider (W = 0) fits its captured inputs at RMS
+0.06 pt and the switch its captured 11.5 / 6.9 with W = 9 at 0.05 pt. The
+segment does not fit its glassBackground inputs (RMS 1.1) but fits 8.8 / 7.04,
+its ContentLensing values, at 0.24 pt. The tab's flat band fits its captured
+inputs at 0.42 pt, within the noise of measuring through the bar. Liquid Prism
+uses these forms and values; Apple's operators remain private.
+
 ## Chromatic rim fringe
 
 Direct measurements: iOS 27.0, iPhone 17 Pro simulator, held over 8-point
@@ -216,12 +249,11 @@ Tab peak is about 3.2–3.7 within about 4 points. The segmented lens also
 fringes labels under its rim.
 
 Fitted renderer: full-lift split 3.5 points, band 4.8, direction `-(n.y,n.x)`.
-Labels and icons in the foreground pass take a quarter of that split, blended
-half with the unshifted glyph, fitted by eye: at the full split thin strokes
-broke into opaque primary colours where native shows a soft tint;
-the weight is `(1-.085*min(d,band))*(1-smoothstep(.62*band,band,d))`, clamped
-nonnegative. The table compares this scalar profile before sampling/lighting;
-it is not a rendered-pixel validation or a reconstruction of Apple's operator.
+The backdrop weight is `(1-.085*min(d,band))*(1-smoothstep(.62*band,band,d))`,
+clamped nonnegative. The table compares this scalar profile before
+sampling/lighting; it is not a rendered-pixel validation or a reconstruction of
+Apple's operator. Labels and icons in the foreground pass use their own fit
+(see Glyph fringe below).
 
 | Depth inside rim (pt) | Measured split (pt) | Fitted split (pt) |
 | --- | --- | --- |
@@ -241,3 +273,30 @@ fit underestimates the fringe and omits the small measured tail beyond 4.8.
 Switch/slider keep their existing generic `dispersion: .3 * lift` by explicit
 product choice; their new along-rim fringe defaults to zero. Tab radial rim
 channel splitting is replaced; its existing fitted bright glint is preserved.
+
+## Glyph fringe
+
+Direct measurements: iOS 27.0 (24A434), iPhone 17 Pro simulator, light, tab bar
+with a black selection tint on white (so every channel has contrast), pill
+dragged to the midpoint between two tabs and held 2 s (115.9 × 73.4 pt;
+aberration input 3.68). Red and blue 50% crossings of glyph edges, measured
+along arcs at fixed depth on the caps, relative to green:
+
+| Depth (pt) | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 14 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Left cap R−B (pt) | 3.01 | 2.47 | 2.71 | 2.72 | 2.33 | 0.86 | 0.31 | 0.12 | 0.03 |
+| Right cap R−B (pt) | 4.09 | — | 2.81 | 2.30 | 1.74 | 0.79 | 0.35 | 0.14 | 0.02 |
+
+Green sits midway. Red moves counter-clockwise on the caps, as on the backdrop.
+Bands at 4–6 pt: amber (193–218, 139–160, 60–83) and azure (66–93, 160–173,
+199–211). Glyph chroma (99th percentile) falls from 171 at 3 pt to 42 at 12 and
+is gone by 15 pt; within ~1.5 pt of the rim glyphs fold and are not measured.
+
+Fitted renderer: each channel is shifted `.77 × split × size × w` along the rim
+and blended half with the unshifted glyph, which puts the red and blue 50%
+crossings 2.7 points apart at full weight on a 1.8-point glyph edge and gives
+(79, 158, 206) on the azure side. `w` is 1 to `1.15 band` deep, then falls by e
+every `.44 band` (5.5 and 2.1 points at the default 4.8). `size` is the pill's
+height over 73.6, following native's aberration inputs (H/19), so the segmented
+selection's labels fringe at about 0.6 of the tab's; the segmented glyph fringe
+itself was not measured.

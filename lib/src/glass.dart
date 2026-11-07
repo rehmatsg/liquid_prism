@@ -14,6 +14,7 @@ import 'layer_transform.dart';
 import 'theme.dart';
 import 'recipe.dart';
 import 'pressable.dart';
+import 'system_chrome.dart';
 
 part 'edge_blur.dart';
 part 'glass_group.dart';
@@ -39,11 +40,14 @@ class LiquidPrism extends StatefulWidget {
     this.lensRim = 0,
     this.chromaticSplit = 0,
     this.chromaticBand = 0,
+    this.underlay = 0,
     this.resting = false,
+    this.materialOptics = false,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
        assert(lensRim >= 0),
        assert(chromaticSplit >= 0),
-       assert(chromaticBand >= 0);
+       assert(chromaticBand >= 0),
+       assert(underlay >= 0);
   final Glass? glass;
   final double? blur;
 
@@ -66,10 +70,22 @@ class LiquidPrism extends StatefulWidget {
   @internal
   final double chromaticBand;
 
+  /// Lifted-lens underlay displacement in points over a 36-point field,
+  /// independent of the optics' rim refraction. Only lens roles that minify
+  /// their underlay read it.
+  @internal
+  final double underlay;
+
   /// A resting control lens whose optics are all zero under an opaque fill:
   /// paint only the clipped child and skip the backdrop passes.
   @internal
   final bool resting;
+
+  /// [optics] are the role's own native inputs (bars), not an app's
+  /// override: their frost follows the device's Liquid Glass setting as the
+  /// material recipe's does.
+  @internal
+  final bool materialOptics;
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
@@ -163,6 +179,29 @@ class LiquidPrism extends StatefulWidget {
 class _LiquidPrismState extends State<LiquidPrism> {
   Glass get _material => widget.glass ?? _theme.glass ?? Glass.regular;
   LiquidPrismThemeData _theme = const LiquidPrismThemeData();
+
+  // The device's Liquid Glass setting, followed live unless the theme sets
+  // the tint amount.
+  final _deviceTint = LiquidPrismSystemChrome.deviceGlassTintAmount;
+  @override
+  void initState() {
+    super.initState();
+    _deviceTint.addListener(_deviceTintChanged);
+  }
+
+  void _deviceTintChanged() {
+    if (mounted && _theme.glassTint == null) setState(() {});
+  }
+
+  /// The tint amount this surface last rendered with.
+  double _tint = GlassTint.standard;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DoubleProperty('glassTint', _tint));
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -219,6 +258,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
 
   @override
   void dispose() {
+    _deviceTint.removeListener(_deviceTintChanged);
     _shader?.dispose();
     super.dispose();
   }
@@ -239,7 +279,9 @@ class _LiquidPrismState extends State<LiquidPrism> {
           lensRim: widget.lensRim,
           chromaticSplit: widget.chromaticSplit,
           chromaticBand: widget.chromaticBand,
+          underlay: widget.underlay,
           resting: widget.resting,
+          materialOptics: widget.materialOptics,
           child: widget.child,
         ),
       );
@@ -268,6 +310,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
         ? 1.0
         : presenceScope.progress.value.clamp(0.0, 1.0);
     final materialize = presenceScope?.materialize ?? false;
+    final tint = _tint = GlassTint.resolve(theme.glassTint, _deviceTint.value);
     final recipe =
         GlassRecipe.resolve(
               _material,
@@ -275,26 +318,43 @@ class _LiquidPrismState extends State<LiquidPrism> {
               widget.role,
               customOptics: optics != null,
             )
+            .withTint(tint)
             .withPresence(presence)
             .withLensRim(widget.lensRim)
-            .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand);
-    var style = (optics ?? recipe.optics(shape.radius)).copyWith(
+            .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand)
+            // Materializing grows the lens, and with it the underlay.
+            .withUnderlay(widget.underlay * (materialize ? presence : 1));
+    var style = resolveSurfaceOptics(
+      optics ?? recipe.optics(shape.radius),
       cornerRadius: shape.radius,
-      frost:
-          widget.blur ??
-          (widget.optics != null ? widget.optics!.frost : theme.blur),
+      widgetOptics: widget.optics,
+      widgetBlur: widget.blur,
+      themeBlur: theme.blur,
+      themeRefraction: theme.refraction,
+    );
+    var frost = resolveSurfaceFrost(
+      recipe,
+      style.frost,
+      tint: tint,
+      followsTint:
+          widget.blur == null &&
+          theme.blur == null &&
+          (optics == null || widget.materialOptics),
+      fillFrost: widget.materialOptics ? style.frost : GlassRecipe.regularFrost,
     );
     if (presence < 1) {
       // Frost is its own backdrop pass, which the output fade cannot reach,
       // so it always follows presence. Materializing also grows the lens on
       // the same curve, so the outline never arrives ahead of it; a plain
       // fade keeps the full lens. The spring supplies the easing.
+      frost = [for (final pass in frost) pass.scaled(presence)];
       style = style.copyWith(
-        frost: style.frost * presence,
         refraction: materialize ? style.refraction * presence : null,
         dispersion: materialize ? style.dispersion * presence : null,
       );
     }
+    // The optical pass assumes the blur its face carries.
+    style = style.copyWith(frost: FrostPass.effectiveSigma(frost));
     final shader = _shader;
     final press = LiquidPrismPressFeedback.of(context);
     final pressScale = LiquidPrismPressFeedback.scaleOf(context);
@@ -328,6 +388,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
               style: style,
               shape: shape,
               recipe: recipe,
+              frost: frost,
               press: press,
               scale: pressScale,
               group: _GlassGroupScope.of(context),
@@ -341,8 +402,8 @@ class _LiquidPrismState extends State<LiquidPrism> {
               clipper: GlassShapeClipper(shape),
               child: BackdropFilter(
                 filter: ui.ImageFilter.blur(
-                  sigmaX: style.frost + 4,
-                  sigmaY: style.frost + 4,
+                  sigmaX: _frostReachOf(frost) + 4,
+                  sigmaY: _frostReachOf(frost) + 4,
                 ),
                 child: DecoratedBox(
                   decoration: ShapeDecoration(
@@ -400,6 +461,83 @@ void writeChromaticFringeUniforms(
   values[46 + superellipseUniformCount + 7] = lens
       ? recipe.chromaticSplit * pixelRatio * recipe.presence
       : 0; // u_derived[1].w
+}
+
+/// A surface's optics after the widget's and theme's per-field overrides: an
+/// explicit blur wins; a widget's own optics keep their frost and refraction;
+/// otherwise the theme's blur and refraction replace the packet's.
+@visibleForTesting
+LiquidPrismStyle resolveSurfaceOptics(
+  LiquidPrismStyle packet, {
+  required double cornerRadius,
+  LiquidPrismStyle? widgetOptics,
+  double? widgetBlur,
+  double? themeBlur,
+  double? themeRefraction,
+}) => packet.copyWith(
+  cornerRadius: cornerRadius,
+  frost: widgetBlur ?? (widgetOptics != null ? widgetOptics.frost : themeBlur),
+  refraction: widgetOptics != null ? null : themeRefraction,
+);
+
+/// Floats in the optical shader's packet (shaders/glass.frag), the engine's
+/// texture size included.
+@visibleForTesting
+const glassUniformCount = 46 + superellipseUniformCount + 16 + 4;
+
+/// A surface's frost passes. The material's own frost ([followsTint]: no
+/// explicit blur and no app optics) follows the tint amount through
+/// [FrostPass.resolve]; an explicit blur or explicit optics keep a plain
+/// frost, as before.
+@visibleForTesting
+List<FrostPass> resolveSurfaceFrost(
+  GlassRecipe recipe,
+  double frost, {
+  required double tint,
+  required bool followsTint,
+  double fillFrost = GlassRecipe.regularFrost,
+}) => FrostPass.resolve(
+  kind: recipe.kind,
+  dark: recipe.dark,
+  frost: frost,
+  fillFrost: fillFrost,
+  tint: followsTint ? tint : null,
+);
+
+/// The widest blur among [passes], for sampling envelopes.
+double _frostReachOf(List<FrostPass> passes) =>
+    passes.fold(0.0, (reach, pass) => math.max(reach, pass.sigma));
+
+/// The filter of one frost pass: its blur, faded to the pass's opacity.
+ui.ImageFilter frostFilter(FrostPass pass, double sigma) {
+  final blur = ui.ImageFilter.blur(
+    sigmaX: sigma,
+    sigmaY: sigma,
+    tileMode: ui.TileMode.clamp,
+  );
+  if (pass.opacity >= 1) return blur;
+  return ui.ImageFilter.compose(
+    outer: ColorFilter.matrix(<double>[
+      1, 0, 0, 0, 0, //
+      0, 1, 0, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 0, pass.opacity, 0,
+    ]),
+    inner: blur,
+  );
+}
+
+/// Writes the lifted lens's underlay displacement (u_shapeD.w), limited like
+/// the rim refraction to the available thickness. Other recipes carry zero.
+@visibleForTesting
+void writeLensUnderlayUniform(
+  List<double> values,
+  GlassRecipe recipe,
+  Rect rect,
+) {
+  values[61] = recipe.kind == 3
+      ? math.min(recipe.underlay, math.min(rect.width, rect.height) * 0.55)
+      : 0;
 }
 
 /// Contact, soft and ambient shadows only darken pixels outside the glass.
@@ -526,6 +664,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
     required this.style,
     required this.shape,
     required this.recipe,
+    required this.frost,
     required this.press,
     required this.scale,
     required this.group,
@@ -536,6 +675,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
   final LiquidPrismStyle style;
   final GlassShape shape;
   final GlassRecipe recipe;
+  final List<FrostPass> frost;
   final double press;
   final double scale;
   final _GlassGroupData? group;
@@ -546,6 +686,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
     style,
     shape,
     recipe,
+    frost,
     press,
     scale,
     pixelRatio,
@@ -558,6 +699,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
       ..style = style
       ..shape = shape
       ..recipe = recipe
+      ..frost = frost
       ..press = press
       ..scale = scale
       ..group = group
@@ -571,6 +713,7 @@ class _RenderGlass extends RenderProxyBox {
     this.style,
     this._shape,
     this._recipe,
+    this._frost,
     this.press,
     this._scale,
     this.pixelRatio,
@@ -591,6 +734,24 @@ class _RenderGlass extends RenderProxyBox {
     _recipe = value;
     if (shadowChanged) markNeedsPaint();
   }
+
+  /// Frost passes, configured at composition; only their number changes the
+  /// layer tree.
+  List<FrostPass> _frost;
+  List<FrostPass> get frost => _frost;
+  set frost(List<FrostPass> value) {
+    if (listEquals(value, _frost)) return;
+    final repaint = value.length != _frost.length;
+    _frost = value;
+    if (repaint) markNeedsPaint();
+  }
+
+  /// How far the frost's blur reads past the contour.
+  double get frostReach => math.max(style.frost, _frostReachOf(_frost));
+
+  /// A single pass that replaces the backdrop, which a batch can compose.
+  bool get plainFrost =>
+      _frost.isEmpty || (_frost.length == 1 && _frost.single.covers);
 
   GlassShape _shape;
   GlassShape get shape => _shape;
@@ -678,8 +839,11 @@ class _RenderGlass extends RenderProxyBox {
       ...recipe.uniforms,
       ..._contour,
       ..._derivedUniforms(rect, m),
+      ...recipe.faceUniforms,
     ];
+    assert(values.length == glassUniformCount);
     writeChromaticFringeUniforms(values, recipe, pixelRatio);
+    writeLensUnderlayUniform(values, recipe, rect);
     values[42] = press;
     values[43] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
     return values;
@@ -789,7 +953,7 @@ class _RenderGlass extends RenderProxyBox {
     // Frost runs as its own backdrop pass clipped to the contour. Composed under
     // the optical shader it would be rendered without a coverage limit: Impeller
     // blurs the whole captured backdrop for every surface, every frame.
-    if (style.frost > 0.05) {
+    if (_frost.isNotEmpty) {
       final frost = _frostLayer.layer ??= _FrostLayer();
       frost.glass = this;
       final local = _scaleTransform;
@@ -801,12 +965,11 @@ class _RenderGlass extends RenderProxyBox {
         offset,
         contour.getBounds(),
         contour,
-        (context, offset) => context.pushLayer(
-          frost,
-          (context, offset) =>
-              context.pushLayer(frost.filter, (_, _) {}, offset),
-          offset,
-        ),
+        (context, offset) => context.pushLayer(frost, (context, offset) {
+          for (final pass in frost.passes(_frost.length)) {
+            context.pushLayer(pass, (_, _) {}, offset);
+          }
+        }, offset),
         oldLayer: _frostClip.layer,
       );
     } else {
@@ -830,31 +993,8 @@ class _RenderGlass extends RenderProxyBox {
       ),
       oldLayer: _clipLayer.layer,
     );
+    // The inner ring shadow is drawn by the optical shader (u_face.y).
     final local = _scaleTransform;
-    if (recipe.kind != 0) {
-      final canvas = context.canvas;
-      canvas.save();
-      canvas.translate(offset.dx, offset.dy);
-      if (local != null) canvas.transform(local.storage);
-      canvas.clipPath(shape.path(size));
-      canvas.drawPath(
-        shape.path(size).shift(const Offset(0, NativeGlassShadow.offset)),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = NativeGlassShadow.ringWidth
-          ..color = Color.from(
-            alpha: NativeGlassShadow.ringOpacity * recipe.shadowStrength,
-            red: 0,
-            green: 0,
-            blue: 0,
-          )
-          ..maskFilter = const MaskFilter.blur(
-            BlurStyle.normal,
-            NativeGlassShadow.ringRadius,
-          ),
-      );
-      canvas.restore();
-    }
     if (local == null) {
       _contentLayer.layer = null;
       super.paint(context, offset);
@@ -935,18 +1075,41 @@ class _GlassLayer extends ContainerLayer {
 
 /// Frost for one unbatched surface, clipped to its contour by the parent.
 /// Batched members skip it: their batch filter composes its own frost.
-/// Like [_GlassLayer], it configures a child filter layer at composition, since
-/// a layer that always needs adding cannot mark itself dirty.
+/// Like [_GlassLayer], it configures its child filter layers at composition,
+/// since a layer that always needs adding cannot mark itself dirty.
+///
+/// Each [FrostPass] is a backdrop filter layer composited with its blend
+/// mode. A surface's passes share one capture ([key]), so each blurs the same
+/// backdrop and the capture is taken once.
 class _FrostLayer extends ContainerLayer {
   _RenderGlass? glass;
-  // The handle keeps the child alive while it is detached between repaints.
-  final _filter = LayerHandle<BackdropFilterLayer>(BackdropFilterLayer());
-  BackdropFilterLayer get filter => _filter.layer!;
-  double? _sigma;
+  // The handles keep the children alive while detached between repaints.
+  final _filters = <LayerHandle<BackdropFilterLayer>>[];
+  final _configured = <(FrostPass, double)?>[];
+  final key = BackdropKey();
+
+  /// The first [count] pass layers, created as needed.
+  List<BackdropFilterLayer> passes(int count) {
+    while (_filters.length < count) {
+      _filters.add(LayerHandle(BackdropFilterLayer()));
+      _configured.add(null);
+    }
+    while (_filters.length > count) {
+      _filters.removeLast().layer = null;
+      _configured.removeLast();
+    }
+    return [for (final handle in _filters) handle.layer!];
+  }
+
+  BackdropFilterLayer pass(int index) => _filters[index].layer!;
 
   @override
   void dispose() {
-    _filter.layer = null;
+    for (final handle in _filters) {
+      handle.layer = null;
+    }
+    _filters.clear();
+    _configured.clear();
     super.dispose();
   }
 
@@ -963,24 +1126,35 @@ class _FrostLayer extends ContainerLayer {
         (group.prepared[owner] != null || group.shared.contains(owner))) {
       return;
     }
-    configure(owner.style.frost, null);
+    final frost = owner.frost;
+    final count = math.min(frost.length, _filters.length);
+    for (var i = 0; i < count; i++) {
+      // Distinct sigmas keep Impeller from rendering equal filters on one
+      // capture once over the whole screen.
+      configure(i, frost[i], count > 1 ? key : null, offset: i * 1e-4);
+    }
     addChildrenToScene(builder);
   }
 
-  /// Sets the blur and capture key. Backdrop filters sharing a key with equal
-  /// filters are rendered once over the whole capture, so the group hands each
-  /// hoisted member a sigma offset below float precision of a logical pixel:
-  /// every blur then stays clipped to its own contour.
-  void configure(double sigma, BackdropKey? key) {
-    if (sigma != _sigma) {
-      _sigma = sigma;
-      filter.filter = ui.ImageFilter.blur(
-        sigmaX: sigma,
-        sigmaY: sigma,
-        tileMode: ui.TileMode.clamp,
-      );
+  /// Sets pass [index]'s blur, blend and capture key. Backdrop filters
+  /// sharing a key with equal filters are rendered once over the whole
+  /// capture, so callers hand each pass a sigma [offset] below float precision
+  /// of a logical pixel: every blur then stays clipped to its own contour.
+  void configure(
+    int index,
+    FrostPass frost,
+    BackdropKey? key, {
+    double offset = 0,
+  }) {
+    final layer = pass(index);
+    final sigma = frost.sigma + offset;
+    if (_configured[index] != (frost, sigma)) {
+      _configured[index] = (frost, sigma);
+      layer
+        ..filter = frostFilter(frost, sigma)
+        ..blendMode = frost.blendMode;
     }
-    filter
+    layer
       ..backdropKey = key
       ..markNeedsAddToScene();
   }

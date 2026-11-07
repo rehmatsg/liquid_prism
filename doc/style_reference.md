@@ -19,7 +19,7 @@ and [components](components.md) for usage.
 | `ringOpacity` / `ringBlur` / `ringWidth` / `ringOffset` | Lifted shadow ring: .055 / 4 / 2 / (0, 4); slider .2 / 3 / 4 / (0, 8) |
 | `chromaticAberration` | Full-lift red–blue split along the rim, in points: segment/tab 3.5, switch/slider 0; explicit 0 off |
 | `chromaticBand` | Band depth in points, 4.8; explicit 0 off |
-| `rimWidth` / `rimRefraction` | Rim band and its displacement for a 37.2-point lens; slider 6.66 / 11.1, others keep their fitted rim |
+| `rimWidth` / `rimRefraction` | Rim band and its displacement for a 37.2-point lens; defaults are each lens's native rim at its own height: slider 6.66 / 11.1, switch 6.9 / 11.5, segment 7.04 / 8.8, tab pill 7 / 10.5 |
 | `rimLight` | Rim key/fill highlight strength at full lift: slider 1, others .6 |
 | `faceBlack` | Lens face black point, 0–1: slider .1, others 0 |
 | `heldContactShadow` | Keep the resting contact shadow while lifted: slider true, others false |
@@ -39,7 +39,7 @@ refracted foreground. Generic optical dispersion is a separate setting.
 | --- | --- |
 | `buttonStyle` | `GlassButtonStyle.glass`; prominent is the tinted preset |
 | `glass`, `optics`, `blur`, `motion`, `shape` | Component overrides of surface/theme settings |
-| `padding` | Standard/menu: horizontal 20, vertical 15; icon: 12 all sides |
+| `padding` | Standard/menu: horizontal 20, vertical 14, so a 17-point label is 48 points tall like a bar's text button (Invite measured 48.3 on iPhone Duo); icon: 12 all sides |
 | `minimumSize` | Standard/menu: no added minimum; icon: 48×48 |
 | `textStyle` | 17-point semibold, merged with surrounding text style |
 | `iconSize` | Ambient icon size |
@@ -182,6 +182,7 @@ separate scopes, native timings and input guarantees.
 | `GlassNavigationBarStyle.titleStyle` | 17-point semibold, semantic label |
 | `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold, semantic label |
 | `gutter` / `controlGap` | 16 / 12 |
+| `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; capsule at least 38 tall, padding 14 × 9 around the title; leading 22 with `leadingPadding` 12 start, 11 top and bottom, 10 before the title (a 44-point capsule); regular glass (measured from iOS 27 SwiftUI apps' device screenshots) |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
 | `revealCurve` | easeOutCubic (fitted) for the inline title's 0.53 s fade and 15-point rise |
 

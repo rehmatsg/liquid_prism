@@ -28,9 +28,16 @@ scale beneath it. Impeller places a filter layer on whole device pixels, so a
 clip that follows the pill or an animating ancestor scale makes the filtered
 glyphs pop between pixels against the unfiltered ones.
 
-Default regular glass also draws a separate inner ring and a negative edge
+Default regular glass also draws an inner ring shadow and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
 mapping and its measured limits are described in [native shadows](native_shadows.md).
+
+Regular and clear frost follows the device's Liquid Glass setting (see
+[customization](customization.md)). Below iOS's default the frost becomes a
+blur fill: the blurred backdrop composited over the sharp one with normal and
+lighten (dark: darken) blends, one backdrop filter layer per blend sharing one
+capture; clear glass above the default adds a fading blur fill. At the default
+and above, regular frost stays one plain blur pass, so it costs what it did.
 
 ## Ancestor transforms
 
@@ -95,7 +102,8 @@ moment-matched per-channel weights replace the five spectral bands. Each gate
 keeps the change imperceptible over the blurred backdrop; at zero frost the
 full paths run. The flat center skips the lens direction arithmetic,
 and highlights and reflections are evaluated only within their reach of the
-edge. The regular inner ring adds a blurred contour stroke. Exterior shadows are drawn as rounded-rect or
+edge. The inner ring is evaluated in the optical pass (two `erf` terms of the
+contour distance), not a separate blurred stroke. Exterior shadows are drawn as rounded-rect or
 rounded-superellipse primitives, so Impeller uses its analytic blur instead of
 tessellating a blurred path every frame. Press, tint and material changes update
 uniforms at composition without repainting the glass content.
@@ -165,20 +173,15 @@ an `Opacity` below 1 or a filter does.
 ### Shared captures and edge effects
 
 A `LiquidPrismScrollEdge`, `LiquidPrismScrollFade` or `LiquidPrismEdgeBlur`
-inside a group joins its captures. The effect's horizontal blur pass is painted
-with the members' hoisted frost and reads the same capture; its vertical pass
-reads the capture the members' optical passes read, which is taken before the
-fade and before that pass writes. Both passes and the fade are cut out of
-every shared member's contour. The members' optical passes therefore see the
-page content with the members' own frost and nothing of the effect, so glass
-over a scroll edge refracts what is beneath it, as native bar buttons do, and a
-bar's effect and its capsules cost two backdrop captures together instead of
-two each. Batching is off while an effect is hoisted, since a batch would read
-its own later capture.
+inside a group paints its own passes in place, and glass painted after it sits
+on top: the members' captures include the blurred, faded content, which their
+optical passes refract, as SwiftUI glass does over a scroll edge effect. The
+effect costs its own two backdrop captures beside the group's.
 
-The effect must reach the scene before the group's glass does, as a bar's
-background does before its controls. An effect with a `child` joins only when
-it paints first; one without a child (a bar's effect) joins wherever it paints.
+Earlier releases hoisted the effect into the group's captures and cut it out of
+every member's contour, so glass refracted the unblurred content; that is off,
+and the hoisting code is unused. Paint the effect before the group's glass, as
+a bar's background comes before its controls.
 Outside a group, or under an isolating ancestor, an effect takes two backdrop
 passes of its own and glass painted after it refracts the finished blur.
 
@@ -192,8 +195,9 @@ The example and regression tests are not a physical-device energy certification.
 
 ## Color and appearance
 
-Clear glass uses vertical bright highlights and a thin dark exterior rim,
-calibrated against the iOS 27 reference. Both follow the existing contour.
+Regular and clear glass use vertical key/fill highlights and a thin dark
+exterior rim, calibrated against iOS 27 references; regular glass uses the
+highlight matrix iOS 27.2 shows for it. Both follow the existing contour.
 Explicit custom optics retain their diagonal lighting. This adds arithmetic to the
 optical pass without adding texture samples or a separate rendering pass.
 

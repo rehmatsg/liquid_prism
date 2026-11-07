@@ -145,6 +145,24 @@ poses changed):
 | Split View, left half | x 24, y 24, 48 × 100 | x 24, y 433, 48 × 212 |
 | Split View, right half | x 397, y 120, 48 × 100 | x 397, y 433, 48 × 212 |
 
+A navigation back button moves into the rail too. In Apple Music on the
+closed iPhone Duo (iOS 27, device screenshot, about ±1 pt) it is a 48 pt
+circle at the column's top, y 174 under the status bar, where a trailing group
+would otherwise start, with the share/more capsule about 12 pt below it; the
+top bar row is empty. `LiquidPrismScaffold` places `leading` the same way (at
+the actions' top, the 12 pt rail gap above them).
+
+Text buttons stay in the top bar. In a SwiftUI chat app on the closed Duo
+(device screenshot, 3×), an Invite capsule 76 × 48.3 pt sits at x 306–382, ending
+at the content's edge, the rail's 12 pt from its column, level with a glass
+title capsule, while back and more icons sit in the rail. `trailing` drops its
+16 pt edge on the rail's side to match. The same screenshots give the
+`LiquidPrismTitle` defaults: a 64 pt avatar from y 24 on the content's centre,
+and the capsule (38 pt for a 17 pt title, 14 pt horizontal padding; 44.3 pt with
+a 22 pt inline avatar inset 12 pt from its start and 11 pt above and below, 10
+pt before the text). The text button and the capsule share the top margin's
+48 pt row, the Invite's top at y 24 tucked about 6 pt under it.
+
 The rail therefore runs from below any system region in its top half to above
 any in its bottom half. With horizontal bars, a status bar in a top corner
 shares the top bar's row.
@@ -167,3 +185,86 @@ the 24 pt top margin.
   The pill spans the slot plus 8 pt, matching the 58 pt native buttons.
 - A vertical toolbar group transposes the measured horizontal group: two items
   give the same 100 pt length.
+
+## Device Liquid Glass setting
+
+iOS 27 has a Liquid Glass slider (Settings > Appearance > Liquid Glass) that
+replaced iOS 26.1's Clear/Tinted switch. It has no public API; iOS applies it
+only to glass it draws. UIKitCore keeps it as the glass tint amount:
+`UIViewGlassGetTintAmount` (getter, no arguments, cached; it returns an
+`NSNumber`, which read 0, 0.5 and 1 at the slider's lowest, middle and highest
+positions on an iOS 27 device),
+`UIViewGlassSetTintAmount` (used by Settings) and
+`UIViewGlassTintAmountDidChangeNotification`, found in the iOS 27.1 simulator
+runtime's shared cache; Setup Assistant carries the user's value as
+`glassTintAmount` beside `appearanceMode`. The plugin reads the getter and
+observes the notification through `dlsym`, with the names assembled from
+reversed fragments (after NotchMyProblem), and reports its value; where the
+symbols are missing (earlier iOS, possibly 26.x) it reports null. It also
+re-reads when the app becomes active.
+
+What the setting changes, read directly from the glass layers' filter inputs
+(`tool/native_dispersion_probe --scene tint`, iOS 27.2 iPhone Duo, light, white
+backdrop, the slider moved in Settings; `UIViewGlassSetTintAmount` does not
+change the value in-process). Only `glassBackground` inputs move; refraction,
+highlights and shapes do not.
+
+| Tint amount | 0 | 0.25 | 0.5 | 1 |
+| --- | --- | --- | --- | --- |
+| Regular: blur fill lighten opacity | 0.675 | 0.7875 | 0.9 | 0.9 |
+| Regular: blur fill normal opacity | 0 | 0.25 | 0.5 | 1 |
+| Regular: face fill colour (white) alpha | 0 | 0.1 | 0.2 | 0.5 |
+| Clear: blur radius | 0 | 0.375 | 0.75 | 0.75 |
+| Clear: blur opacities 0–3 | 0 | 1, .5, .5, 1 | 1, .5, .5, 1 | 1, .5, .5, 1 |
+| Clear: blur fill radius / normal opacity | 0 / 0 | 0 / 0 | 0 / 0 | 8 / 1 |
+
+The prominent button's vibrant colour matrix is zero at 0 and set above it.
+The package's earlier simulator captures (blur fill lighten 0.9, normal 0.5,
+radius 8) match 0.5, so iOS's default is the middle position and the package's
+recipes are calibrated there. Reduce
+Transparency (`UIAccessibility.isReduceTransparencyEnabled` and its change
+notification) is reported beside it on every version.
+
+Other inputs in the same dumps that do not move with the setting: every glass
+layer's `inputBlurFillBlurRadius` (8 for regular glass at every amount),
+refraction, the negative key/fill rim, the ring shadow, and the held tab lens
+(`_UITabSelectionView` blur and colour matrix, the lens warp). The regular
+glass highlight layers (capsule, button, toolbar item, tab bar, prominent
+button) all carry the vibrant matrix whose first row is
+`(1.1202, -0.1894, -0.0190)`, the lens matrix in
+[native tab bar spec](native_tab_bar_spec.md); clear glass carries
+`(1.3192, -0.0478, -0.0047)`. Their `CASDFKeyFillHighlightEffect` inputs are
+identical for regular and clear glass. The dumps cover light appearance only.
+
+### How Liquid Prism follows it
+
+`LiquidPrismThemeData.glassTint` sets the amount; null follows
+`LiquidPrismSystemChrome.deviceGlassTintAmount` (live), then 0.5. The tables
+above are interpolated linearly between the measured amounts
+(`GlassTint` in `lib/src/recipe.dart`). Measured and fitted parts:
+
+| Part | Measured | Fitted (this package) |
+| --- | --- | --- |
+| Light regular face fill | white alpha 0 / .1 / .2 / .5 | — (used as captured) |
+| Light regular face luma cap | `inputFaceColorMatrixMaxLumaSDR` 0.94 at every amount (`inputFaceColorMatrixMaxLuma` 1); clear glass 1 | Applied after the fill as linear-light luma, scaled to keep hue. Over (242, 241, 246) native draws a face of (247, 246, 252); the cap gives (248, 248, 253), where the uncapped face was (254, 254, 255) and hid the rim's white band. Dark appearance is unmeasured and uncapped. |
+| Regular blur fill | lighten (darken in dark) and normal opacities above; radius 8 | The blur-fill sigma is the recipe's fitted frost (3.3, bars 5), which was calibrated at 0.5 and already stood for the blur fill there. Its normal opacity is the measured one divided by its 0.5 value, capped at 1, so 0.5 and above stay the plain frost they were and 0 is the sharp backdrop lightened at 0.675. |
+| Clear blur | radius 0 / .375 / .75 / .75 | The fitted frost (1.8, bars 5) scales with radius ÷ 0.75. |
+| Clear blur fill | normal 0 → 1 at tint 1, radius 8 | Same sigma as the regular blur fill. |
+| Dark appearance | at 0.5 only: darken 0.9, lighten 0, normal 0.5, fill clear | The light curves with darken for lighten; the fill stays clear. Not measured away from 0.5. |
+| Reduce Transparency | reported, not measured | Not applied: no capture shows what it changes in glass. |
+
+The blur fill is a backdrop filter layer per blend (normal, lighten or darken),
+each a Gaussian blur faded to its opacity and composited with that blend mode;
+a surface's layers share one capture, so the order does not change the result:
+for a lighten opacity `l` and normal `n` both give `s + n(b − s)` where the blur
+`b` is darker than the backdrop `s`, and `b − (1 − l)(1 − n)(b − s)` where it is
+lighter. An explicit `blur` (theme or widget) or explicit optics keep a plain
+frost, as before. Held control lenses keep their captured optics.
+
+Verified on macOS Impeller at a 3x raster (the showcase's Duo frame scaled 1.5
+on a 2x display): at 0.5 the frost passes are the single plain pass of before,
+and a textured scene changes by 0.2 levels on average (99th percentile 5, all
+from the rim highlight below); grouped surfaces batch at 0.5 and 1 and share
+captures at 0.25 and 0, matching ungrouped renders within 3 levels. Pixels at
+other amounts were not compared with native glass: the white-backdrop
+screenshots cannot show a blur.
