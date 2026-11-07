@@ -224,3 +224,46 @@ radius 8) match 0.5, so iOS's default is the middle position and the package's
 recipes are calibrated there. Reduce
 Transparency (`UIAccessibility.isReduceTransparencyEnabled` and its change
 notification) is reported beside it on every version.
+
+Other inputs in the same dumps that do not move with the setting: every glass
+layer's `inputBlurFillBlurRadius` (8 for regular glass at every amount),
+refraction, the negative key/fill rim, the ring shadow, and the held tab lens
+(`_UITabSelectionView` blur and colour matrix, the lens warp). The regular
+glass highlight layers (capsule, button, toolbar item, tab bar, prominent
+button) all carry the vibrant matrix whose first row is
+`(1.1202, -0.1894, -0.0190)`, the lens matrix in
+[native tab bar spec](native_tab_bar_spec.md); clear glass carries
+`(1.3192, -0.0478, -0.0047)`. Their `CASDFKeyFillHighlightEffect` inputs are
+identical for regular and clear glass. The dumps cover light appearance only.
+
+### How Liquid Prism follows it
+
+`LiquidPrismThemeData.glassTint` sets the amount; null follows
+`LiquidPrismSystemChrome.deviceGlassTintAmount` (live), then 0.5. The tables
+above are interpolated linearly between the measured amounts
+(`GlassTint` in `lib/src/recipe.dart`). Measured and fitted parts:
+
+| Part | Measured | Fitted (this package) |
+| --- | --- | --- |
+| Light regular face fill | white alpha 0 / .1 / .2 / .5 | — (used as captured) |
+| Regular blur fill | lighten (darken in dark) and normal opacities above; radius 8 | The blur-fill sigma is the recipe's fitted frost (3.3, bars 5), which was calibrated at 0.5 and already stood for the blur fill there. Its normal opacity is the measured one divided by its 0.5 value, capped at 1, so 0.5 and above stay the plain frost they were and 0 is the sharp backdrop lightened at 0.675. |
+| Clear blur | radius 0 / .375 / .75 / .75 | The fitted frost (1.8, bars 5) scales with radius ÷ 0.75. |
+| Clear blur fill | normal 0 → 1 at tint 1, radius 8 | Same sigma as the regular blur fill. |
+| Dark appearance | at 0.5 only: darken 0.9, lighten 0, normal 0.5, fill clear | The light curves with darken for lighten; the fill stays clear. Not measured away from 0.5. |
+| Reduce Transparency | reported, not measured | Not applied: no capture shows what it changes in glass. |
+
+The blur fill is a backdrop filter layer per blend (normal, lighten or darken),
+each a Gaussian blur faded to its opacity and composited with that blend mode;
+a surface's layers share one capture, so the order does not change the result:
+for a lighten opacity `l` and normal `n` both give `s + n(b − s)` where the blur
+`b` is darker than the backdrop `s`, and `b − (1 − l)(1 − n)(b − s)` where it is
+lighter. An explicit `blur` (theme or widget) or explicit optics keep a plain
+frost, as before. Held control lenses keep their captured optics.
+
+Verified on macOS Impeller at a 3x raster (the showcase's Duo frame scaled 1.5
+on a 2x display): at 0.5 the frost passes are the single plain pass of before,
+and a textured scene changes by 0.2 levels on average (99th percentile 5, all
+from the rim highlight below); grouped surfaces batch at 0.5 and 1 and share
+captures at 0.25 and 0, matching ungrouped renders within 3 levels. Pixels at
+other amounts were not compared with native glass: the white-backdrop
+screenshots cannot show a blur.

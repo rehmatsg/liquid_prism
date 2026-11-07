@@ -9,7 +9,23 @@
   The tint amount uses private UIKit API looked up at runtime under names
   assembled from fragments; it is null where iOS has no such setting, so
   earlier versions are unaffected. Reduce Transparency is public on every
-  version. Glass does not yet follow them.
+  version.
+
+- Regular and clear glass follow the device's Liquid Glass setting, live:
+  below iOS's default the frost becomes the native blur fill (the blurred
+  backdrop over the sharp one with normal and lighten blends at the measured
+  opacities) and the white face fill thins, so glass shows more of the
+  backdrop; above it the face whitens and clear glass frosts. At the default
+  glass looks as before. `LiquidPrismThemeData.glassTint` fixes the amount;
+  an explicit `blur` or `optics` keeps a plain frost. Reduce Transparency is
+  not applied to glass yet: no capture shows what it changes.
+
+- Regular glass rims read on white as native ones do: a full-white band
+  inside the dark line at the top and bottom. Regular glass now draws the
+  vertical key/fill highlight with the matrix iOS 27.2 uses for it, instead of
+  a diagonal top-left lobe, and the inner ring shadow is drawn in the optical
+  pass under that highlight. Clear glass's dark line is lighter, matching the
+  measured −0.3 bias.
 
 - `LiquidPrismThemeData.refraction` sets the rim refraction of every glass
   surface that uses its material's optics, as `blur` sets their frost, keeping

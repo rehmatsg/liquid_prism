@@ -25,6 +25,16 @@ each, keeping the rest of each native recipe. A surface's own `optics` or
 `blur`, and the held lenses of switches, sliders, segments and tabs, keep
 theirs.
 
+Regular and clear glass follow iOS 27's Liquid Glass setting (Settings >
+Appearance > Liquid Glass) by default: lower settings show more of the
+backdrop, higher ones frost and whiten the glass, and glass updates as soon as
+the setting changes. `LiquidPrismThemeData(glassTint: .5)` fixes the amount
+(0–1) for an app or subtree; null follows the device, then iOS's default 0.5,
+where the materials look as they always have. It changes the material's own
+frost and white face fill only: an explicit `blur` or `optics` keeps a plain
+frost, and held control lenses keep their optics. Other platforms and earlier
+iOS versions report no setting, so glass renders at 0.5.
+
 Shapes: `GlassShape.capsule`, `GlassShape.circle`,
 `GlassShape.rect(cornerRadius: ...)` for continuous corners, and
 `GlassShape.roundedRect(cornerRadius: ...)` for circular corners. A circle is
@@ -33,7 +43,8 @@ inscribed in the available rectangle without changing layout dimensions.
 ## Defaults and precedence
 
 `LiquidPrismThemeData` accepts `brightness`, `glass`, `tint`, `foregroundColor`,
-`optics`, `blur`, `shape`, `motion`, and component styles: `button`, `switchStyle`,
+`optics`, `blur`, `refraction`, `glassTint`, `shape`, `motion`, and component
+styles: `button`, `switchStyle`,
 `slider`, `segmentedControl`, `tabBar`, `toolbar`, `search`, shared `lens` and
 `controlMotion`.
 

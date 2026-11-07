@@ -308,14 +308,20 @@ class _GlassGroupData {
           .transform(entry.value.storage);
       contours.add(contour);
       final frost = member._frostLayer.layer;
-      if (frost == null || member.style.frost <= 0.05) continue;
-      frost.configure(member.style.frost + index++ * 1e-4, frostKey);
+      final passes = member.frost;
+      if (frost == null || passes.isEmpty) continue;
       final memberClips = clips[member]!;
       for (final clip in memberClips) {
         builder.pushClipPath(clip);
       }
       builder.pushClipPath(contour);
-      frost.filter.addToScene(builder);
+      // Every pass reads the one frost capture, as a lone surface's passes
+      // share theirs.
+      final count = math.min(passes.length, frost._filters.length);
+      for (var i = 0; i < count; i++) {
+        frost.configure(i, passes[i], frostKey, offset: index++ * 1e-4);
+        frost.pass(i).addToScene(builder);
+      }
       builder.pop();
       for (final _ in memberClips) {
         builder.pop();
@@ -456,7 +462,7 @@ class _GlassGroupData {
           : 0.0;
       final margin =
           math.max(displacement * .5 + spread, reach) +
-          member.style.frost * 3 +
+          member.frostReach * 3 +
           20;
       // Exact outward reach of the optical pass: reflection taps, or dispersion
       // plus half of the bounded 16px footprint, then the frost kernel (3σ).
@@ -465,7 +471,7 @@ class _GlassGroupData {
             member.style.reflection > .001 ? member.style.reflectionReach : 0,
             spread + 8 / member.pixelRatio,
           ) +
-          member.style.frost * 3 +
+          member.frostReach * 3 +
           1;
       sampled[member] = MatrixUtils.transformRect(
         transform,
@@ -537,8 +543,11 @@ class _GlassGroupData {
       }
       // Clear, expert and tab-bar optics expose resampling differences in Impeller's
       // cached filter snapshot at high-contrast edges. Keep their scalar path.
+      // A batch composes one plain frost into its filter; a blur fill that
+      // blends over the sharp backdrop needs the member's own passes.
       if (!canBatch ||
           near ||
+          !member.plainFrost ||
           member.shape.isSmooth ||
           member.recipe.kind != 1 ||
           member.recipe.role == GlassRole.tabBar) {
@@ -563,8 +572,8 @@ class _GlassGroupData {
     }
     var used = 0;
     for (final group in groups.values) {
-      for (var start = 0; start < group.length; start += 16) {
-        final chunk = group.skip(start).take(16).toList();
+      for (var start = 0; start < group.length; start += batchMaxLenses) {
+        final chunk = group.skip(start).take(batchMaxLenses).toList();
         if (chunk.length < 2) continue;
         if (used == _batches.length) _batches.add(_GlassBatch());
         final batch = _batches[used++];
@@ -572,17 +581,11 @@ class _GlassGroupData {
         for (final member in chunk) {
           final rect = bounds[member]!;
           final dpr = member.pixelRatio;
-          // Sixteen vec4 per lens: bounds, the eleven scalar uniform blocks after
-          // the texture size, then the four derived blocks after the contour.
+          // Seventeen vec4 per lens: bounds, the eleven scalar uniform blocks
+          // after the texture size, the four derived blocks after the
+          // contour, then the face block.
           final uniforms = member.uniforms(transforms[member]);
-          values.addAll([
-            rect.left * dpr,
-            rect.top * dpr,
-            rect.right * dpr,
-            rect.bottom * dpr,
-            ...uniforms.skip(2).take(44),
-            ...uniforms.skip(46 + superellipseUniformCount).take(16),
-          ]);
+          values.addAll(batchLensUniforms(rect, dpr, uniforms));
           prepared[member] = batch;
         }
         batch.filter = batch._filterCache.resolve(
@@ -629,3 +632,23 @@ bool _pixelAlignedRect(Rect rect, double pixelRatio) {
   }
   return true;
 }
+
+/// One lens of the batch shader's `u_lenses`: [batchLensStride] floats.
+@visibleForTesting
+List<double> batchLensUniforms(Rect bounds, double dpr, List<double> scalar) =>
+    [
+      bounds.left * dpr,
+      bounds.top * dpr,
+      bounds.right * dpr,
+      bounds.bottom * dpr,
+      ...scalar.skip(2).take(44),
+      ...scalar.skip(46 + superellipseUniformCount).take(20),
+    ];
+
+/// Floats per lens in the batch shader (seventeen vec4).
+@visibleForTesting
+const batchLensStride = 68;
+
+/// Lenses per batch: `u_lenses` holds 256 vec4.
+@visibleForTesting
+const batchMaxLenses = 15;

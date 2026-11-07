@@ -2,6 +2,7 @@
 precision highp float;
 uniform vec2 u_textureSize;
 uniform float u_count;
+// Seventeen vec4 per lens, at most fifteen lenses.
 uniform vec4 u_lenses[256];
 uniform sampler2D u_backdrop;
 out vec4 frag_color;
@@ -23,15 +24,16 @@ const vec4 u_shapeC = vec4(0.);
 const vec4 u_shapeD = vec4(0.);
 vec4 u_curve[65];
 vec4 u_derived[4];
+vec4 u_face;
 #include "glass_core.glsl"
 void main() {
     vec2 p = FlutterFragCoord().xy;
     int slot = -1;
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 15; i++) {
         if (float(i) >= u_count) break;
-        vec4 bounds = u_lenses[i * 16];
+        vec4 bounds = u_lenses[i * 17];
         if (p.x >= bounds.x && p.y >= bounds.y && p.x <= bounds.z && p.y <= bounds.w) {
-            slot = i * 16;
+            slot = i * 17;
             break;
         }
     }
@@ -53,5 +55,6 @@ void main() {
     u_derived[1] = u_lenses[slot + 13];
     u_derived[2] = u_lenses[slot + 14];
     u_derived[3] = u_lenses[slot + 15];
+    u_face = u_lenses[slot + 16];
     shadeGlass();
 }

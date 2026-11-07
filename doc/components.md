@@ -460,6 +460,9 @@ CupertinoApp(
   flag. Use them to place custom bars or sheet controls on the same edge as the
   system's vertical bar and below the status bar.
 - `LiquidPrismSystemChrome.listenable` gives the same report outside widgets.
+- `LiquidPrismSystemChrome.deviceGlassTintAmount` is the device's Liquid Glass
+  setting (0–1, null where iOS has none). Glass follows it already; read it to
+  match your own surfaces, or override it with `LiquidPrismThemeData.glassTint`.
 - A `LiquidPrismScaffold` inside a sheet lays out its own rail too.
 - To keep interactive content off a bent fold, read
   `MediaQuery.displayFeaturesOf(context)` for a feature in

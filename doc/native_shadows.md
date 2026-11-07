@@ -59,6 +59,54 @@ glass keeps about 30%. Its `inputKeyFillHighlightSpread` is 1.309 (75°)
 against regular's 1.676 (96°), which matches that falloff; the algorithm is
 not recovered. The renderer's clear glass therefore keeps its ends-only line.
 
+### The rim over white on iOS 27.2
+
+Measured on an iPhone Duo (iOS 27.2, 3x, light, white page) from the native
+probe (`--scene tint`, captured at tint 0.25) and a native app, and compared
+with Liquid Prism rendered at a 3x raster (macOS Impeller with the frame
+scaled 1.5 on a 2x display; both builds were also captured on the iPhone
+through the Flutter driver and agree with macOS to a level):
+
+| Profile (device pixels, outside → inside) | Native | Before | After |
+| --- | --- | --- | --- |
+| Regular, side of a 48 pt circle or 38 pt button | 254 \| 215, 175 \| 248, 249 | 255 \| 211, 178 \| 248, 250 | 255 \| 211, 178 \| 248, 251 |
+| Regular, top centre | 241, 231 \| 255 for 2.7 pt, then down to 248 by 9 pt | 242, 232 \| 254, 254, 253, then down to 250 | 242, 232 \| 255 for 4 pt, then down to 251 by 8 pt |
+| Regular, bottom centre | 236, 228 \| 255 × 10, then 254, 253 | 239, 229 \| 253, 254, 254, 255 | 239, 229 \| 255 throughout |
+| Clear, side | 255 \| 217, 179 \| 255 | 251 \| 204, 135, 224 \| 250 | 251 \| 220, 175, 233 \| 251 |
+
+The dark exterior line already matched for regular glass. What made native
+rims read on white was the full-white band just inside the line at the top
+(2.7 pt) and bottom (3.3 pt) against a slightly grey face: Liquid Prism had
+none, because the inner ring was painted over the face up to the edge (253
+right inside the line) and regular glass used a 1-point diagonal highlight
+that no capture supports. Changes:
+
+- Regular glass now draws the vertical key/fill lobes of clear glass (the
+  dumps show identical `CASDFKeyFillHighlightEffect` inputs for both) with the
+  matrix the iOS 27.2 dumps show for regular highlights in light appearance
+  (`1.1202 −0.1894 −0.0190 / −0.0563 0.9871 −0.0191 / −0.0563 −0.1893 1.1574`,
+  bias 0.1471, the lens matrix). On the prominent button the green channel
+  above the face now reads about +25, +10, +8, +7, +6 from 1 to 3 points
+  deep against native's +22, +9, +6, +4, +3 (aligned at the dark line, ±1
+  device pixel; before: +37, then nothing past 1 point); the first point stays
+  dimmer (+40 against +65). Dark appearance
+  keeps its previous matrix: no dark capture exists for 27.2.
+- The inner ring moved from a canvas stroke into the optical shader, under the
+  key/fill, where native layers it. It is the same stroke (width 4, moved 8
+  down, sigma 5, opacity 0.06 × the shadow strength) as a one-dimensional
+  blurred band across the moved contour's distance, which is exact along
+  straight edges. It is kept out of a band 2.67 pt under the top and 3.3 pt
+  above the bottom, fading back by 8 pt and from 20° to 60° off vertical: a fit
+  to the profiles above, not Apple's ring operator.
+- Clear glass's line uses the measured −0.3 colour bias as regular's does
+  (0.46 before, which darkened its ends by 120 levels against native's 76).
+
+Remaining differences on white: the native face is 2–5 levels greyer inside
+the band (its ring dip reaches 248, ours 251, and its button centres sit at
+249–250 where ours stay at 253–255). No measured input explains that level,
+so it is unchanged. The line on dark and colourful backdrops keeps the black
+coverage band: no capture separates an additive −0.3 bias from it there.
+
 Angles are radians. Clear glass's shadow opacity/radius and all ring-shadow
 inputs are zero in the captured fixtures. It retains its optical edge lighting.
 
@@ -84,7 +132,7 @@ The recovered size-dependent native shadow rule remains reference data; it does
 not replace the established Flutter exterior shadow. Standalone surfaces use half exterior-shadow and inner-ring opacity in Regular
 compared with Clear, as requested. Buttons and tab bars instead use the captured
 control profile described below. Their strength remains independent of blur. This 0.5 factor
-is a user-requested visual adjustment, not an extracted Apple parameter. The optical edge highlight still follows the material. The ring is painted above the optical face and below foreground content.
+is a user-requested visual adjustment, not an extracted Apple parameter. The optical edge highlight still follows the material. The optical shader draws the ring under the key/fill highlight and below foreground content (`u_face.y` carries its opacity).
 All passes follow the same continuous/circular contour and press transform.
 
 The native inputs above are extracted values. The compositor implementation is

@@ -28,9 +28,16 @@ scale beneath it. Impeller places a filter layer on whole device pixels, so a
 clip that follows the pill or an animating ancestor scale makes the filtered
 glyphs pop between pixels against the unfiltered ones.
 
-Default regular glass also draws a separate inner ring and a negative edge
+Default regular glass also draws an inner ring shadow and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
 mapping and its measured limits are described in [native shadows](native_shadows.md).
+
+Regular and clear frost follows the device's Liquid Glass setting (see
+[customization](customization.md)). Below iOS's default the frost becomes a
+blur fill: the blurred backdrop composited over the sharp one with normal and
+lighten (dark: darken) blends, one backdrop filter layer per blend sharing one
+capture; clear glass above the default adds a fading blur fill. At the default
+and above, regular frost stays one plain blur pass, so it costs what it did.
 
 ## Ancestor transforms
 
@@ -95,7 +102,8 @@ moment-matched per-channel weights replace the five spectral bands. Each gate
 keeps the change imperceptible over the blurred backdrop; at zero frost the
 full paths run. The flat center skips the lens direction arithmetic,
 and highlights and reflections are evaluated only within their reach of the
-edge. The regular inner ring adds a blurred contour stroke. Exterior shadows are drawn as rounded-rect or
+edge. The inner ring is evaluated in the optical pass (two `erf` terms of the
+contour distance), not a separate blurred stroke. Exterior shadows are drawn as rounded-rect or
 rounded-superellipse primitives, so Impeller uses its analytic blur instead of
 tessellating a blurred path every frame. Press, tint and material changes update
 uniforms at composition without repainting the glass content.
@@ -187,8 +195,9 @@ The example and regression tests are not a physical-device energy certification.
 
 ## Color and appearance
 
-Clear glass uses vertical bright highlights and a thin dark exterior rim,
-calibrated against the iOS 27 reference. Both follow the existing contour.
+Regular and clear glass use vertical key/fill highlights and a thin dark
+exterior rim, calibrated against iOS 27 references; regular glass uses the
+highlight matrix iOS 27.2 shows for it. Both follow the existing contour.
 Explicit custom optics retain their diagonal lighting. This adds arithmetic to the
 optical pass without adding texture samples or a separate rendering pass.
 

@@ -173,6 +173,7 @@ class LiquidPrismThemeData {
     this.optics,
     this.blur,
     this.refraction,
+    this.glassTint,
     this.shape,
     this.motion,
     this.navigationBar,
@@ -188,7 +189,8 @@ class LiquidPrismThemeData {
     this.transition,
     this.scrollEdge,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(refraction == null || refraction >= 0);
+       assert(refraction == null || refraction >= 0),
+       assert(glassTint == null || (glassTint >= 0 && glassTint <= 1));
 
   /// Replaces native feedback; component haptics flags still silence it.
   final GlassHaptics? haptics;
@@ -213,6 +215,18 @@ class LiquidPrismThemeData {
   /// Surfaces with their own optics, including held control lenses, keep
   /// theirs. Null retains the material default.
   final double? refraction;
+
+  /// How tinted regular and clear glass are, 0–1, as the Liquid Glass slider
+  /// in iOS 27's Settings > Appearance sets it (UIKit's glass tint amount):
+  /// lower values show more of the backdrop, higher ones frost and whiten
+  /// the glass. Null follows the device's setting
+  /// ([LiquidPrismSystemChrome.deviceGlassTintAmount], live), then iOS's
+  /// default 0.5, where the materials are calibrated.
+  ///
+  /// It drives the material's own frost and face fill. An explicit [blur],
+  /// a widget's `blur` or explicit optics keep a plain frost; held control
+  /// lenses keep their captured optics, which the setting does not change.
+  final double? glassTint;
   final GlassShape? shape;
   final GlassMotion? motion;
   final GlassNavigationBarStyle? navigationBar;
@@ -243,6 +257,7 @@ class LiquidPrismThemeData {
     LiquidPrismStyle? optics,
     double? blur,
     double? refraction,
+    double? glassTint,
     GlassShape? shape,
     GlassMotion? motion,
     GlassNavigationBarStyle? navigationBar,
@@ -267,6 +282,7 @@ class LiquidPrismThemeData {
     optics: optics ?? this.optics,
     blur: blur ?? this.blur,
     refraction: refraction ?? this.refraction,
+    glassTint: glassTint ?? this.glassTint,
     shape: shape ?? this.shape,
     motion: motion ?? this.motion,
     navigationBar: navigationBar ?? this.navigationBar,
@@ -294,6 +310,7 @@ class LiquidPrismThemeData {
         optics: other.optics ?? optics,
         blur: other.blur ?? blur,
         refraction: other.refraction ?? refraction,
+        glassTint: other.glassTint ?? glassTint,
         shape: other.shape ?? shape,
         motion: other.motion ?? motion,
         navigationBar: (navigationBar ?? const GlassNavigationBarStyle()).merge(

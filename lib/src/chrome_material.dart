@@ -28,14 +28,17 @@ class ChromeMaterial extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = LiquidPrismTheme.of(context);
+    final ownOptics = optics ?? theme.optics;
     return LiquidPrism(
       glass: (glass ?? theme.glass ?? Glass.regular).interactive(false),
       shape: shape ?? GlassShape.capsule,
       role: role,
-      blur: blur ?? optics?.frost ?? theme.blur ?? theme.optics?.frost ?? 5,
+      // The bar's own frost (5) follows the device's Liquid Glass setting;
+      // an app's blur or optics replace it with a plain frost.
+      blur: blur ?? ownOptics?.frost ?? theme.blur,
+      materialOptics: ownOptics == null,
       optics:
-          optics ??
-          theme.optics ??
+          ownOptics ??
           LiquidPrismStyle(
             edgeWidth: height / 4,
             refraction: height / 2,

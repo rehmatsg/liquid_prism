@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'material.dart';
@@ -22,6 +25,160 @@ enum GlassRole {
   final double shaderId;
 }
 
+/// What the device's Liquid Glass setting (iOS 27's Settings > Appearance >
+/// Liquid Glass, UIKit's glass tint amount) changes in a material.
+///
+/// The tables are `glassBackground` filter inputs read directly from iOS 27.2
+/// on an iPhone Duo (light appearance, `tool/native_dispersion_probe --scene
+/// tint`) at tint amounts 0, 0.25, 0.5 and 1; values between them are
+/// interpolated linearly. See doc/native_adaptive_layout.md for the measured
+/// inputs and for the parts that are fitted rather than measured.
+@internal
+abstract final class GlassTint {
+  /// iOS's default, where the package's recipes were calibrated.
+  static const standard = 0.5;
+
+  /// Tint amounts the tables below were measured at.
+  static const amounts = <double>[0, .25, .5, 1];
+
+  /// Regular: blur fill lighten opacity (float32 inputs as captured).
+  static const regularLighten = <double>[
+    0.6749999523162842,
+    0.7874999642372131,
+    0.8999999761581421,
+    0.8999999761581421,
+  ];
+
+  /// Regular: blur fill normal opacity.
+  static const regularNormal = <double>[0, .25, .5, 1];
+
+  /// Regular, light: alpha of the white face fill colour.
+  static const regularFaceFill = <double>[0, .1, .2, .5];
+
+  /// Clear: blur radius (the face's own, light blur).
+  static const clearBlurRadius = <double>[0, .375, .75, .75];
+
+  /// Clear: blur fill normal opacity (its radius is 8 only at tint 1).
+  static const clearFillNormal = <double>[0, 0, 0, 1];
+
+  /// [values] at tint amount [t], linear between the measured amounts.
+  static double sample(List<double> values, double t) {
+    final x = t.clamp(0.0, 1.0);
+    for (var i = 1; i < amounts.length; i++) {
+      if (x <= amounts[i]) {
+        final f = (x - amounts[i - 1]) / (amounts[i] - amounts[i - 1]);
+        return values[i - 1] + (values[i] - values[i - 1]) * f;
+      }
+    }
+    return values.last;
+  }
+
+  /// Resolution order: an explicit theme value, then the device's setting,
+  /// then iOS's default.
+  static double resolve(double? theme, double? device) =>
+      (theme ?? device ?? standard).clamp(0.0, 1.0);
+}
+
+/// One blur of a surface's frost: a Gaussian copy of the backdrop under the
+/// glass, composited over it at [opacity] with [blendMode]. Every pass of a
+/// surface reads the same capture of the backdrop.
+@immutable
+@internal
+final class FrostPass {
+  const FrostPass(
+    this.sigma, [
+    this.opacity = 1,
+    this.blendMode = BlendMode.srcOver,
+  ]);
+  final double sigma;
+  final double opacity;
+  final BlendMode blendMode;
+
+  /// Replaces the backdrop under the glass outright, as a plain frost does.
+  bool get covers => opacity >= 1 && blendMode == BlendMode.srcOver;
+
+  FrostPass scaled(double factor) =>
+      FrostPass(sigma * factor, opacity, blendMode);
+
+  @override
+  bool operator ==(Object other) =>
+      other is FrostPass &&
+      other.sigma == sigma &&
+      other.opacity == opacity &&
+      other.blendMode == blendMode;
+
+  @override
+  int get hashCode => Object.hash(sigma, opacity, blendMode);
+
+  @override
+  String toString() => 'FrostPass($sigma, $opacity, ${blendMode.name})';
+
+  /// The frost of a material whose blur follows the tint amount [tint].
+  ///
+  /// Native regular glass composites a blurred copy of the backdrop (its blur
+  /// fill) over the sharp face with a normal blend and a lighten blend (darken
+  /// in dark appearance) at the measured opacities. The package's fitted frost
+  /// [frost] was calibrated at tint 0.5, so it stands for that blur fill there:
+  /// its normal opacity is the measured one divided by its 0.5 value (capped
+  /// at 1), which leaves tint 0.5 exactly as it was and keeps a plain frost from
+  /// 0.5 up. The lighten opacity is the measured one. Clear glass scales its
+  /// own blur with the measured blur radius and adds a blur fill of
+  /// [fillFrost] (the regular frost, from the same captured radius) at the
+  /// measured normal opacity, which reaches 1 at tint 1.
+  static List<FrostPass> resolve({
+    required double kind,
+    required bool dark,
+    required double frost,
+    required double fillFrost,
+    required double? tint,
+  }) {
+    if (tint == null || (kind != 1 && kind != 2)) {
+      return frost > 0.05 ? [FrostPass(frost)] : const [];
+    }
+    if (kind == 1) {
+      final normal = math.min(
+        1.0,
+        GlassTint.sample(GlassTint.regularNormal, tint) /
+            GlassTint.sample(GlassTint.regularNormal, GlassTint.standard),
+      );
+      if (frost <= 0.05) return const [];
+      if (normal >= 1) return [FrostPass(frost)];
+      final blend = GlassTint.sample(GlassTint.regularLighten, tint);
+      return [
+        if (normal > 0) FrostPass(frost, normal),
+        if (blend > 0)
+          FrostPass(frost, blend, dark ? BlendMode.darken : BlendMode.lighten),
+      ];
+    }
+    final radius = GlassTint.sample(GlassTint.clearBlurRadius, tint);
+    final base =
+        frost *
+        radius /
+        GlassTint.sample(GlassTint.clearBlurRadius, GlassTint.standard);
+    final fill = GlassTint.sample(GlassTint.clearFillNormal, tint);
+    if (fill >= 1 && fillFrost > 0.05) return [FrostPass(fillFrost)];
+    return [
+      if (base > 0.05) FrostPass(base),
+      if (fill > 0 && fillFrost > 0.05) FrostPass(fillFrost, fill),
+    ];
+  }
+
+  /// The blur the optical pass may assume of the face it reads: the last pass
+  /// that replaces the backdrop outright, or none while sharp detail shows
+  /// through.
+  static double effectiveSigma(List<FrostPass> passes) {
+    var sigma = 0.0;
+    for (final pass in passes) {
+      if (pass.covers) {
+        sigma = pass.sigma;
+      } else if (pass.blendMode == BlendMode.srcOver) {
+        sigma = math.min(sigma, pass.sigma);
+      }
+    }
+    return passes.any((p) => p.covers) ? sigma : 0;
+  }
+}
+
 final class GlassRecipe {
   const GlassRecipe(
     this.kind,
@@ -34,6 +191,7 @@ final class GlassRecipe {
     this.chromaticSplit = 0,
     this.chromaticBand = 0,
     this.underlay = 0,
+    this.faceFill = .2,
   ]);
   final double kind;
   final bool dark;
@@ -63,6 +221,32 @@ final class GlassRecipe {
   /// the optics' rim refraction: native gives each its own pass.
   final double underlay;
 
+  /// Alpha of the white face fill of light regular glass, which follows the
+  /// device's Liquid Glass setting ([GlassTint.regularFaceFill]); 0.2 at iOS's
+  /// default. The shader ignores it for clear glass and dark appearance, whose
+  /// measured fill is clear.
+  final double faceFill;
+
+  /// This recipe at tint amount [tint].
+  GlassRecipe withTint(double tint) {
+    final fill = GlassTint.sample(GlassTint.regularFaceFill, tint);
+    return fill == faceFill
+        ? this
+        : GlassRecipe(
+            kind,
+            dark,
+            role,
+            tintMatrix,
+            tintAlpha,
+            presence,
+            lensRim,
+            chromaticSplit,
+            chromaticBand,
+            underlay,
+            fill,
+          );
+  }
+
   GlassRecipe withChromaticFringe(double split, double band) => GlassRecipe(
     kind,
     dark,
@@ -74,6 +258,7 @@ final class GlassRecipe {
     split,
     band,
     underlay,
+    faceFill,
   );
 
   GlassRecipe withUnderlay(double value) => value == underlay
@@ -89,6 +274,7 @@ final class GlassRecipe {
           chromaticSplit,
           chromaticBand,
           value,
+          faceFill,
         );
 
   GlassRecipe withPresence(double value) => value == presence
@@ -104,6 +290,7 @@ final class GlassRecipe {
           chromaticSplit,
           chromaticBand,
           underlay,
+          faceFill,
         );
 
   GlassRecipe withLensRim(double value) => value == lensRim
@@ -119,6 +306,7 @@ final class GlassRecipe {
           chromaticSplit,
           chromaticBand,
           underlay,
+          faceFill,
         );
 
   // Native controls retain their captured profile. The requested half-strength
@@ -167,6 +355,10 @@ final class GlassRecipe {
     );
   }
 
+  /// The regular recipe's frost: the blur fill a clear surface fades in
+  /// towards tint 1, which native draws with the same captured radius.
+  static const regularFrost = 3.3;
+
   LiquidPrismStyle optics(double radius) => kind == 2
       ? LiquidPrismStyle.clear.copyWith(
           cornerRadius: radius,
@@ -176,7 +368,7 @@ final class GlassRecipe {
         )
       : LiquidPrismStyle(
           refraction: 48,
-          frost: 3.3,
+          frost: regularFrost,
           brightness: 0,
           tint: const Color(0x00000000),
           saturation: 1,
@@ -192,6 +384,16 @@ final class GlassRecipe {
     // Press progress, smooth contour flag, absence (1 - presence) and the tab
     // pill's glint. Absence keeps the zero default fully materialized.
     0, 0, 1 - presence, lensRim,
+  ];
+
+  /// The trailing `u_face` block: the face fill alpha, the inner ring
+  /// shadow's opacity (zero for custom optics, as before), then two reserved
+  /// zeros.
+  List<double> get faceUniforms => [
+    faceFill,
+    kind == 0 ? 0 : NativeGlassShadow.ringOpacity * shadowStrength,
+    0,
+    0,
   ];
 }
 

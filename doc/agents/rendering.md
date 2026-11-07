@@ -54,6 +54,33 @@ selected copy has not been verified with them on a GPU. Preserve the base row's
 state identity during style or selection changes. Test first render, movement and
 resize, not only a settled pill.
 
+## Face block and frost passes
+
+`u_face` closes the scalar packet (floats 338–341, `glassUniformCount` 342):
+x is the white face fill alpha of light regular glass (it follows the tint
+amount; the shader ignores it for clear and dark), y the inner ring shadow's
+opacity (`NativeGlassShadow.ringOpacity` × shadow strength, zero for custom
+optics and lenses), z and w reserved zeros. The batch shader carries it as
+each lens's seventeenth vec4 (`batchLensStride` 68 floats), so a batch holds
+at most `batchMaxLenses` 15 lenses in its 256 vec4. `test/glass_tint_test.dart`
+parses both shaders against these constants.
+
+The ring is evaluated in `ringShadow()` under the key/fill highlight; the
+canvas stroke it replaces is gone. Its band mask (`facing`, `gain`) is a fit
+documented in [native shadows](../native_shadows.md#the-rim-over-white-on-ios-272).
+
+A surface's frost is a list of `FrostPass`es (`lib/src/recipe.dart`), resolved
+from the tint amount for the material's own frost and plain otherwise. Each
+pass is a `BackdropFilterLayer` under the `_FrostLayer` (blur, faded by a
+colour-matrix alpha, composited with the pass's blend mode). An unshared
+surface's passes share the layer's own `BackdropKey`, so the backdrop is
+captured once and each pass blurs the same pixels; hoisted members' passes use
+`frostKey`. Each pass gets a distinct sigma offset (1e-4) so Impeller never
+treats two as equal filters on one key. `style.frost` handed to the optical
+pass is `FrostPass.effectiveSigma`: zero while sharp detail shows through. A
+batch composes one plain frost, so only members whose frost is a single
+covering pass batch (the default tint and above); the rest share captures.
+
 ## Shared captures
 
 Each `BackdropFilterLayer` makes Impeller end the render pass, store the full
@@ -154,7 +181,8 @@ also scales the new fringe in backdrop and foreground; 0 disables all three.
 The existing 1.5-point glint (blue reaching .3 deeper) and .16 strength still
 scale with lens height over 70; this is a fitted treatment, not a native operator.
 
-The scalar packet remains 338 floats. Reserved `u_derived[1].w` (float 329)
+The scalar packet was 338 floats when this was added (342 since the face block
+below). Reserved `u_derived[1].w` (float 329)
 now carries effective red–blue split in device pixels: style split × lift ×
 presence × DPR, before the existing sampling transform. Reserved `u_shapeD.z`
 (float 60) carries band depth in local points. The contour generator still writes
