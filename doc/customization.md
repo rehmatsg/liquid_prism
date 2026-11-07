@@ -19,6 +19,12 @@ LiquidPrism(
 spring touch feedback to a surface, without inventing an action. Use
 `LiquidPrismButton` for touch, keyboard, and accessibility activation.
 
+App-wide, `LiquidPrismThemeData(blur: 6, refraction: 30)` sets the frost and
+the rim refraction of every surface that uses its material's optics, one field
+each, keeping the rest of each native recipe. A surface's own `optics` or
+`blur`, and the held lenses of switches, sliders, segments and tabs, keep
+theirs.
+
 Shapes: `GlassShape.capsule`, `GlassShape.circle`,
 `GlassShape.rect(cornerRadius: ...)` for continuous corners, and
 `GlassShape.roundedRect(cornerRadius: ...)` for circular corners. A circle is

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- `LiquidPrismThemeData.refraction` sets the rim refraction of every glass
+  surface that uses its material's optics, as `blur` sets their frost, keeping
+  the rest of each recipe. The showcase's Studio gains a Whole app switch that
+  applies its Frost and Refraction to every screen.
+
 - On iOS, a scaffold `bottomBar` without a tab bar sits on the tab bar's line,
   21 points above the screen's edge, inside the home indicator's inset as
   native bottom glass does (a bottom search field rests 28 points up), instead

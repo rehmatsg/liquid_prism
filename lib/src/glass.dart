@@ -289,11 +289,13 @@ class _LiquidPrismState extends State<LiquidPrism> {
             .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand)
             // Materializing grows the lens, and with it the underlay.
             .withUnderlay(widget.underlay * (materialize ? presence : 1));
-    var style = (optics ?? recipe.optics(shape.radius)).copyWith(
+    var style = resolveSurfaceOptics(
+      optics ?? recipe.optics(shape.radius),
       cornerRadius: shape.radius,
-      frost:
-          widget.blur ??
-          (widget.optics != null ? widget.optics!.frost : theme.blur),
+      widgetOptics: widget.optics,
+      widgetBlur: widget.blur,
+      themeBlur: theme.blur,
+      themeRefraction: theme.refraction,
     );
     if (presence < 1) {
       // Frost is its own backdrop pass, which the output fade cannot reach,
@@ -412,6 +414,23 @@ void writeChromaticFringeUniforms(
       ? recipe.chromaticSplit * pixelRatio * recipe.presence
       : 0; // u_derived[1].w
 }
+
+/// A surface's optics after the widget's and theme's per-field overrides: an
+/// explicit blur wins; a widget's own optics keep their frost and refraction;
+/// otherwise the theme's blur and refraction replace the packet's.
+@visibleForTesting
+LiquidPrismStyle resolveSurfaceOptics(
+  LiquidPrismStyle packet, {
+  required double cornerRadius,
+  LiquidPrismStyle? widgetOptics,
+  double? widgetBlur,
+  double? themeBlur,
+  double? themeRefraction,
+}) => packet.copyWith(
+  cornerRadius: cornerRadius,
+  frost: widgetBlur ?? (widgetOptics != null ? widgetOptics.frost : themeBlur),
+  refraction: widgetOptics != null ? null : themeRefraction,
+);
 
 /// Writes the lifted lens's underlay displacement (u_shapeD.w), limited like
 /// the rim refraction to the available thickness. Other recipes carry zero.

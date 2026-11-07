@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/glass.dart' show resolveSurfaceOptics;
 import 'package:liquid_prism/src/recipe.dart';
 
 import 'support/rendering.dart';
@@ -441,4 +442,34 @@ void main() {
       expect(haptics, hasLength(1));
     },
   );
+
+  test('theme refraction replaces the material packet field only', () {
+    const packet = LiquidPrismStyle(refraction: 9, frost: 3);
+    var style = resolveSurfaceOptics(
+      packet,
+      cornerRadius: 12,
+      themeBlur: 6,
+      themeRefraction: 30,
+    );
+    expect(style.refraction, 30);
+    expect(style.frost, 6);
+    expect(style.cornerRadius, 12);
+    // A surface's own optics keep both; an explicit blur still wins.
+    style = resolveSurfaceOptics(
+      packet,
+      cornerRadius: 12,
+      widgetOptics: packet,
+      widgetBlur: 1,
+      themeBlur: 6,
+      themeRefraction: 30,
+    );
+    expect(style.refraction, 9);
+    expect(style.frost, 1);
+    expect(
+      const LiquidPrismThemeData(refraction: 30)
+          .merge(const LiquidPrismThemeData(blur: 2))
+          .refraction,
+      30,
+    );
+  });
 }

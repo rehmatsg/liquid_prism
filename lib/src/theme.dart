@@ -172,6 +172,7 @@ class LiquidPrismThemeData {
     this.glass,
     this.optics,
     this.blur,
+    this.refraction,
     this.shape,
     this.motion,
     this.navigationBar,
@@ -186,7 +187,8 @@ class LiquidPrismThemeData {
     this.controlMotion,
     this.transition,
     this.scrollEdge,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12));
+  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
+       assert(refraction == null || refraction >= 0);
 
   /// Replaces native feedback; component haptics flags still silence it.
   final GlassHaptics? haptics;
@@ -205,6 +207,12 @@ class LiquidPrismThemeData {
 
   /// Gaussian blur in logical pixels. Null retains the material default.
   final double? blur;
+
+  /// Rim displacement in points for every glass surface that uses its
+  /// material's optics, replacing that one field as [blur] replaces frost.
+  /// Surfaces with their own optics, including held control lenses, keep
+  /// theirs. Null retains the material default.
+  final double? refraction;
   final GlassShape? shape;
   final GlassMotion? motion;
   final GlassNavigationBarStyle? navigationBar;
@@ -234,6 +242,7 @@ class LiquidPrismThemeData {
     Glass? glass,
     LiquidPrismStyle? optics,
     double? blur,
+    double? refraction,
     GlassShape? shape,
     GlassMotion? motion,
     GlassNavigationBarStyle? navigationBar,
@@ -257,6 +266,7 @@ class LiquidPrismThemeData {
     glass: glass ?? this.glass,
     optics: optics ?? this.optics,
     blur: blur ?? this.blur,
+    refraction: refraction ?? this.refraction,
     shape: shape ?? this.shape,
     motion: motion ?? this.motion,
     navigationBar: navigationBar ?? this.navigationBar,
@@ -283,6 +293,7 @@ class LiquidPrismThemeData {
         glass: other.glass ?? glass,
         optics: other.optics ?? optics,
         blur: other.blur ?? blur,
+        refraction: other.refraction ?? refraction,
         shape: other.shape ?? shape,
         motion: other.motion ?? motion,
         navigationBar: (navigationBar ?? const GlassNavigationBarStyle()).merge(
