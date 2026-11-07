@@ -201,7 +201,26 @@ runtime's shared cache; Setup Assistant carries the user's value as
 observes the notification through `dlsym`, with the names assembled from
 reversed fragments (after NotchMyProblem), and reports its value; where the
 symbols are missing (earlier iOS, possibly 26.x) it reports null. It also
-re-reads when the app becomes active. The setting's effect on native glass is
-not yet measured. Reduce
+re-reads when the app becomes active.
+
+What the setting changes, read directly from the glass layers' filter inputs
+(`tool/native_dispersion_probe --scene tint`, iOS 27.2 iPhone Duo, light, white
+backdrop, the slider moved in Settings; `UIViewGlassSetTintAmount` does not
+change the value in-process). Only `glassBackground` inputs move; refraction,
+highlights and shapes do not.
+
+| Tint amount | 0 | 0.25 | 0.5 | 1 |
+| --- | --- | --- | --- | --- |
+| Regular: blur fill lighten opacity | 0.675 | 0.7875 | 0.9 | 0.9 |
+| Regular: blur fill normal opacity | 0 | 0.25 | 0.5 | 1 |
+| Regular: face fill colour (white) alpha | 0 | 0.1 | 0.2 | 0.5 |
+| Clear: blur radius | 0 | 0.375 | 0.75 | 0.75 |
+| Clear: blur opacities 0–3 | 0 | 1, .5, .5, 1 | 1, .5, .5, 1 | 1, .5, .5, 1 |
+| Clear: blur fill radius / normal opacity | 0 / 0 | 0 / 0 | 0 / 0 | 8 / 1 |
+
+The prominent button's vibrant colour matrix is zero at 0 and set above it.
+The package's earlier simulator captures (blur fill lighten 0.9, normal 0.5,
+radius 8) match 0.5, so iOS's default is the middle position and the package's
+recipes are calibrated there. Reduce
 Transparency (`UIAccessibility.isReduceTransparencyEnabled` and its change
 notification) is reported beside it on every version.
