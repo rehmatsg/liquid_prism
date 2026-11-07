@@ -499,6 +499,22 @@ void main() {
       unawaited(SystemChromeListener.instance.reset());
     }
 
+    testWidgets('device glass settings arrive even without the rail APIs', (
+      tester,
+    ) async {
+      // iOS 27.0 has the Liquid Glass setting but not the rail APIs.
+      await report(tester, {
+        'supported': false,
+        'glassTintAmount': .4,
+        'reduceTransparency': true,
+      });
+      await tester.pumpWidget(const _App());
+      await tester.pump();
+      expect(LiquidPrismSystemChrome.deviceGlassTintAmount.value, .4);
+      expect(LiquidPrismSystemChrome.reduceTransparency.value, isTrue);
+      expect(LiquidPrismSystemChrome.listenable.value, isNull);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
     testWidgets('the vertical bar edge wins over safe-area insets', (
       tester,
     ) async {

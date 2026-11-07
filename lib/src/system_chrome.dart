@@ -203,6 +203,18 @@ class LiquidPrismSystemChrome extends StatelessWidget {
   static ValueListenable<GlassSystemChrome?> get listenable =>
       SystemChromeListener.instance.value;
 
+  /// The device's Liquid Glass setting: iOS 27's Settings > Appearance >
+  /// Liquid Glass slider (UIKit's glass tint amount), read through private
+  /// UIKit API. Null on other platforms, without the plugin, and where iOS has
+  /// no such setting (it is looked up at runtime, so earlier versions are
+  /// safe).
+  static ValueListenable<double?> get deviceGlassTintAmount =>
+      SystemChromeListener.instance.glassTintAmount;
+
+  /// Accessibility's Reduce Transparency, on every iOS version.
+  static ValueListenable<bool> get reduceTransparency =>
+      SystemChromeListener.instance.reduceTransparency;
+
   /// The report from the nearest [LiquidPrismSystemChrome]. Without one, the
   /// latest report, without rebuilding when it changes.
   static GlassSystemChrome? of(BuildContext context) =>
@@ -278,6 +290,8 @@ class SystemChromeListener {
   static const channel = EventChannel('liquid_prism/system_chrome');
 
   final _value = ValueNotifier<GlassSystemChrome?>(null);
+  final _glassTintAmount = ValueNotifier<double?>(null);
+  final _reduceTransparency = ValueNotifier<bool>(false);
   StreamSubscription<Object?>? _subscription;
   bool _started = false;
 
@@ -287,6 +301,20 @@ class SystemChromeListener {
       unawaited(_listen());
     }
     return _value;
+  }
+
+  /// The device's Liquid Glass setting (iOS 27's Settings > Appearance >
+  /// Liquid Glass, UIKit's glass tint amount), or null where it can't be read.
+  /// Reported on every iOS version that has it, unlike [value].
+  ValueListenable<double?> get glassTintAmount {
+    value; // Subscribes on first use.
+    return _glassTintAmount;
+  }
+
+  /// Accessibility's Reduce Transparency, on every iOS version.
+  ValueListenable<bool> get reduceTransparency {
+    value; // Subscribes on first use.
+    return _reduceTransparency;
   }
 
   Future<void> _listen() async {
@@ -300,7 +328,10 @@ class SystemChromeListener {
     }
     if (!_started) return;
     _subscription = channel.receiveBroadcastStream().listen((event) {
-      if (event is Map) _value.value = GlassSystemChrome.fromMap(event);
+      if (event is! Map) return;
+      _value.value = GlassSystemChrome.fromMap(event);
+      _glassTintAmount.value = (event['glassTintAmount'] as num?)?.toDouble();
+      _reduceTransparency.value = event['reduceTransparency'] == true;
     }, onError: (Object _) {});
   }
 
@@ -311,6 +342,8 @@ class SystemChromeListener {
     final subscription = _subscription;
     _subscription = null;
     _value.value = null;
+    _glassTintAmount.value = null;
+    _reduceTransparency.value = false;
     await subscription?.cancel();
   }
 }

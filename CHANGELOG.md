@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- The iOS plugin reports the device's Liquid Glass setting (iOS 27's
+  Settings > Appearance > Liquid Glass slider, UIKit's glass tint amount) as
+  `LiquidPrismSystemChrome.deviceGlassTintAmount`, and Reduce Transparency as
+  `LiquidPrismSystemChrome.reduceTransparency`, updating when either changes.
+  The tint amount uses private UIKit API looked up at runtime under names
+  assembled from fragments; it is null where iOS has no such setting, so
+  earlier versions are unaffected. Reduce Transparency is public on every
+  version. Glass does not yet follow them.
+
 - `LiquidPrismThemeData.refraction` sets the rim refraction of every glass
   surface that uses its material's optics, as `blur` sets their frost, keeping
   the rest of each recipe. The showcase's Studio gains a Whole app switch that
