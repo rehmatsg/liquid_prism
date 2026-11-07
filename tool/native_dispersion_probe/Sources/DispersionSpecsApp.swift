@@ -3,7 +3,7 @@ import SwiftUI
 /// Native glass over hard-edged black/white backdrops, held one at a time by
 /// the UI tests, so screenshots show any colour fringe at lifted lens rims and
 /// the extractor records the filters (glassForeground inputAberration*).
-///   --scene controls|tabbar|toolbar|tint   --pattern v|h|edge   --light
+///   --scene controls|tabbar|toolbar|tint|levels   --pattern v|h|edge   --light
 /// Position-encoded and plain backdrops (see EncodedBackdrop) for decoding the
 /// lens displacement field from screenshots:
 ///   --pattern ramp|phasex|phasey|grayx|grayy|white   [--period 32] [--shift k]
@@ -73,6 +73,7 @@ struct Root: View {
             if flag("--mono") { TabsFixture().tint(.black) } else { TabsFixture() }
         case "toolbar": ToolbarFixture()
         case "tint": TintFixture()
+        case "levels": LevelsFixture()
         default: ControlsFixture()
         }
     }
