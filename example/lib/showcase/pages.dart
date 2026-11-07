@@ -290,7 +290,9 @@ class StudioPage extends StatelessWidget {
         ),
         InsetSection(
           header: 'Optics',
-          footer: 'Frost and refraction apply to the canvas above.',
+          footer:
+              'Frost and refraction apply to the canvas above, and to every '
+              'glass surface when Whole app is on.',
           children: [
             SliderRow(
               title: 'Frost',
@@ -307,6 +309,16 @@ class StudioPage extends StatelessWidget {
               max: 64,
               display: '${model.refraction.round()}',
               onChanged: (v) => model.change(() => model.refraction = v),
+            ),
+            ListRow(
+              title: 'Whole app',
+              icon: CupertinoIcons.square_stack_3d_up,
+              iconColor: colors.teal,
+              trailing: LiquidPrismSwitch(
+                label: 'Whole app',
+                value: model.globalOptics,
+                onChanged: (v) => model.change(() => model.globalOptics = v),
+              ),
             ),
           ],
         ),

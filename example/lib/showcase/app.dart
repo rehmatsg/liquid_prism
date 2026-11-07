@@ -49,6 +49,10 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
             brightness: model.brightness,
             tint: model.tint,
             glass: model.glass,
+            // Studio's optics, app-wide when its switch is on; surfaces with
+            // their own optics, such as held control lenses, keep theirs.
+            blur: model.globalOptics ? model.frost : null,
+            refraction: model.globalOptics ? model.refraction : null,
             tabBar: GlassTabBarStyle(
               labelBehavior: model.labels
                   ? GlassTabLabelBehavior.always

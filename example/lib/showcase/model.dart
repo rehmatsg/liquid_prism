@@ -9,6 +9,10 @@ class ShowcaseModel extends ChangeNotifier {
   String accent = 'blue';
   int wallpaper = 0;
   double frost = 4, refraction = 24;
+
+  /// Applies [frost] and [refraction] to every glass surface in the app,
+  /// not just the Studio canvas.
+  bool globalOptics = false;
   bool enabled = true, favorite = false;
   double level = .62;
   int segment = 0, taps = 0;
@@ -41,6 +45,7 @@ class ShowcaseModel extends ChangeNotifier {
     wallpaper = 0;
     frost = 4;
     refraction = 24;
+    globalOptics = false;
   });
 }
 
