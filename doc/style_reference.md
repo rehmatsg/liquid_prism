@@ -182,6 +182,7 @@ separate scopes, native timings and input guarantees.
 | `GlassNavigationBarStyle.titleStyle` | 17-point semibold, semantic label |
 | `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold, semantic label |
 | `gutter` / `controlGap` | 16 / 12 |
+| `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; capsule at least 38 tall, padding 14 × 8; leading 26, 10 before the title; regular glass (measured from iOS 27 SwiftUI apps' device screenshots) |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
 | `revealCurve` | easeOutCubic (fitted) for the inline title's 0.53 s fade and 15-point rise |
 

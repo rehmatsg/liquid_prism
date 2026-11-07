@@ -125,6 +125,131 @@ void main() {
     expect(rect.top, lessThan(120));
   });
 
+  group('LiquidPrismTitle', () {
+    test('local style wins per field over the theme, keeping zero', () {
+      const theme = GlassTitleStyle(avatarSize: 40, avatarOverlap: 4);
+      final style = theme.merge(const GlassTitleStyle(avatarOverlap: 0));
+      expect(style.resolvedAvatarSize, 40);
+      expect(style.resolvedAvatarOverlap, 0);
+      expect(style.resolvedMinHeight, 38);
+      const title = LiquidPrismTitle(avatar: SizedBox(), child: Text('A'));
+      // 38 pt capsule under a 40 pt avatar it does not tuck under.
+      expect(LiquidPrismTitle.extentOf(title, style, 20.4), 78);
+      expect(
+        const GlassNavigationBarStyle(titleCapsule: theme)
+            .merge(
+              const GlassNavigationBarStyle(
+                titleCapsule: GlassTitleStyle(avatarSize: 50),
+              ),
+            )
+            .titleCapsule,
+        const GlassTitleStyle(avatarSize: 50, avatarOverlap: 4),
+      );
+    });
+
+    const avatar = Key('avatar'),
+        inline = Key('inline'),
+        invite = Key('invite');
+    var taps = 0;
+    Widget app({required bool withAvatar, Widget? trailing, Widget? leading}) =>
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            leading: leading,
+            title: LiquidPrismTitle(
+              avatar: withAvatar
+                  ? const ColoredBox(key: avatar, color: Color(0xFFEE8866))
+                  : null,
+              leading: withAvatar
+                  ? null
+                  : const ColoredBox(key: inline, color: Color(0xFFEE8866)),
+              onPressed: () => taps++,
+              child: const Text('Friday'),
+            ),
+            trailing: trailing,
+            actions: [
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.phone),
+                label: 'Call',
+                onPressed: () {},
+              ),
+            ],
+            body: const SizedBox.expand(key: _body),
+          ),
+        );
+
+    testWidgets(
+      'an avatar heads the bar on iPhone Duo; the capsule tucks under',
+      (tester) async {
+        window(tester, duo);
+        await tester.pumpWidget(app(withAvatar: true));
+        // Measured (SwiftUI app, closed Duo): a 64 pt avatar from y 24 centred
+        // on the content beside the rail, the capsule 6 pt under it, ending at
+        // y 120.
+        final face = tester.getRect(find.byKey(avatar));
+        expect(face, const Rect.fromLTWH(191 - 32, 24, 64, 64));
+        final title = tester.getRect(find.byType(LiquidPrismTitle));
+        expect(title.top, 24);
+        expect(title.bottom, 120);
+        expect(title.center.dx, closeTo(191, .01));
+        // The bar grows to hold it; the content starts below it.
+        expect(
+          MediaQuery.paddingOf(tester.element(find.byKey(_body))).top,
+          120 + LiquidPrismScaffold.topBarClearance,
+        );
+        await tester.tap(find.text('Friday'));
+        expect(taps, 1);
+        expect(find.bySemanticsLabel('Friday'), findsOneWidget);
+      },
+    );
+
+    testWidgets('an inline leading and a text button share the top row', (
+      tester,
+    ) async {
+      window(tester, duo);
+      await tester.pumpWidget(
+        app(
+          withAvatar: false,
+          trailing: LiquidPrismButton(
+            key: invite,
+            label: 'Invite',
+            onPressed: () {},
+            child: const Text('Invite'),
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byKey(inline)), const Size(26, 26));
+      final capsule = tester.getRect(find.byType(LiquidPrismTitle));
+      expect(capsule.height, 42, reason: '26 pt leading and 8 pt padding');
+      // The text button stays in the top bar beside the rail, ending at the
+      // content's edge, level with the title; the icon action is in the rail.
+      final button = tester.getRect(find.byKey(invite));
+      expect(button.right, 382);
+      expect(button.center.dy, closeTo(capsule.center.dy, .01));
+      expect(tester.getRect(find.byType(LiquidPrismToolbarGroup)).left, 394);
+    });
+
+    testWidgets('on iPhone the controls keep their row above a tall title', (
+      tester,
+    ) async {
+      window(tester, phone);
+      const back = Key('back');
+      await tester.pumpWidget(
+        app(
+          withAvatar: true,
+          leading: const SizedBox(key: back, width: 44, height: 44),
+        ),
+      );
+      final title = tester.getRect(find.byType(LiquidPrismTitle));
+      final control = tester.getRect(find.byKey(back));
+      expect(title.height, 96);
+      expect(control.top, lessThan(title.top + 20));
+      expect(
+        tester.getRect(find.byType(LiquidPrismToolbarGroup)).center.dy,
+        closeTo(control.center.dy, .01),
+      );
+    });
+  });
+
   testWidgets('unfolded iPhone Duo keeps the rail, actions sit higher', (
     tester,
   ) async {

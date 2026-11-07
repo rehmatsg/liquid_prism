@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- `LiquidPrismTitle` puts a navigation title in a glass capsule, with an
+  optional `leading` inside it (a small avatar) and an optional `avatar`
+  above it that the capsule tucks under, as SwiftUI chat screens do;
+  `onPressed` makes it a button. The scaffold grows its bar to fit while the
+  leading control and actions keep their row. Geometry is configurable with
+  `GlassTitleStyle`, locally or in `GlassNavigationBarStyle.titleCapsule`.
+- On iPhone Duo, a `trailing` widget such as a glass text button ends at the
+  content's edge beside the rail, as measured, instead of 16 points in.
+
 - On iPhone Duo, `LiquidPrismScaffold` moves `leading` (the back button)
   into the vertical rail with the actions: at the top of the column, under
   the status bar, the actions 12 points below it, as native apps do. It no

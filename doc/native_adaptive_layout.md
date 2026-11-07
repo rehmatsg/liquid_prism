@@ -152,6 +152,15 @@ would otherwise start, with the share/more capsule about 12 pt below it; the
 top bar row is empty. `LiquidPrismScaffold` places `leading` the same way (at
 the actions' top, the 12 pt rail gap above them).
 
+Text buttons stay in the top bar. In a SwiftUI chat app on the closed Duo
+(device screenshot, 3×), an Invite capsule 76 × 48 pt sits at x 306–382, ending
+at the content's edge, the rail's 12 pt from its column, level with a glass
+title capsule, while back and more icons sit in the rail. `trailing` drops its
+16 pt edge on the rail's side to match. The same screenshots give the
+`LiquidPrismTitle` defaults: a 64 pt avatar from y 24 on the content's centre,
+and the capsule (38 pt for a 17 pt title, 43 with a 26 pt inline avatar, 14 pt
+horizontal padding) tucked about 6 pt under it.
+
 The rail therefore runs from below any system region in its top half to above
 any in its bottom half. With horizontal bars, a status bar in a top corner
 shares the top bar's row.

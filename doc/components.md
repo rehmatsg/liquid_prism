@@ -291,6 +291,45 @@ rather than running under them. An inline title taller than the bar's row,
 such as a logo beside two lines at a large text size, scales down to fit the
 row instead of overflowing it.
 
+A text button in glass, such as Invite, also goes in `trailing:`; it stays in
+the top bar on iPhone Duo, where only the icon actions move to the rail, and
+there ends at the content's edge, the rail's 12 points from its column.
+
+### Glass titles and avatars
+
+`LiquidPrismTitle` puts the title in a glass capsule, as SwiftUI chat and
+contact screens do. `child` is the title (usually `Text`, or any widget),
+`leading` sits inside the capsule before it (a small avatar), and `avatar` sits
+above it, with the capsule tucked 6 points under (a conversation header). Each
+is optional except the title; `onPressed` makes the whole capsule one button.
+
+```dart
+LiquidPrismScaffold(
+  title: LiquidPrismTitle(
+    avatar: ClipOval(child: Image.asset('friday.png')),
+    onPressed: openContact,
+    child: const Text('Friday'),
+  ),
+  actions: [GlassToolbarItem(icon: const Icon(CupertinoIcons.phone), label: 'Call', onPressed: call)],
+  body: conversation,
+)
+
+LiquidPrismScaffold(
+  title: LiquidPrismTitle(
+    leading: ClipOval(child: Image.asset('spacy.png')),
+    child: const Text('Spacy'),
+  ),
+  trailing: LiquidPrismButton(label: 'Invite', onPressed: invite, child: const Text('Invite')),
+  body: conversation,
+)
+```
+
+The avatar and leading are laid out in squares (64 and 26 points by default)
+so the bar knows its height: with an avatar it grows below the control row,
+which the leading control, actions and `trailing` keep, and the content starts
+below the capsule. Sizes, padding and glass come from `GlassTitleStyle`, on the
+title or app-wide in `GlassNavigationBarStyle.titleCapsule`.
+
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
 iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`
 reports reselections for anything else, such as focusing a search field. The

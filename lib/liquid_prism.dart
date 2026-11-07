@@ -49,6 +49,7 @@ export 'src/selection.dart' show LiquidPrismSelection;
 export 'src/style.dart' show LiquidPrismStyle;
 export 'src/tab_bar.dart' show LiquidPrismTab, LiquidPrismTabBar;
 export 'src/tab_bar_style.dart' show GlassTabBarStyle, GlassTabLabelBehavior;
+export 'src/title.dart' show GlassTitleStyle, LiquidPrismTitle;
 export 'src/theme.dart'
     show LiquidPrismTheme, LiquidPrismThemeData, GlassColors;
 
