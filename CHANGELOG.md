@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.6.0
+
 - The held slider's shadow in light appearance matches native over white:
   it was about twice as dark and darkest right at the lens. The light held
   slider drops the contact shadow and uses fainter layers fitted to a native
