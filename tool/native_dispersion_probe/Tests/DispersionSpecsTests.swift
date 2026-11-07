@@ -46,6 +46,8 @@ final class DispersionSpecsTests: XCTestCase {
     func testControlsVLight() { controls(["--pattern", "v", "--light"]) }
     func testControlsHDark() { controls(["--pattern", "h"]) }
     func testControlsHLight() { controls(["--pattern", "h", "--light"]) }
+    // Held shadows over plain white.
+    func testControlsWhiteLight() { controls(["--pattern", "white", "--light"]) }
     func testTabsVDark() { tabbar(["--pattern", "v"]) }
     func testTabsVLight() { tabbar(["--pattern", "v", "--light"]) }
     func testTabsHDark() { tabbar(["--pattern", "h"]) }
