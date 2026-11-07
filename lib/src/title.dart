@@ -227,6 +227,10 @@ class LiquidPrismTitle extends StatelessWidget {
             glass: glass.interactive(),
             shape: GlassShape.capsule,
             padding: padding,
+            // A title keeps the bar's title colour, not a button's tint.
+            foregroundColor:
+                DefaultTextStyle.of(context).style.color ??
+                GlassColors.of(context).label,
             child: content,
           );
     final avatar = this.avatar;

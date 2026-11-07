@@ -748,6 +748,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         accessoryHeight: widget.accessory?.preferredSize.height ?? 0,
         titleRowHeight: titleRowHeight,
         controlRowHeight: controlRowHeight,
+        centreTitle: widget.title is LiquidPrismTitle,
         expandedHeight: expandedHeight,
         largeTitleTop: widget.subtitle == null ? 3.67 : 6.67,
         collapseExtent: extent,
@@ -1182,6 +1183,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.accessoryHeight,
     required this.titleRowHeight,
     required this.controlRowHeight,
+    required this.centreTitle,
     required this.expandedHeight,
     required this.largeTitleTop,
     required this.collapseExtent,
@@ -1209,6 +1211,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
   /// Height of the row below the top bar, 0 without one.
   final double accessoryHeight;
+
+  /// A glass title capsule centres even beside controls, as measured.
+  final bool centreTitle;
   final double titleRowHeight,
       controlRowHeight,
       expandedHeight,
@@ -1581,7 +1586,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      if (actionsInBar) {
+      if (actionsInBar && !centreTitle) {
         // Beside actions the title leads, after the leading control.
         final title = layoutChild(
           _Slot.title,
@@ -1711,6 +1716,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       accessoryHeight != old.accessoryHeight ||
       titleRowHeight != old.titleRowHeight ||
       controlRowHeight != old.controlRowHeight ||
+      centreTitle != old.centreTitle ||
       expandedHeight != old.expandedHeight ||
       largeTitleTop != old.largeTitleTop ||
       collapseExtent != old.collapseExtent ||

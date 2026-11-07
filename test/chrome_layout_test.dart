@@ -220,6 +220,8 @@ void main() {
       expect(tester.getSize(find.byKey(inline)), const Size(26, 26));
       final capsule = tester.getRect(find.byType(LiquidPrismTitle));
       expect(capsule.height, 42, reason: '26 pt leading and 8 pt padding');
+      // Unlike a plain title, the capsule stays centred beside Invite.
+      expect(capsule.center.dx, closeTo(191, .01));
       // The text button stays in the top bar beside the rail, ending at the
       // content's edge, level with the title; the icon action is in the rail.
       final button = tester.getRect(find.byKey(invite));
