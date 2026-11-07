@@ -324,7 +324,8 @@ class StudioPage extends StatelessWidget {
                   icon: CupertinoIcons.device_phone_portrait,
                   iconColor: colors.indigo,
                   trailing: Text(
-                    tint == null ? 'Unavailable' : tint.toStringAsFixed(2),
+                    // Short, so the row fits narrow screens at large text.
+                    tint == null ? '—' : tint.toStringAsFixed(2),
                     style: TextStyle(color: colors.secondaryLabel),
                   ),
                 ),
