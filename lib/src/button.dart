@@ -40,7 +40,7 @@ class LiquidPrismButton extends StatelessWidget {
   }) : buttonStyle = buttonStyle ?? GlassButtonStyle.glass,
        _hasButtonStyle = buttonStyle != null,
        padding =
-           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
        _hasPadding = padding != null,
        _iconOnly = false,
        menu = null,
@@ -95,7 +95,7 @@ class LiquidPrismButton extends StatelessWidget {
   }) : buttonStyle = buttonStyle ?? GlassButtonStyle.glass,
        _hasButtonStyle = buttonStyle != null,
        padding =
-           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
        _hasPadding = padding != null,
        _iconOnly = false,
        onPressed = null,

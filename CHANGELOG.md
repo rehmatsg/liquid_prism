@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- `LiquidPrismButton`'s standard and menu text buttons default to 14 points of
+  vertical padding instead of 15, so a 17-point label is 48 points tall, the
+  height of a SwiftUI bar text button (Invite measured 48.3 on iPhone Duo) and
+  of the package's icon buttons. Pass `padding` to keep the old size.
+
 - `LiquidPrismTitle` puts a navigation title in a glass capsule, with an
   optional `leading` inside it (a small avatar) and an optional `avatar`
   above it that the capsule tucks under, as SwiftUI chat screens do;
