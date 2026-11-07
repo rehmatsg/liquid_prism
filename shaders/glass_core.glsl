@@ -170,29 +170,22 @@ vec3 gradeFace(vec3 color) {
             (dark ? 1.100000023841858 : 1.0299999713897705);
         float saturation = clear ? 1.059999942779541 :
             (dark ? 1.399999976158142 : 1.2000000476837158);
-        color = (color-vec3(value))*saturation + mix(black,white,value);
+        float tone = mix(black,white,value);
+        // Light regular glass rolls its face off below white. Native glass
+        // over flat sRGB greys (tool/native_dispersion_probe --scene levels,
+        // iOS 27.0 simulator, default tint) fits this curve within half a
+        // level from 32 to 255: it starts at the measured black, 0.4, and
+        // ends at 0.995, where mix(black, white) reaches 1.03 and left a
+        // light face pure white. iOS 27.2 also reports a face luma limit
+        // (inputFaceColorMatrixMaxLumaSDR 0.94) that may be its source; the
+        // operator is not recovered, so the curve is fitted. Clear glass
+        // matches mix(black, white) exactly and dark is unmeasured.
+        if (!clear && !dark) tone = .4 + value*(.7239-.129*value);
+        color = (color-vec3(value))*saturation + tone;
         // The white fill follows the device's Liquid Glass setting (0.2 at
         // iOS's default); clear glass and dark appearance measure none.
         float fill = clear || dark ? 0. : u_face.x;
-        color = mix(color,vec3(1.),fill);
-        // Light regular glass caps the face's luma at 0.94 in SDR
-        // (inputFaceColorMatrixMaxLumaSDR, every tint amount on iOS 27.2; clear
-        // glass measures 1, dark is unmeasured). Read as linear-light luma,
-        // scaled to keep hue, it leaves a light face off-white, so the rim's
-        // white band shows: over (242, 241, 246) native draws (247, 246, 252)
-        // and this gives (249, 248, 252), against (254, 254, 255) uncapped.
-        if (!clear && !dark) {
-            vec3 c = max(color,0.);
-            vec3 lin = mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),
-                           step(.04045,c));
-            float y = dot(lin,vec3(.2126,.7152,.0722));
-            if (y > .94) {
-                lin *= .94/y;
-                color = mix(lin*12.92,1.055*pow(lin,vec3(1./2.4))-.055,
-                            step(.0031308,lin));
-            }
-        }
-        color = clamp(color,0.,1.);
+        color = clamp(mix(color,vec3(1.),fill),0.,1.);
     }
     if (u_material.w > 0.) {
         vec4 inputColor = vec4(color,1.);
