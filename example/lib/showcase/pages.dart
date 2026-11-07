@@ -310,6 +310,26 @@ class StudioPage extends StatelessWidget {
               display: '${model.refraction.round()}',
               onChanged: (v) => model.change(() => model.refraction = v),
             ),
+            // The device's own Liquid Glass setting, as the package reads it.
+            ValueListenableBuilder(
+              valueListenable: LiquidPrismSystemChrome.deviceGlassTintAmount,
+              builder: (context, tint, _) => ValueListenableBuilder(
+                valueListenable: LiquidPrismSystemChrome.reduceTransparency,
+                builder: (context, reduced, _) => ListRow(
+                  key: const ValueKey('device-glass'),
+                  title: 'Device glass',
+                  subtitle: reduced
+                      ? 'Reduce Transparency on'
+                      : 'Settings › Appearance › Liquid Glass',
+                  icon: CupertinoIcons.device_phone_portrait,
+                  iconColor: colors.indigo,
+                  trailing: Text(
+                    tint == null ? 'Unavailable' : tint.toStringAsFixed(2),
+                    style: TextStyle(color: colors.secondaryLabel),
+                  ),
+                ),
+              ),
+            ),
             ListRow(
               title: 'Whole app',
               icon: CupertinoIcons.square_stack_3d_up,
