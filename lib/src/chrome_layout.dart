@@ -867,7 +867,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 widget.subtitle,
                 subtitleStyle,
                 large: false,
-                leading: titleLeads,
+                // A glass title capsule stays centred beside controls, so its
+                // subtitle centres under it too.
+                leading: titleLeads && title is! LiquidPrismTitle,
               ),
               titleStyle,
               large: false,

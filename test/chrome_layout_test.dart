@@ -242,6 +242,31 @@ void main() {
       expect(tester.getRect(find.byType(LiquidPrismToolbarGroup)).left, 394);
     });
 
+    testWidgets('a capsule title centres its subtitle beside controls', (
+      tester,
+    ) async {
+      window(tester, phone);
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: const LiquidPrismTitle(child: Text('Book Club')),
+            subtitle: const Text('5 members'),
+            actions: [
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.ellipsis),
+                label: 'More',
+                onPressed: () {},
+              ),
+            ],
+            body: const SizedBox.expand(key: _body),
+          ),
+        ),
+      );
+      final capsule = tester.getRect(find.byType(LiquidPrismTitle));
+      final subtitle = tester.getRect(find.text('5 members'));
+      expect(subtitle.center.dx, closeTo(capsule.center.dx, .01));
+    });
+
     testWidgets('on iPhone the controls keep their row above a tall title', (
       tester,
     ) async {
