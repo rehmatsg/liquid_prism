@@ -10,7 +10,9 @@ import UIKit
 /// appears as a literal; where either is missing the setting reads as nil and
 /// glass keeps its defaults.
 enum DeviceGlass {
-  private typealias Getter = @convention(c) () -> CGFloat
+  /// Returns an `NSNumber`, not a raw float: 0, 0.5 and 1 at the slider's
+  /// lowest, middle and highest positions (confirmed on an iOS 27 device).
+  private typealias Getter = @convention(c) () -> Unmanaged<AnyObject>?
 
   /// `RTLD_DEFAULT`: search every image loaded in the process.
   private static let everyImage = UnsafeMutableRawPointer(bitPattern: -2)
@@ -23,11 +25,14 @@ enum DeviceGlass {
     ["Amount", "Tint", "Get", "Glass", "View", "UI"]
   ).map { unsafeBitCast($0, to: Getter.self) }
 
-  /// The raw tint amount (measured range not yet recorded), or nil where the
-  /// system has no such setting.
+  /// The getter's object, unretained: it follows the get rule.
+  private static var tintObject: AnyObject? { getter?()?.takeUnretainedValue() }
+
+  /// The tint amount, 0 (lowest) to 1 (highest), or nil where the system has
+  /// no such setting.
   static var tintAmount: Double? {
-    guard let getter else { return nil }
-    let value = Double(getter())
+    guard let number = tintObject as? NSNumber else { return nil }
+    let value = number.doubleValue
     return value.isFinite ? value : nil
   }
 

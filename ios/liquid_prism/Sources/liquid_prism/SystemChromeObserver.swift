@@ -148,7 +148,12 @@ public final class SystemChromeObserver {
   public init() {
     // The Liquid Glass and Reduce Transparency settings change without any
     // layout or trait change.
-    let names = [DeviceGlass.didChange, UIAccessibility.reduceTransparencyStatusDidChangeNotification]
+    // Returning from Settings re-reads them too.
+    let names = [
+      DeviceGlass.didChange,
+      UIAccessibility.reduceTransparencyStatusDidChangeNotification,
+      UIApplication.didBecomeActiveNotification,
+    ]
     for name in names.compactMap({ $0 }) {
       glassObservers.append(
         NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) {

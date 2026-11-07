@@ -191,14 +191,17 @@ the 24 pt top margin.
 iOS 27 has a Liquid Glass slider (Settings > Appearance > Liquid Glass) that
 replaced iOS 26.1's Clear/Tinted switch. It has no public API; iOS applies it
 only to glass it draws. UIKitCore keeps it as the glass tint amount:
-`UIViewGlassGetTintAmount` (getter, no arguments, cached),
+`UIViewGlassGetTintAmount` (getter, no arguments, cached; it returns an
+`NSNumber`, which read 0, 0.5 and 1 at the slider's lowest, middle and highest
+positions on an iOS 27 device),
 `UIViewGlassSetTintAmount` (used by Settings) and
 `UIViewGlassTintAmountDidChangeNotification`, found in the iOS 27.1 simulator
 runtime's shared cache; Setup Assistant carries the user's value as
 `glassTintAmount` beside `appearanceMode`. The plugin reads the getter and
 observes the notification through `dlsym`, with the names assembled from
-reversed fragments (after NotchMyProblem), and reports the raw value; where
-the symbols are missing (earlier iOS, possibly 26.x) it reports null. Its
-range and its effect on native glass are not yet measured. Reduce
+reversed fragments (after NotchMyProblem), and reports its value; where the
+symbols are missing (earlier iOS, possibly 26.x) it reports null. It also
+re-reads when the app becomes active. The setting's effect on native glass is
+not yet measured. Reduce
 Transparency (`UIAccessibility.isReduceTransparencyEnabled` and its change
 notification) is reported beside it on every version.

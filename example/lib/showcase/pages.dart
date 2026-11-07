@@ -311,11 +311,17 @@ class StudioPage extends StatelessWidget {
               onChanged: (v) => model.change(() => model.refraction = v),
             ),
             // The device's own Liquid Glass setting, as the package reads it.
-            ValueListenableBuilder(
-              valueListenable: LiquidPrismSystemChrome.deviceGlassTintAmount,
-              builder: (context, tint, _) => ValueListenableBuilder(
-                valueListenable: LiquidPrismSystemChrome.reduceTransparency,
-                builder: (context, reduced, _) => ListRow(
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                LiquidPrismSystemChrome.deviceGlassTintAmount,
+                LiquidPrismSystemChrome.reduceTransparency,
+              ]),
+              builder: (context, _) {
+                final tint =
+                    LiquidPrismSystemChrome.deviceGlassTintAmount.value;
+                final reduced =
+                    LiquidPrismSystemChrome.reduceTransparency.value;
+                return ListRow(
                   key: const ValueKey('device-glass'),
                   title: 'Device glass',
                   subtitle: reduced
@@ -328,8 +334,8 @@ class StudioPage extends StatelessWidget {
                     tint == null ? '—' : tint.toStringAsFixed(2),
                     style: TextStyle(color: colors.secondaryLabel),
                   ),
-                ),
-              ),
+                );
+              },
             ),
             ListRow(
               title: 'Whole app',
