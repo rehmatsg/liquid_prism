@@ -27,6 +27,11 @@
   pass under that highlight. Clear glass's dark line is lighter, matching the
   measured −0.3 bias.
 
+- Light regular glass keeps its face off-white, as native does: iOS caps the
+  face's brightness (luma 0.94 in SDR), which this package now applies. Over
+  a light backdrop the face was near pure white, which hid the rim's white
+  band.
+
 - `LiquidPrismThemeData.refraction` sets the rim refraction of every glass
   surface that uses its material's optics, as `blur` sets their frost, keeping
   the rest of each recipe. The showcase's Studio gains a Whole app switch that

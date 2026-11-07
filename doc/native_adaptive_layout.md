@@ -246,6 +246,7 @@ above are interpolated linearly between the measured amounts
 | Part | Measured | Fitted (this package) |
 | --- | --- | --- |
 | Light regular face fill | white alpha 0 / .1 / .2 / .5 | — (used as captured) |
+| Light regular face luma cap | `inputFaceColorMatrixMaxLumaSDR` 0.94 at every amount (`inputFaceColorMatrixMaxLuma` 1); clear glass 1 | Applied after the fill as linear-light luma, scaled to keep hue. Over (242, 241, 246) native draws a face of (247, 246, 252); the cap gives (248, 248, 253), where the uncapped face was (254, 254, 255) and hid the rim's white band. Dark appearance is unmeasured and uncapped. |
 | Regular blur fill | lighten (darken in dark) and normal opacities above; radius 8 | The blur-fill sigma is the recipe's fitted frost (3.3, bars 5), which was calibrated at 0.5 and already stood for the blur fill there. Its normal opacity is the measured one divided by its 0.5 value, capped at 1, so 0.5 and above stay the plain frost they were and 0 is the sharp backdrop lightened at 0.675. |
 | Clear blur | radius 0 / .375 / .75 / .75 | The fitted frost (1.8, bars 5) scales with radius ÷ 0.75. |
 | Clear blur fill | normal 0 → 1 at tint 1, radius 8 | Same sigma as the regular blur fill. |

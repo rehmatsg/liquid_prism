@@ -174,7 +174,25 @@ vec3 gradeFace(vec3 color) {
         // The white fill follows the device's Liquid Glass setting (0.2 at
         // iOS's default); clear glass and dark appearance measure none.
         float fill = clear || dark ? 0. : u_face.x;
-        color = clamp(mix(color,vec3(1.),fill),0.,1.);
+        color = mix(color,vec3(1.),fill);
+        // Light regular glass caps the face's luma at 0.94 in SDR
+        // (inputFaceColorMatrixMaxLumaSDR, every tint amount on iOS 27.2; clear
+        // glass measures 1, dark is unmeasured). Read as linear-light luma,
+        // scaled to keep hue, it leaves a light face off-white, so the rim's
+        // white band shows: over (242, 241, 246) native draws (247, 246, 252)
+        // and this gives (249, 248, 252), against (254, 254, 255) uncapped.
+        if (!clear && !dark) {
+            vec3 c = max(color,0.);
+            vec3 lin = mix(c/12.92,pow((c+.055)/1.055,vec3(2.4)),
+                           step(.04045,c));
+            float y = dot(lin,vec3(.2126,.7152,.0722));
+            if (y > .94) {
+                lin *= .94/y;
+                color = mix(lin*12.92,1.055*pow(lin,vec3(1./2.4))-.055,
+                            step(.0031308,lin));
+            }
+        }
+        color = clamp(color,0.,1.);
     }
     if (u_material.w > 0.) {
         vec4 inputColor = vec4(color,1.);
