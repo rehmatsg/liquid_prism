@@ -220,9 +220,18 @@ void main() {
           ),
         ),
       );
-      expect(tester.getSize(find.byKey(inline)), const Size(26, 26));
+      expect(tester.getSize(find.byKey(inline)), const Size(22, 22));
       final capsule = tester.getRect(find.byType(LiquidPrismTitle));
-      expect(capsule.height, 44, reason: '26 pt leading and 9 pt padding');
+      expect(
+        capsule.height,
+        44,
+        reason: '22 pt leading, 11 pt above and below',
+      );
+      // Native: the avatar 12 pt from the capsule's start, nearly as far as
+      // from its top and bottom.
+      final face = tester.getRect(find.byKey(inline));
+      expect(face.left - capsule.left, 12);
+      expect(face.top - capsule.top, 11);
       // Unlike a plain title, the capsule stays centred beside Invite.
       expect(capsule.center.dx, closeTo(191, .01));
       // The text button stays in the top bar beside the rail, ending at the
@@ -659,8 +668,9 @@ void main() {
       final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
       expect(padding.left, 280);
       expect(padding.right, 84);
-      // The top bar row stays reserved, so hiding never shifts content down.
-      expect(padding.top, 24 + 44 + 16);
+      // The top bar row (48 pt in the rail layout, as the measured 48 pt
+      // toggle) stays reserved, so hiding never shifts content down.
+      expect(padding.top, 24 + 48 + 16);
 
       await tester.tap(find.text('Search'));
       await tester.pump();
@@ -698,7 +708,7 @@ void main() {
       );
       expect(
         MediaQuery.paddingOf(tester.element(find.byKey(_body))).top,
-        24 + 44 + 16,
+        24 + 48 + 16,
       );
 
       await tester.tap(find.bySemanticsLabel('Show sidebar'));

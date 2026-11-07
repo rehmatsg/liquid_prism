@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- In the iPhone Duo rail layout the scaffold's top bar row is 48 points, the
+  height of the rail's circles, so top bar controls and titles sit on native's
+  line (a SwiftUI text button there is 48.3 points from the 24-point margin).
+
 - `LiquidPrismButton`'s standard and menu text buttons default to 14 points of
   vertical padding instead of 15, so a 17-point label is 48 points tall, the
   height of a SwiftUI bar text button (Invite measured 48.3 on iPhone Duo) and

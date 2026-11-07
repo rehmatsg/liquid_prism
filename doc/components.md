@@ -324,7 +324,7 @@ LiquidPrismScaffold(
 )
 ```
 
-The avatar and leading are laid out in squares (64 and 26 points by default)
+The avatar and leading are laid out in squares (64 and 22 points by default)
 so the bar knows its height: with an avatar it grows below the control row,
 which the leading control, actions and `trailing` keep, and the content starts
 below the capsule. Sizes, padding and glass come from `GlassTitleStyle`, on the

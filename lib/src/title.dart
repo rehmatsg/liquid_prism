@@ -10,23 +10,24 @@ import 'theme.dart';
 /// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's
 /// `GlassNavigationBarStyle.titleCapsule`, then to the defaults, measured on
 /// iOS 27 device screenshots of SwiftUI apps on iPhone Duo (3x, about a third
-/// of a point): a 64-point avatar that the capsule tucks 6 points under, a
-/// capsule at least 38 points tall with 14 x 9 points of padding (44.3 points
-/// with a 26-point inline leading, 10 points before the title).
+/// of a point): a 64-point avatar that the capsule tucks 6 points under; a
+/// capsule at least 38 points tall with 14 x 9 points of padding around the
+/// title; and a 22-point inline leading inset 12 points from the capsule's
+/// start and 11 above and below, 10 points before the title, which makes the
+/// capsule 44 points tall.
 @immutable
 final class GlassTitleStyle {
   const GlassTitleStyle({
     this.avatarSize,
     this.avatarOverlap,
     this.leadingSize,
-    this.leadingGap,
+    this.leadingPadding,
     this.padding,
     this.minHeight,
     this.glass,
   }) : assert(avatarSize == null || avatarSize >= 0),
        assert(avatarOverlap == null || avatarOverlap >= 0),
        assert(leadingSize == null || leadingSize >= 0),
-       assert(leadingGap == null || leadingGap >= 0),
        assert(minHeight == null || minHeight >= 0);
 
   /// Side of the square the [LiquidPrismTitle.avatar] is laid out in.
@@ -38,10 +39,12 @@ final class GlassTitleStyle {
   /// Side of the square the [LiquidPrismTitle.leading] is laid out in.
   final double? leadingSize;
 
-  /// Space between the leading widget and the title.
-  final double? leadingGap;
+  /// Space around the leading widget: from the capsule's start, top and
+  /// bottom, and before the title (end). With a leading widget its start
+  /// replaces [padding]'s on that side.
+  final EdgeInsetsDirectional? leadingPadding;
 
-  /// Padding inside the capsule.
+  /// Padding around the title inside the capsule.
   final EdgeInsets? padding;
 
   /// The capsule's minimum height.
@@ -51,13 +54,15 @@ final class GlassTitleStyle {
   final Glass? glass;
 
   static const _avatarSize = 64.0, _avatarOverlap = 6.0;
-  static const _leadingSize = 26.0, _leadingGap = 10.0, _minHeight = 38.0;
+  static const _leadingSize = 22.0, _minHeight = 38.0;
+  static const _leadingPadding = EdgeInsetsDirectional.fromSTEB(12, 11, 10, 11);
   static const _padding = EdgeInsets.symmetric(horizontal: 14, vertical: 9);
 
   double get resolvedAvatarSize => avatarSize ?? _avatarSize;
   double get resolvedAvatarOverlap => avatarOverlap ?? _avatarOverlap;
   double get resolvedLeadingSize => leadingSize ?? _leadingSize;
-  double get resolvedLeadingGap => leadingGap ?? _leadingGap;
+  EdgeInsetsDirectional get resolvedLeadingPadding =>
+      leadingPadding ?? _leadingPadding;
   EdgeInsets get resolvedPadding => padding ?? _padding;
   double get resolvedMinHeight => minHeight ?? _minHeight;
 
@@ -65,7 +70,7 @@ final class GlassTitleStyle {
     double? avatarSize,
     double? avatarOverlap,
     double? leadingSize,
-    double? leadingGap,
+    EdgeInsetsDirectional? leadingPadding,
     EdgeInsets? padding,
     double? minHeight,
     Glass? glass,
@@ -73,7 +78,7 @@ final class GlassTitleStyle {
     avatarSize: avatarSize ?? this.avatarSize,
     avatarOverlap: avatarOverlap ?? this.avatarOverlap,
     leadingSize: leadingSize ?? this.leadingSize,
-    leadingGap: leadingGap ?? this.leadingGap,
+    leadingPadding: leadingPadding ?? this.leadingPadding,
     padding: padding ?? this.padding,
     minHeight: minHeight ?? this.minHeight,
     glass: glass ?? this.glass,
@@ -86,7 +91,7 @@ final class GlassTitleStyle {
           avatarSize: other.avatarSize ?? avatarSize,
           avatarOverlap: other.avatarOverlap ?? avatarOverlap,
           leadingSize: other.leadingSize ?? leadingSize,
-          leadingGap: other.leadingGap ?? leadingGap,
+          leadingPadding: other.leadingPadding ?? leadingPadding,
           padding: other.padding ?? padding,
           minHeight: other.minHeight ?? minHeight,
           glass: other.glass ?? glass,
@@ -98,7 +103,7 @@ final class GlassTitleStyle {
       other.avatarSize == avatarSize &&
       other.avatarOverlap == avatarOverlap &&
       other.leadingSize == leadingSize &&
-      other.leadingGap == leadingGap &&
+      other.leadingPadding == leadingPadding &&
       other.padding == padding &&
       other.minHeight == minHeight &&
       other.glass == glass;
@@ -108,7 +113,7 @@ final class GlassTitleStyle {
     avatarSize,
     avatarOverlap,
     leadingSize,
-    leadingGap,
+    leadingPadding,
     padding,
     minHeight,
     glass,
@@ -184,12 +189,13 @@ class LiquidPrismTitle extends StatelessWidget {
     GlassTitleStyle style,
     double lineHeight,
   ) => math.max(
-    style.resolvedMinHeight,
     math.max(
-          lineHeight,
-          title.leading == null ? 0.0 : style.resolvedLeadingSize,
-        ) +
-        style.resolvedPadding.vertical,
+      style.resolvedMinHeight,
+      lineHeight + style.resolvedPadding.vertical,
+    ),
+    title.leading == null
+        ? 0.0
+        : style.resolvedLeadingSize + style.resolvedLeadingPadding.vertical,
   );
 
   @override
@@ -203,11 +209,15 @@ class LiquidPrismTitle extends StatelessWidget {
     final line =
         MediaQuery.textScalerOf(context).scale(text.fontSize ?? 17) *
         (text.height ?? 1.2);
+    final height = _capsuleHeight(this, resolved, line);
+    final around = resolved.resolvedLeadingPadding;
+    // With a leading widget its own padding sets the capsule's start, and it
+    // centres in the capsule's full height; the title keeps its end padding.
+    final EdgeInsetsGeometry inset = leading == null
+        ? padding
+        : EdgeInsetsDirectional.only(start: around.start, end: padding.right);
     final content = SizedBox(
-      height: math.max(
-        0,
-        _capsuleHeight(this, resolved, line) - padding.vertical,
-      ),
+      height: math.max(0, height - inset.vertical),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -216,7 +226,7 @@ class LiquidPrismTitle extends StatelessWidget {
               dimension: resolved.resolvedLeadingSize,
               child: leading,
             ),
-            SizedBox(width: resolved.resolvedLeadingGap),
+            SizedBox(width: around.end),
           ],
           Flexible(child: child),
         ],
@@ -227,7 +237,7 @@ class LiquidPrismTitle extends StatelessWidget {
         ? LiquidPrism(
             glass: glass,
             shape: GlassShape.capsule,
-            child: Padding(padding: padding, child: content),
+            child: Padding(padding: inset, child: content),
           )
         : LiquidPrismButton(
             onPressed: onPressed,
@@ -239,7 +249,7 @@ class LiquidPrismTitle extends StatelessWidget {
                 },
             glass: glass.interactive(),
             shape: GlassShape.capsule,
-            padding: padding,
+            padding: inset,
             // A title keeps the bar's title colour, not a button's tint.
             foregroundColor:
                 DefaultTextStyle.of(context).style.color ??

@@ -621,9 +621,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final titleLine =
         scaler.scale(titleStyle.fontSize ?? 17) * (titleStyle.height ?? 1.2);
     // The leading control, actions and trailing widget keep this row.
+    // In the iPhone Duo rail layout the row matches the rail's 48 pt circles:
+    // a SwiftUI text button there is 48.3 pt tall from the 24 pt top margin.
+    final barHeight = rail ? 48.0 : LiquidPrismScaffold.topBarHeight;
     final controlRowHeight = widget.title == null
-        ? LiquidPrismScaffold.topBarHeight
-        : math.max(LiquidPrismScaffold.topBarHeight, titleLine + 8);
+        ? barHeight
+        : math.max(barHeight, titleLine + 8);
     // A glass title capsule, and an avatar above it, can make the title
     // taller than that row: the bar grows below the controls to hold it.
     final titleRowHeight = switch (widget.title) {

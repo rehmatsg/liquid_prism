@@ -158,8 +158,10 @@ at the content's edge, the rail's 12 pt from its column, level with a glass
 title capsule, while back and more icons sit in the rail. `trailing` drops its
 16 pt edge on the rail's side to match. The same screenshots give the
 `LiquidPrismTitle` defaults: a 64 pt avatar from y 24 on the content's centre,
-and the capsule (38 pt for a 17 pt title, 44.3 with an inline avatar, measured
-between avatar and text; 14 pt horizontal padding) tucked about 6 pt under it.
+and the capsule (38 pt for a 17 pt title, 14 pt horizontal padding; 44.3 pt with
+a 22 pt inline avatar inset 12 pt from its start and 11 pt above and below, 10
+pt before the text). The text button and the capsule share the top margin's
+48 pt row, the Invite's top at y 24 tucked about 6 pt under it.
 
 The rail therefore runs from below any system region in its top half to above
 any in its bottom half. With horizontal bars, a status bar in a top corner
