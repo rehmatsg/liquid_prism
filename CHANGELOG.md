@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- On iOS, a scaffold `bottomBar` without a tab bar sits on the tab bar's line,
+  21 points above the screen's edge, inside the home indicator's inset as
+  native bottom glass does (a bottom search field rests 28 points up), instead
+  of above the 34-point inset. Above a tab bar or the keyboard it is unchanged.
+
 - In the iPhone Duo rail layout the scaffold's top bar row is 48 points, the
   height of the rail's circles, so top bar controls and titles sit on native's
   line (a SwiftUI text button there is 48.3 points from the 24-point margin).

@@ -264,6 +264,26 @@ void main() {
     });
   });
 
+  testWidgets(
+    'on iOS a bottom bar sits on the tab bar line, not above the inset',
+    (tester) async {
+      window(tester, phone);
+      const bar = Key('bar');
+      await tester.pumpWidget(
+        const CupertinoApp(
+          home: LiquidPrismScaffold(
+            bottomBar: SizedBox(key: bar, width: 200, height: 48),
+            body: SizedBox.expand(key: _body),
+          ),
+        ),
+      );
+      // Native bottom glass sits inside the home indicator's 34 pt inset:
+      // a tab bar 21 pt above the screen's edge (a search field 28).
+      expect(tester.getRect(find.byKey(bar)).bottom, 874 - 21);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+
   testWidgets('unfolded iPhone Duo keeps the rail, actions sit higher', (
     tester,
   ) async {

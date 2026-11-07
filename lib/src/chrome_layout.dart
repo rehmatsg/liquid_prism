@@ -1666,11 +1666,16 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     }
 
     if (hasChild(_Slot.bottomBar)) {
-      // Above the keyboard, else above the tab bar or the home indicator.
+      // Above the keyboard, else above the tab bar, else on the tab bar's
+      // own line: native bottom glass sits inside the home indicator's
+      // inset (a bottom search field rests 28 points above the screen's
+      // edge, a tab bar 21), not above it.
       final floor = keyboard > 0
           ? keyboard
           : covered.bottom > 0
           ? covered.bottom + 8
+          : iOS
+          ? _bottomBarGap
           : viewPadding.bottom;
       final bar = layoutChild(
         _Slot.bottomBar,
