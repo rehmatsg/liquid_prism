@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.6.0
+
+- The held slider's shadow in light appearance matches native over white:
+  it was about twice as dark and darkest right at the lens. The light held
+  slider drops the contact shadow and uses fainter layers fitted to a native
+  capture; dark appearance is unchanged.
+
 - The iOS plugin reports the device's Liquid Glass setting (iOS 27's
   Settings > Appearance > Liquid Glass slider, UIKit's glass tint amount) as
   `LiquidPrismSystemChrome.deviceGlassTintAmount`, and Reduce Transparency as

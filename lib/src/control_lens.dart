@@ -96,7 +96,13 @@ class ControlLens extends StatelessWidget {
             progress,
             contour,
             restingShadow,
-            (slider ? _sliderShadow : _sharedShadow).merge(appearance),
+            (slider
+                    ? (LiquidPrismTheme.brightnessOf(context) ==
+                              Brightness.light
+                          ? _sliderShadowLight
+                          : _sliderShadow)
+                    : _sharedShadow)
+                .merge(appearance),
           ),
           child: LiquidPrism(
             glass: (appearance.glass ?? Glass.clear).interactive(false),
@@ -169,9 +175,10 @@ const _sharedShadow = GlassLensStyle(
   ringOffset: Offset(0, 4),
 );
 
-/// The held slider keeps its measured contact shadow (.14, radius 5, offset
-/// 1) and uses the measured ring geometry (width 4, radius 3, offset 8). The
-/// ring and ambient opacities are fitted to the native dark capture.
+/// The held slider in dark appearance keeps its measured contact shadow (.14,
+/// radius 5, offset 1) and uses the measured ring geometry (width 4, radius 3,
+/// offset 8). The ring and ambient opacities are fitted to the native dark
+/// capture.
 const _sliderShadow = GlassLensStyle(
   heldContactShadow: true,
   shadowOpacity: _sliderAmbient,
@@ -183,6 +190,23 @@ const _sliderShadow = GlassLensStyle(
   ringOffset: Offset(0, 8),
 );
 const _sliderAmbient = .12, _sliderRing = .2;
+
+/// The held slider in light appearance. Native over white (iOS 27.0,
+/// tool/native_dispersion_probe testControlsWhiteLight) darkens 8 levels just
+/// below the lens, 19 at 5 points and none by 13: no held contact shadow, and
+/// fainter layers than the dark fit, which was twice as dark. The measured
+/// geometry (held layer offset 7, radius 3; ring width 4, radius 3, offset 8)
+/// stays; the opacities are fitted to that profile within 2.3 levels RMS.
+const _sliderShadowLight = GlassLensStyle(
+  heldContactShadow: false,
+  shadowOpacity: .045,
+  shadowBlur: 3,
+  shadowOffset: Offset(0, 7),
+  ringOpacity: .09,
+  ringBlur: 3,
+  ringWidth: 4,
+  ringOffset: Offset(0, 8),
+);
 
 class _LensShadow extends CustomPainter {
   const _LensShadow(this.progress, this.shape, this.restingShadow, this.style);
