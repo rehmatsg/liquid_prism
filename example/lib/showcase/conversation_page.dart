@@ -4,7 +4,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 /// A conversation with a [LiquidPrismTitle]. A one-to-one chat shows a header
 /// avatar above a tappable glass name with a call action; tapping the name
 /// switches to a group chat with an inline avatar in the capsule beside a
-/// glass Invite text button. On iPhone Duo the icon actions move to the rail
+/// glass Invite text button. On iPhone Duo the icon toolbar move to the rail
 /// while Invite stays in the top bar.
 class ConversationPage extends StatefulWidget {
   const ConversationPage({super.key});
@@ -56,7 +56,7 @@ class _ConversationPageState extends State<ConversationPage> {
               onPressed: () {},
               child: const Text('Invite'),
             ),
-      actions: [
+      toolbar: [
         _direct
             ? GlassToolbarItem(
                 icon: const Icon(CupertinoIcons.phone),

@@ -11,20 +11,20 @@ appearance, and `LiquidPrismThemeData` for shared defaults.
 
 | Widget | Local style | Theme field |
 | --- | --- | --- |
-| Button | `style: GlassButtonAppearance` | `button` |
+| Button | `style: GlassButtonStyle` | `button` |
 | Switch | `style: GlassSwitchStyle` | `switchStyle` |
 | Slider | `style: GlassSliderStyle` | `slider` |
 | Segmented control | `style: GlassSegmentedStyle` | `segmentedControl` |
 | Tab bar | `style: GlassTabBarStyle` | `tabBar` |
 | Toolbar | `style: GlassToolbarStyle` | `toolbar` |
-| Search | `appearance: GlassSearchStyle` | `search` |
+| Search | `style: GlassSearchStyle` | `search` |
 | Every lifted lens | component style's `lens` | `lens` |
 | Small-control motion | widget `motion: GlassControlMotion` | `controlMotion` |
 
 See [all style fields and defaults](style_reference.md),
 [customization](customization.md) for precedence and [motion/lenses](motion_and_lenses.md)
-for the advanced controls. Search's existing `style` argument remains its editor
-`TextStyle`; it overrides `appearance.textStyle`.
+for the advanced controls. Search's direct `textStyle` overrides
+`GlassSearchStyle.textStyle`.
 
 ## Surfaces
 
@@ -73,8 +73,8 @@ Never fade glass with an ancestor `Opacity`: it cuts the lens off its backdrop.
 LiquidPrismButton(
   label: 'Save',
   onPressed: save,
-  style: const GlassButtonAppearance(
-    buttonStyle: GlassButtonStyle.glassProminent,
+  style: const GlassButtonStyle(
+    variant: GlassButtonVariant.prominent,
     minimumSize: Size(120, 48),
     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
   ),
@@ -90,7 +90,7 @@ LiquidPrismButton.icon(
 
 The icon constructor defaults to a circle and a 48-point minimum extent.
 Style overrides include typography, icon size, material, optics, blur, shape,
-padding, foreground and motion. A direct `buttonStyle`, `padding` or
+padding, foreground and motion. A direct `variant`, `padding` or
 `foregroundColor` wins over the style, including explicit defaults. Prominent
 buttons default to white text and use a neutral material tint while disabled.
 Null callbacks disable every activation path.
@@ -223,7 +223,7 @@ LiquidPrismTabBar(
 
 The default compact housing uses the widest measured label, with an 86-point
 minimum tab spacing and 32 points of label breathing room. Tune those with
-`minimumTabWidth` and `labelPadding`; use `expanded: true` to fill a bounded parent.
+`minimumTabWidth` and `labelPadding`; use `sizing: GlassTabBarSizing.fill` to fill a bounded parent.
 Hidden labels still have accessibility names. `selectedIcon` accepts custom
 selected artwork, shown for the selected tab and for any tab seen through the
 moving pill. While the pill is held or moving, the bar builds a display-only
@@ -253,7 +253,7 @@ Pass `slivers:` instead of `body:` and the scaffold builds the scroll view:
 LiquidPrismScaffold(
   title: const Text('Applications'),
   largeTitle: const Text('Applications'),
-  actions: [[filter], [sort, search]],
+  toolbar: [GlassToolbarGroup(items: [filter]), GlassToolbarGroup(items: [sort, search])],
   onRefresh: reload,
   bottomBar: SaveButton(...),
   slivers: [SliverList.builder(...)],
@@ -311,7 +311,7 @@ LiquidPrismScaffold(
     onPressed: openContact,
     child: const Text('Friday'),
   ),
-  actions: [GlassToolbarItem(icon: const Icon(CupertinoIcons.phone), label: 'Call', onPressed: call)],
+  toolbar: [GlassToolbarItem(icon: const Icon(CupertinoIcons.phone), label: 'Call', onPressed: call)],
   body: conversation,
 )
 
@@ -349,7 +349,7 @@ CustomScrollView(
     LiquidPrismSliverAppBar(
       title: const Text('Library'),
       largeTitle: const Text('Library'),
-      actions: [[activity], [share, more]],
+      toolbar: [GlassToolbarGroup(items: [activity]), GlassToolbarGroup(items: [share, more])],
       accessory: PreferredSize(preferredSize: const Size.fromHeight(48), child: tabs),
     ),
     SliverList.builder(...),
@@ -358,7 +358,7 @@ CustomScrollView(
 ```
 
 It takes `leading` (or implies a back or close button), `title`,
-`largeTitle`, `subtitle`, `actions`, `trailing`, `accessory`, `sheet`, `backgroundColor` (the fade colour),
+`largeTitle`, `subtitle`, `toolbar`, `trailing`, `accessory`, `sheet`, `backgroundColor` (the fade colour),
 `scrollEdge`, `scrollEdgeStyle` and `navigationBarStyle`, with the scaffold's
 measured geometry: 16-point edges, the 44-point control row under the status
 bar, a 52-point large title row that rides the scroll before the titles swap
@@ -368,7 +368,7 @@ before the effect.
 
 ## Adaptive layout
 
-`LiquidPrismScaffold` places a `tabBar`, top-trailing `actions` and a
+`LiquidPrismScaffold` places a `tabBar`, typed `toolbar` content and a
 `leading` control over a full-window `body`. Each action is a
 `GlassToolbarItem` or a list of them: `[share, more]` is one capsule,
 `[[filter], [share, more]]` two, and loose items next to each other share a
@@ -480,7 +480,31 @@ controller (in `Main.storyboard`, set the custom class) and call
 It returns false where it can't apply. Apple asks that this be a stable choice,
 not one that changes as people navigate.
 
-## Toolbar groups
+## Toolbar composition
+
+`GlassToolbarItem` renders its label when `icon` is omitted. Native menus use
+`.menu`; `.custom(child: ...)` hosts app-owned input without a second gesture or
+semantics owner. Custom content has no additional glass unless placed inside an
+explicit `GlassToolbarGroup`. `width` sets its main-axis extent inside a group;
+ungrouped custom content may size intrinsically.
+
+`LiquidPrismScaffold.toolbar` and `LiquidPrismSliverAppBar.toolbar` accept
+`List<GlassToolbarContent>`. Items default to the top trailing region. Set
+`placement` to `topLeading`, `principal`, `bottomLeading`, `bottom` or
+`bottomTrailing`. Principal content replaces the inline title while the large
+title remains independent. Bottom regions form a window footer in a scaffold;
+in a sliver app bar they form a pinned row below the accessory.
+
+Consecutive loose actions share one capsule. `GlassToolbarGroup(items: [...])`
+starts a separate capsule, with an optional local `style`. Fixed and flexible
+`GlassToolbarSpacer`s separate capsules; flexible space uses a bounded main axis
+and collapses under unbounded constraints. A standalone toolbar respects list
+order and ignores placements. Long intrinsic toolbars scroll along their axis.
+Give stateful custom entries a stable `key` when reordering them.
+
+See the [release guide](releases/0.7.md) for migration and full placement examples.
+
+### Shared capsule
 
 ```dart
 LiquidPrismToolbarGroup(
@@ -496,7 +520,7 @@ LiquidPrismToolbarGroup(
 Navigation/bottom presets are 44/48 points high. Style can override height,
 inset, spacing, shapes, colors, material and motion. Each item has its own width,
 key, selected flag and optional literal foreground. A group with one item and
-no explicit width is a circle as tall as the bar (44 or 48 points), like a lone
+an icon and no explicit width is a circle as tall as the bar (44 or 48 points), like a lone
 native bar button; give the item a width to keep a wider capsule. Narrow groups scroll rather
 than shrink icons. Direct `size` wins over the theme, even when explicitly bottom.
 Null callbacks disable individual actions; menu items use `enabled: false`.
@@ -508,16 +532,16 @@ draws nothing, so a list whose items all depend on state is fine.
 `GlassToolbarStyle.itemTransition: GlassTransition.identity` swaps at once, as
 Reduce Motion does; `itemTransitionStyle` sets the springs.
 
-Several capsules in one bar are one `LiquidPrismToolbar`, a list of groups
+Several capsules in one bar are one `LiquidPrismToolbar`, with typed content
 laid out `spacing` (default 8) apart. Declare every group the bar can show and
 let emptiness animate, so groups keep their positions:
 
 ```dart
 LiquidPrismToolbar(
   size: GlassToolbarSize.navigation,
-  groups: [
-    [if (hasSuggestions) suggestionsItem],
-    [sortItem, moreItem],
+  content: [
+    GlassToolbarGroup(items: [if (hasSuggestions) suggestionsItem]),
+    GlassToolbarGroup(items: [sortItem, moreItem]),
   ],
 )
 ```
@@ -573,7 +597,7 @@ SliverLayoutBuilder(
       color: Theme.of(context).scaffoldBackgroundColor,
     ),
     leading: LiquidPrismToolbarGroup(size: GlassToolbarSize.navigation, items: [back]),
-    actions: [LiquidPrismToolbar(size: GlassToolbarSize.navigation, groups: groups)],
+    actions: [LiquidPrismToolbar(size: GlassToolbarSize.navigation, content: content)],
   ),
 )
 ```
@@ -619,7 +643,7 @@ LiquidPrismSearchField(
   onSubmitted: submitSearch,
   onCancel: closeSearch,
   textInputAction: TextInputAction.search,
-  appearance: const GlassSearchStyle(height: 52, showClearButton: true),
+  style: const GlassSearchStyle(height: 52, showClearButton: true),
 )
 ```
 
@@ -743,3 +767,26 @@ keyboard avoidance to descendants.
 
 See [feature contracts and adoption](package_features_spec.md) for per-item
 changes, native measurements and remaining gaps.
+
+## Chrome layout overrides
+
+`GlassNavigationBarStyle.titleAlignment` supports automatic, leading, center and
+trailing alignment. `controlRowHeight` sets the minimum row height (44 by default),
+`contentPadding` adds directional insets inside the safe area, and
+`largeTitleExtent` replaces the typography-measured expanded row height. These
+fields apply to both scaffold and sliver app bars.
+
+`GlassScaffoldStyle`, through scaffold `style` or theme `scaffold`, controls
+`tabBarMargin`, `tabBarAlignment`, `tabBarMaxWidth`, `bottomBarMargin`,
+`bottomBarAlignment` and `bottomBarMaxWidth`. Margins replace the corresponding
+package gaps; explicit zero is respected. Bottom content stays above the keyboard
+or bottom tab dock. Cross-axis alignment determines where a compact bar sits.
+
+`GlassTabBarPlacement.top`, `.bottom`, `.leading` and `.trailing` explicitly dock
+tabs. Leading/trailing follow RTL and use vertical bars. `.automatic` preserves
+system rail behavior; `.sidebar` keeps the existing adaptive sidebar. Body and
+scroll-edge insets follow the dock. Bottom tabs hide while the keyboard is open;
+top and side docks remain visible. Compact sizing remains the default.
+`GlassTabBarSizing.fill` fills a bounded main axis; under unbounded constraints it
+uses compact sizing. Vertical labels default to hidden but honor explicit
+`labelBehavior`.

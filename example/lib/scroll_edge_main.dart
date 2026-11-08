@@ -50,7 +50,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
         child: Builder(
           builder: (context) {
             final colors = GlassColors.of(context);
-            final actions = [
+            final toolbar = [
               GlassToolbarItem(
                 icon: const Icon(CupertinoIcons.moon_stars),
                 label: 'Appearance',
@@ -89,7 +89,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                       background: _background,
                       extra: _extra,
                       onToggle: () => setState(() => _extra = !_extra),
-                      actions: actions,
+                      toolbar: toolbar,
                       tabBar: _tabBar(),
                       body: content,
                       controller: _scroll,
@@ -132,7 +132,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                           ),
                         ],
                       ),
-                      actions: [
+                      toolbar: [
                         GlassToolbarItem(
                           icon: Icon(
                             _extra
@@ -148,7 +148,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                             label: 'Favorite',
                             onPressed: () {},
                           ),
-                        ...actions,
+                        ...toolbar,
                       ],
                       tabBar: _tabBar(),
                       body: SingleChildScrollView(
@@ -181,7 +181,7 @@ class _SliverPage extends StatelessWidget {
     required this.background,
     required this.extra,
     required this.onToggle,
-    required this.actions,
+    required this.toolbar,
     required this.tabBar,
     required this.body,
     required this.controller,
@@ -190,7 +190,7 @@ class _SliverPage extends StatelessWidget {
   final Color background;
   final bool extra;
   final VoidCallback onToggle;
-  final List<GlassToolbarItem> actions;
+  final List<GlassToolbarItem> toolbar;
   final Widget tabBar;
   final Widget body;
 
@@ -239,27 +239,31 @@ class _SliverPage extends StatelessWidget {
                           ),
                           LiquidPrismToolbar(
                             size: GlassToolbarSize.navigation,
-                            groups: [
-                              [
-                                if (extra)
+                            content: [
+                              GlassToolbarGroup(
+                                items: [
+                                  if (extra)
+                                    GlassToolbarItem(
+                                      icon: const Icon(CupertinoIcons.star),
+                                      label: 'Favorite',
+                                      onPressed: () {},
+                                    ),
+                                ],
+                              ),
+                              GlassToolbarGroup(
+                                items: [
                                   GlassToolbarItem(
-                                    icon: const Icon(CupertinoIcons.star),
-                                    label: 'Favorite',
-                                    onPressed: () {},
+                                    icon: Icon(
+                                      extra
+                                          ? CupertinoIcons.minus_circle
+                                          : CupertinoIcons.plus_circle,
+                                    ),
+                                    label: 'Toggle item',
+                                    onPressed: onToggle,
                                   ),
-                              ],
-                              [
-                                GlassToolbarItem(
-                                  icon: Icon(
-                                    extra
-                                        ? CupertinoIcons.minus_circle
-                                        : CupertinoIcons.plus_circle,
-                                  ),
-                                  label: 'Toggle item',
-                                  onPressed: onToggle,
-                                ),
-                                ...actions,
-                              ],
+                                  ...toolbar,
+                                ],
+                              ),
                             ],
                           ),
                         ],

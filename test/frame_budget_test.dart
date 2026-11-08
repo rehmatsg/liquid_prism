@@ -150,7 +150,7 @@ void main() {
           backgroundColor: const Color(0xFF101010),
           largeTitle: const Text('Large'),
           title: const Text('Title'),
-          actions: [
+          toolbar: [
             GlassToolbarItem(
               icon: const Icon(CupertinoIcons.star),
               label: 'Star',
@@ -200,7 +200,7 @@ void main() {
             LiquidPrismSliverAppBar(
               title: const Text('Inline'),
               largeTitle: const Text('Large'),
-              actions: [
+              toolbar: [
                 GlassToolbarItem(
                   icon: const Icon(CupertinoIcons.star),
                   label: 'Star',

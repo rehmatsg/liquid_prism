@@ -110,10 +110,10 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
               ),
             )
           : null,
-      actions: _twoCapsules
+      toolbar: _twoCapsules
           ? [
-              [inbox],
-              [share, more],
+              GlassToolbarGroup(items: [inbox]),
+              GlassToolbarGroup(items: [share, more]),
             ]
           : [inbox, share, more],
       scrollEdge: _edge != _Edge.off,
@@ -271,7 +271,7 @@ class _SheetPage extends StatelessWidget {
       ),
       title: const Text('Sheet'),
       subtitle: const Text('Scaffold with sheet: true'),
-      actions: [
+      toolbar: [
         GlassToolbarItem(
           icon: const Icon(CupertinoIcons.checkmark),
           label: 'Done',

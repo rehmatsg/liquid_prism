@@ -123,7 +123,7 @@ pitch for three tabs, so a narrower `minimumTabWidth` (such as 72) is an app cho
 
 API: scaffold `title`, `largeTitle`, `navigationBarStyle`; theme `navigationBar`:
 `GlassNavigationBarStyle(titleStyle, largeTitleStyle, gutter, controlGap,
-revealExtent, revealCurve)`. Scaffold fields reuse its owned outermost vertical
+revealExtent, revealSpring)`. Scaffold fields reuse its owned outermost vertical
 scroll offset, chrome layout, accessory, implied leading and shared captures.
 A second navigation/sliver component would duplicate those owners. Body padding,
 accessory position and soft/hard scroll-edge extent contract with the large row.

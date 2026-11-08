@@ -3,6 +3,8 @@
 /.github/
 /example/android/
 /example/ios/
+/example/macos/
+/example/test_driver/
 /example/test/
 /example/.metadata
 /test/

@@ -15,6 +15,12 @@ enum GlassTabBarPlacement {
   /// The tab bar, as on every other window.
   automatic,
 
+  /// Explicit floating docks, independent of system rail placement.
+  bottom,
+  top,
+  leading,
+  trailing,
+
   /// A sidebar along the leading edge, as `defaultTabBarPlacement(.sidebar)`
   /// does natively. Apple suggests it for information-dense apps.
   sidebar,

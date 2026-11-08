@@ -670,6 +670,7 @@ class GlassToolbarStyle {
     this.inset,
     this.spacing,
     this.iconSize,
+    this.textStyle,
     this.badgeColor,
     this.badgeTextStyle,
     this.foregroundColor,
@@ -698,6 +699,7 @@ class GlassToolbarStyle {
   final double? inset;
   final double? spacing;
   final double? iconSize;
+  final TextStyle? textStyle;
   final Color? foregroundColor;
 
   /// Badge fill and count typography; null inherits the theme, then the
@@ -747,6 +749,7 @@ class GlassToolbarStyle {
     double? inset,
     double? spacing,
     double? iconSize,
+    TextStyle? textStyle,
     Color? badgeColor,
     TextStyle? badgeTextStyle,
     Color? foregroundColor,
@@ -770,6 +773,7 @@ class GlassToolbarStyle {
     inset: inset ?? this.inset,
     spacing: spacing ?? this.spacing,
     iconSize: iconSize ?? this.iconSize,
+    textStyle: textStyle ?? this.textStyle,
     badgeColor: badgeColor ?? this.badgeColor,
     badgeTextStyle: badgeTextStyle ?? this.badgeTextStyle,
     foregroundColor: foregroundColor ?? this.foregroundColor,
@@ -798,6 +802,7 @@ class GlassToolbarStyle {
           inset: other.inset ?? inset,
           spacing: other.spacing ?? spacing,
           iconSize: other.iconSize ?? iconSize,
+          textStyle: textStyle?.merge(other.textStyle) ?? other.textStyle,
           badgeColor: other.badgeColor ?? badgeColor,
           badgeTextStyle:
               badgeTextStyle?.merge(other.badgeTextStyle) ??

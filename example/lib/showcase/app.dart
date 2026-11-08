@@ -54,9 +54,7 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
             blur: model.globalOptics ? model.frost : null,
             refraction: model.globalOptics ? model.refraction : null,
             tabBar: GlassTabBarStyle(
-              labelBehavior: model.labels
-                  ? GlassTabLabelBehavior.always
-                  : GlassTabLabelBehavior.never,
+              labelBehavior: model.labels ? null : GlassTabLabelBehavior.never,
             ),
           ),
           // Publishes iPhone Duo bar placement and keeps dialogs out of the
@@ -131,7 +129,7 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
     tabBarPlacement: model.sidebar
         ? GlassTabBarPlacement.sidebar
         : GlassTabBarPlacement.automatic,
-    actions: appearanceActions(model),
+    toolbar: appearanceActions(model),
     tabBar: LiquidPrismTabBar(
       key: const ValueKey('showcase-navigation'),
       selectedIndex: tab.index,

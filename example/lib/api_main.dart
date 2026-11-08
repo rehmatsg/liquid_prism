@@ -128,7 +128,7 @@ class _ApiExampleState extends State<ApiExample> {
                     child: field,
                   ),
                 ),
-                appearance: const GlassSearchStyle(
+                style: const GlassSearchStyle(
                   height: 52,
                   iconColor: Color(0xFF426D62),
                 ),

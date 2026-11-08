@@ -142,8 +142,8 @@ void main() {
                       selected = index;
                     }),
                     style: GlassTabBarStyle(
-                      expanded:
-                          true, // Fixed pixel probes isolate selection blur.
+                      sizing: GlassTabBarSizing
+                          .fill, // Fixed pixel probes isolate selection blur.
                       padding: EdgeInsets.zero,
                       labelBehavior: GlassTabLabelBehavior.never,
                       selectionColor: const Color(0x00000000),

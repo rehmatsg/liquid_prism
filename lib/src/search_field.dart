@@ -41,10 +41,10 @@ class LiquidPrismSearchField extends StatefulWidget {
     this.onCancel,
     this.enabled = true,
     this.autofocus = false,
-    bool? showCancelButton,
+    this.showCancelButton,
     this.cancelVisibility,
-    double? restingInset,
-    this.appearance,
+    this.restingInset,
+    this.style,
     this.keyboardType = TextInputType.text,
     this.textInputAction = TextInputAction.search,
     this.inputFormatters,
@@ -65,21 +65,18 @@ class LiquidPrismSearchField extends StatefulWidget {
     this.groupId = EditableText,
     this.clearLabel = 'Clear search',
     this.cancelLabel = 'Cancel search',
-    this.style,
+    this.textStyle,
     this.glass,
     this.optics,
     this.blur,
-  }) : showCancelButton = showCancelButton ?? true,
-       _hasCancel = showCancelButton != null,
-       restingInset = restingInset ?? 0,
-       _hasInset = restingInset != null,
-       assert(restingInset == null || restingInset >= 0);
+  }) : assert(restingInset == null || restingInset >= 0);
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final String placeholder, clearLabel, cancelLabel;
   final ValueChanged<String>? onChanged, onSubmitted;
   final VoidCallback? onCancel;
-  final bool enabled, autofocus, showCancelButton;
+  final bool enabled, autofocus;
+  final bool? showCancelButton;
 
   /// When the cancel action shows. Overrides
   /// [GlassSearchStyle.cancelVisibility]; defaults to
@@ -87,8 +84,7 @@ class LiquidPrismSearchField extends StatefulWidget {
   /// [GlassSearchCancelVisibility.always] for a dedicated search screen whose
   /// cancel closes it: it then shows, and works, while the field is unfocused.
   final GlassSearchCancelVisibility? cancelVisibility;
-  final bool _hasCancel, _hasInset;
-  final GlassSearchStyle? appearance;
+  final GlassSearchStyle? style;
   final TextInputType keyboardType;
   final TextInputAction textInputAction;
   final List<TextInputFormatter>? inputFormatters;
@@ -126,8 +122,8 @@ class LiquidPrismSearchField extends StatefulWidget {
 
   /// Optional inset that dissolves on focus. Native bottom search uses 20
   /// inside a parent inset by 8; standalone fields default to zero.
-  final double restingInset;
-  final TextStyle? style;
+  final double? restingInset;
+  final TextStyle? textStyle;
   final Glass? glass;
   final LiquidPrismStyle? optics;
   final double? blur;
@@ -188,7 +184,7 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
 
   GlassSearchStyle get _appearance =>
       (LiquidPrismTheme.of(context).search ?? const GlassSearchStyle()).merge(
-        widget.appearance,
+        widget.style,
       );
 
   late bool _reportedFocus;
@@ -255,7 +251,7 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
     final style = TextStyle(
       fontSize: 17,
       color: widget.enabled ? colors.label : colors.disabledLabel,
-    ).merge(appearance.textStyle).merge(widget.style);
+    ).merge(appearance.textStyle).merge(widget.textStyle);
     final height = math.max(
       appearance.height ?? 48.0,
       MediaQuery.textScalerOf(context).scale(style.fontSize ?? 17) + 28,
@@ -349,9 +345,8 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
       builder: (context, _) => LayoutBuilder(
         builder: (context, constraints) {
           final progress = _focus.value.clamp(0.0, 1.0);
-          final showCancel = widget._hasCancel
-              ? widget.showCancelButton
-              : appearance.showCancelButton ?? widget.showCancelButton;
+          final showCancel =
+              widget.showCancelButton ?? appearance.showCancelButton ?? true;
           final cancelWidth = appearance.cancelWidth ?? 48;
           final cancelGap = appearance.cancelSpacing ?? 12;
           final fits =
@@ -366,9 +361,7 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
           final active = pinned || _node.hasFocus;
           final inset =
               math.min(
-                widget._hasInset
-                    ? widget.restingInset
-                    : appearance.restingInset ?? widget.restingInset,
+                widget.restingInset ?? appearance.restingInset ?? 0,
                 math.max(0, (constraints.maxWidth - 100) / 2),
               ) *
               (1 - progress);

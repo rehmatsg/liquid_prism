@@ -5,7 +5,9 @@ import 'package:flutter/widgets.dart';
 import 'motion.dart' show GlassSpring;
 import 'title.dart' show GlassTitleStyle;
 
-/// Navigation title typography and collapse.
+enum GlassTitleAlignment { automatic, leading, center, trailing }
+
+/// Navigation title typography, layout and collapse.
 ///
 /// Defaults are measured on iOS 27 (see doc/package_features_spec.md): a
 /// 17-point semibold inline title centred on the 44-point control row, a
@@ -16,36 +18,44 @@ import 'title.dart' show GlassTitleStyle;
 class GlassNavigationBarStyle {
   const GlassNavigationBarStyle({
     this.titleStyle,
+    this.titleAlignment,
+    this.controlRowHeight,
+    this.contentPadding,
+    this.largeTitleExtent,
     this.largeTitleStyle,
     this.subtitleStyle,
     this.largeSubtitleStyle,
     this.gutter,
     this.controlGap,
     this.revealExtent,
-    @Deprecated('The swap now runs on a spring; use revealSpring.')
-    this.revealCurve,
     this.revealSpring,
     this.titleCapsule,
   }) : assert(gutter == null || gutter >= 0),
        assert(controlGap == null || controlGap >= 0),
-       assert(revealExtent == null || revealExtent >= 0);
+       assert(revealExtent == null || revealExtent >= 0),
+       assert(controlRowHeight == null || controlRowHeight >= 44),
+       assert(largeTitleExtent == null || largeTitleExtent >= 0);
   final TextStyle? titleStyle, largeTitleStyle;
 
   /// The subtitle under the inline title (12-point regular secondary label)
   /// and under the large title (11-point medium secondary label), measured.
   final TextStyle? subtitleStyle, largeSubtitleStyle;
   final double? gutter, controlGap;
+  final GlassTitleAlignment? titleAlignment;
+
+  /// Minimum height of the controls, before text scaling. Defaults to 44.
+  final double? controlRowHeight;
+
+  /// Additional insets inside the safe area; directional values follow RTL.
+  final EdgeInsetsGeometry? contentPadding;
+
+  /// Expanded title row height. Null measures typography at the current scale.
+  final double? largeTitleExtent;
 
   /// Scroll distance at which the large title swaps for the inline title.
   /// Defaults to the large title's row height (52 points at default size);
   /// zero swaps on the first pixel.
   final double? revealExtent;
-
-  /// Curve of the inline title's fade and 15-point rise as it appears
-  /// (0.53 s; it leaves over 0.8 s on the flipped curve). Defaults to
-  /// [Curves.easeOutCubic], fitted to the measured deceleration.
-  @Deprecated('The swap now runs on a spring; use revealSpring.')
-  final Curve? revealCurve;
 
   /// The inline title's spring as it fades and rises 15 points into place,
   /// and back out. Defaults to [titleSpring].
@@ -70,25 +80,30 @@ class GlassNavigationBarStyle {
 
   GlassNavigationBarStyle copyWith({
     TextStyle? titleStyle,
+    GlassTitleAlignment? titleAlignment,
+    double? controlRowHeight,
+    EdgeInsetsGeometry? contentPadding,
+    double? largeTitleExtent,
     TextStyle? largeTitleStyle,
     TextStyle? subtitleStyle,
     TextStyle? largeSubtitleStyle,
     double? gutter,
     double? controlGap,
     double? revealExtent,
-    Curve? revealCurve,
     GlassSpring? revealSpring,
     GlassTitleStyle? titleCapsule,
   }) => GlassNavigationBarStyle(
     titleStyle: titleStyle ?? this.titleStyle,
+    titleAlignment: titleAlignment ?? this.titleAlignment,
+    controlRowHeight: controlRowHeight ?? this.controlRowHeight,
+    contentPadding: contentPadding ?? this.contentPadding,
+    largeTitleExtent: largeTitleExtent ?? this.largeTitleExtent,
     largeTitleStyle: largeTitleStyle ?? this.largeTitleStyle,
     subtitleStyle: subtitleStyle ?? this.subtitleStyle,
     largeSubtitleStyle: largeSubtitleStyle ?? this.largeSubtitleStyle,
     gutter: gutter ?? this.gutter,
     controlGap: controlGap ?? this.controlGap,
     revealExtent: revealExtent ?? this.revealExtent,
-    // ignore: deprecated_member_use_from_same_package
-    revealCurve: revealCurve ?? this.revealCurve,
     revealSpring: revealSpring ?? this.revealSpring,
     titleCapsule: titleCapsule ?? this.titleCapsule,
   );
@@ -97,6 +112,10 @@ class GlassNavigationBarStyle {
       ? this
       : GlassNavigationBarStyle(
           titleStyle: titleStyle?.merge(other.titleStyle) ?? other.titleStyle,
+          titleAlignment: other.titleAlignment ?? titleAlignment,
+          controlRowHeight: other.controlRowHeight ?? controlRowHeight,
+          contentPadding: other.contentPadding ?? contentPadding,
+          largeTitleExtent: other.largeTitleExtent ?? largeTitleExtent,
           largeTitleStyle:
               largeTitleStyle?.merge(other.largeTitleStyle) ??
               other.largeTitleStyle,
@@ -108,8 +127,6 @@ class GlassNavigationBarStyle {
           gutter: other.gutter ?? gutter,
           controlGap: other.controlGap ?? controlGap,
           revealExtent: other.revealExtent ?? revealExtent,
-          // ignore: deprecated_member_use_from_same_package
-          revealCurve: other.revealCurve ?? revealCurve,
           revealSpring: other.revealSpring ?? revealSpring,
           titleCapsule:
               titleCapsule?.merge(other.titleCapsule) ?? other.titleCapsule,

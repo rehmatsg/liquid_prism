@@ -116,7 +116,10 @@ void main() {
     tester,
   ) async {
     Widget toolbar(List<List<GlassToolbarItem>> groups) => harness(
-      LiquidPrismToolbar(size: GlassToolbarSize.navigation, groups: groups),
+      LiquidPrismToolbar(
+        size: GlassToolbarSize.navigation,
+        content: [for (final items in groups) GlassToolbarGroup(items: items)],
+      ),
     );
     await tester.pumpWidget(
       toolbar([

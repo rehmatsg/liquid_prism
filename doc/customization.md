@@ -100,18 +100,17 @@ Use [the runnable example](../example/lib/api_main.dart) for complete state/layo
 
 | Component | Local configuration | Theme field |
 | --- | --- | --- |
-| Button | `style: GlassButtonAppearance(...)` | `button` |
+| Button | `style: GlassButtonStyle(...)` | `button` |
 | Switch | `style: GlassSwitchStyle(...)` | `switchStyle` |
 | Slider | `style: GlassSliderStyle(...)` | `slider` |
 | Segmented control | `style: GlassSegmentedStyle(...)` | `segmentedControl` |
 | Tab bar | `style: GlassTabBarStyle(...)` | `tabBar` |
 | Toolbar | `style: GlassToolbarStyle(...)` | `toolbar` |
-| Search | `appearance: GlassSearchStyle(...)` | `search` |
+| Search | `style: GlassSearchStyle(...)` | `search` |
 | All lifted lenses | component style's `lens` | `lens` |
 | Small-control motion | widget's `motion: GlassControlMotion(...)` | `controlMotion` |
 
-Search's existing `style` argument remains a `TextStyle`; it overrides
-`appearance.textStyle`. Style objects configure geometry, colors, contours,
+Search's direct `textStyle` overrides `GlassSearchStyle.textStyle`. Style objects configure geometry, colors, contours,
 material and optics. Geometry is in logical pixels; `scale` multiplies the
 switch/slider/segment dimensions. Text sizing and lens minification are separate.
 Parent constraints can limit preferred widths; lifted lenses paint beyond the
@@ -311,7 +310,7 @@ silences it. No hook retains native feedback and platform gates. A custom hook
 receives switch/slider feedback on all platforms.
 
 Theme `navigationBar` and scaffold `navigationBarStyle` merge title styles,
-large-title styles, gutter, controlGap, revealExtent and revealCurve field by
+large-title styles, gutter, controlGap, revealExtent and revealSpring field by
 field. Titles retain explicit child text styles. As measured on iOS 27, the
 large title scrolls with the content; once the scroll passes `revealExtent`
 (its 52-point row) the titles swap on a timer, not with the scroll. Zero
@@ -327,3 +326,20 @@ body's bottom viewInset when keyboard height is folded into padding.
 
 [Feature evidence and contracts](package_features_spec.md) lists the measured
 values and what remains fitted.
+
+## Composition and placement
+
+Use `LiquidPrismButton(label: 'Save', onPressed: save)` for a generated text label.
+An optional icon combines with the label using `GlassButtonStyle.labelPlacement`
+and `spacing`; `child` replaces generated content. `GlassControlSize` chooses a
+native size preset, and `GlassButtonSizing.fill` fills a bounded width.
+`alignment`, `minimumSize` and `maximumSize` control the content and visual bounds.
+The input area remains at least 44 points when its parent allows it. The button
+borrows `focusNode` and accepts `autofocus`, `onFocusChange` and `mouseCursor`.
+
+Set scaffold `toolbar` to typed `GlassToolbarContent`: actions, groups, custom
+widgets and spacers. Placement belongs to the content; native menu actions keep
+their iOS bridge. Navigation and scaffold styles control title alignment, row
+geometry, dock alignment, margins and maximum widths. See
+[0.7 composition examples and migration](releases/0.7.md) and run
+`example/lib/composition_main.dart` for an interactive example.

@@ -24,7 +24,7 @@ void main() {
           onTap: () => taps++,
           child: pill,
         );
-        final actions = [_item('Filter')];
+        final toolbar = [_item('Filter')];
         await tester.pumpWidget(
           CupertinoApp(
             home: Directionality(
@@ -34,7 +34,7 @@ void main() {
                       slivers: [
                         LiquidPrismSliverAppBar(
                           title: const Text('Matches'),
-                          actions: actions,
+                          toolbar: toolbar,
                           trailing: tappable,
                         ),
                         ...rows(),
@@ -42,7 +42,7 @@ void main() {
                     )
                   : LiquidPrismScaffold(
                       title: const Text('Matches'),
-                      actions: actions,
+                      toolbar: toolbar,
                       trailing: tappable,
                       slivers: rows(),
                     ),
@@ -73,7 +73,7 @@ void main() {
     }
   }
 
-  testWidgets('without actions trailing takes the trailing edge', (
+  testWidgets('without toolbar trailing takes the trailing edge', (
     tester,
   ) async {
     phone(tester);

@@ -24,27 +24,31 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
         title: const Text('Inbox'),
         largeTitle: const Text('Inbox'),
         backgroundColor: GlassColors.of(context).groupedBackground,
-        actions: [
-          [
-            GlassToolbarItem(
-              icon: const Icon(CupertinoIcons.bell),
-              label: 'Activity',
-              badge: const GlassBadge.dot(),
-              onPressed: () {},
-            ),
-          ],
-          [
-            GlassToolbarItem(
-              icon: const Icon(CupertinoIcons.square_arrow_up),
-              label: 'Share',
-              onPressed: () {},
-            ),
-            GlassToolbarItem(
-              icon: const Icon(CupertinoIcons.ellipsis),
-              label: 'More',
-              onPressed: () {},
-            ),
-          ],
+        toolbar: [
+          GlassToolbarGroup(
+            items: [
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.bell),
+                label: 'Activity',
+                badge: const GlassBadge.dot(),
+                onPressed: () {},
+              ),
+            ],
+          ),
+          GlassToolbarGroup(
+            items: [
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.square_arrow_up),
+                label: 'Share',
+                onPressed: () {},
+              ),
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.ellipsis),
+                label: 'More',
+                onPressed: () {},
+              ),
+            ],
+          ),
         ],
         tabBar: LiquidPrismTabBar(
           selectedIndex: tab,

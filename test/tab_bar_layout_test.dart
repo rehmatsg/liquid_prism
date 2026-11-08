@@ -98,7 +98,9 @@ void main() {
               onSelected: (_) {},
               style: GlassTabBarStyle(
                 labelBehavior: GlassTabLabelBehavior.never,
-                expanded: expanded,
+                sizing: expanded
+                    ? GlassTabBarSizing.fill
+                    : GlassTabBarSizing.compact,
               ),
             ),
           ),
@@ -153,13 +155,19 @@ void main() {
           width: 600,
           child: LiquidPrismTheme(
             data: const LiquidPrismThemeData(
-              tabBar: GlassTabBarStyle(expanded: true),
+              tabBar: GlassTabBarStyle(sizing: GlassTabBarSizing.fill),
             ),
             child: LiquidPrismTabBar(
               tabs: tabs(3),
               selectedIndex: 0,
               onSelected: (_) {},
-              style: GlassTabBarStyle(expanded: expanded),
+              style: GlassTabBarStyle(
+                sizing: expanded == null
+                    ? null
+                    : expanded
+                    ? GlassTabBarSizing.fill
+                    : GlassTabBarSizing.compact,
+              ),
             ),
           ),
         ),

@@ -16,7 +16,7 @@ class ComponentPage extends StatelessWidget {
     listenable: model,
     builder: (context, _) => LiquidPrismScaffold(
       backgroundColor: GlassColors.of(context).groupedBackground,
-      actions: appearanceActions(model),
+      toolbar: appearanceActions(model),
       body: LargeTitlePage(
         key: ValueKey('detail-${info.id}'),
         title: info.title,

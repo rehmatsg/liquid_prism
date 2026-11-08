@@ -637,13 +637,14 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         : accent;
     final vertical = _vertical;
     final padding =
-        style.padding ??
-        (vertical
-            ? const EdgeInsets.symmetric(horizontal: 2, vertical: 6)
-            : const EdgeInsets.symmetric(horizontal: 8, vertical: 4));
-    final labels = vertical
-        ? GlassTabLabelBehavior.never
-        : style.labelBehavior ?? GlassTabLabelBehavior.always;
+        (style.padding ??
+                (vertical
+                    ? const EdgeInsets.symmetric(horizontal: 2, vertical: 6)
+                    : const EdgeInsets.symmetric(horizontal: 8, vertical: 4)))
+            .resolve(Directionality.of(context));
+    final labels =
+        style.labelBehavior ??
+        (vertical ? GlassTabLabelBehavior.never : GlassTabLabelBehavior.always);
     final iconSize = style.iconSize ?? 25;
     final textStyle = const TextStyle(
       fontSize: 10,
@@ -652,7 +653,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final textHeight =
         MediaQuery.textScalerOf(context).scale(textStyle.fontSize ?? 10) *
         (textStyle.height ?? 1.2);
-    final height = vertical
+    var height = vertical
         ? math.max(44.0, iconSize + 8)
         : math.max(
             style.height ?? 54,
@@ -683,9 +684,17 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       }
       painter.dispose();
     }
+    if (vertical && labels != GlassTabLabelBehavior.never) {
+      height = math.max(height, contentWidth + 16);
+    }
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final slot = vertical
-        ? math.max(50.0, iconSize + 25)
+        ? math.max(
+            50.0,
+            iconSize +
+                25 +
+                (labels == GlassTabLabelBehavior.never ? 0 : textHeight + 2),
+          )
         : math.max(
             style.minimumTabWidth ?? 86.0,
             (contentWidth * dpr).ceil() / dpr + (style.labelPadding ?? 32),
@@ -698,8 +707,8 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ? constraints.maxHeight
             : constraints.maxWidth;
         final barWidth =
-            !vertical && style.expanded == true && constraints.hasBoundedWidth
-            ? constraints.maxWidth
+            style.sizing == GlassTabBarSizing.fill && available.isFinite
+            ? available
             : math.min(preferredWidth, available);
         final width = (barWidth - mainPadding) / widget.tabs.length;
         if (!width.isFinite || width <= 0) return const SizedBox.shrink();

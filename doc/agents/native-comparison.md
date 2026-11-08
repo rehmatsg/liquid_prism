@@ -36,7 +36,7 @@ Flutter apps on the same simulator/OS with matching fixture values.
 
 ## Regression checks
 
-1. Tabs stay compact unless expanded is explicit. The three-tab native fixture is
+1. Tabs stay compact unless fill sizing is explicit. The three-tab native fixture is
    274×62 points under its specified typography; that is not a universal width.
 2. Lifted switch, segment and tab lenses reveal a smaller underlay. Slider knobs
    grow, but their tracks retain scale. Customization may opt out explicitly.

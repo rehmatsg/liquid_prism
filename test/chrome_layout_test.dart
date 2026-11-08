@@ -58,7 +58,7 @@ void main() {
     );
   });
 
-  testWidgets('iPhone Duo: actions and icon-only tabs stack in the rail', (
+  testWidgets('iPhone Duo: toolbar and icon-only tabs stack in the rail', (
     tester,
   ) async {
     window(tester, duo);
@@ -70,8 +70,8 @@ void main() {
     expect(find.text('Home'), findsNothing, reason: 'the rail is icon-only');
     expect(find.bySemanticsLabel('Home'), findsOneWidget);
 
-    final actions = tester.getRect(find.byType(LiquidPrismToolbarGroup));
-    expect(actions, const Rect.fromLTWH(394, 170, 48, 100));
+    final toolbar = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+    expect(toolbar, const Rect.fromLTWH(394, 170, 48, 100));
 
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
     expect(padding.right, 84);
@@ -82,7 +82,7 @@ void main() {
     );
   });
 
-  testWidgets('iPhone Duo: a back button heads the rail, above the actions', (
+  testWidgets('iPhone Duo: a back button heads the rail, above the toolbar', (
     tester,
   ) async {
     window(tester, duo);
@@ -92,7 +92,7 @@ void main() {
         leading: leading
             ? const SizedBox(key: back, width: 48, height: 48)
             : null,
-        actions: [
+        toolbar: [
           for (final label in ['Share', 'More'])
             GlassToolbarItem(
               icon: const Icon(CupertinoIcons.star),
@@ -105,7 +105,7 @@ void main() {
     );
     await tester.pumpWidget(app(leading: true));
     // Native (Apple Music, closed Duo): the back button takes the column's
-    // top under the status bar; the actions follow 12 pt below.
+    // top under the status bar; the toolbar follow 12 pt below.
     expect(
       tester.getRect(find.byKey(back)),
       const Rect.fromLTWH(394, 170, 48, 48),
@@ -169,7 +169,7 @@ void main() {
               child: const Text('Friday'),
             ),
             trailing: trailing,
-            actions: [
+            toolbar: [
               GlassToolbarItem(
                 icon: const Icon(CupertinoIcons.phone),
                 label: 'Call',
@@ -251,7 +251,7 @@ void main() {
           home: LiquidPrismScaffold(
             title: const LiquidPrismTitle(child: Text('Book Club')),
             subtitle: const Text('5 members'),
-            actions: [
+            toolbar: [
               GlassToolbarItem(
                 icon: const Icon(CupertinoIcons.ellipsis),
                 label: 'More',
@@ -309,7 +309,7 @@ void main() {
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
 
-  testWidgets('unfolded iPhone Duo keeps the rail, actions sit higher', (
+  testWidgets('unfolded iPhone Duo keeps the rail, toolbar sit higher', (
     tester,
   ) async {
     window(tester, duoUnfolded);
@@ -328,7 +328,7 @@ void main() {
     expect(padding.right, 84);
   });
 
-  testWidgets('iPhone: top-trailing actions and a floating bottom tab bar', (
+  testWidgets('iPhone: top-trailing toolbar and a floating bottom tab bar', (
     tester,
   ) async {
     window(tester, phone);
@@ -339,10 +339,10 @@ void main() {
     expect(bar.center.dx, 201);
     expect(find.text('Home'), findsOneWidget);
 
-    final actions = tester.getRect(find.byType(LiquidPrismToolbarGroup));
-    expect(actions.right, 402 - 16);
-    expect(actions.top, 62);
-    expect(actions.height, 44);
+    final toolbar = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+    expect(toolbar.right, 402 - 16);
+    expect(toolbar.top, 62);
+    expect(toolbar.height, 44);
 
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
     expect(padding.top, 62 + 44 + 16);
@@ -612,7 +612,7 @@ void main() {
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
     testWidgets('a corner status bar shares the top bar row', (tester) async {
-      // Native, unfolded in portrait: actions at y 24, 48 pt tall, ending
+      // Native, unfolded in portrait: toolbar at y 24, 48 pt tall, ending
       // where the status bar's region begins at x 535.
       window(tester, (
         size: const Size(669, 951),
@@ -626,16 +626,16 @@ void main() {
       });
       await tester.pumpWidget(const _App());
       await tester.pump();
-      final actions = tester.getRect(find.byType(LiquidPrismToolbarGroup));
-      expect(actions.right, 535);
-      expect(actions.top, 24);
-      expect(actions.height, 48);
+      final toolbar = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+      expect(toolbar.right, 535);
+      expect(toolbar.top, 24);
+      expect(toolbar.height, 48);
       expect(tester.getRect(find.byType(LiquidPrismTabBar)).bottom, 951 - 21);
       final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
       expect(padding.top, 24 + 44 + 16);
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
-    testWidgets('rail actions start below the reported status bar region', (
+    testWidgets('rail toolbar start below the reported status bar region', (
       tester,
     ) async {
       window(tester, duoUnfolded);
@@ -643,7 +643,7 @@ void main() {
         'verticalBarEdge': 'right',
         'occlusions': [
           [867.0, 0.0, 84.0, 131.0],
-          // A camera region outside the rail does not move the actions.
+          // A camera region outside the rail does not move the toolbar.
           [677.0, 21.0, 58.0, 37.0],
         ],
       });
@@ -671,7 +671,7 @@ void main() {
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
   });
 
-  testWidgets('a short rail collapses actions into one overflow menu', (
+  testWidgets('a short rail collapses toolbar into one overflow menu', (
     tester,
   ) async {
     // The folded Duo in landscape: 466 pt tall with the bar on the side.
@@ -802,16 +802,16 @@ void main() {
       expect(find.bySemanticsLabel('Hide sidebar'), findsNothing);
     });
   });
-  group('actions in several capsules', () {
+  group('toolbar in several capsules', () {
     GlassToolbarItem item(String label) => GlassToolbarItem(
       icon: const Icon(CupertinoIcons.star),
       label: label,
       onPressed: () {},
     );
-    Widget app(List<Object> actions) => CupertinoApp(
+    Widget app(List<GlassToolbarContent> toolbar) => CupertinoApp(
       debugShowCheckedModeBanner: false,
       home: LiquidPrismScaffold(
-        actions: actions,
+        toolbar: toolbar,
         tabBar: LiquidPrismTabBar(
           selectedIndex: 0,
           onSelected: (_) {},
@@ -827,8 +827,8 @@ void main() {
       window(tester, phone);
       await tester.pumpWidget(
         app([
-          [item('Filter')],
-          [item('Share'), item('More')],
+          GlassToolbarGroup(items: [item('Filter')]),
+          GlassToolbarGroup(items: [item('Share'), item('More')]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -853,8 +853,8 @@ void main() {
       window(tester, phone);
       await tester.pumpWidget(
         app([
-          [],
-          [item('Share')],
+          const GlassToolbarGroup(items: []),
+          GlassToolbarGroup(items: [item('Share')]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -869,8 +869,12 @@ void main() {
       window(tester, duo);
       await tester.pumpWidget(
         app([
-          [item('Filter'), item('Sort'), item('Group')],
-          [item('Share'), item('Save'), item('More actions')],
+          GlassToolbarGroup(
+            items: [item('Filter'), item('Sort'), item('Group')],
+          ),
+          GlassToolbarGroup(
+            items: [item('Share'), item('Save'), item('More toolbar')],
+          ),
         ]),
       );
       await tester.pumpAndSettle();
@@ -890,7 +894,7 @@ void main() {
         app([
           item('Filter'),
           item('Sort'),
-          [item('Share'), item('More')],
+          GlassToolbarGroup(items: [item('Share'), item('More')]),
         ]),
       );
       await tester.pumpAndSettle();
@@ -932,7 +936,7 @@ class _App extends StatelessWidget {
   Widget build(BuildContext context) => CupertinoApp(
     debugShowCheckedModeBanner: false,
     home: LiquidPrismScaffold(
-      actions: [
+      toolbar: [
         for (final label in ['Share', 'More'])
           GlassToolbarItem(
             icon: const Icon(CupertinoIcons.star),

@@ -46,8 +46,10 @@ void main() {
       same(merged.slider),
     );
     expect(
-      const GlassTabBarStyle(expanded: true).copyWith(expanded: false).expanded,
-      false,
+      const GlassTabBarStyle(sizing: GlassTabBarSizing.fill)
+          .copyWith(sizing: GlassTabBarSizing.compact)
+          .sizing,
+      GlassTabBarSizing.compact,
     );
     const physical = GlassSpring.physical(
       SpringDescription(mass: 1, stiffness: 300, damping: 26),
@@ -225,7 +227,7 @@ void main() {
           LiquidPrismSearchField(
             showCancelButton: false,
             restingInset: 0,
-            style: const TextStyle(fontSize: 21),
+            textStyle: const TextStyle(fontSize: 21),
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
             autocorrect: false,
@@ -233,7 +235,7 @@ void main() {
             readOnly: true,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             prefix: const Text('Find'),
-            appearance: const GlassSearchStyle(
+            style: const GlassSearchStyle(
               height: 52,
               textStyle: TextStyle(fontSize: 19),
             ),
@@ -358,10 +360,7 @@ void main() {
           focusNode: focus,
           onChanged: changes.add,
           onCleared: () => cleared++,
-          appearance: const GlassSearchStyle(
-            cancelWidth: 64,
-            cancelSpacing: 20,
-          ),
+          style: const GlassSearchStyle(cancelWidth: 64, cancelSpacing: 20),
         ),
       ),
     );

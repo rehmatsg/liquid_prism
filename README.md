@@ -170,7 +170,7 @@ LiquidPrismSlider(
 ### Tab bar
 
 The tab bar is compact by default and grows for longer labels. Use
-`GlassTabBarStyle(expanded: true)` for full-width navigation. Place it where your
+`GlassTabBarStyle(sizing: GlassTabBarSizing.fill)` for full-width navigation. Place it where your
 layout needs it; the widget does not add safe-area margins. The icons below use
 `package:flutter/cupertino.dart`.
 
@@ -205,7 +205,7 @@ controls see through.
 ```dart
 LiquidPrismScaffold(
   backgroundColor: const Color(0xFFF2F2F7),
-  actions: [
+  toolbar: [
     GlassToolbarItem(
       icon: const Icon(CupertinoIcons.share),
       label: 'Share',
@@ -221,6 +221,10 @@ LiquidPrismScaffold(
 )
 ```
 
+Position chrome with typed toolbar placements, title alignment and tab docks.
+See the [0.7 API and migration guide](doc/releases/0.7.md) and run
+`example/lib/composition_main.dart` to explore the layouts.
+
 ## Make it yours
 
 Set shared defaults around your app's routes:
@@ -229,7 +233,7 @@ Set shared defaults around your app's routes:
 LiquidPrismTheme(
   data: const LiquidPrismThemeData(
     tint: Color(0xFF6155F5),
-    button: GlassButtonAppearance(minimumSize: Size(88, 48)),
+    button: GlassButtonStyle(minimumSize: Size(88, 48)),
     slider: GlassSliderStyle(trackHeight: 8),
     lens: GlassLensStyle(shadowOpacity: .08),
     toolbar: GlassToolbarStyle(spacing: 10),
@@ -238,8 +242,8 @@ LiquidPrismTheme(
 )
 ```
 
-Override one component with `style` (`appearance` on search, whose `style` is its
-editor `TextStyle`). Direct widget arguments override styles. Null fields inherit;
+Override one component with `style`. Search also accepts a direct `textStyle`.
+Direct widget arguments override styles. Null fields inherit;
 zero and false are real overrides. Nested themes merge fields; `inherit: false`
 starts from native defaults. Styles and themes support `copyWith` and `merge`.
 

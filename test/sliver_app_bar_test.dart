@@ -21,7 +21,7 @@ void main() {
   Widget page({
     ScrollController? controller,
     TextDirection direction = TextDirection.ltr,
-    List<Object> actions = const [],
+    List<GlassToolbarContent> toolbar = const [],
     bool large = true,
     PreferredSizeWidget? accessory,
   }) => CupertinoApp(
@@ -39,7 +39,7 @@ void main() {
               ),
               title: const Text('Inline'),
               largeTitle: large ? const Text('Large') : null,
-              actions: actions,
+              toolbar: toolbar,
               accessory: accessory,
             ),
             SliverList.builder(
@@ -65,13 +65,13 @@ void main() {
     tester,
   ) async {
     phone(tester);
-    await tester.pumpWidget(page(actions: [_item('Share')]));
+    await tester.pumpWidget(page(toolbar: [_item('Share')]));
     await tester.pumpAndSettle();
     final leading = tester.getRect(find.byKey(const ValueKey('leading')));
     expect(leading, const Rect.fromLTWH(16, 62, 44, 44));
-    final actions = tester.getRect(find.byType(LiquidPrismToolbarGroup));
-    expect(actions.right, 402 - 16);
-    expect(actions.top, 62);
+    final toolbar = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+    expect(toolbar.right, 402 - 16);
+    expect(toolbar.top, 62);
     final large = tester.getTopLeft(find.text('Large'));
     expect(large.dx, 16);
     // Measured: the bar frame ends at 116 and the large title's 52-point
@@ -121,9 +121,9 @@ void main() {
     await tester.pumpWidget(
       page(
         controller: controller,
-        actions: [
-          [_item('Filter')],
-          [_item('Share'), _item('More')],
+        toolbar: [
+          GlassToolbarGroup(items: [_item('Filter')]),
+          GlassToolbarGroup(items: [_item('Share'), _item('More')]),
         ],
       ),
     );
@@ -149,7 +149,7 @@ void main() {
   testWidgets('mirrors in right-to-left layouts', (tester) async {
     phone(tester);
     await tester.pumpWidget(
-      page(direction: TextDirection.rtl, actions: [_item('Share')]),
+      page(direction: TextDirection.rtl, toolbar: [_item('Share')]),
     );
     await tester.pumpAndSettle();
     expect(

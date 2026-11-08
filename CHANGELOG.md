@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 0.7.0
+
+- Breaking: replace untyped scaffold/sliver `actions` and nested toolbar `groups`
+  with typed `toolbar`/`content`: text or icon actions, native menus, custom
+  widgets, explicit groups, fixed/flexible spacers and positional placements.
+- Add navigation title alignment, control-row height, directional content padding
+  and expanded-title extent. Add scaffold dock margins, alignment and maximum
+  widths, plus top, bottom, leading and trailing tab docks.
+- Breaking: rename `GlassButtonAppearance` to `GlassButtonStyle`, button variants
+  to `GlassButtonVariant.regular`/`.prominent` and `buttonStyle` to `variant`.
+  Text buttons generate their label; add icon/label arrangements, native control
+  sizes, intrinsic/fill sizing, visual bounds and borrowed focus/cursor control.
+- Breaking: standardize search styling on `style: GlassSearchStyle(...)` and
+  direct typography on `textStyle:`.
+- Breaking: replace tab `expanded` with `GlassTabBarSizing.compact`/`.fill` and
+  remove obsolete navigation `revealCurve` (use `revealSpring`). Vertical tabs
+  honor explicit label behavior. Compact sizing remains the default.
+- Add a runnable composition example and [0.7 migration guide](doc/releases/0.7.md).
+  Native rendering, shader packets and controlled-input contracts are preserved.
+
 - Match native Liquid Glass defaults more closely: setting-dependent regular
   frost, dark face grading and gray fill, regular rim lighting and standalone
   shadow strength. Explicit blur and optical overrides retain precedence.

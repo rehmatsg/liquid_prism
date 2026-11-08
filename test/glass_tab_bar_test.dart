@@ -129,7 +129,7 @@ class _TabHarnessState extends State<_TabHarness> {
   GlassMotion? motion;
   LiquidPrismThemeData theme = const LiquidPrismThemeData();
   GlassTabBarStyle style = const GlassTabBarStyle(
-    expanded: true,
+    sizing: GlassTabBarSizing.fill,
     padding: EdgeInsets.zero,
     labelBehavior: GlassTabLabelBehavior.never,
     haptics: false,
@@ -313,7 +313,10 @@ void _motionTests() {
     final state = await _mountTabs(tester);
     state.update(() {
       state.width = 274;
-      state.style = const GlassTabBarStyle(haptics: false, expanded: true);
+      state.style = const GlassTabBarStyle(
+        haptics: false,
+        sizing: GlassTabBarSizing.fill,
+      );
     });
     await tester.pump();
     expect(_pill(tester).size, const Size(94, 54));
@@ -369,7 +372,10 @@ void _motionTests() {
       final state = await _mountTabs(tester);
       state.update(() {
         state.width = 360;
-        state.style = const GlassTabBarStyle(haptics: false, expanded: true);
+        state.style = const GlassTabBarStyle(
+          haptics: false,
+          sizing: GlassTabBarSizing.fill,
+        );
       });
       await tester.pump();
       final gesture = await tester.startGesture(
@@ -404,7 +410,10 @@ void _motionTests() {
     final state = await _mountTabs(tester);
     state.update(() {
       state.width = 274;
-      state.style = const GlassTabBarStyle(haptics: false, expanded: true);
+      state.style = const GlassTabBarStyle(
+        haptics: false,
+        sizing: GlassTabBarSizing.fill,
+      );
     });
     await tester.pump();
     final gesture = await tester.startGesture(

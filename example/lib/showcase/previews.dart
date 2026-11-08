@@ -458,56 +458,58 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 26),
-              // One toolbar, two groups: the first fills and empties as the
-              // plus item is tapped, so its capsule and the gap materialize.
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: LiquidPrismToolbar(
                   key: const ValueKey('demo-toolbar'),
                   size: GlassToolbarSize.navigation,
-                  groups: [
-                    [
-                      if (extraAction)
+                  content: [
+                    GlassToolbarGroup(
+                      items: [
+                        if (extraAction)
+                          GlassToolbarItem(
+                            icon: const Icon(CupertinoIcons.star),
+                            label: 'Star',
+                            width: 42 + 1 / 3,
+                            onPressed: () => setState(() => actions++),
+                          ),
+                      ],
+                    ),
+                    GlassToolbarGroup(
+                      items: [
                         GlassToolbarItem(
-                          icon: const Icon(CupertinoIcons.star),
-                          label: 'Star',
-                          width: 42 + 1 / 3,
+                          // One item whose glyph and label change, so it swaps
+                          // in place rather than leaving and re-entering.
+                          key: const ValueKey('toggle-star'),
+                          icon: Icon(
+                            extraAction
+                                ? CupertinoIcons.minus_circle
+                                : CupertinoIcons.plus_circle,
+                          ),
+                          label: extraAction ? 'Remove star' : 'Add star',
+                          onPressed: () =>
+                              setState(() => extraAction = !extraAction),
+                        ),
+                        GlassToolbarItem(
+                          icon: const Icon(CupertinoIcons.share),
+                          label: 'Share',
+                          width: 38 + 2 / 3,
                           onPressed: () => setState(() => actions++),
                         ),
-                    ],
-                    [
-                      GlassToolbarItem(
-                        // One item whose glyph and label change, so it swaps
-                        // in place rather than leaving and re-entering.
-                        key: const ValueKey('toggle-star'),
-                        icon: Icon(
-                          extraAction
-                              ? CupertinoIcons.minus_circle
-                              : CupertinoIcons.plus_circle,
+                        if (extraAction)
+                          GlassToolbarItem(
+                            icon: const Icon(CupertinoIcons.square_pencil),
+                            label: 'Compose',
+                            onPressed: () => setState(() => actions++),
+                          ),
+                        GlassToolbarItem.menu(
+                          icon: const Icon(CupertinoIcons.ellipsis),
+                          label: 'More',
+                          menu: _actionMenu(),
+                          onSelected: _menuSelected,
                         ),
-                        label: extraAction ? 'Remove star' : 'Add star',
-                        onPressed: () =>
-                            setState(() => extraAction = !extraAction),
-                      ),
-                      GlassToolbarItem(
-                        icon: const Icon(CupertinoIcons.share),
-                        label: 'Share',
-                        width: 38 + 2 / 3,
-                        onPressed: () => setState(() => actions++),
-                      ),
-                      if (extraAction)
-                        GlassToolbarItem(
-                          icon: const Icon(CupertinoIcons.square_pencil),
-                          label: 'Compose',
-                          onPressed: () => setState(() => actions++),
-                        ),
-                      GlassToolbarItem.menu(
-                        icon: const Icon(CupertinoIcons.ellipsis),
-                        label: 'More',
-                        menu: _actionMenu(),
-                        onSelected: _menuSelected,
-                      ),
-                    ],
+                      ],
+                    ),
                   ],
                 ),
               ),
