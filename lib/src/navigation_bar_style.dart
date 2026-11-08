@@ -74,6 +74,7 @@ class GlassNavigationBarStyle {
   final GlassTitleAlignment? largeTitleAlignment;
 
   /// Automatic retains the captured non-minimizing default.
+  /// The title and controls minimize together; an accessory stays visible.
   final GlassToolbarMinimizationBehavior? minimizationBehavior;
 
   /// Initial scroll distance before minimization starts; fitted default 13⅓ pt.

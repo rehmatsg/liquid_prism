@@ -232,16 +232,17 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
               ),
             ],
           );
+    final minimizingExtent = barRow + (accessoryHeight == 0 ? clearance : 0);
     return _MinimizingSliverBar(
       style: navigation,
       collapseExtent: largeTitle == null ? 0 : largeRow + lead,
-      extent: minExtent - top,
+      extent: minimizingExtent,
       builder: (minimization) {
         final reduction =
             navigation.minimizationSafeAreaAdjustment ==
                 GlassToolbarMinimizationSafeAreaAdjustment.disabled
             ? 0.0
-            : (minExtent - top) * minimization.value;
+            : minimizingExtent * minimization.value;
         return SliverPersistentHeader(
           pinned: true,
           delegate: _SliverBarDelegate(
@@ -576,125 +577,136 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       context,
       bar.scrollEdgeStyle,
     );
-    return NavigationBarPresence(
-      progress: _d.minimization,
-      child: LiquidPrismGroup(
-        child: CustomMultiChildLayout(
-          delegate: _SliverBarLayout(
-            textDirection: Directionality.of(context),
-            largeTitleAlignment:
-                _d.navigation.largeTitleAlignment ??
-                GlassTitleAlignment.leading,
-            titleAlignment:
-                _d.navigation.titleAlignment ?? GlassTitleAlignment.automatic,
-            insets: _d.insets,
-            top:
-                _d.top -
-                (_d.barRow +
-                        _d.accessoryHeight +
-                        (_d.navigation.contentSpacing ??
-                            (_d.lead > 0 && _d.accessoryHeight == 0
-                                ? _d.lead
-                                : LiquidPrismScaffold.topBarClearance))) *
-                    _d.minimization.value,
-            barRow: _d.barRow,
-            largeRow: _d.largeRow,
-            lead: _d.lead,
-            largeTitleTop: _d.largeTitleTop,
-            shrink: shrink,
-            accessoryHeight: _d.accessoryHeight,
-            gutter: _d.navigation.gutter ?? 16,
-            gap: _d.navigation.controlGap ?? 12,
-            edgeFrame:
-                bar.accessory == null &&
-                    edgeStyle.variant == GlassScrollEdgeVariant.hard
-                ? 10
-                : 0,
-          ),
-          children: [
-            if (bar.scrollEdge || !_edgePresence.isDismissed)
-              LayoutId(
-                id: _Slot.edge,
-                child: IgnorePointer(
-                  child: ScrollEdgeProgressBuilder(
-                    listenable: Listenable.merge([_scrolled, _edgeStrength]),
-                    progress: () =>
-                        _edgeStrength.value *
-                        LiquidPrismScrollEdge.progressFor(
-                          _scrolled.value,
-                          revealExtent:
-                              edgeStyle.revealExtent ??
-                              GlassScrollEdgeStyle.defaultRevealExtent,
-                        ),
-                    builder: (context, progress) => LiquidPrismScrollEdge(
-                      progress: progress,
-                      color: bar.backgroundColor,
-                      style: bar.scrollEdgeStyle,
+    return LiquidPrismGroup(
+      child: CustomMultiChildLayout(
+        delegate: _SliverBarLayout(
+          textDirection: Directionality.of(context),
+          largeTitleAlignment:
+              _d.navigation.largeTitleAlignment ?? GlassTitleAlignment.leading,
+          titleAlignment:
+              _d.navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+          insets: _d.insets,
+          top:
+              _d.top -
+              (_d.barRow +
+                      (_d.accessoryHeight > 0
+                          ? 0
+                          : (_d.navigation.contentSpacing ??
+                                (_d.lead > 0
+                                    ? _d.lead
+                                    : LiquidPrismScaffold.topBarClearance)))) *
+                  _d.minimization.value,
+          barRow: _d.barRow,
+          largeRow: _d.largeRow,
+          lead: _d.lead,
+          largeTitleTop: _d.largeTitleTop,
+          shrink: shrink,
+          accessoryHeight: _d.accessoryHeight,
+          gutter: _d.navigation.gutter ?? 16,
+          gap: _d.navigation.controlGap ?? 12,
+          edgeFrame:
+              bar.accessory == null &&
+                  edgeStyle.variant == GlassScrollEdgeVariant.hard
+              ? 10
+              : 0,
+        ),
+        children:
+            [
+              if (bar.scrollEdge || !_edgePresence.isDismissed)
+                LayoutId(
+                  id: _Slot.edge,
+                  child: IgnorePointer(
+                    child: ScrollEdgeProgressBuilder(
+                      listenable: Listenable.merge([_scrolled, _edgeStrength]),
+                      progress: () =>
+                          _edgeStrength.value *
+                          LiquidPrismScrollEdge.progressFor(
+                            _scrolled.value,
+                            revealExtent:
+                                edgeStyle.revealExtent ??
+                                GlassScrollEdgeStyle.defaultRevealExtent,
+                          ),
+                      builder: (context, progress) => LiquidPrismScrollEdge(
+                        progress: progress,
+                        color: bar.backgroundColor,
+                        style: bar.scrollEdgeStyle,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            if (bar.largeTitle case final large?)
-              LayoutId(
-                id: _Slot.largeTitle,
-                child: _header(
-                  glassTitled(
-                    large,
-                    bar.subtitle,
-                    _d.largeSubtitleStyle,
+              if (bar.largeTitle case final large?)
+                LayoutId(
+                  id: _Slot.largeTitle,
+                  child: _header(
+                    glassTitled(
+                      large,
+                      bar.subtitle,
+                      _d.largeSubtitleStyle,
+                      large: true,
+                      alignment:
+                          _d.navigation.largeTitleAlignment ??
+                          GlassTitleAlignment.leading,
+                      subtitleOffset:
+                          MediaQuery.textScalerOf(context)
+                              .scale(_d.largeTitleStyle.fontSize ?? 34) *
+                          38.33 /
+                          34,
+                    ),
+                    _d.largeTitleStyle,
                     large: true,
-                    alignment:
-                        _d.navigation.largeTitleAlignment ??
-                        GlassTitleAlignment.leading,
-                    subtitleOffset:
-                        MediaQuery.textScalerOf(context)
-                            .scale(_d.largeTitleStyle.fontSize ?? 34) *
-                        38.33 /
-                        34,
                   ),
-                  _d.largeTitleStyle,
-                  large: true,
                 ),
-              ),
-            if (_d.accessory case final accessory?)
-              LayoutId(id: _Slot.accessory, child: accessory),
-            if (_d.inlineTitle case final title?)
-              LayoutId(
-                id: _Slot.title,
-                child: _header(
-                  glassTitled(
-                    title,
-                    bar.subtitle,
-                    _d.subtitleStyle,
+              if (_d.accessory case final accessory?)
+                LayoutId(id: _Slot.accessory, child: accessory),
+              if (_d.inlineTitle case final title?)
+                LayoutId(
+                  id: _Slot.title,
+                  child: _header(
+                    glassTitled(
+                      title,
+                      bar.subtitle,
+                      _d.subtitleStyle,
+                      large: false,
+                      alignment:
+                          _d.navigation.titleAlignment == null ||
+                              _d.navigation.titleAlignment ==
+                                  GlassTitleAlignment.automatic
+                          ? GlassTitleAlignment.center
+                          : _d.navigation.titleAlignment!,
+                    ),
+                    _d.titleStyle,
                     large: false,
-                    alignment:
-                        _d.navigation.titleAlignment == null ||
-                            _d.navigation.titleAlignment ==
-                                GlassTitleAlignment.automatic
-                        ? GlassTitleAlignment.center
-                        : _d.navigation.titleAlignment!,
-                  ),
-                  _d.titleStyle,
-                  large: false,
-                ),
-              ),
-            if (_d.leading case final leading?)
-              LayoutId(id: _Slot.leading, child: leading),
-            if (content.isNotEmpty)
-              LayoutId(
-                id: _Slot.actions,
-                child: LiquidPrismToolbar(
-                  content: content,
-                  style: glassToolbarStyleFor(
-                    context,
-                    GlassToolbarSize.navigation,
                   ),
                 ),
-              ),
-            if (bar.trailing case final trailing?)
-              LayoutId(id: _Slot.trailing, child: trailing),
-          ],
-        ),
+              if (_d.leading case final leading?)
+                LayoutId(id: _Slot.leading, child: leading),
+              if (content.isNotEmpty)
+                LayoutId(
+                  id: _Slot.actions,
+                  child: LiquidPrismToolbar(
+                    content: content,
+                    style: glassToolbarStyleFor(
+                      context,
+                      GlassToolbarSize.navigation,
+                    ),
+                  ),
+                ),
+              if (bar.trailing case final trailing?)
+                LayoutId(id: _Slot.trailing, child: trailing),
+            ].map((child) {
+              final pinned =
+                  child.id == _Slot.accessory ||
+                  (child.id == _Slot.edge && _d.accessory != null);
+              return pinned
+                  ? child
+                  : LayoutId(
+                      id: child.id,
+                      child: NavigationBarPresence(
+                        progress: _d.minimization,
+                        child: child.child,
+                      ),
+                    );
+            }).toList(),
       ),
     );
   }

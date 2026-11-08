@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.7.1
+
+- Keep centered navigation titles aligned with the content area beside corner
+  status regions, and keep crowded interactive titles usable. Sheets no longer
+  reserve horizontal space for the window status bar above them.
+- Preserve rounded ancestor clips around scroll-edge blur, haze and fade when
+  backdrop filters restore their clip state, including moving sheet surfaces.
+- Keep accessory rows visible and interactive while scaffold and sliver titles
+  and controls minimize. Retain the accessory's scroll edge and content clearance.
+- Add sticky, scroll-away and reveal-on-scroll-up modes to Scaffold Lab, including
+  the full set of lab controls when presented in a sheet.
+
 ## 0.7.0
 
 - Breaking: replace untyped scaffold/sliver `actions` and nested toolbar `groups`

@@ -287,7 +287,7 @@ to `leading`, `center` or `trailing`; directional alignment mirrors in RTL.
 Title widgets keep their own pointer and keyboard input. Only the active title
 participates in focus and accessibility.
 
-`navigationBarStyle.minimizationBehavior` controls the whole navigation bar:
+`navigationBarStyle.minimizationBehavior` moves the navigation title and controls:
 `automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
 and restores it on reversal; `onScrollUp` reverses those directions.
 `minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
@@ -295,7 +295,9 @@ an on-scroll-down bar hidden until content reaches the top. Set
 `minimizationSafeAreaAdjustment` to `disabled` to keep body insets fixed while
 chrome moves. A top-docked tab bar follows the navigation bar; other docks remain
 independent. Minimization follows scroll progress, without a separate fixed-time
-animation. These settings also work with `scrollEdge: false`.
+animation. An accessory row stays visible and interactive, moving up to the safe
+top edge as the bar leaves. Its scroll-edge effect and content clearance remain.
+These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
 
 Use `largeTitle` plus `title` for large-to-inline collapse under pinned controls.
 Use `header` for page content that scrolls away entirely. Use minimization to move

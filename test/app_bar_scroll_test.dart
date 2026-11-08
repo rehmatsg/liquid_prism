@@ -13,6 +13,7 @@ Widget page({
   bool reduceMotion = false,
   bool scrollEdge = true,
   FocusNode? focus,
+  PreferredSizeWidget? accessory,
 }) => CupertinoApp(
   home: Builder(
     builder: (context) => MediaQuery(
@@ -26,6 +27,7 @@ Widget page({
                   LiquidPrismSliverAppBar(
                     navigationBarStyle: style,
                     scrollEdge: scrollEdge,
+                    accessory: accessory,
                     title: const Text('Inline'),
                     largeTitle: large ? const Text('Large') : null,
                     leading: LiquidPrismButton(
@@ -40,6 +42,7 @@ Widget page({
             : LiquidPrismScaffold(
                 navigationBarStyle: style,
                 scrollEdge: scrollEdge,
+                accessory: accessory,
                 title: const Text('Inline'),
                 largeTitle: large ? const Text('Large') : null,
                 leading: LiquidPrismButton(
@@ -111,6 +114,107 @@ void main() {
     });
   }
   for (final sliver in [false, true]) {
+    testWidgets(
+      'accessories remain usable while navigation scrolls, sliver $sliver',
+      (tester) async {
+        phone(tester);
+        final semantics = tester.ensureSemantics();
+        try {
+          const modes = {
+            'sticky': GlassNavigationBarStyle(
+              minimizationBehavior: GlassToolbarMinimizationBehavior.never,
+            ),
+            'scroll-away': GlassNavigationBarStyle(
+              minimizationBehavior:
+                  GlassToolbarMinimizationBehavior.onScrollDown,
+              minimizationRestoration:
+                  GlassToolbarMinimizationRestoration.atScrollEdge,
+            ),
+            'reveal-on-scroll-up': GlassNavigationBarStyle(
+              minimizationBehavior:
+                  GlassToolbarMinimizationBehavior.onScrollDown,
+            ),
+          };
+          for (final mode in modes.entries) {
+            await tester.pumpWidget(const SizedBox.shrink());
+            final scroll = ScrollController();
+            addTearDown(scroll.dispose);
+            var taps = 0;
+            const accessoryKey = Key('persistent accessory');
+            await tester.pumpWidget(
+              page(
+                sliver: sliver,
+                scroll: scroll,
+                style: mode.value,
+                accessory: PreferredSize(
+                  preferredSize: const Size.fromHeight(44),
+                  child: CupertinoButton(
+                    key: accessoryKey,
+                    padding: EdgeInsets.zero,
+                    onPressed: () => taps++,
+                    child: const Text('Accessory action'),
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            double bodyInset() =>
+                tester.getTopLeft(find.byKey(const ValueKey('row8'))).dy +
+                scroll.offset -
+                8 * 50;
+            final initialInset = bodyInset();
+            final clearance =
+                initialInset -
+                tester.getBottomLeft(find.byKey(accessoryKey)).dy;
+            var expectedTaps = 0;
+            Future<void> check({required bool headerVisible}) async {
+              expect(
+                find.semantics.byLabel('Back'),
+                headerVisible ? findsOneWidget : findsNothing,
+                reason: mode.key,
+              );
+              expect(
+                find.semantics.byLabel('Accessory action'),
+                findsOneWidget,
+                reason: mode.key,
+              );
+              final accessory = tester.getRect(find.byKey(accessoryKey));
+              expect(
+                accessory.top,
+                headerVisible ? greaterThanOrEqualTo(62) : closeTo(62, .01),
+                reason: mode.key,
+              );
+              expect(
+                bodyInset(),
+                closeTo(accessory.bottom + clearance, .01),
+                reason: mode.key,
+              );
+              await tester.tapAt(accessory.center);
+              await tester.pumpAndSettle();
+              expect(taps, ++expectedTaps, reason: mode.key);
+            }
+
+            await check(headerVisible: true);
+            scroll.jumpTo(300);
+            await tester.pumpAndSettle();
+            await check(headerVisible: mode.key == 'sticky');
+            if (mode.key != 'sticky') {
+              expect(bodyInset(), lessThan(initialInset));
+            }
+            scroll.jumpTo(240);
+            await tester.pumpAndSettle();
+            await check(headerVisible: mode.key != 'scroll-away');
+            scroll.jumpTo(0);
+            await tester.pumpAndSettle();
+            await check(headerVisible: true);
+            expect(tester.takeException(), isNull);
+          }
+        } finally {
+          semantics.dispose();
+        }
+      },
+    );
+
     testWidgets('large-title collapse precedes minimization, sliver $sliver', (
       tester,
     ) async {

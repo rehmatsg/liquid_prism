@@ -1045,12 +1045,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             final moves = switch (child.id) {
               _Slot.title ||
               _Slot.largeTitle ||
-              _Slot.scrollEdge ||
-              _Slot.accessory ||
               _Slot.sidebarToggle ||
               _Slot.leading ||
               _Slot.actions ||
               _Slot.trailing => true,
+              _Slot.scrollEdge => widget.accessory == null,
               _Slot.tabBar => explicitDock == GlassTabBarPlacement.top,
               _ => false,
             };
@@ -1564,8 +1563,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
             dockTop +
                 margin.top -
                 (barRow +
-                        accessoryHeight +
-                        contentSpacing +
+                        (accessoryHeight == 0 ? contentSpacing : 0) +
                         bar.height +
                         margin.vertical) *
                     minimization.value,
@@ -1576,7 +1574,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       }
     }
     final minimizedExtent =
-        barRow + accessoryHeight + contentSpacing + topDockHeight;
+        barRow + (accessoryHeight == 0 ? contentSpacing : 0) + topDockHeight;
     onMinimizationExtent(minimizedExtent);
     top -= minimizedExtent * minimization.value;
     if (adjustsMinimizationInsets) {
@@ -1629,7 +1627,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       );
       positionChild(
         _Slot.accessory,
-        Offset(contentLeft, top + barRow + largeHeight),
+        Offset(contentLeft, math.max(naturalTop, top + barRow + largeHeight)),
       );
     }
 
