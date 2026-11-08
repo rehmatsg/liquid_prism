@@ -114,6 +114,12 @@ Future<void> main() async {
       await driver.requestData(
         jsonEncode({'op': 'configure', 'dock': 'automatic'}),
       );
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+      final restored = await state();
+      if ((restored['errors'] as List).isNotEmpty) {
+        throw StateError(jsonEncode(restored['errors']));
+      }
+      stdout.writeln('PASS restored layout after keyboard');
     });
   } finally {
     File(

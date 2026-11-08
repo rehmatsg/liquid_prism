@@ -19,6 +19,8 @@
 - Breaking: replace tab `expanded` with `GlassTabBarSizing.compact`/`.fill` and
   remove obsolete navigation `revealCurve` (use `revealSpring`). Vertical tabs
   honor explicit label behavior. Compact sizing remains the default.
+- Avoid rebuilding scroll edges during viewport layout when the keyboard or
+  dock geometry changes.
 - Add a runnable composition example and [0.7 migration guide](doc/releases/0.7.md).
   Native rendering, shader packets and controlled-input contracts are preserved.
 
