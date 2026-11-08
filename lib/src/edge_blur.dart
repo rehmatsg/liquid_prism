@@ -881,7 +881,10 @@ class _EdgePassLayer extends ContainerLayer {
     filter
       ..filter = owner._screenFrameFilter(pass)
       ..backdropKey = null;
+    final clip = compositedAncestorClip(this);
+    if (clip != null) builder.pushClipPath(clip);
     addChildrenToScene(builder);
+    if (clip != null) builder.pop();
   }
 }
 
@@ -909,7 +912,10 @@ class _EdgeHazeLayer extends ContainerLayer {
     filter
       ..filter = owner._hazeScreenFilter()
       ..backdropKey = null;
+    final clip = compositedAncestorClip(this);
+    if (clip != null) builder.pushClipPath(clip);
     addChildrenToScene(builder);
+    if (clip != null) builder.pop();
   }
 }
 
@@ -925,6 +931,9 @@ class _EdgeFadeLayer extends ContainerLayer {
   void addToScene(ui.SceneBuilder builder) {
     final owner = blur;
     if (owner == null || !owner.attached) return;
+    final clip = compositedAncestorClip(this);
+    if (clip != null) builder.pushClipPath(clip);
     builder.addPicture(Offset.zero, owner._fadeFor(offset));
+    if (clip != null) builder.pop();
   }
 }

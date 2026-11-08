@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+## 0.7.1
+
+- Suppress the outgoing header edge on initial downward scroll. Reveal the
+  compact title and its edge during actual upward restoration; scroll-away
+  expanded headings do not build a compact title. Accessories retain their edge.
+- Keep scaffold bottom-bar edges soft, or off when scroll edges are disabled,
+  even when the top edge uses the hard variant.
+
+- Regroup action-only toolbars without replaying entry/exit animations;
+  genuinely added and removed actions retain their transitions.
+
+- Keep side-rail controls fixed when the navigation title minimizes, and retain
+  stable content insets by default so header hide/reveal does not double scroll.
+  Explicit enabled safe-area adjustment still follows the bar.
+
+- Keep centered navigation titles aligned with the content area beside corner
+  status regions, and keep crowded interactive titles usable. Sheets no longer
+  reserve horizontal space for the window status bar above them.
+- Preserve rounded ancestor clips around scroll-edge blur, haze and fade when
+  backdrop filters restore their clip state, including moving sheet surfaces.
+- Keep accessory rows visible and interactive while scaffold and sliver titles
+  and controls minimize. Retain the accessory's scroll edge and content clearance.
+- Add sticky, scroll-away and reveal-on-scroll-up modes to Scaffold Lab, including
+  the full set of lab controls when presented in a sheet.
+
 ## 0.7.0
 
 - Breaking: replace untyped scaffold/sliver `actions` and nested toolbar `groups`

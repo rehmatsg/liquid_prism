@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui' show DisplayFeatureType;
+import 'dart:ui' show DisplayFeatureType, SemanticsAction, SemanticsActionEvent;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -610,6 +610,221 @@ void main() {
       expect(tester.getRect(find.byType(LiquidPrismTabBar)).bottom, 384);
       expect(tester.getRect(find.byType(LiquidPrismToolbarGroup)).top, 24);
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('a sheet title ignores the window status bar above its route', (
+      tester,
+    ) async {
+      for (final rtl in [false, true]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        window(tester, (
+          size: const Size(669, 951),
+          padding: const FakeViewPadding(top: 82, bottom: 34),
+        ));
+        await report(tester, {
+          'verticalBarEdge': null,
+          'occlusions': [
+            [rtl ? 0.0 : 535.0, 0.0, 134.0, 82.0],
+          ],
+        });
+        final scroll = ScrollController();
+        addTearDown(scroll.dispose);
+        await tester.pumpWidget(
+          CupertinoApp(
+            home: Directionality(
+              textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 100),
+                child: LiquidPrismScaffold(
+                  sheet: true,
+                  title: const Text('Preferences'),
+                  largeTitle: const Text('Preferences'),
+                  scrollController: scroll,
+                  toolbar: [
+                    GlassToolbarItem(
+                      icon: const Icon(CupertinoIcons.ellipsis),
+                      label: 'More',
+                      onPressed: () {},
+                    ),
+                  ],
+                  slivers: const [
+                    SliverToBoxAdapter(child: SizedBox(height: 2000)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        scroll.jumpTo(300);
+        await tester.pumpAndSettle();
+        final inline = tester.getRect(find.text('Preferences').first);
+        expect(inline.center.dx, closeTo(669 / 2, .01));
+        expect(inline.center.dy, closeTo(100 + 16 + 44 / 2, .01));
+        final toolbar = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+        expect(toolbar.top, greaterThan(82));
+        expect(
+          rtl ? toolbar.right : toolbar.left,
+          rtl ? lessThan(134) : greaterThan(535),
+          reason: 'the window status bar is above the sheet, not beside it',
+        );
+      }
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets(
+      'a short inline title stays centered beside a corner status bar',
+      (tester) async {
+        for (final rtl in [false, true]) {
+          await tester.pumpWidget(const SizedBox.shrink());
+          window(tester, (
+            size: const Size(669, 951),
+            padding: const FakeViewPadding(
+              top: 82,
+              left: 24,
+              right: 8,
+              bottom: 34,
+            ),
+          ));
+          await report(tester, {
+            'verticalBarEdge': null,
+            'occlusions': [
+              [rtl ? 0.0 : 535.0, 0.0, 134.0, 82.0],
+            ],
+          });
+          await tester.pumpWidget(
+            CupertinoApp(
+              home: Directionality(
+                textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+                child: const LiquidPrismScaffold(
+                  navigationBarStyle: GlassNavigationBarStyle(
+                    contentPadding: EdgeInsetsDirectional.only(start: 20),
+                  ),
+                  title: Text('Library'),
+                  body: SizedBox.expand(),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final contentCenter = (24 + 669 - 8 + (rtl ? -20 : 20)) / 2;
+          expect(
+            tester.getCenter(find.text('Library')).dx,
+            closeTo(contentCenter, .01),
+          );
+          expect(tester.takeException(), isNull);
+        }
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
+
+    for (final rtl in [false, true]) {
+      testWidgets('a wide centered title stays usable between controls '
+          'with a ${rtl ? 'left' : 'right'} corner status bar', (tester) async {
+        final semantics = tester.ensureSemantics();
+        try {
+          for (final cornerWidth in [134.0, 120.0]) {
+            await tester.pumpWidget(const SizedBox.shrink());
+            window(tester, (
+              size: const Size(466, 678),
+              padding: const FakeViewPadding(top: 82, bottom: 34),
+            ));
+            await report(tester, {
+              'verticalBarEdge': null,
+              'occlusions': [
+                [rtl ? 0.0 : 466 - cornerWidth, 0.0, cornerWidth, 82.0],
+              ],
+            });
+            const titleKey = Key('wide title');
+            const backKey = Key('back control');
+            var taps = 0;
+            final focus = FocusNode();
+            addTearDown(focus.dispose);
+            await tester.pumpWidget(
+              CupertinoApp(
+                home: Directionality(
+                  textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+                  child: LiquidPrismScaffold(
+                    leading: const SizedBox(
+                      key: backKey,
+                      width: 44,
+                      height: 44,
+                    ),
+                    title: CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      focusNode: focus,
+                      onPressed: () => taps++,
+                      child: const SizedBox(
+                        key: titleKey,
+                        width: 300,
+                        height: 44,
+                        child: Icon(
+                          CupertinoIcons.briefcase,
+                          size: 28,
+                          semanticLabel: 'Job details',
+                        ),
+                      ),
+                    ),
+                    toolbar: [
+                      for (final label in ['Save', 'More'])
+                        GlassToolbarItem(
+                          icon: const Icon(CupertinoIcons.star),
+                          label: label,
+                          onPressed: () {},
+                        ),
+                    ],
+                    body: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            final title = tester.getRect(find.byKey(titleKey));
+            final back = tester.getRect(find.byKey(backKey));
+            final toolbar = tester.getRect(
+              find.byType(LiquidPrismToolbarGroup),
+            );
+            final gap = rtl
+                ? back.left - toolbar.right
+                : toolbar.left - back.right;
+            expect(gap, greaterThan(44));
+            expect(
+              title.width,
+              greaterThan(44),
+              reason: 'corner width $cornerWidth',
+            );
+            expect(title.overlaps(back), isFalse);
+            expect(title.overlaps(toolbar), isFalse);
+            expect(title.left, greaterThanOrEqualTo(rtl ? cornerWidth : 0));
+            expect(
+              title.right,
+              lessThanOrEqualTo(rtl ? 466 : 466 - cornerWidth),
+            );
+            await tester.tapAt(title.center);
+            await tester.pumpAndSettle();
+            expect(taps, 1);
+            focus.requestFocus();
+            await tester.pump();
+            expect(focus.hasFocus, isTrue);
+            await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+            await tester.pumpAndSettle();
+            expect(taps, 2);
+            final action = find.bySemanticsLabel('Job details');
+            expect(action, findsOneWidget);
+            tester.binding.performSemanticsAction(
+              SemanticsActionEvent(
+                type: SemanticsAction.tap,
+                viewId: tester.view.viewId,
+                nodeId: tester.getSemantics(action).id,
+              ),
+            );
+            await tester.pumpAndSettle();
+            expect(taps, 3);
+            expect(tester.takeException(), isNull);
+          }
+        } finally {
+          semantics.dispose();
+        }
+      }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+    }
 
     testWidgets('a corner status bar shares the top bar row', (tester) async {
       // Native, unfolded in portrait: toolbar at y 24, 48 pt tall, ending

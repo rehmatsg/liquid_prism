@@ -277,7 +277,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   static const scrollEdgeFadeDuration = Duration(milliseconds: 900);
 
   /// Overrides the theme's [GlassScrollEdgeStyle] field by field. Its
-  /// `fadeColor` applies when [backgroundColor] is null.
+  /// `fadeColor` applies when [backgroundColor] is null. The bottom bar uses
+  /// the soft variant. Set [scrollEdge] to false to disable both edges.
   final GlassScrollEdgeStyle? scrollEdgeStyle;
 
   /// The placement of the nearest scaffold, or null outside one.
@@ -553,7 +554,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       resolved,
       occlusions,
     );
-    final corner = rail
+    final corner = rail || widget.sheet
         ? null
         : _ChromeLayout.topCorner(media.size, occlusions);
     final showTabBar =
@@ -697,6 +698,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ).revealExtent ??
         GlassScrollEdgeStyle.defaultRevealExtent;
     final swaps = widget.largeTitle != null || widget.header != null;
+    final hidesOnScrollDown =
+        navigation.minimizationBehavior ==
+        GlassToolbarMinimizationBehavior.onScrollDown;
+    final scrollsAway =
+        hidesOnScrollDown &&
+        navigation.minimizationRestoration ==
+            GlassToolbarMinimizationRestoration.atScrollEdge;
     final minimizes = switch (navigation.minimizationBehavior) {
       GlassToolbarMinimizationBehavior.onScrollDown ||
       GlassToolbarMinimizationBehavior.onScrollUp => true,
@@ -729,13 +737,21 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           _largeFade,
           _inlineFade,
           _minimization.progress,
+          _minimization.revealed,
         ]),
         builder: (context, child) {
-          final visible = !swaps || (large ? !_collapsed : _collapsed);
+          final eligible =
+              large ||
+              !swaps ||
+              !hidesOnScrollDown ||
+              _minimization.revealed.value;
+          final visible =
+              eligible && (!swaps || (large ? !_collapsed : _collapsed));
           final inline = _inlineFade.value;
           final opacity =
               (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
-              (1 - _minimization.progress.value);
+              (1 - _minimization.progress.value) *
+              (eligible ? 1 : 0);
           return ExcludeSemantics(
             excluding: !visible,
             child: ExcludeFocus(
@@ -777,8 +793,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         minimization: _minimization.progress,
         onMinimizationExtent: _minimization.setExtent,
         adjustsMinimizationInsets:
-            navigation.minimizationSafeAreaAdjustment !=
-            GlassToolbarMinimizationSafeAreaAdjustment.disabled,
+            navigation.minimizationSafeAreaAdjustment ==
+            GlassToolbarMinimizationSafeAreaAdjustment.enabled,
         tabDock: explicitDock,
         style: scaffoldStyle,
         viewPadding: padding,
@@ -866,9 +882,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     listenable: Listenable.merge([
                       _scrollOffset,
                       _edgeStrength,
+                      _minimization.revealed,
                     ]),
                     progress: () =>
-                        _edgeStrength.value *
+                        (widget.accessory != null ||
+                                !hidesOnScrollDown ||
+                                _minimization.revealed.value
+                            ? _edgeStrength.value
+                            : 0) *
                         LiquidPrismScrollEdge.progressFor(
                           _scrollOffset.value,
                           revealExtent: revealExtent,
@@ -901,7 +922,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                         edge: GlassEdge.bottom,
                         progress: progress,
                         color: widget.backgroundColor,
-                        style: widget.scrollEdgeStyle,
+                        style:
+                            (widget.scrollEdgeStyle ??
+                                    const GlassScrollEdgeStyle())
+                                .copyWith(variant: GlassScrollEdgeVariant.soft),
                       ),
                     ),
                   ),
@@ -912,7 +936,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 id: _Slot.bottomBar,
                 child: GlassGroupMembers(child: bottomBar),
               ),
-            if (inlineTitle case final title?)
+            if (inlineTitle case final title? when !(scrollsAway && swaps))
               LayoutId(
                 id: _Slot.title,
                 child: header(
@@ -1045,12 +1069,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             final moves = switch (child.id) {
               _Slot.title ||
               _Slot.largeTitle ||
-              _Slot.scrollEdge ||
-              _Slot.accessory ||
               _Slot.sidebarToggle ||
-              _Slot.leading ||
-              _Slot.actions ||
               _Slot.trailing => true,
+              _Slot.leading || _Slot.actions => !rail,
+              _Slot.scrollEdge => widget.accessory == null,
               _Slot.tabBar => explicitDock == GlassTabBarPlacement.top,
               _ => false,
             };
@@ -1495,9 +1517,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? (scrollOffset.value > 0 ? 1.0 : 0.0)
         : (scrollOffset.value / (collapseExtent + lead)).clamp(0.0, 1.0);
     final largeHeight = expanded * (1 - collapse);
-    // The body keeps the expanded bar's inset while the large title collapses:
-    // content scrolls one for one beneath the title and accessory riding up
-    // over it. A shrinking inset moved content twice as fast as the finger.
+    // Retain the expanded inset so content follows scrolling one for one.
     var covered = EdgeInsets.only(
       top: topBar || accessoryHeight > 0
           ? top +
@@ -1564,8 +1584,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
             dockTop +
                 margin.top -
                 (barRow +
-                        accessoryHeight +
-                        contentSpacing +
+                        (accessoryHeight == 0 ? contentSpacing : 0) +
                         bar.height +
                         margin.vertical) *
                     minimization.value,
@@ -1576,7 +1595,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       }
     }
     final minimizedExtent =
-        barRow + accessoryHeight + contentSpacing + topDockHeight;
+        barRow + (accessoryHeight == 0 ? contentSpacing : 0) + topDockHeight;
     onMinimizationExtent(minimizedExtent);
     top -= minimizedExtent * minimization.value;
     if (adjustsMinimizationInsets) {
@@ -1629,7 +1648,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       );
       positionChild(
         _Slot.accessory,
-        Offset(contentLeft, top + barRow + largeHeight),
+        Offset(contentLeft, math.max(naturalTop, top + barRow + largeHeight)),
       );
     }
 
@@ -1679,7 +1698,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? railRight + _railGap + (48 - width) / 2
         : railLeft - _railGap - 48 + (48 - width) / 2;
 
-    var railTop = actionsTop - minimizedExtent * minimization.value;
+    var railTop = actionsTop;
     if (rail && hasChild(_Slot.leading)) {
       final child = layoutChild(
         _Slot.leading,
@@ -1757,7 +1776,12 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     }
 
     if (hasChild(_Slot.title)) {
-      final centre = (barLeft + barRight) / 2;
+      final centre =
+          (contentLeft +
+              contentPadding.left +
+              contentRight -
+              contentPadding.right) /
+          2;
       final left = math.max(
         barLeft + titleGutter,
         leadingEnd + (leadingEnd > barLeft ? titleGap : 0),
@@ -1784,14 +1808,19 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           ),
         );
       } else {
-        final half = math.max(0.0, math.min(centre - left, right - centre));
+        final half = math.min(centre - left, right - centre);
+        // Keep an interactive title usable when controls cross the center.
+        final width = math.max(0.0, 2 * half >= 44 ? 2 * half : right - left);
         final title = layoutChild(
           _Slot.title,
-          BoxConstraints.loose(Size(2 * half, barRow)),
+          BoxConstraints.loose(Size(width, barRow)),
         );
+        final x = (centre - title.width / 2)
+            .clamp(left, math.max(left, right - title.width))
+            .toDouble();
         positionChild(
           _Slot.title,
-          Offset(centre - title.width / 2, top + (barRow - title.height) / 2),
+          Offset(x, top + (barRow - title.height) / 2),
         );
       }
     }

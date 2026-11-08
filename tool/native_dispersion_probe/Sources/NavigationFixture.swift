@@ -19,6 +19,13 @@ struct NavigationFixture: View {
     }
   }
   var body: some View {
+    if flag("--navigation-sheet") {
+      Color.gray.sheet(isPresented: .constant(true)) { navigation }
+    } else {
+      navigation
+    }
+  }
+  private var navigation: some View {
     NavigationStack {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 0) {

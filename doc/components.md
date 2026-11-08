@@ -287,15 +287,24 @@ to `leading`, `center` or `trailing`; directional alignment mirrors in RTL.
 Title widgets keep their own pointer and keyboard input. Only the active title
 participates in focus and accessibility.
 
-`navigationBarStyle.minimizationBehavior` controls the whole navigation bar:
+`navigationBarStyle.minimizationBehavior` moves the navigation title and controls:
 `automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
 and restores it on reversal; `onScrollUp` reverses those directions.
 `minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
-an on-scroll-down bar hidden until content reaches the top. Set
-`minimizationSafeAreaAdjustment` to `disabled` to keep body insets fixed while
-chrome moves. A top-docked tab bar follows the navigation bar; other docks remain
+an on-scroll-down bar hidden until content reaches the top. Automatic safe-area
+adjustment keeps content insets stable so rows follow scrolling one for one.
+`minimizationSafeAreaAdjustment: enabled` explicitly makes insets follow the bar;
+`disabled` keeps them fixed. Rail controls stay fixed below the system status
+region while the title minimizes. A top-docked tab bar follows the navigation bar; other docks remain
 independent. Minimization follows scroll progress, without a separate fixed-time
-animation. These settings also work with `scrollEdge: false`.
+animation. An accessory row stays visible and interactive, moving up to the safe
+top edge as the bar leaves. Its scroll-edge effect and content clearance remain.
+On initial downward departure, the outgoing header does not introduce an edge
+blur/fade band. Reveal-on-scroll-up makes the compact title and its edge eligible
+when scrolling actually restores the bar. With at-scroll-edge restoration, an
+expanded title or `header` has no compact-title subtree. A sole inline title still
+appears at the top. Accessories retain their edge protection in all modes.
+These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
 
 Use `largeTitle` plus `title` for large-to-inline collapse under pinned controls.
 Use `header` for page content that scrolls away entirely. Use minimization to move
@@ -388,11 +397,10 @@ before the effect.
 ## Adaptive layout
 
 `LiquidPrismScaffold` places a `tabBar`, typed `toolbar` content and a
-`leading` control over a full-window `body`. Each action is a
-`GlassToolbarItem` or a list of them: `[share, more]` is one capsule,
-`[[filter], [share, more]]` two, and loose items next to each other share a
-capsule; an empty list draws nothing and materializes in when it gains an item, and
-in the iPhone Duo rail the groups stack or fold into one "More" menu. With no `leading`, a route that
+`leading` control over a full-window `body`. Consecutive `GlassToolbarItem`s
+share a capsule; explicit `GlassToolbarGroup(items: [...])` entries create
+separate capsules. An empty group draws nothing and materializes in when it gains
+an item. In the iPhone Duo rail, groups stack or fold into one "More" menu. With no `leading`, a route that
 can pop gets a `LiquidPrismBackButton`: a glass back chevron, or a close mark
 on a fullscreen dialog, popping through `Navigator.maybePop`. Pass
 `automaticallyImplyLeading: false` to suppress it, or your own
@@ -547,7 +555,12 @@ Null callbacks disable individual actions; menu items use `enabled: false`.
 Items may come and go: an item added to `items` materializes in while the
 capsule widens, and a removed one leaves the same way. Items are matched by
 `key`, else by `label`. An empty list materializes the whole capsule away and
-draws nothing, so a list whose items all depend on state is fine.
+draws nothing, so a list whose items all depend on state is fine. In an action-only
+toolbar, regrouping the same ordered actions between capsules keeps them fully
+present and interactive;
+it does not replay item entry/exit transitions. Use keys or distinct labels to
+identify actions. Toolbars containing custom content or spacers retain their
+normal transition behavior.
 `GlassToolbarStyle.itemTransition: GlassTransition.identity` swaps at once, as
 Reduce Motion does; `itemTransitionStyle` sets the springs.
 
@@ -574,7 +587,9 @@ glass controls refract the content beneath, not the blur.
 `LiquidPrismScaffold` draws this effect under its top bar while the body's
 outermost scroll view is scrolled, fading toward its `backgroundColor`
 (without one, it blurs only). `scrollEdge: false` turns it off and
-`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it. The defaults are
+`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it. A scaffold bottom bar
+always uses the soft variant, including when its top edge is hard;
+`scrollEdge: false` disables both edges. The defaults are
 measured from iOS 27's own effect ([spec](native_scroll_edge_spec.md)): a
 1.5-point variable blur and a half-opacity fade held over the top third of the
 strip and falling along a smoothstep over its last 98 points, a 16-point haze
@@ -794,6 +809,10 @@ trailing alignment. `controlRowHeight` sets the minimum row height (44 by defaul
 `contentPadding` adds directional insets inside the safe area, and
 `largeTitleExtent` replaces the typography-measured expanded row height. These
 fields apply to both scaffold and sliver app bars.
+
+Centered scaffold titles use the content area's center, shifting only as far as
+needed to fit between the visible controls. A window's corner status-bar region
+still bounds top-row controls, but does not move a sheet title below that region.
 
 `GlassScaffoldStyle`, through scaffold `style` or theme `scaffold`, controls
 `tabBarMargin`, `tabBarAlignment`, `tabBarMaxWidth`, `bottomBarMargin`,

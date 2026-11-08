@@ -13,6 +13,9 @@ class NavigationBarMinimization {
     : progress = AnimationController(vsync: vsync);
 
   final AnimationController progress;
+
+  /// Whether the visible bar was restored by a scroll reversal.
+  final revealed = ValueNotifier(false);
   GlassToolbarMinimizationBehavior _behavior =
       GlassToolbarMinimizationBehavior.never;
   GlassToolbarMinimizationRestoration _restoration =
@@ -22,7 +25,7 @@ class NavigationBarMinimization {
       _extent = 1,
       _threshold = 40 / 3,
       _hidden = 0;
-  bool _scheduled = false, _disposed = false;
+  bool _scheduled = false, _disposed = false, _revealed = false;
 
   void configure(
     GlassNavigationBarStyle style, {
@@ -32,11 +35,16 @@ class NavigationBarMinimization {
     final behavior =
         style.minimizationBehavior ??
         GlassToolbarMinimizationBehavior.automatic;
-    if (behavior != _behavior) _hidden = 0;
+    if (behavior != _behavior) {
+      _hidden = 0;
+      _revealed = false;
+    }
     _behavior = behavior;
-    _restoration =
+    final restoration =
         style.minimizationRestoration ??
         GlassToolbarMinimizationRestoration.automatic;
+    if (restoration != _restoration) _revealed = false;
+    _restoration = restoration;
     _collapseExtent = collapseExtent;
     if (extent != null) setExtent(extent);
     _threshold = style.minimizationThreshold ?? 40 / 3;
@@ -68,12 +76,16 @@ class NavigationBarMinimization {
       case GlassToolbarMinimizationBehavior.never:
         _hidden = 0;
       case GlassToolbarMinimizationBehavior.onScrollDown:
+        final previous = _hidden;
         if (pixels == 0) {
           _hidden = 0;
+          _revealed = false;
         } else if (delta > 0 ||
             _restoration != GlassToolbarMinimizationRestoration.atScrollEdge) {
           _hidden = (_hidden + delta).clamp(0.0, _extent);
+          if (_hidden < previous) _revealed = true;
         }
+        if (_hidden >= _extent) _revealed = false;
       case GlassToolbarMinimizationBehavior.onScrollUp:
         _hidden = (_hidden - delta).clamp(0.0, _extent);
     }
@@ -82,7 +94,7 @@ class NavigationBarMinimization {
 
   void _publish() {
     final value = _hidden / _extent;
-    if (progress.value == value) return;
+    if (progress.value == value && revealed.value == _revealed) return;
     // Viewports can deliver scroll notifications while updating their dimensions.
     if (SchedulerBinding.instance.schedulerPhase ==
         SchedulerPhase.persistentCallbacks) {
@@ -96,11 +108,13 @@ class NavigationBarMinimization {
       return;
     }
     progress.value = value;
+    revealed.value = _revealed;
   }
 
   void dispose() {
     _disposed = true;
     progress.dispose();
+    revealed.dispose();
   }
 }
 

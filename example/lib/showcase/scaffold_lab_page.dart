@@ -7,11 +7,16 @@ enum _Heading { large, header, inline }
 
 enum _Edge { soft, hard, off }
 
+enum _Scrolling { sticky, away, reveal }
+
 /// One [LiquidPrismScaffold] built from slivers, with every page-level option
 /// switchable live: the heading, the edge effect, an accessory, a bottom bar,
 /// one or two action capsules, badges and pull to refresh.
 class ScaffoldLabPage extends StatefulWidget {
-  const ScaffoldLabPage({super.key});
+  const ScaffoldLabPage({super.key, this.sheet = false, this.scrollController});
+
+  final bool sheet;
+  final ScrollController? scrollController;
 
   @override
   State<ScaffoldLabPage> createState() => _ScaffoldLabPageState();
@@ -20,6 +25,7 @@ class ScaffoldLabPage extends StatefulWidget {
 class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
   var _heading = _Heading.large;
   var _edge = _Edge.soft;
+  var _scrolling = _Scrolling.sticky;
   var _accessory = false;
   var _bottomBar = true;
   var _twoCapsules = true;
@@ -85,6 +91,22 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       onPressed: () {},
     );
     return LiquidPrismScaffold(
+      sheet: widget.sheet,
+      scrollController: widget.scrollController,
+      leading: widget.sheet
+          ? LiquidPrismBackButton(
+              close: true,
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : null,
+      navigationBarStyle: GlassNavigationBarStyle(
+        minimizationBehavior: _scrolling == _Scrolling.sticky
+            ? GlassToolbarMinimizationBehavior.never
+            : GlassToolbarMinimizationBehavior.onScrollDown,
+        minimizationRestoration: _scrolling == _Scrolling.away
+            ? GlassToolbarMinimizationRestoration.atScrollEdge
+            : GlassToolbarMinimizationRestoration.automatic,
+      ),
       backgroundColor: colors.groupedBackground,
       title: const Text('Scaffold Lab'),
       subtitle: _subtitle ? const Text('Every page option, live') : null,
@@ -165,12 +187,18 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
             children: [
               InsetSection(
                 header: 'Heading',
+                footer: 'Sticky keeps the bar visible. Scroll away restores it at the top; reveal restores it when scrolling up. An accessory stays visible in every mode.',
                 children: [
                   _choice<_Heading>('Style', _heading, const {
                     _Heading.large: 'Large title',
                     _Heading.header: 'Header',
                     _Heading.inline: 'Inline',
                   }, (v) => _heading = v),
+                  _choice<_Scrolling>('Scroll behavior', _scrolling, const {
+                    _Scrolling.sticky: 'Sticky',
+                    _Scrolling.away: 'Scroll away',
+                    _Scrolling.reveal: 'Reveal',
+                  }, (v) => _scrolling = v),
                 ],
               ),
               InsetSection(
@@ -209,8 +237,10 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                   onPressed: () => showCupertinoSheet<void>(
                     context: context,
                     // The sheet's controller lets a pull at the top dismiss it.
-                    scrollableBuilder: (_, controller) =>
-                        _SheetPage(controller: controller),
+                    scrollableBuilder: (_, controller) => ScaffoldLabPage(
+                      sheet: true,
+                      scrollController: controller,
+                    ),
                   ),
                   child: const Text('Open in a Sheet'),
                 ),
@@ -244,55 +274,6 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                 'Row $i: scroll it under the bar',
                 style: const TextStyle(fontSize: 17, color: Color(0xFF111111)),
               ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// A sheet built on the scaffold with `sheet: true`: the bar sits 16 points
-/// below the sheet's top, without a status bar inset.
-class _SheetPage extends StatelessWidget {
-  const _SheetPage({required this.controller});
-  final ScrollController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
-    return LiquidPrismScaffold(
-      sheet: true,
-      scrollController: controller,
-      backgroundColor: colors.groupedBackground,
-      leading: LiquidPrismBackButton(
-        close: true,
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: const Text('Sheet'),
-      subtitle: const Text('Scaffold with sheet: true'),
-      toolbar: [
-        GlassToolbarItem(
-          icon: const Icon(CupertinoIcons.checkmark),
-          label: 'Done',
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverList.builder(
-            itemCount: 20,
-            itemBuilder: (context, i) => Container(
-              height: 56,
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: AlignmentDirectional.centerStart,
-              decoration: BoxDecoration(
-                color: HSLColor.fromAHSL(1, (i * 31) % 360, .6, .62).toColor(),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Text('Sheet row $i'),
             ),
           ),
         ),

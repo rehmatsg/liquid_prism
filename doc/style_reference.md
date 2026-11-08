@@ -186,7 +186,7 @@ separate scopes, native timings and input guarantees.
 | `contentSpacing` | 10 below a standard top bar; 16 in rail/sidebar layouts |
 | `minimizationBehavior` | `automatic` (pinned); `never`, `onScrollDown`, `onScrollUp` |
 | `minimizationRestoration` | `automatic` restores on reversal; `atScrollEdge` waits for the top with on-scroll-down |
-| `minimizationSafeAreaAdjustment` | `automatic` adjusts content insets; `enabled` or `disabled` explicitly |
+| `minimizationSafeAreaAdjustment` | `automatic` / `disabled` keep content insets stable; `enabled` makes them follow the bar |
 | `minimizationThreshold` | Fitted initial travel 13⅓ points, after large-title collapse |
 | `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; capsule at least 38 tall, padding 14 × 9 around the title; leading 22 with `leadingPadding` 12 start, 11 top and bottom, 10 before the title (a 44-point capsule); regular glass (measured from iOS 27 SwiftUI apps' device screenshots) |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |

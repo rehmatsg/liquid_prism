@@ -19,7 +19,7 @@ dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: v0.7.0
+      ref: v0.7.1
 ```
 
 Run `flutter pub get`. For breaking API changes, see the [0.7 migration guide](doc/releases/0.7.md).

@@ -24,6 +24,55 @@ Matrix4 compositedTransform(Layer layer) {
   return transform;
 }
 
+/// Intersects ancestor clips in [layer]'s paint coordinates. Reapplying the
+/// contour keeps backdrop passes from losing rounded clips during restoration.
+@internal
+Path? compositedAncestorClip(Layer layer) {
+  final toLocal = Matrix4.tryInvert(compositedTransform(layer));
+  if (toLocal == null) return Path();
+  Path? result;
+  var shaped = false;
+  for (
+    Layer? ancestor = layer.parent;
+    ancestor != null;
+    ancestor = ancestor.parent
+  ) {
+    final path = switch (ancestor) {
+      ClipRectLayer(:final clipRect?) => Path()..addRect(clipRect),
+      ClipRRectLayer(:final clipRRect?) => Path()..addRRect(clipRRect),
+      ClipRSuperellipseLayer(:final clipRSuperellipse?) =>
+        Path()..addRSuperellipse(clipRSuperellipse),
+      ClipPathLayer(:final clipPath?) => clipPath,
+      _ => null,
+    };
+    if (path != null) {
+      shaped |= ancestor is! ClipRectLayer;
+      final transform = toLocal.clone()
+        ..multiply(compositedTransform(ancestor));
+      final local = path.transform(transform.storage);
+      result = result == null
+          ? local
+          : Path.combine(PathOperation.intersect, result, local);
+    }
+    final isolated = switch (ancestor) {
+      OpacityLayer(:final alpha) => alpha != null && alpha < 255,
+      ImageFilterLayer() ||
+      ShaderMaskLayer() ||
+      ColorFilterLayer() ||
+      BackdropFilterLayer() => true,
+      ClipRectLayer(:final clipBehavior) ||
+      ClipRRectLayer(:final clipBehavior) ||
+      ClipRSuperellipseLayer(:final clipBehavior) ||
+      ClipPathLayer(
+        :final clipBehavior,
+      ) => clipBehavior == Clip.antiAliasWithSaveLayer,
+      _ => false,
+    };
+    if (isolated) break;
+  }
+  return shaped ? result : null;
+}
+
 /// Whether an ancestor moves a layer after it is rasterized, so that its
 /// composited and laid-out geometry disagree by more than [tolerance] physical
 /// pixels at any corner of [bounds].
