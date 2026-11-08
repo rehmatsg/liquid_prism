@@ -66,7 +66,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
       bool inherit = true,
       bool enabled = true,
       int selectedIndex = 0,
-      GlassButtonStyle buttonStyle = GlassButtonStyle.glass,
+      GlassButtonVariant variant = GlassButtonVariant.regular,
       Color background = const Color(0xFF666666),
     }) async {
       await tester.pumpWidget(
@@ -116,7 +116,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
                     label: 'Button',
                     onPressed: enabled ? () {} : null,
                     foregroundColor: buttonColor,
-                    buttonStyle: buttonStyle,
+                    variant: variant,
                     padding: const EdgeInsets.all(10),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -211,7 +211,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
     expect(await pixelsAt(tester, imageKey, foregroundPoints), disabledPixels);
     await render(
       appForeground: appForeground,
-      buttonStyle: GlassButtonStyle.glassProminent,
+      variant: GlassButtonVariant.prominent,
     );
     expect(await pixelsAt(tester, imageKey, buttonPoints), [
       [255, 255, 255, 255],
@@ -219,7 +219,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
     ]);
     await render(
       appForeground: appForeground,
-      buttonStyle: GlassButtonStyle.glassProminent,
+      variant: GlassButtonVariant.prominent,
       buttonColor: const Color(0xFFAA22DD),
     );
     expect(await pixelsAt(tester, imageKey, buttonPoints), [

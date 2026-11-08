@@ -54,7 +54,7 @@ class ExplorePage extends StatelessWidget {
               children: [
                 LiquidPrismButton(
                   label: 'Try a button',
-                  buttonStyle: GlassButtonStyle.glassProminent,
+                  variant: GlassButtonVariant.prominent,
                   onPressed: () => model.change(() => model.taps++),
                   child: const Text('Try a button'),
                 ),
@@ -160,7 +160,7 @@ class ExploreHero extends StatelessWidget {
             ),
             LiquidPrismButton(
               label: 'Make it yours',
-              buttonStyle: GlassButtonStyle.glassProminent,
+              variant: GlassButtonVariant.prominent,
               onPressed: onStudio,
               child: const Text('Make it yours'),
             ),

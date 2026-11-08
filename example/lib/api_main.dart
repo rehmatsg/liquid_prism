@@ -34,7 +34,7 @@ class _ApiExampleState extends State<ApiExample> {
   static const _lens = GlassLensStyle(shadowOpacity: .07, ringOpacity: .035);
   static const _theme = LiquidPrismThemeData(
     lens: _lens,
-    button: GlassButtonAppearance(
+    button: GlassButtonStyle(
       minimumSize: Size(48, 48),
       padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
     ),

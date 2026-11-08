@@ -1,0 +1,131 @@
+{
+  "capture": {
+    "os": "iOS 27.0 (24A434)",
+    "device": "iPhone 17 Pro simulator",
+    "dpr": 3,
+    "method": "SwiftUI geometry preferences on glass Button, its unmodified label, and icon-only circle"
+  },
+  "measured": {
+    "mini": {
+      "button": [
+        76.16666666666667,
+        336,
+        57.66666666666667,
+        28
+      ],
+      "icon": [
+        186.66666666666666,
+        736.8333333333334,
+        28.666666666666657,
+        26.33333333333337
+      ],
+      "label": [
+        86.33333333333333,
+        341,
+        37.66666666666667,
+        18
+      ]
+    },
+    "small": {
+      "button": [
+        76.16666666666667,
+        336,
+        57.66666666666667,
+        28
+      ],
+      "icon": [
+        186.66666666666666,
+        736.8333333333334,
+        28.666666666666657,
+        26.33333333333337
+      ],
+      "label": [
+        86.33333333333333,
+        341,
+        37.66666666666667,
+        18
+      ]
+    },
+    "regular": {
+      "button": [
+        72,
+        332.8333333333333,
+        66,
+        34.333333333333314
+      ],
+      "icon": [
+        183.66666666666666,
+        734,
+        34.66666666666666,
+        32
+      ],
+      "label": [
+        84,
+        340,
+        42,
+        20.333333333333314
+      ]
+    },
+    "large": {
+      "button": [
+        64,
+        324.8333333333333,
+        82,
+        50.333333333333314
+      ],
+      "icon": [
+        175.66666666666666,
+        726,
+        50.66666666666666,
+        48
+      ],
+      "label": [
+        84,
+        340,
+        42,
+        20.333333333333314
+      ]
+    },
+    "extraLarge": {
+      "button": [
+        64,
+        324.8333333333333,
+        82,
+        50.333333333333314
+      ],
+      "icon": [
+        175.66666666666666,
+        726,
+        50.66666666666666,
+        48
+      ],
+      "label": [
+        84,
+        340,
+        42,
+        20.333333333333314
+      ]
+    }
+  },
+  "fitted": {
+    "small": {
+      "fontSize": 15,
+      "horizontalPadding": 10,
+      "verticalPadding": 5
+    },
+    "regular": {
+      "fontSize": 17,
+      "horizontalPadding": 12,
+      "verticalPadding": 7
+    },
+    "large": {
+      "fontSize": 17,
+      "horizontalPadding": 20,
+      "verticalPadding": 15
+    }
+  },
+  "notes": [
+    "Mini and small resolve alike; extraLarge and large resolve alike on this native build.",
+    "Text font sizes match measured label dimensions; symbol glyphs differ between SF Symbols and Cupertino icons."
+  ]
+}

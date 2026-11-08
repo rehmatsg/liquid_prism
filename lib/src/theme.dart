@@ -232,7 +232,7 @@ class LiquidPrismThemeData {
   final GlassNavigationBarStyle? navigationBar;
   final GlassTabBarStyle? tabBar;
   final GlassLensStyle? lens;
-  final GlassButtonAppearance? button;
+  final GlassButtonStyle? button;
   final GlassSwitchStyle? switchStyle;
   final GlassSliderStyle? slider;
   final GlassSegmentedStyle? segmentedControl;
@@ -263,7 +263,7 @@ class LiquidPrismThemeData {
     GlassNavigationBarStyle? navigationBar,
     GlassTabBarStyle? tabBar,
     GlassLensStyle? lens,
-    GlassButtonAppearance? button,
+    GlassButtonStyle? button,
     GlassSwitchStyle? switchStyle,
     GlassSliderStyle? slider,
     GlassSegmentedStyle? segmentedControl,
@@ -318,7 +318,7 @@ class LiquidPrismThemeData {
         ),
         tabBar: (tabBar ?? const GlassTabBarStyle()).merge(other.tabBar),
         lens: (lens ?? const GlassLensStyle()).merge(other.lens),
-        button: (button ?? const GlassButtonAppearance()).merge(other.button),
+        button: (button ?? const GlassButtonStyle()).merge(other.button),
         switchStyle: (switchStyle ?? const GlassSwitchStyle()).merge(
           other.switchStyle,
         ),

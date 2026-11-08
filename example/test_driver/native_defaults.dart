@@ -199,7 +199,7 @@ class _DefaultsState extends State<_Defaults> {
                   child: Center(
                     child: LiquidPrismButton(
                       label: 'Prominent',
-                      buttonStyle: GlassButtonStyle.glassProminent,
+                      variant: GlassButtonVariant.prominent,
                       onPressed: disabled ? null : () {},
                       child: const Text('Prominent'),
                     ),

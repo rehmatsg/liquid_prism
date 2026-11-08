@@ -273,7 +273,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                   ),
                   LiquidPrismButton(
                     label: 'Add a prominent tap',
-                    buttonStyle: GlassButtonStyle.glassProminent,
+                    variant: GlassButtonVariant.prominent,
                     onPressed: () => m.change(() => m.taps++),
                     child: const Text('Prominent'),
                   ),
@@ -658,7 +658,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     key: const ValueKey('native-menu-button'),
                     label: 'Open native menu',
                     menu: _actionMenu(),
-                    buttonStyle: GlassButtonStyle.glassProminent,
+                    variant: GlassButtonVariant.prominent,
                     onSelected: _menuSelected,
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,

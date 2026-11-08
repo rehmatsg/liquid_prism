@@ -4,7 +4,7 @@
 /// [LiquidPrismTheme] above your glass widgets to share material and color defaults.
 library;
 
-export 'src/button.dart' show GlassButtonStyle, LiquidPrismButton;
+export 'src/button.dart' show GlassButtonVariant, LiquidPrismButton;
 export 'src/chrome_layout.dart' show GlassChromePlacement, LiquidPrismScaffold;
 export 'src/sidebar.dart' show GlassTabBarPlacement;
 export 'src/system_chrome.dart'
@@ -36,7 +36,10 @@ export 'src/motion.dart' show GlassMotion, GlassSpring, GlassControlMotion;
 export 'src/appearance.dart'
     show
         GlassLensStyle,
-        GlassButtonAppearance,
+        GlassButtonStyle,
+        GlassControlSize,
+        GlassButtonSizing,
+        GlassLabelPlacement,
         GlassSwitchStyle,
         GlassSliderStyle,
         GlassSegmentedStyle,
