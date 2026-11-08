@@ -7,7 +7,12 @@
 - Breaking: replace untyped scaffold/sliver `actions` and nested toolbar `groups`
   with typed `toolbar`/`content`: text or icon actions, native menus, custom
   widgets, explicit groups, fixed/flexible spacers and positional placements.
-- Add navigation title alignment, control-row height, directional content padding
+- Keep visible title widgets interactive. Add independent inline/expanded title
+  alignment and SwiftUI-style whole-bar minimization/restoration and inset control.
+  Match measured large-title fade timing and separate inline reveal/hide profiles.
+  Center inline titles by default, use Cupertino title fonts, and match standard
+  navigation content clearance to 10 points.
+- Add navigation control-row height, directional content padding
   and expanded-title extent. Add scaffold dock margins, alignment and maximum
   widths, plus top, bottom, leading and trailing tab docks.
 - Breaking: rename `GlassButtonAppearance` to `GlassButtonStyle`, button variants

@@ -208,7 +208,7 @@ void accessoryTests() {
     expect(tabs.height, 36);
     expect(tabs.width, 402);
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
-    expect(padding.top, 62 + 44 + 36 + 16);
+    expect(padding.top, 62 + 44 + 36 + 10);
 
     controller.jumpTo(100);
     await tester.pump();

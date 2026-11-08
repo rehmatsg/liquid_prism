@@ -310,10 +310,12 @@ silences it. No hook retains native feedback and platform gates. A custom hook
 receives switch/slider feedback on all platforms.
 
 Theme `navigationBar` and scaffold `navigationBarStyle` merge title styles,
-large-title styles, gutter, controlGap, revealExtent and revealSpring field by
-field. Titles retain explicit child text styles. As measured on iOS 27, the
+large-title styles, inline/expanded alignment, spacing, collapse timing and toolbar
+minimization field by field. Titles retain explicit child text styles. As measured on iOS 27, the
 large title scrolls with the content; once the scroll passes `revealExtent`
-(its 52-point row) the titles swap on a timer, not with the scroll. Zero
+(its 52-point row) the large title fades over 200 ms with ease-in-out timing;
+the inline title uses separate fitted reveal/hide springs. These animations run
+on time, independently of subsequent scroll movement. Zero
 revealExtent swaps on the first positive scroll offset. The native snap of a
 half-scrolled title on release is not reproduced.
 

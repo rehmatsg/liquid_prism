@@ -1,0 +1,78 @@
+{
+  "source": "SwiftUI NavigationStack, iPhone 17 Pro, iOS 27.0, CADisplayLink presentation sampling",
+  "alignment": "Shared onset inferred from the directly captured 200 ms large-title opacity animation. Inline opacity is interpolated from native presentation samples, including its onset lag.",
+  "transitions": {
+    "enter": [
+      {
+        "ms": 50,
+        "opacity": 0.121474
+      },
+      {
+        "ms": 100,
+        "opacity": 0.398649
+      },
+      {
+        "ms": 150,
+        "opacity": 0.63519
+      },
+      {
+        "ms": 200,
+        "opacity": 0.800653
+      },
+      {
+        "ms": 300,
+        "opacity": 0.950608
+      },
+      {
+        "ms": 400,
+        "opacity": 0.990325
+      },
+      {
+        "ms": 500,
+        "opacity": 1.0
+      },
+      {
+        "ms": 600,
+        "opacity": 1.0
+      }
+    ],
+    "exit": [
+      {
+        "ms": 50,
+        "opacity": 0.944053
+      },
+      {
+        "ms": 100,
+        "opacity": 0.782978
+      },
+      {
+        "ms": 150,
+        "opacity": 0.600769
+      },
+      {
+        "ms": 200,
+        "opacity": 0.440469
+      },
+      {
+        "ms": 300,
+        "opacity": 0.206913
+      },
+      {
+        "ms": 400,
+        "opacity": 0.087353
+      },
+      {
+        "ms": 500,
+        "opacity": 0.033317
+      },
+      {
+        "ms": 600,
+        "opacity": 0.011316
+      }
+    ]
+  },
+  "largeTitleOnsets": {
+    "enter": 7.810720258027044,
+    "exit": 9.77599552239506
+  }
+}

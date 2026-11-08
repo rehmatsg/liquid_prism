@@ -7,6 +7,17 @@ import 'title.dart' show GlassTitleStyle;
 
 enum GlassTitleAlignment { automatic, leading, center, trailing }
 
+enum GlassToolbarMinimizationBehavior {
+  automatic,
+  never,
+  onScrollDown,
+  onScrollUp,
+}
+
+enum GlassToolbarMinimizationRestoration { automatic, atScrollEdge }
+
+enum GlassToolbarMinimizationSafeAreaAdjustment { automatic, enabled, disabled }
+
 /// Navigation title typography, layout and collapse.
 ///
 /// Defaults are measured on iOS 27 (see doc/package_features_spec.md): a
@@ -19,6 +30,11 @@ class GlassNavigationBarStyle {
   const GlassNavigationBarStyle({
     this.titleStyle,
     this.titleAlignment,
+    this.largeTitleAlignment,
+    this.minimizationBehavior,
+    this.minimizationThreshold,
+    this.minimizationRestoration,
+    this.minimizationSafeAreaAdjustment,
     this.controlRowHeight,
     this.contentPadding,
     this.largeTitleExtent,
@@ -27,21 +43,50 @@ class GlassNavigationBarStyle {
     this.largeSubtitleStyle,
     this.gutter,
     this.controlGap,
+    this.contentSpacing,
     this.revealExtent,
     this.revealSpring,
+    this.hideSpring,
+    this.inlineTitleDelay,
+    this.largeTitleFadeDuration,
+    this.largeTitleFadeCurve,
     this.titleCapsule,
   }) : assert(gutter == null || gutter >= 0),
        assert(controlGap == null || controlGap >= 0),
+       assert(contentSpacing == null || contentSpacing >= 0),
        assert(revealExtent == null || revealExtent >= 0),
        assert(controlRowHeight == null || controlRowHeight >= 44),
-       assert(largeTitleExtent == null || largeTitleExtent >= 0);
+       assert(largeTitleExtent == null || largeTitleExtent >= 0),
+       assert(minimizationThreshold == null || minimizationThreshold >= 0);
   final TextStyle? titleStyle, largeTitleStyle;
 
   /// The subtitle under the inline title (12-point regular secondary label)
   /// and under the large title (11-point medium secondary label), measured.
   final TextStyle? subtitleStyle, largeSubtitleStyle;
   final double? gutter, controlGap;
+
+  /// Clearance below navigation chrome: 10 pt for standard top bars,
+  /// 16 pt for rail/sidebar layouts.
+  final double? contentSpacing;
   final GlassTitleAlignment? titleAlignment;
+
+  /// Expanded title alignment. Automatic retains the native leading edge.
+  final GlassTitleAlignment? largeTitleAlignment;
+
+  /// Automatic retains the captured non-minimizing default.
+  final GlassToolbarMinimizationBehavior? minimizationBehavior;
+
+  /// Initial scroll distance before minimization starts; fitted default 13⅓ pt.
+  final double? minimizationThreshold;
+
+  /// Automatic restores on scroll reversal. At-scroll-edge restoration applies
+  /// to on-scroll-down minimization and waits until the content reaches its top.
+  final GlassToolbarMinimizationRestoration? minimizationRestoration;
+
+  /// Automatic adjusts body safe-area insets as the bar minimizes. Disabled
+  /// keeps them fixed for content drawn beneath the chrome.
+  final GlassToolbarMinimizationSafeAreaAdjustment?
+  minimizationSafeAreaAdjustment;
 
   /// Minimum height of the controls, before text scaling. Defaults to 44.
   final double? controlRowHeight;
@@ -57,30 +102,43 @@ class GlassNavigationBarStyle {
   /// zero swaps on the first pixel.
   final double? revealExtent;
 
-  /// The inline title's spring as it fades and rises 15 points into place,
-  /// and back out. Defaults to [titleSpring].
+  /// The inline title's spring as it fades and rises 15 points into place.
+  /// Defaults to [titleSpring]; [hideSpring] controls the outgoing motion.
   final GlassSpring? revealSpring;
+
+  /// The inline title's outgoing spring, independent of its reveal.
+  final GlassSpring? hideSpring;
+
+  /// Fitted onset lag behind the large-title fade, 12 ms. Applied only when
+  /// starting at rest; reversals retain continuous motion.
+  final Duration? inlineTitleDelay;
+
+  /// The large title's opacity animation. Native UIKit records 200 ms with
+  /// the ease-in-out Bezier; see doc/navigation_bar_spec.json.
+  final Duration? largeTitleFadeDuration;
+  final Curve? largeTitleFadeCurve;
 
   /// Geometry and glass of `LiquidPrismTitle` capsules in these bars; a
   /// title's own style wins per field.
   final GlassTitleStyle? titleCapsule;
 
-  /// Fitted to the measured rise: settles in about half a second with a
-  /// little bounce.
-  static const titleSpring = GlassSpring(
-    response: Duration(milliseconds: 500),
-    bounce: .2,
+  /// Fitted to native opacity and the correlated 15-point rise, with separate
+  /// reveal/hide profiles. These are renderer fits, not recovered algorithms.
+  static const titleSpring = GlassSpring.physical(
+    SpringDescription(mass: 1, stiffness: 225, damping: 28.3),
   );
-
-  /// The large title's quick fade, about 0.18 s, without bounce.
-  static const largeTitleSpring = GlassSpring(
-    response: Duration(milliseconds: 180),
-    bounce: 0,
+  static const titleHideSpring = GlassSpring.physical(
+    SpringDescription(mass: 1, stiffness: 93.3, damping: 18.22),
   );
 
   GlassNavigationBarStyle copyWith({
     TextStyle? titleStyle,
     GlassTitleAlignment? titleAlignment,
+    GlassTitleAlignment? largeTitleAlignment,
+    GlassToolbarMinimizationBehavior? minimizationBehavior,
+    double? minimizationThreshold,
+    GlassToolbarMinimizationRestoration? minimizationRestoration,
+    GlassToolbarMinimizationSafeAreaAdjustment? minimizationSafeAreaAdjustment,
     double? controlRowHeight,
     EdgeInsetsGeometry? contentPadding,
     double? largeTitleExtent,
@@ -89,12 +147,24 @@ class GlassNavigationBarStyle {
     TextStyle? largeSubtitleStyle,
     double? gutter,
     double? controlGap,
+    double? contentSpacing,
     double? revealExtent,
     GlassSpring? revealSpring,
+    GlassSpring? hideSpring,
+    Duration? inlineTitleDelay,
+    Duration? largeTitleFadeDuration,
+    Curve? largeTitleFadeCurve,
     GlassTitleStyle? titleCapsule,
   }) => GlassNavigationBarStyle(
     titleStyle: titleStyle ?? this.titleStyle,
     titleAlignment: titleAlignment ?? this.titleAlignment,
+    largeTitleAlignment: largeTitleAlignment ?? this.largeTitleAlignment,
+    minimizationBehavior: minimizationBehavior ?? this.minimizationBehavior,
+    minimizationThreshold: minimizationThreshold ?? this.minimizationThreshold,
+    minimizationRestoration:
+        minimizationRestoration ?? this.minimizationRestoration,
+    minimizationSafeAreaAdjustment:
+        minimizationSafeAreaAdjustment ?? this.minimizationSafeAreaAdjustment,
     controlRowHeight: controlRowHeight ?? this.controlRowHeight,
     contentPadding: contentPadding ?? this.contentPadding,
     largeTitleExtent: largeTitleExtent ?? this.largeTitleExtent,
@@ -103,8 +173,14 @@ class GlassNavigationBarStyle {
     largeSubtitleStyle: largeSubtitleStyle ?? this.largeSubtitleStyle,
     gutter: gutter ?? this.gutter,
     controlGap: controlGap ?? this.controlGap,
+    contentSpacing: contentSpacing ?? this.contentSpacing,
     revealExtent: revealExtent ?? this.revealExtent,
     revealSpring: revealSpring ?? this.revealSpring,
+    hideSpring: hideSpring ?? this.hideSpring,
+    inlineTitleDelay: inlineTitleDelay ?? this.inlineTitleDelay,
+    largeTitleFadeDuration:
+        largeTitleFadeDuration ?? this.largeTitleFadeDuration,
+    largeTitleFadeCurve: largeTitleFadeCurve ?? this.largeTitleFadeCurve,
     titleCapsule: titleCapsule ?? this.titleCapsule,
   );
 
@@ -113,6 +189,16 @@ class GlassNavigationBarStyle {
       : GlassNavigationBarStyle(
           titleStyle: titleStyle?.merge(other.titleStyle) ?? other.titleStyle,
           titleAlignment: other.titleAlignment ?? titleAlignment,
+          largeTitleAlignment: other.largeTitleAlignment ?? largeTitleAlignment,
+          minimizationBehavior:
+              other.minimizationBehavior ?? minimizationBehavior,
+          minimizationThreshold:
+              other.minimizationThreshold ?? minimizationThreshold,
+          minimizationRestoration:
+              other.minimizationRestoration ?? minimizationRestoration,
+          minimizationSafeAreaAdjustment:
+              other.minimizationSafeAreaAdjustment ??
+              minimizationSafeAreaAdjustment,
           controlRowHeight: other.controlRowHeight ?? controlRowHeight,
           contentPadding: other.contentPadding ?? contentPadding,
           largeTitleExtent: other.largeTitleExtent ?? largeTitleExtent,
@@ -126,8 +212,14 @@ class GlassNavigationBarStyle {
               other.largeSubtitleStyle,
           gutter: other.gutter ?? gutter,
           controlGap: other.controlGap ?? controlGap,
+          contentSpacing: other.contentSpacing ?? contentSpacing,
           revealExtent: other.revealExtent ?? revealExtent,
           revealSpring: other.revealSpring ?? revealSpring,
+          hideSpring: other.hideSpring ?? hideSpring,
+          inlineTitleDelay: other.inlineTitleDelay ?? inlineTitleDelay,
+          largeTitleFadeDuration:
+              other.largeTitleFadeDuration ?? largeTitleFadeDuration,
+          largeTitleFadeCurve: other.largeTitleFadeCurve ?? largeTitleFadeCurve,
           titleCapsule:
               titleCapsule?.merge(other.titleCapsule) ?? other.titleCapsule,
         );
@@ -143,11 +235,11 @@ Widget glassTitled(
   Widget? subtitle,
   TextStyle subtitleStyle, {
   required bool large,
-  bool leading = false,
+  GlassTitleAlignment alignment = GlassTitleAlignment.center,
   double subtitleOffset = 0,
 }) {
   if (!large) {
-    return _FitsRow(child: _titled(title, subtitle, subtitleStyle, leading));
+    return _FitsRow(child: _titled(title, subtitle, subtitleStyle, alignment));
   }
   if (subtitle == null) return title;
   final line = DefaultTextStyle(
@@ -158,12 +250,12 @@ Widget glassTitled(
   );
   return Column(
     mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: glassTitleCrossAlignment(alignment),
     children: [
       SizedBox(
         height: subtitleOffset,
         child: OverflowBox(
-          alignment: AlignmentDirectional.topStart,
+          alignment: glassTitleBoxAlignment(alignment),
           maxHeight: double.infinity,
           child: title,
         ),
@@ -177,14 +269,12 @@ Widget _titled(
   Widget title,
   Widget? subtitle,
   TextStyle subtitleStyle,
-  bool leading,
+  GlassTitleAlignment alignment,
 ) {
   if (subtitle == null) return title;
   return Column(
     mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: leading
-        ? CrossAxisAlignment.start
-        : CrossAxisAlignment.center,
+    crossAxisAlignment: glassTitleCrossAlignment(alignment),
     children: [
       title,
       DefaultTextStyle(
@@ -196,6 +286,20 @@ Widget _titled(
     ],
   );
 }
+
+AlignmentGeometry glassTitleBoxAlignment(GlassTitleAlignment alignment) =>
+    switch (alignment) {
+      GlassTitleAlignment.center => Alignment.topCenter,
+      GlassTitleAlignment.trailing => AlignmentDirectional.topEnd,
+      _ => AlignmentDirectional.topStart,
+    };
+
+CrossAxisAlignment glassTitleCrossAlignment(GlassTitleAlignment alignment) =>
+    switch (alignment) {
+      GlassTitleAlignment.center => CrossAxisAlignment.center,
+      GlassTitleAlignment.trailing => CrossAxisAlignment.end,
+      _ => CrossAxisAlignment.start,
+    };
 
 /// Lays an inline title out at its own height and, when that is taller than
 /// the bar's row (a two-line title at a large text size, say), scales it down

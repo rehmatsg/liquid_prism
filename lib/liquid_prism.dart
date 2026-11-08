@@ -86,6 +86,11 @@ export 'src/haptics.dart'
 export 'src/badge.dart' show GlassBadge;
 
 export 'src/navigation_bar_style.dart'
-    show GlassNavigationBarStyle, GlassTitleAlignment;
+    show
+        GlassNavigationBarStyle,
+        GlassTitleAlignment,
+        GlassToolbarMinimizationBehavior,
+        GlassToolbarMinimizationRestoration,
+        GlassToolbarMinimizationSafeAreaAdjustment;
 
 export 'src/scaffold_style.dart' show GlassScaffoldStyle;

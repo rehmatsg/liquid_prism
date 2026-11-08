@@ -470,7 +470,7 @@ void main() {
     expect(colors, isNot(contains(GlassScrollEdgeStyle.hairlineColor)));
   });
 
-  testWidgets('beside toolbar the title leads; without them it centres', (
+  testWidgets('the inline title centers with and without toolbar content', (
     tester,
   ) async {
     phone(tester);
@@ -508,8 +508,8 @@ void main() {
       await tester.pumpWidget(page(toolbar: true, sliverBar: sliverBar));
       await tester.pumpAndSettle();
       expect(
-        tester.getRect(find.text('Title')).left,
-        rectOf(tester, 'leading').right + 12,
+        tester.getRect(find.text('Title')).center.dx,
+        closeTo(201, .5),
         reason: 'sliverBar: $sliverBar',
       );
       await tester.pumpWidget(page(toolbar: false, sliverBar: sliverBar));
@@ -551,6 +551,10 @@ void main() {
     await tester.pumpAndSettle();
     final settled = tester.getTopLeft(find.text('Inline')).dy;
     expect(rest, greaterThan(settled), reason: 'it starts low and rises');
-    expect(highest, lessThan(settled), reason: 'and overshoots, as a spring');
+    expect(
+      highest,
+      closeTo(settled, .01),
+      reason: 'the measured reveal has no visible overshoot',
+    );
   });
 }

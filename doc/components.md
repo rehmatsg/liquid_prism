@@ -277,16 +277,35 @@ down, as in a tab view, pass `scrollDepth: 1`.
 
 `header:` puts your own heading at the top of the slivers, such as a detail
 page's icon and title; it scrolls away under the bar and the inline `title`
-fades in once it has, as after a large title. Titles focus in and out through
-a blur as they fade, on springs (`GlassNavigationBarStyle.revealSpring`). With
-actions in the bar the inline title leads, after the leading control; without
-them it centres.
+fades in once it has, as after a large title. The large title fades over 200 ms
+with ease-in-out timing. The inline title fades and rises 15 points with separate
+native-fitted reveal/hide springs (`revealSpring` and `hideSpring`).
+
+Inline titles center by default, including beside actions. Set `titleAlignment`
+to `leading`, `center` or `trailing`; directional alignment mirrors in RTL.
+`largeTitleAlignment` independently controls the expanded title, leading by default.
+Title widgets keep their own pointer and keyboard input. Only the active title
+participates in focus and accessibility.
+
+`navigationBarStyle.minimizationBehavior` controls the whole navigation bar:
+`automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
+and restores it on reversal; `onScrollUp` reverses those directions.
+`minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
+an on-scroll-down bar hidden until content reaches the top. Set
+`minimizationSafeAreaAdjustment` to `disabled` to keep body insets fixed while
+chrome moves. A top-docked tab bar follows the navigation bar; other docks remain
+independent. Minimization follows scroll progress, without a separate fixed-time
+animation. These settings also work with `scrollEdge: false`.
+
+Use `largeTitle` plus `title` for large-to-inline collapse under pinned controls.
+Use `header` for page content that scrolls away entirely. Use minimization to move
+title and controls together. See [native measurements and limits](navigation_bar_spec.json).
 
 `trailing:` places a widget of your own before the action capsules, such as a
 credits pill or a counter, centred on the control row 8 points from the first
-capsule (or at the trailing edge without actions); the title leads beside it
-as beside actions. An interactive heading, such as a feed switcher with a
-menu, belongs in `leading`, which takes any widget: it is bounded by the
+capsule (or at the trailing edge without actions). An interactive heading, such
+as a feed switcher with a menu, can use `title` or `leading`. The leading slot
+takes any widget, bounded by the
 actions and `trailing`, 12 points before them, so a long label ellipsizes
 rather than running under them. An inline title taller than the bar's row,
 such as a logo beside two lines at a large text size, scales down to fit the

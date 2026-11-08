@@ -197,7 +197,7 @@ void main() {
         // The bar grows to hold it; the content starts below it.
         expect(
           MediaQuery.paddingOf(tester.element(find.byKey(_body))).top,
-          closeTo(120.4 + LiquidPrismScaffold.topBarClearance, .01),
+          closeTo(120.4 + 16, .01),
         );
         await tester.tap(find.text('Friday'));
         expect(taps, 1);
@@ -345,7 +345,7 @@ void main() {
     expect(toolbar.height, 44);
 
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
-    expect(padding.top, 62 + 44 + 16);
+    expect(padding.top, 62 + 44 + 10);
     expect(padding.bottom, 874 - bar.top + 3);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 

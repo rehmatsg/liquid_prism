@@ -75,6 +75,8 @@ struct Root: View {
         case "toolbar": ToolbarFixture()
         case "tint": TintFixture()
         case "defaults": DefaultsFixture()
+        case "navigation":
+            if #available(iOS 27.0, *) { NavigationFixture() }
         case "levels": LevelsFixture()
         default: ControlsFixture()
         }
