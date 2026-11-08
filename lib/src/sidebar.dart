@@ -268,7 +268,6 @@ class GlassSidebar extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 17,
-                          // Native: medium when selected, regular otherwise.
                           fontWeight: selected
                               ? FontWeight.w500
                               : FontWeight.w400,

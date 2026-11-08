@@ -439,7 +439,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
 
   void _commit(int index, {double? velocity, bool fromDrag = false}) {
     if (widget.onSelected == null) return;
-    // A tap on the selected tab scrolls the visible page back to the top.
     if (index == widget.selectedIndex && !fromDrag) {
       LiquidPrismTabReselection.maybeOf(context)?.reselect();
     }
@@ -458,7 +457,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     }
     widget.onSelected!(index);
     _committing = false;
-    // Reconcile after the parent has had a frame to accept or reject the action.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && epoch == _epoch && _pointer == null) {
         _settle(velocity: settleVelocity);
@@ -514,7 +512,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         }
       });
     }
-    // The pill glides to the touched tab on contact, before any release.
     _fingerSlot = _slotAt(event.localPosition);
     final slot = _fingerSlot.roundToDouble().clamp(
       0.0,
@@ -639,14 +636,11 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         ? restingGlassAccent(accent, colors.brightness)
         : accent;
     final vertical = _vertical;
-    // The native iPhone Duo rail: 44 x 58 pt buttons at a 50 pt pitch inside
-    // a 48 pt wide capsule, 2 pt across and 6 pt along the rail.
     final padding =
         style.padding ??
         (vertical
             ? const EdgeInsets.symmetric(horizontal: 2, vertical: 6)
             : const EdgeInsets.symmetric(horizontal: 8, vertical: 4));
-    // The rail is icon-only. Labels remain the accessible names.
     final labels = vertical
         ? GlassTabLabelBehavior.never
         : style.labelBehavior ?? GlassTabLabelBehavior.always;
@@ -658,7 +652,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     final textHeight =
         MediaQuery.textScalerOf(context).scale(textStyle.fontSize ?? 10) *
         (textStyle.height ?? 1.2);
-    // Cross-axis extent of one tab: its height in a row, width in a column.
     final height = vertical
         ? math.max(44.0, iconSize + 8)
         : math.max(
@@ -690,9 +683,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       }
       painter.dispose();
     }
-    // Native items have an 86-point minimum centre spacing. Wider labels add
-    // 32 points of horizontal breathing room; measure in device pixels as UIKit
-    // does. The housing keeps its outer padding, instead of consuming all space.
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final slot = vertical
         ? math.max(50.0, iconSize + 25)
@@ -745,12 +735,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ],
           ),
         );
-        // Display-only selected copy of every tab, seen through the pill.
-        // Held in light appearance native tints it with the plain accent
-        // (0, 136, 255 for system blue), not the darker resting calibration,
-        // so the colour follows the lift. In dark it stays at the lighter
-        // resting calibration (measured 48, 192, 248 held). Built per frame
-        // only while the window is open.
         final heldAccent = colors.brightness == Brightness.dark
             ? selectedAccent
             : accent;
@@ -776,8 +760,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
               ),
           ],
         );
-        // Badges lay out against the base row, which turns unselected while
-        // the window is open.
         final badges = widget.tabs.any((tab) => tab.badge != null)
             ? ExcludeSemantics(
                 child: IgnorePointer(
@@ -837,8 +819,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                 );
               }
             },
-            // Any direction past the touch slop drags; the pill reads only the
-            // bar's own axis, so diagonal drags and flicks still select.
             onStart: (details) => _drag(details.localPosition),
             onUpdate: (details) => _drag(details.localPosition),
             onEnd: _dragEnd,
@@ -874,8 +854,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                 );
                 final lensScale = _lensScale.value;
                 final barScale = lensScale;
-                // UIKit applies the flex transform to the housing and its
-                // foreground, with an additional lift on the lens bounds.
                 final foregroundPill = pill;
                 final window = _window.value
                     ? selectionShape
@@ -977,7 +955,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                           padding: padding,
                           child: ContentLensWindow.selection(
                             scale: barScale,
-                            // The housing scales about the bar's centre.
                             origin: centre - padding.topLeft,
                             path: window,
                             selected: window == null
@@ -990,8 +967,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                                 ? 0
                                 : style.contentRefraction ?? 14,
                             depth: style.contentDepth ?? 11.2,
-                            // The lens's content wrapper, a second native
-                            // pass over the same depth.
                             wrapper: style.refractContent == false ? 0 : 17.5,
                             chromaticAberration: style.refractContent == false
                                 ? 0
@@ -1007,8 +982,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
                           key: const ValueKey('tab-badges'),
                           child: Padding(
                             padding: padding,
-                            // The same flex scale as the foreground, about
-                            // the bar's centre.
                             child: Transform(
                               transform:
                                   Matrix4.translationValues(
@@ -1059,10 +1032,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
     double magnify = 1,
   }) {
     final committed = widget.selectedIndex == index;
-    // Native keeps an unselected and a selected copy of the foreground. While
-    // the selection window is open this row is the unselected copy, including
-    // the committed tab, and [selectedCopy] builds the one seen through the
-    // pill, so the selected icon, weight and colour travel with the lens.
     final selected = selectedCopy || (committed && !window);
     final enabled = widget.onSelected != null;
     final tab = widget.tabs[index];
@@ -1131,8 +1100,6 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
       return SizedBox(
         width: vertical ? height : null,
         height: vertical ? null : height,
-        // The held selected copy is magnified about each item's centre,
-        // beneath the content lens filter.
         child: Center(
           child: magnify == 1
               ? content
@@ -1239,9 +1206,6 @@ class _LensHalo extends CustomPainter {
       centre,
       diameter / 2,
       Paint()
-        // Native LittleGlow is a circle's broad Gaussian shadow, rather than
-        // a gradient that concentrates all its brightness at the touch point.
-        // Its blur grows with the release ripple's contour.
         ..color = Color.from(alpha: opacity, red: 1, green: 1, blue: 1)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurRadius),
     );

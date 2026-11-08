@@ -1,5 +1,16 @@
 # Rendering implementation guide
 
+For the optical code, start at `shadeGlass()` in `shaders/glass_core.glsl`:
+it maps coordinates and displacement, then calls `sampleGlass`, `gradeInput`,
+`reflectGlass`, `gradeFace`, `lightGlass` and `gradePressed` in paint order.
+`glass.frag` declares the scalar packet; `glass_batch.frag` unpacks a member
+before entering the same routine. Dart packet assembly is in `_RenderGlass`.
+
+For grouping, `_GlassGroupData.prepare` selects shared and batched members.
+`_GlassGroupGeometry.measure` computes each member's bounds and sampling reach;
+`_prepareBatches` packs the accepted members. `_hoist` paints only shared
+shadows and frost. Edge effects compose independently in `edge_blur.dart`.
+
 Read [consumer rendering requirements](../rendering.md) and the relevant native
 spec before changing paint order or shaders.
 
@@ -65,9 +76,8 @@ each lens's seventeenth vec4 (`batchLensStride` 68 floats), so a batch holds
 at most `batchMaxLenses` 15 lenses in its 256 vec4. `test/glass_tint_test.dart`
 parses both shaders against these constants.
 
-The ring is evaluated in `ringShadow()` under the key/fill highlight; the
-canvas stroke it replaces is gone. Its band mask (`facing`, `gain`) is a fit
-documented in [native shadows](../native_shadows.md#the-rim-over-white-on-ios-272).
+The ring is evaluated in `ringShadow()` under the key/fill highlight. Its band
+mask (`facing`, `gain`) is a fit documented in [native shadows](../native_shadows.md#the-rim-over-white-on-ios-272).
 
 A surface's frost is a list of `FrostPass`es (`lib/src/recipe.dart`), resolved
 from the tint amount for the material's own frost and plain otherwise. Each
@@ -101,48 +111,20 @@ so members under offset or plain transform layers stay aligned.
 membership scope; the scaffold hosts the layer around its layout and scopes only
 the chrome slots. Keep the contract: nothing paints between members that a
 member samples. Headless tests exercise the fallback, so verify grouping with
-the real-shader drivers under `_research/package_check/` or the showcase.
+the showcase drivers in `example/test_driver/`.
 
-`_clipsToGroup` walks a member's or edge effect's layers up to the group
-layer. Offset, transform, plain container and annotated-region layers pass;
+`_clipsToGroup` walks a member's layers up to the group layer. Offset, transform, plain container and annotated-region layers pass;
 plain clip layers are collected (in root logical coordinates, via
 `compositedTransform` divided by the DPR) and applied again to that member's
-hoisted shadow, frost and edge passes; anything else (a saveLayer clip,
+hoisted shadow and frost passes; anything else (a saveLayer clip,
 opacity, filter, mask) keeps the member out of `shared`. Batching still
 requires no intermediate layer at all.
 
-## Edge effects in a group
+## Edge effects
 
-Edge effects are no longer hoisted: `prepare()` leaves `hoistEdges` empty, so
-each effect paints its own passes and the group's glass, painted after it,
-captures and refracts the blurred content, as SwiftUI does. The hoisting
-machinery below is unused and kept only until it is removed; the description
-records how it worked.
-
-`_RenderEdgeBlur` (edge_blur.dart, a part of glass.dart) registers in
-`_GlassGroupData.edges`. `prepare()` put active, non-isolated, hoistable
-effects in `hoistEdges` and turned batching off. The hoist host is whichever
-reaches the scene first: a shared member's `_GlassShadowLayer` or an effect's
-`_EdgeHoistLayer`, which sits between the effect's content layer and its strip
-clips so the hoisted shadows are not clipped to the strips. `_hoist` paints
-shadows, frost, then each hoisted effect's horizontal pass (`frostKey`),
-vertical pass (`sharedKey`) and fade, all clipped to the strips minus the
-shared members' contours (`Path.combine` difference, cached by signature). An
-effect with a child is hoisted only as host, since its child must already be
-painted. Hoisted effects skip their own `_EdgePassLayer` and `_EdgeFadeLayer`;
-a lone shared member stays shared while an effect is hoisted.
-
-An effect's clip walk to the group starts at its content layer's parent (the
-content layer is its own). While an effect is hoisted, members share unless
-their glass bounds overlap: their 44-point reflection envelopes and shadow
-skirts reaching a neighbour would otherwise leave both unshared, and an
-unshared member captures after the effect and refracts blurred, faded
-content (a bar button above a search-field accessory). Without hoisted
-effects the stricter sampled/painted test still applies. With an effect
-hoisted, the shared shadows paint after it: they belong to the glass above
-the effect, so the effect must neither blur nor fade them. Headless tests do
-not load the shaders, so verify hoisting on a simulator: compare the glass
-over the strip with `scrollEdge: false`.
+Edge effects paint their own passes in place. Glass painted after an effect
+captures and refracts its blurred, faded content. Edge effects do not register
+with the glass group or share its captures.
 
 The pass uniforms are `u_pass`, `u_box`, `u_matrix`, `u_inverse`, `u_start`,
 `u_end` (24 floats after the engine's texture size; the strips' fourth
@@ -165,26 +147,22 @@ weight, as native bars composite a 16-point blur at half opacity under a
 linear mask. Keep the blur the top-level filter: Impeller passes a coverage
 hint (the clip) only to the outermost filter, so a blur composed under a
 shader or colour filter is computed over the whole captured screen every
-frame. The hoisted haze uses its own backdrop layer whose gradient is
-recorded in the host's space. Hoisted, it reads
-`sharedKey` like the vertical pass. It is skipped in the texture frame. Under
+frame. The haze is skipped in the texture frame. Under
 an isolating ancestor the effect filters its child's raster through a
 composed `ImageFilter` on its content layer instead, and adds no backdrop
 pass.
 
 ## Tab pill rim
 
-The tab pill's old radial channel split is replaced by the along-rim fringe.
+The tab pill uses an along-rim chromatic fringe.
 Recipe slot `u_state.w` (uniform 45, `GlassRecipe.lensRim`) retains the bright
 glint, scaled by lift and `GlassTabBarStyle.rimRefraction`. That style multiplier
-also scales the new fringe in backdrop and foreground; 0 disables all three.
-The existing 1.5-point glint (blue reaching .3 deeper) and .16 strength still
+also scales the fringe in backdrop and foreground; 0 disables all three.
+The 1.5-point glint (blue reaching .3 deeper) and .16 strength
 scale with lens height over 70; this is a fitted treatment, not a native operator.
 
-The scalar packet was 338 floats when this was added (342 since the face block
-below). Reserved `u_derived[1].w` (float 329)
-now carries effective red–blue split in device pixels: style split × lift ×
-presence × DPR, before the existing sampling transform. Reserved `u_shapeD.z`
+`u_derived[1].w` (float 329) carries effective red–blue split in device pixels:
+style split × lift × presence × DPR, before the sampling transform. Reserved `u_shapeD.z`
 (float 60) carries band depth in local points. The contour generator still writes
 zero there; packet assembly replaces it only for lens kind 3. Non-lens recipes
 write both slots as zero; batching accepts only kind 1 and keeps its constant
@@ -205,23 +183,23 @@ The glyph pass has its own measured fit (`glyphFringeWeight`): channels shift
 73.6. See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe)
 and [glyph fringe](../native_controls_spec.md#glyph-fringe).
 
-The foreground packet grows from 288 to 291 floats: after the contour,
-`u_effect` is now vec4 at floats 286–289: displacement/depth in scaled points,
+In the foreground packet, `u_effect` is vec4 at floats 286–289:
+displacement/depth in scaled points,
 effective split in raster pixels (split × clamped lift × flex scale × composited
 DPR), and band in scaled points. Out-of-bounds reads remain transparent. R/G/B
 come from the corresponding shifted premultiplied samples; output alpha is their
 maximum, bounding every channel even at antialiased glyph edges. Zero displacement
 can still fringe; `refractContent: false` disables both foreground effects.
 Float 290, `u_tone`, is the grey level of the bar under the foreground (1 in
-light appearance, 0 in dark): a channel whose shifted sample misses the glyph
+light appearance, .16 in dark): a channel whose shifted sample misses the glyph
 takes it for the coverage it lacks, as native disperses glyphs already over the
 bar. Without it, those pixels paint the remaining channels at full alpha, which
-reads as black smears on light bars.
+reads as black smears on light bars. Float 291, `u_wrapper`, carries the outer
+content-wrapper displacement. The shader evaluates the inner lens at the
+depth displaced by that wrapper.
 
-The touch glow is painted between the housing and the lens and must be
-clipped to the housing as drawn, including its flex expansion. Clipped to the
-resting contour it left a hard inner edge that the lens magnified into a
-second rim.
+The touch glow paints between the housing and lens. Clip it to the housing
+including its flex expansion, so its inner edge cannot refract as a second rim.
 
 ## Shared lens and shadows
 

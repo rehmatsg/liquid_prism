@@ -66,8 +66,6 @@ class LiquidPrismPressable extends StatefulWidget {
 class _LiquidPrismPressableState extends State<LiquidPrismPressable>
     with TickerProviderStateMixin {
   late final _press = AnimationController.unbounded(vsync: this, value: 0);
-  // Glow is nonspatial: it reaches full strength within ~0.1 s of contact and
-  // decays after release independently of the scale spring's bounce.
   late final _glow = AnimationController.unbounded(vsync: this, value: 0);
   bool _reduceMotion = false, _attached = true, _suppressTap = false;
   final _contacts = <int>{};

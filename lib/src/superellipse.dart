@@ -14,8 +14,7 @@ const int superellipseUniformCount = 276;
 /// center x, y, radius, span), u_shapeC (right arc circle), u_shapeD
 /// (cos(top span), cos(right span), 0, 0), then u_curve[65]: the superellipse
 /// arc vertex at angle k*pi/256 for k = 0..64, top octant in xy and right
-/// octant in zw. The shader bisects over these vertices instead of evaluating
-/// pow per step; the vertices are the ones the previous shader computed itself.
+/// octant in zw. The shader bisects over these precomputed vertices.
 List<double> superellipseUniforms(Size size, double radius) {
   if (radius <= .001 || size.isEmpty) {
     return List.filled(superellipseUniformCount, 0);

@@ -7,7 +7,6 @@ import 'material.dart';
 import 'native_colors.dart';
 import 'style.dart';
 
-// Native RGB tint matrices; explicit custom colors retain the legacy fallback.
 enum GlassRole {
   surface(0),
   button(1),
@@ -25,14 +24,8 @@ enum GlassRole {
   final double shaderId;
 }
 
-/// What the device's Liquid Glass setting (iOS 27's Settings > Appearance >
-/// Liquid Glass, UIKit's glass tint amount) changes in a material.
-///
-/// The tables are `glassBackground` filter inputs read directly from iOS 27.2
-/// on an iPhone Duo (light appearance, `tool/native_dispersion_probe --scene
-/// tint`) at tint amounts 0, 0.25, 0.5 and 1; values between them are
-/// interpolated linearly. See doc/native_adaptive_layout.md for the measured
-/// inputs and for the parts that are fitted rather than measured.
+/// Measured tint inputs, interpolated between device setting values.
+/// See doc/native_adaptive_layout.md for captures and fitted behavior.
 @internal
 abstract final class GlassTint {
   /// iOS's default, where the package's recipes were calibrated.
@@ -113,18 +106,8 @@ final class FrostPass {
   @override
   String toString() => 'FrostPass($sigma, $opacity, ${blendMode.name})';
 
-  /// The frost of a material whose blur follows the tint amount [tint].
-  ///
-  /// Native regular glass composites a blurred copy of the backdrop (its blur
-  /// fill) over the sharp face with a normal blend and a lighten blend (darken
-  /// in dark appearance) at the measured opacities. The package's fitted frost
-  /// [frost] was calibrated at tint 0.5, so it stands for that blur fill there:
-  /// its normal opacity is the measured one divided by its 0.5 value (capped
-  /// at 1), which leaves tint 0.5 exactly as it was and keeps a plain frost from
-  /// 0.5 up. The lighten opacity is the measured one. Clear glass scales its
-  /// own blur with the measured blur radius and adds a blur fill of
-  /// [fillFrost] (the regular frost, from the same captured radius) at the
-  /// measured normal opacity, which reaches 1 at tint 1.
+  /// Composites the measured blur fills at [tint]. Regular frost is calibrated
+  /// at tint 0.5; normal opacity is normalized to that value and capped at 1.
   static List<FrostPass> resolve({
     required double kind,
     required bool dark,
@@ -227,90 +210,44 @@ final class GlassRecipe {
   /// measured fill is clear.
   final double faceFill;
 
-  /// This recipe at tint amount [tint].
-  GlassRecipe withTint(double tint) {
-    final fill = GlassTint.sample(GlassTint.regularFaceFill, tint);
-    return fill == faceFill
-        ? this
-        : GlassRecipe(
-            kind,
-            dark,
-            role,
-            tintMatrix,
-            tintAlpha,
-            presence,
-            lensRim,
-            chromaticSplit,
-            chromaticBand,
-            underlay,
-            fill,
-          );
-  }
-
-  GlassRecipe withChromaticFringe(double split, double band) => GlassRecipe(
+  GlassRecipe _copyWith({
+    double? presence,
+    double? lensRim,
+    double? chromaticSplit,
+    double? chromaticBand,
+    double? underlay,
+    double? faceFill,
+  }) => GlassRecipe(
     kind,
     dark,
     role,
     tintMatrix,
     tintAlpha,
-    presence,
-    lensRim,
-    split,
-    band,
-    underlay,
-    faceFill,
+    presence ?? this.presence,
+    lensRim ?? this.lensRim,
+    chromaticSplit ?? this.chromaticSplit,
+    chromaticBand ?? this.chromaticBand,
+    underlay ?? this.underlay,
+    faceFill ?? this.faceFill,
   );
 
-  GlassRecipe withUnderlay(double value) => value == underlay
-      ? this
-      : GlassRecipe(
-          kind,
-          dark,
-          role,
-          tintMatrix,
-          tintAlpha,
-          presence,
-          lensRim,
-          chromaticSplit,
-          chromaticBand,
-          value,
-          faceFill,
-        );
+  GlassRecipe withTint(double tint) {
+    final fill = GlassTint.sample(GlassTint.regularFaceFill, tint);
+    return fill == faceFill ? this : _copyWith(faceFill: fill);
+  }
 
-  GlassRecipe withPresence(double value) => value == presence
-      ? this
-      : GlassRecipe(
-          kind,
-          dark,
-          role,
-          tintMatrix,
-          tintAlpha,
-          value,
-          lensRim,
-          chromaticSplit,
-          chromaticBand,
-          underlay,
-          faceFill,
-        );
+  GlassRecipe withChromaticFringe(double split, double band) =>
+      _copyWith(chromaticSplit: split, chromaticBand: band);
 
-  GlassRecipe withLensRim(double value) => value == lensRim
-      ? this
-      : GlassRecipe(
-          kind,
-          dark,
-          role,
-          tintMatrix,
-          tintAlpha,
-          presence,
-          value,
-          chromaticSplit,
-          chromaticBand,
-          underlay,
-          faceFill,
-        );
+  GlassRecipe withUnderlay(double value) =>
+      value == underlay ? this : _copyWith(underlay: value);
 
-  // Native controls retain their captured profile. The requested half-strength
-  // Regular/Clear balance applies to standalone surfaces.
+  GlassRecipe withPresence(double value) =>
+      value == presence ? this : _copyWith(presence: value);
+
+  GlassRecipe withLensRim(double value) =>
+      value == lensRim ? this : _copyWith(lensRim: value);
+
   bool get usesNativeControlShadow => kind != 0 && role != GlassRole.surface;
   double get shadowStrength =>
       presence *
@@ -326,8 +263,6 @@ final class GlassRecipe {
     final rgb = tint == null ? 0 : tint.toARGB32() & 0xFFFFFF;
     final matrix =
         nativeTintMatrices[(glass.variant == GlassVariant.clear, dark, rgb)];
-    // Arbitrary colors (and unmeasured clear accents) retain app-owned styling.
-    // This fallback is not an extracted Apple matrix.
     final fallback = <double>[
       for (final component in [tint?.r ?? 0, tint?.g ?? 0, tint?.b ?? 0]) ...[
         0.12 * (1 - component) * 0.2126,
@@ -336,23 +271,17 @@ final class GlassRecipe {
         component * 0.94,
       ],
     ];
-    return GlassRecipe(
-      (role == GlassRole.toolbar || role == GlassRole.searchField)
-          ? (glass.variant == GlassVariant.clear ? 2 : 1)
-          : (role == GlassRole.controlThumb ||
-                role == GlassRole.segmentLens ||
-                role == GlassRole.tabLens ||
-                role == GlassRole.sliderLens ||
-                role == GlassRole.controlLensUnminified)
-          ? 3
-          : customOptics
-          ? 0
-          : (glass.variant == GlassVariant.clear ? 2 : 1),
-      dark,
-      role,
-      matrix ?? fallback,
-      tint?.a ?? 0,
-    );
+    final materialKind = glass.variant == GlassVariant.clear ? 2.0 : 1.0;
+    final kind = switch (role) {
+      GlassRole.toolbar || GlassRole.searchField => materialKind,
+      GlassRole.controlThumb ||
+      GlassRole.segmentLens ||
+      GlassRole.tabLens ||
+      GlassRole.sliderLens ||
+      GlassRole.controlLensUnminified => 3.0,
+      _ => customOptics ? 0.0 : materialKind,
+    };
+    return GlassRecipe(kind, dark, role, matrix ?? fallback, tint?.a ?? 0);
   }
 
   /// The regular recipe's frost: the blur fill a clear surface fades in
@@ -386,9 +315,7 @@ final class GlassRecipe {
     0, 0, 1 - presence, lensRim,
   ];
 
-  /// The trailing `u_face` block: the face fill alpha, the inner ring
-  /// shadow's opacity (zero for custom optics, as before), then two reserved
-  /// zeros.
+  /// `u_face`: white fill, inner ring opacity, two reserved zeros.
   List<double> get faceUniforms => [
     faceFill,
     kind == 0 ? 0 : NativeGlassShadow.ringOpacity * shadowStrength,

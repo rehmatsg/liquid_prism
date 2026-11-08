@@ -145,7 +145,6 @@ class LiquidPrismBackButton extends StatelessWidget {
       final mirrors = iconMirrors ?? appearance.backIconMirrors ?? true;
       final rtl = Directionality.of(context) == TextDirection.rtl;
       glyph = Transform.translate(
-        // A mirrored glyph points right in RTL, and so does its shift.
         offset: Offset(mirrors && rtl ? shift : -shift, 0),
         child:
             icon ??
@@ -266,8 +265,6 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Theme rebuilds notify dependents whether or not they changed; only the
-    // first sync settles without animating.
     if (!_synced) {
       _synced = true;
       _sync(animated: false);
@@ -340,8 +337,6 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
           final spring = _presence[i];
           final presence = spring.value.clamp(0.0, 1.0);
           if (presence <= 0 && !spring.isAnimating) continue;
-          // The gap belongs between two shown groups: it follows this
-          // group's own presence and that of any group before it.
           final gap = spacing * before;
           before = math.max(before, presence);
           Widget group = LiquidPrismPresence(
@@ -367,8 +362,6 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
           if (presence < 1) {
             group = IgnorePointer(
               child: ClipRect(
-                // Shrink-wrapped across the axis too: a null factor would
-                // fill the height a bar offers and centre the capsules in it.
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   widthFactor: vertical ? 1 : presence,
@@ -556,7 +549,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
 
   void _sync({required bool animated}) {
     final items = widget.items;
-    // An emptied group leaves as a whole (see build), keeping its items.
     if (items.isEmpty) {
       _hidden = true;
       return;
@@ -600,7 +592,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
         next.add(entry);
       }
     }
-    // Unmatched entries leave in place, after their nearest kept predecessor.
     for (var index = 0; index < _entries.length; index++) {
       final entry = _entries[index];
       if (!byKey.containsKey(entry.key)) continue;
@@ -663,9 +654,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
       builder: (context, _) {
         _observeEdges();
         final anchor = _itemAnchor(vertical);
-        // Insets follow the resting layout of the items that stay; a leaving
-        // item carries its gap and collapses to nothing without a jump.
-        // Items enter and leave with the shared glass content treatment.
         final contentBlur =
             (theme.transition ?? const GlassTransitionStyle())
                 .merge(appearance.itemTransitionStyle)
@@ -741,8 +729,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
           ),
         );
         if (badged) {
-          // Badges overhang the capsule, as native ones do, so they paint
-          // above it rather than inside its clip.
           capsule = Stack(
             clipBehavior: Clip.none,
             children: [
@@ -807,9 +793,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
       child: Builder(
         builder: (context) {
           final scale = LiquidPrismPressFeedback.scaleOf(context);
-          // Captured widths 159, 100 and 48 all gain 16 points while held.
-          // Normalize the shared feedback spring without bounding small circles
-          // to the ordinary button motion API's maximum scale.
           return LiquidPrismPressFeedback(
             progress: LiquidPrismPressFeedback.of(context),
             scale: customMotion == null && width > 0
@@ -852,8 +835,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     Alignment anchor,
   ) {
     final badge = entry.item.badge;
-    // The slot grows like the item's own; the badge holds its final place on
-    // the group's fixed side, as the item does.
     return SizedBox(
       width: vertical ? height : extent * progress,
       height: vertical ? extent * progress : height,
@@ -966,9 +947,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                       ),
                     ),
                     IconTheme.merge(
-                      // Native symbol image views enlarge their source images.
-                      // 22-point Cupertino glyphs leave too much visible space
-                      // between actions despite matching native item centers.
                       data: IconThemeData(
                         color: color,
                         size: appearance.iconSize ?? 25.5,

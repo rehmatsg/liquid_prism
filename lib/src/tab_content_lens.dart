@@ -146,9 +146,6 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
 
   @override
   Widget build(BuildContext context) {
-    // The glyph fringe fills channels its shift misses with the bar beneath:
-    // light glass in light appearance, the dark housing's grey (measured
-    // about 40/255 on the dark showcase bar) in dark.
     final tone =
         LiquidPrismTheme.materialBrightnessOf(context) == Brightness.light
         ? 1.0
@@ -160,7 +157,6 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
       lens: widget.lens,
       lift: widget.lift,
       shape: widget.shape,
-      // Only the refracted copy needs the content lens.
       shader: region == _WindowRegion.outside ? null : _shader,
       refraction: widget.refraction,
       depth: widget.depth,
@@ -387,8 +383,6 @@ class _RenderSelectionWindow extends RenderProxyBox {
   /// The content lens for a raster at [deviceScale] physical pixels per point.
   ui.ImageFilter _contentFilter(double deviceScale) {
     final shader = _shader!;
-    // The filter sits outside the flex scale, so its lens is the scaled
-    // contour; lengths in points scale with it.
     final local = _shape.rect(_lens.size).shift(_lens.topLeft);
     final contour = Rect.fromCenter(
       center: _origin + (local.center - _origin) * _scale,
@@ -401,8 +395,6 @@ class _RenderSelectionWindow extends RenderProxyBox {
       _contourRadius = radius;
       _contour = superellipseUniforms(contour.size, radius);
     }
-    // The filter reads the whole foreground row, which stays put while the
-    // pill moves; the lens is expressed relative to that row.
     final values = [
       contour.left,
       contour.top,
@@ -523,9 +515,6 @@ class _RenderSelectionWindow extends RenderProxyBox {
       return;
     }
     if (_region == _WindowRegion.outside) {
-      // The selected and unselected copies occupy complementary regions.
-      // Painting both at the same pixel leaves unselected fringes around
-      // glyphs.
       _warp.layer = null;
       _clip.layer = null;
       _scaled.layer = null;
@@ -596,7 +585,6 @@ class _RenderSelectionWindow extends RenderProxyBox {
 class _ContentLensLayer extends ContainerLayer {
   _ContentLensLayer(this.window);
   final _RenderSelectionWindow window;
-  // The handle keeps the child alive while it is detached between repaints.
   final _filter = LayerHandle<ImageFilterLayer>(ImageFilterLayer());
   ImageFilterLayer get filter => _filter.layer!;
   double? _deviceScale;

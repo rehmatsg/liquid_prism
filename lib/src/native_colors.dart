@@ -3,7 +3,6 @@
 // RGB rows preserve decoded float32 values. Alpha is composed separately.
 
 const nativeTintMatrices = <(bool, bool, int), List<double>>{
-  // raw/ios27/tinted-dark-gray-blue-1-06.json
   (false, true, 0x0091FF): [
     0.04340582713484764,
     0.14601999521255493,
@@ -18,7 +17,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     -0.0027075044345110655,
     1.0056250095367432,
   ],
-  // raw/ios27/tinted-dark-gray-brown-1-06.json
   (false, true, 0xB78A66): [
     0.010215215384960175,
     0.03436464071273804,
@@ -33,7 +31,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.009979885071516037,
     0.37926626205444336,
   ],
-  // raw/ios27/tinted-dark-gray-cyan-1-06.json
   (false, true, 0x3CD3FE): [
     0.04906860738992691,
     0.16506995260715485,
@@ -48,7 +45,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     -0.0018464261665940285,
     0.9999145269393921,
   ],
-  // raw/ios27/tinted-dark-gray-green-1-06.json
   (false, true, 0x30D158): [
     0.034243084490299225,
     0.11519593745470047,
@@ -63,7 +59,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.008863765746355057,
     0.326682984828949,
   ],
-  // raw/ios27/tinted-dark-gray-indigo-1-06.json
   (false, true, 0x6D7CFF): [
     0.05438666418194771,
     0.18296024203300476,
@@ -78,7 +73,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     -0.0012929874937981367,
     1.0026862621307373,
   ],
-  // raw/ios27/tinted-dark-gray-mint-1-06.json
   (false, true, 0x00DAC3): [
     0.008330367505550385,
     0.028023891150951385,
@@ -93,7 +87,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.006969890557229519,
     0.7502255439758301,
   ],
-  // raw/ios27/tinted-dark-gray-orange-1-06.json
   (false, true, 0xFF9230): [
     -0.006138248834758997,
     -0.020649462938308716,
@@ -108,7 +101,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.016383012756705284,
     0.15419816970825195,
   ],
-  // raw/ios27/tinted-dark-gray-pink-1-06.json
   (false, true, 0xFF375F): [
     -0.005870786029845476,
     -0.019749702885746956,
@@ -123,7 +115,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.012899287976324558,
     0.34575000405311584,
   ],
-  // raw/ios27/tinted-dark-gray-purple-1-06.json
   (false, true, 0xDB34F2): [
     0.002487270860001445,
     0.00836733914911747,
@@ -138,7 +129,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     -0.0011014119954779744,
     0.9513078927993774,
   ],
-  // raw/ios27/tinted-dark-gray-red-1-06.json
   (false, true, 0xFF4245): [
     -0.005450436379760504,
     -0.01833561807870865,
@@ -153,7 +143,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.01669968292117119,
     0.23589351773262024,
   ],
-  // raw/ios27/tinted-dark-gray-teal-1-06.json
   (false, true, 0x00D2E0): [
     0.008559465408325195,
     0.02879459224641323,
@@ -168,7 +157,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.007663564290851355,
     0.8625097870826721,
   ],
-  // raw/ios27/tinted-dark-gray-yellow-1-06.json
   (false, true, 0xFFD600): [
     -0.007972217164933681,
     -0.026819052174687386,
@@ -183,7 +171,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.014740724116563797,
     -0.030625542625784874,
   ],
-  // raw/ios27/tinted-light-gray-blue-1-06.json
   (false, false, 0x0088FF): [
     0,
     0,
@@ -198,7 +185,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.02887999638915062,
     0.6000000238418579,
   ],
-  // raw/ios27/tinted-light-gray-brown-1-06.json
   (false, false, 0xAC7F5E): [
     0.06040899455547333,
     0.2032197266817093,
@@ -213,7 +199,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.014926929026842117,
     0.16188327968120575,
   ],
-  // raw/ios27/tinted-light-gray-cyan-1-06.json
   (false, false, 0x00C0E8): [
     0,
     0,
@@ -228,7 +213,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.02627512998878956,
     0.5458824634552002,
   ],
-  // raw/ios27/tinted-light-gray-green-1-06.json
   (false, false, 0x34C759): [
     0.02905287779867649,
     0.09773574024438858,
@@ -243,7 +227,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.013317449018359184,
     0.16456736624240875,
   ],
-  // raw/ios27/tinted-light-gray-indigo-1-06.json
   (false, false, 0x6155F5): [
     0.08607982099056244,
     0.28957802057266235,
@@ -258,7 +241,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.013457329012453556,
     0.7743947505950928,
   ],
-  // raw/ios27/tinted-light-gray-mint-1-06.json
   (false, false, 0x00C8B3): [
     0,
     0,
@@ -273,7 +255,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.02069234289228916,
     0.41536322236061096,
   ],
-  // raw/ios27/tinted-light-gray-orange-1-06.json
   (false, false, 0xFF8D28): [
     0.05914546176791191,
     0.19896911084651947,
@@ -288,7 +269,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.01332410704344511,
     -0.027681663632392883,
   ],
-  // raw/ios27/tinted-light-gray-pink-1-06.json
   (false, false, 0xFF2D55): [
     0.05590865761041641,
     0.1880803108215332,
@@ -303,7 +283,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.020604750141501427,
     0.0479489341378212,
   ],
-  // raw/ios27/tinted-light-gray-purple-1-06.json
   (false, false, 0xCB30E0): [
     0.06499970704317093,
     0.21866317093372345,
@@ -318,7 +297,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.023313380777835846,
     0.55553138256073,
   ],
-  // raw/ios27/tinted-light-gray-red-1-06.json
   (false, false, 0xFF383C): [
     0.04878763481974602,
     0.1641247272491455,
@@ -333,7 +311,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.01998615637421608,
     -0.04152248799800873,
   ],
-  // raw/ios27/tinted-light-gray-teal-1-06.json
   (false, false, 0x00C3D0): [
     0,
     0,
@@ -348,7 +325,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.023557016626000404,
     0.4894118010997772,
   ],
-  // raw/ios27/tinted-light-gray-yellow-1-06.json
   (false, false, 0xFFCC00): [
     0.08503998816013336,
     0.2860799729824066,
@@ -363,7 +339,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0,
     0,
   ],
-  // raw/ios27-phone-extra/clear-tinted-dark-gray-blue-1-06.json
   (true, true, 0x0091FF): [
     0,
     0,
@@ -378,7 +353,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.02887999638915062,
     0.6000000238418579,
   ],
-  // raw/ios27-phone-extra/clear-tinted-dark-gray-green-1-06.json
   (true, true, 0x30D158): [
     0.029206259176135063,
     0.09825172275304794,
@@ -393,7 +367,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.013497662730515003,
     0.15814976394176483,
   ],
-  // raw/ios27-phone-extra/clear-tinted-dark-gray-orange-1-06.json
   (true, true, 0xFF9230): [
     0.05396655574440956,
     0.18154694139957428,
@@ -408,7 +381,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.015988925471901894,
     -0.03321798890829086,
   ],
-  // raw/ios27-phone-extra/clear-tinted-dark-gray-pink-1-06.json
   (true, true, 0xFF375F): [
     0.04943499341607094,
     0.16630247235298157,
@@ -423,7 +395,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.022970745339989662,
     0.05439465865492821,
   ],
-  // raw/ios27-phone-extra/clear-tinted-light-gray-blue-1-06.json
   (true, false, 0x0088FF): [
     0,
     0,
@@ -438,7 +409,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.02887999638915062,
     0.6000000238418579,
   ],
-  // raw/ios27-phone-extra/clear-tinted-light-gray-green-1-06.json
   (true, false, 0x34C759): [
     0.02905287779867649,
     0.09773574024438858,
@@ -453,7 +423,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.013317449018359184,
     0.16456736624240875,
   ],
-  // raw/ios27-phone-extra/clear-tinted-light-gray-orange-1-06.json
   (true, false, 0xFF8D28): [
     0.05914546176791191,
     0.19896911084651947,
@@ -468,7 +437,6 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
     0.01332410704344511,
     -0.027681663632392883,
   ],
-  // raw/ios27-phone-extra/clear-tinted-light-gray-pink-1-06.json
   (true, false, 0xFF2D55): [
     0.05590865761041641,
     0.1880803108215332,

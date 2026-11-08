@@ -135,7 +135,6 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
       if (_dragging) {
         _end(event);
       } else if (!_movedOff) {
-        // An unclaimed tap wins over competitors that have not claimed yet.
         if (!_claimed) {
           resolvePointer(event.pointer, GestureDisposition.accepted);
         }
@@ -255,7 +254,6 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
   @override
   void rejectGesture(int pointer) {
     if (pointer != _pointer) return;
-    // An ancestor scrollable won an unclaimed contact.
     _cancel();
     _finish(pointer);
   }

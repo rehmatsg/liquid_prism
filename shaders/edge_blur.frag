@@ -1,48 +1,28 @@
-// Progressive edge blur: one separable Gaussian pass whose sigma ramps across
-// a strip at the start and/or end of one axis of a box. Run twice, horizontal
-// then vertical, as backdrop filters clipped to the strips.
 #include <flutter/runtime_effect.glsl>
 precision highp float;
 
-// Engine-provided: the input texture's size in texture pixels. In the screen
-// frame this is the live backdrop (the render pass, so texture px are physical
-// px); in the texture frame it is the box's own offscreen raster, whose
-// resolution the engine picks per frame. All box inputs are in logical px and
-// reach texture px through the frame's matrix.
+// Texture pixels. Other lengths are logical pixels mapped by u_matrix.
 uniform vec2 u_size;
-// Pass direction (0 horizontal, 1 vertical), fade axis (0 x, 1 y), frame
-// (0 screen, 1 texture), box width in logical px.
+// Direction (0 horizontal, 1 vertical), fade axis (0 x, 1 y), frame, box width.
 uniform vec4 u_pass;
-// Box height (logical px), box top-left in texture px (screen frame), unused.
+// Box height, texture origin xy, unused.
 uniform vec4 u_box;
-// Screen frame: logical box px -> texture px, column-major (a, b | c, d):
-// x' = a x + c y, y' = b x + d y.
 uniform vec4 u_matrix;
-// Its inverse, precomputed per surface.
 uniform vec4 u_inverse;
-// Start (top/left) strip: extent (logical px, 0 = off), max sigma (logical
-// px), leading fraction held at full sigma, floor (the fraction of full
-// strength kept at the strip's inner end, for a hard edge).
+// Extent, sigma, plateau, floor; top/left and bottom/right strips.
 uniform vec4 u_start;
-// End (bottom/right) strip, same layout.
 uniform vec4 u_end;
 uniform sampler2D u_texture;
 
 out vec4 frag_color;
 
-// Paired taps per side: 72 texels, or 3 sigma of a 24-texel sigma (an 8-point
-// blur at 3x). Larger sigmas truncate their kernel; the loop ends early below.
+// Paired taps span 72 texels: 3 sigma for an 8-point blur at 3x.
 #define MAX_PAIRS 36
 
-// Smoothstep, the curve fitted to the mask of iOS 27's scroll edge effect
-// (doc/native_scroll_edge_spec.md), the same as GlassFadeCurve in Dart so a
-// blur and a fade over one strip track exactly.
 float smoothstep01(float t) {
   return t * t * (3.0 - 2.0 * t);
 }
 
-// Blur strength 1 -> floor across a strip, with a solid plateau near the
-// edge, and nothing past the strip.
 float ramp(float dist, float extent, float plateau, float floorStrength) {
   if (extent <= 0.0 || dist >= extent) return 0.0;
   float t = clamp(dist / extent, 0.0, 1.0);
@@ -51,9 +31,6 @@ float ramp(float dist, float extent, float plateau, float floorStrength) {
   return floorStrength + (1.0 - floorStrength) * fall;
 }
 
-// Samples the input at uv (normalized, Flutter orientation), clamped to
-// bounds. Taps are formed in uv space so the clamp is a free saturate and no
-// division by the size is left in the loop: the pass is ALU bound.
 vec4 sampleUV(vec2 uv) {
   uv = clamp(uv, 0.0, 1.0);
 #ifdef IMPELLER_TARGET_OPENGLES
@@ -68,9 +45,6 @@ void main() {
   bool vertical = u_pass.x > 0.5;
   bool axisY = u_pass.y > 0.5;
 
-  // The box frame: where its top-left sits in the texture and the matrix
-  // taking logical box px to texture px. In the texture frame the texture is
-  // the box itself, so the matrix is the raster scale.
   vec2 origin;
   mat2 m;
   mat2 inv;
@@ -89,7 +63,6 @@ void main() {
   float coord = axisY ? p.y : p.x;
   float len = axisY ? boxSize.y : boxSize.x;
 
-  // The two strips sit on opposite edges, so summing is exact.
   float sigmaLogical =
       u_start.y * ramp(coord, u_start.x, u_start.z, u_start.w)
       + u_end.y * ramp(len - coord, u_end.x, u_end.z, u_end.w);
@@ -98,30 +71,21 @@ void main() {
     return;
   }
 
-  // Blur direction in texture px, and the texture px per logical px along it.
   vec2 dir = vertical ? vec2(m[1][0], m[1][1]) : vec2(m[0][0], m[0][1]);
   float stretch = max(length(dir), 0.0001);
   dir /= stretch;
   float sigma = sigmaLogical * stretch; // texture px
 
-  // The tap line runs along one of the box's own axes, so the strip
-  // replicates the box's edge by limiting how far the taps may travel toward
-  // each end of that axis. The limits sit half a texel inside the edge: a tap
-  // on the boundary itself would land between the last texel inside the box
-  // and the first one beyond it.
   float along = vertical ? p.y : p.x;
   float lenAlong = vertical ? boxSize.y : boxSize.x;
+  // Keep bilinear taps half a texel inside the box.
   float maxBack = max(along * stretch - 0.5, 0.0);
   float maxForward = max((lenAlong - along) * stretch - 0.5, 0.0);
 
-  // Gaussian weights by incremental coefficients instead of an exp per tap
-  // (GPU Gems 3, ch. 40), and adjacent taps merged into one bilinear read at
-  // their weighted midpoint, which halves the texture reads. The sampler is
-  // bound linear for that purpose.
+  // Incremental Gaussian weights (GPU Gems 3, ch. 40); pair adjacent taps.
   vec3 g = vec3(1.0, exp(-0.5 / (sigma * sigma)), 0.0);
   g.z = g.y * g.y;
-  // Past 2.88 sigma the taps hold under 0.4% of the kernel's mass. Below
-  // 1.5 texels one pair carries too much of it to drop: keep 3 sigma.
+  // Truncate under 0.4% of the kernel mass; retain narrow kernels in full.
   float radius = (sigma < 1.5 ? 3.0 : 2.88) * sigma;
   vec2 texel = 1.0 / u_size;
   vec2 uv = xy * texel;

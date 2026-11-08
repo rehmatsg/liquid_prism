@@ -203,16 +203,12 @@ class LiquidPrismTitle extends StatelessWidget {
     final resolved = resolve(context);
     final padding = resolved.resolvedPadding;
     final leading = this.leading;
-    // The line is measured as the scaffold measures it, so the capsule is
-    // exactly the height the bar reserved for it.
     final text = DefaultTextStyle.of(context).style;
     final line =
         MediaQuery.textScalerOf(context).scale(text.fontSize ?? 17) *
         (text.height ?? 1.2);
     final height = _capsuleHeight(this, resolved, line);
     final around = resolved.resolvedLeadingPadding;
-    // With a leading widget its own padding sets the capsule's start, and it
-    // centres in the capsule's full height; the title keeps its end padding.
     final EdgeInsetsGeometry inset = leading == null
         ? padding
         : EdgeInsetsDirectional.only(start: around.start, end: padding.right);
@@ -250,7 +246,6 @@ class LiquidPrismTitle extends StatelessWidget {
             glass: glass.interactive(),
             shape: GlassShape.capsule,
             padding: inset,
-            // A title keeps the bar's title colour, not a button's tint.
             foregroundColor:
                 DefaultTextStyle.of(context).style.color ??
                 GlassColors.of(context).label,
@@ -260,7 +255,6 @@ class LiquidPrismTitle extends StatelessWidget {
     if (avatar == null) return GlassGroupMembers(child: capsule);
     final size = resolved.resolvedAvatarSize;
     final overlap = math.min(resolved.resolvedAvatarOverlap, size);
-    // The avatar paints over the capsule's top, as measured.
     return GlassGroupMembers(
       child: Column(
         mainAxisSize: MainAxisSize.min,

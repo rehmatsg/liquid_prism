@@ -72,7 +72,6 @@ class LiquidPrismSwitch extends StatelessWidget {
     final feedback = _hasHaptics ? haptics : appearance.haptics ?? true;
     final colors = GlassColors.of(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    // UISwitch's visible well is 63x28; its hit area is extended to 44 points.
     return SizedBox(
       width: hitWidth,
       height: hitHeight,

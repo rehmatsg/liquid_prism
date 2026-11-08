@@ -44,36 +44,34 @@ class ControlLens extends StatelessWidget {
     final contour = appearance.shape ?? shape;
     final slider = role == GlassRole.sliderLens;
     final minify = appearance.minifyUnderlay ?? !slider;
-    final materialRole = minify
-        ? (role == GlassRole.sliderLens ? GlassRole.controlThumb : role)
-        : (role == GlassRole.sliderLens
-              ? role
-              : GlassRole.controlLensUnminified);
+    final materialRole = switch ((slider, minify)) {
+      (true, true) => GlassRole.controlThumb,
+      (true, false) => GlassRole.sliderLens,
+      (false, true) => role,
+      (false, false) => GlassRole.controlLensUnminified,
+    };
+    final shadow = switch ((slider, LiquidPrismTheme.brightnessOf(context))) {
+      (false, _) => _sharedShadow,
+      (true, Brightness.light) => _sliderShadowLight,
+      (true, Brightness.dark) => _sliderShadow,
+    };
     return LayoutBuilder(
       builder: (context, constraints) {
-        // The accepted tab lens is the 70-point reference. Scale the optics
-        // and shadow with the actual lens rather than reusing fixed kernels.
-        final scale = constraints.maxHeight / 70;
+        final tabScale = constraints.maxHeight / 70;
         // Custom rim inputs are expressed for the 37.2-point held small lens.
-        final small = constraints.maxHeight / 37.2;
-        // Each lens's held glassBackground inner refraction, scaled from the
-        // lens height it was captured at (doc/native_controls_spec.json and
-        // doc/native_tab_bar_spec.md).
+        final smallLensScale = constraints.maxHeight / 37.2;
         final captured = _nativeRim(role);
-        final native = constraints.maxHeight / captured.height;
+        final nativeScale = constraints.maxHeight / captured.height;
         final rimWidth = appearance.rimWidth == null
-            ? captured.width * native
-            : appearance.rimWidth! * small;
+            ? captured.width * nativeScale
+            : appearance.rimWidth! * smallLensScale;
         final rimRefraction = appearance.rimRefraction == null
-            ? captured.amount * native
-            : appearance.rimRefraction! * small;
-        // The broad underlay field is its own native pass: displacement 9
-        // over a 36-point SDF for every minifying lens, whatever its height.
-        // Custom optics keep driving both, as before.
+            ? captured.amount * nativeScale
+            : appearance.rimRefraction! * smallLensScale;
         final underlay = minify
             ? (appearance.optics?.refraction ?? 9 * progress)
             : 0.0;
-        final light = appearance.rimLight ?? (slider ? _sliderRimLight : .6);
+        final light = appearance.rimLight ?? (slider ? 1.0 : .6);
         final faceBlack = appearance.faceBlack ?? (slider ? .1 : 0.0);
         final fill = ColoredBox(
           color: restingColor.withValues(
@@ -96,13 +94,7 @@ class ControlLens extends StatelessWidget {
             progress,
             contour,
             restingShadow,
-            (slider
-                    ? (LiquidPrismTheme.brightnessOf(context) ==
-                              Brightness.light
-                          ? _sliderShadowLight
-                          : _sliderShadow)
-                    : _sharedShadow)
-                .merge(appearance),
+            shadow.merge(appearance),
           ),
           child: LiquidPrism(
             glass: (appearance.glass ?? Glass.clear).interactive(false),
@@ -128,13 +120,11 @@ class ControlLens extends StatelessWidget {
                   frost: 0,
                   dispersion: .3 * progress,
                   reflection: .04 * progress,
-                  reflectionReach: (20 * scale).clamp(0, 80),
+                  reflectionReach: (20 * tabScale).clamp(0, 80),
                   splay: .1,
                   light: light * progress,
                   saturation: 1,
                   brightness: 0,
-                  // Mixing toward white by b equals a face color matrix with
-                  // black b and white 1: b + (1 - b) * color.
                   tint: const Color(0xFFFFFFFF)
                       .withValues(alpha: (faceBlack * progress).clamp(0, 1)),
                 ),
@@ -146,11 +136,8 @@ class ControlLens extends StatelessWidget {
   }
 }
 
-/// Rim refraction of each held lens: amount and width in points at the native
-/// lens height they were read at. The tab, slider and switch use their
-/// captured glassBackground inner refraction. The segment's measured
-/// displacement instead fits its ContentLensing inputs, 8.8 over 7.04, not its
-/// glassBackground 6.6 over 4.4. Other lifted roles use the switch's values.
+/// Rim inputs in points at their reference lens height. The segment profile
+/// is fitted to ContentLensing; see doc/native_controls_spec.md.
 ({double amount, double width, double height}) _nativeRim(GlassRole role) =>
     switch (role) {
       GlassRole.tabLens => (amount: 10.5, width: 7, height: 70),
@@ -159,11 +146,7 @@ class ControlLens extends StatelessWidget {
       _ => (amount: 11.5, width: 6.9, height: 115 / 3),
     };
 
-/// Fitted key/fill strength of the held slider rim; see doc/motion_and_lenses.md.
-const _sliderRimLight = 1.0;
-
-/// Shared lifted-shadow fallbacks: renderer calibrations of the native layer
-/// and ring shadows, not recovered kernels.
+// Shadow opacities are renderer fits; geometry is in points at height 37.2.
 const _sharedShadow = GlassLensStyle(
   heldContactShadow: false,
   shadowOpacity: .1,
@@ -175,28 +158,17 @@ const _sharedShadow = GlassLensStyle(
   ringOffset: Offset(0, 4),
 );
 
-/// The held slider in dark appearance keeps its measured contact shadow (.14,
-/// radius 5, offset 1) and uses the measured ring geometry (width 4, radius 3,
-/// offset 8). The ring and ambient opacities are fitted to the native dark
-/// capture.
 const _sliderShadow = GlassLensStyle(
   heldContactShadow: true,
-  shadowOpacity: _sliderAmbient,
+  shadowOpacity: .12,
   shadowBlur: 5,
   shadowOffset: Offset(0, 6),
-  ringOpacity: _sliderRing,
+  ringOpacity: .2,
   ringBlur: 3,
   ringWidth: 4,
   ringOffset: Offset(0, 8),
 );
-const _sliderAmbient = .12, _sliderRing = .2;
 
-/// The held slider in light appearance. Native over white (iOS 27.0,
-/// tool/native_dispersion_probe testControlsWhiteLight) darkens 8 levels just
-/// below the lens, 19 at 5 points and none by 13: no held contact shadow, and
-/// fainter layers than the dark fit, which was twice as dark. The measured
-/// geometry (held layer offset 7, radius 3; ring width 4, radius 3, offset 8)
-/// stays; the opacities are fitted to that profile within 2.3 levels RMS.
 const _sliderShadowLight = GlassLensStyle(
   heldContactShadow: false,
   shadowOpacity: .045,
