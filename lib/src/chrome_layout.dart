@@ -709,12 +709,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final titleLeads =
         glassToolbarHasContent(content) || widget.trailing != null;
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
-    Widget header(
-      Widget child,
-      TextStyle style, {
-      required bool large,
-      bool interactive = false,
-    }) {
+    Widget header(Widget child, TextStyle style, {required bool large}) {
       Widget text = Semantics(
         header: true,
         child: DefaultTextStyle(
@@ -724,7 +719,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           child: child,
         ),
       );
-      if (!swaps) return IgnorePointer(ignoring: !interactive, child: text);
+      if (!swaps) return text;
       return AnimatedBuilder(
         animation: Listenable.merge([_largeFade, _inlineFade]),
         builder: (context, child) {
@@ -733,17 +728,20 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           final opacity = large ? 1 - _largeFade.value : inline;
           return ExcludeSemantics(
             excluding: !visible,
-            child: IgnorePointer(
-              ignoring: !interactive || !visible,
-              child: GlassContentPresence(
-                presence: opacity,
-                blur: titleBlur,
-                child: large
-                    ? child!
-                    : Transform.translate(
-                        offset: Offset(0, 15 * (1 - inline)),
-                        child: child,
-                      ),
+            child: ExcludeFocus(
+              excluding: !visible,
+              child: IgnorePointer(
+                ignoring: !visible,
+                child: GlassContentPresence(
+                  presence: opacity,
+                  blur: titleBlur,
+                  child: large
+                      ? child!
+                      : Transform.translate(
+                          offset: Offset(0, 15 * (1 - inline)),
+                          child: child,
+                        ),
+                ),
               ),
             ),
           );
@@ -895,10 +893,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               ),
               titleStyle,
               large: false,
-              interactive: switch (title) {
-                LiquidPrismTitle(:final onPressed) => onPressed != null,
-                _ => principal.isNotEmpty,
-              },
             ),
           ),
         if (widget.largeTitle case final title?)

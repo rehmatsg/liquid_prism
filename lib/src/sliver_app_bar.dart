@@ -448,7 +448,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       ),
     );
     if (_d.bar.largeTitle == null) {
-      return IgnorePointer(ignoring: !_d.principal, child: text);
+      return text;
     }
     return AnimatedBuilder(
       animation: Listenable.merge([_largeFade, _inlineFade]),
@@ -458,17 +458,20 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         final opacity = large ? 1 - _largeFade.value : inline;
         return ExcludeSemantics(
           excluding: !visible,
-          child: IgnorePointer(
-            ignoring: !_d.principal || !visible,
-            child: GlassContentPresence(
-              presence: opacity,
-              blur: _titleBlur,
-              child: large
-                  ? child!
-                  : Transform.translate(
-                      offset: Offset(0, 15 * (1 - inline)),
-                      child: child,
-                    ),
+          child: ExcludeFocus(
+            excluding: !visible,
+            child: IgnorePointer(
+              ignoring: !visible,
+              child: GlassContentPresence(
+                presence: opacity,
+                blur: _titleBlur,
+                child: large
+                    ? child!
+                    : Transform.translate(
+                        offset: Offset(0, 15 * (1 - inline)),
+                        child: child,
+                      ),
+              ),
             ),
           ),
         );
