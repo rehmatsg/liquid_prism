@@ -342,7 +342,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         duration: LiquidPrismScaffold.scrollEdgeFadeDuration,
         value: widget.scrollEdge ? 1 : 0,
       )..addStatusListener((status) {
-        // Remove the effects once they have faded out.
         if (status.isDismissed && mounted) setState(() {});
       });
   late final _edgeStrength = CurvedAnimation(
@@ -369,8 +368,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     }
   }
 
-  // A tap on the iOS status bar scrolls the page to the top, as a Material
-  // Scaffold does, for the scaffold in front only.
   @override
   void handleStatusBarTap() {
     final controller =
@@ -420,10 +417,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     return false;
   }
 
-  // Measured on iOS 27: the large title scrolls with the content and, once
-  // the scroll passes its row, the titles swap on springs rather than with the
-  // scroll: the large title leaves in about 0.18 s, the inline title rises 15
-  // points into place over about 0.5 s (see GlassNavigationBarStyle).
   late final _largeFade = RetargetableGlassSpring(vsync: this);
   late final _inlineFade = RetargetableGlassSpring(vsync: this);
   bool _collapsed = false;
@@ -458,7 +451,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   late final _reveal = RetargetableGlassSpring(vsync: this)
     ..value = 1
     ..addStatusListener((status) {
-      // Remove the panel once it has slid out.
       if (status.isCompleted || status.isDismissed) setState(() {});
     });
 
@@ -489,8 +481,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   @override
   Widget build(BuildContext context) {
-    // An app-level LiquidPrismSystemChrome already added the fold to
-    // MediaQuery; otherwise listen directly and add it for the body.
     if (LiquidPrismSystemChrome.scopeOf(context) case final scope?) {
       return _build(context, scope.chrome, addFeatures: false);
     }
@@ -520,8 +510,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final rail = resolved.isRail;
     final keyboard = media.viewInsets.bottom > 0;
 
-    // The sidebar replaces the tab bar at regular width when requested. Use
-    // UIKit's size class where reported; elsewhere, a width fallback.
     final regular = switch (system?.horizontalSizeClass) {
       GlassSizeClass.regular => true,
       GlassSizeClass.compact => false,
@@ -534,11 +522,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             tabBar is LiquidPrismTabBar
         ? tabBar
         : null;
-    // The panel stays while it slides out. Native hides the tabs with it.
     final sidebar =
         sidebarTabs != null && (!_sidebarHidden || _reveal.value > 0);
     final sidebarToggle = sidebarTabs != null && _sidebarHidden;
-    // Native: leading, unless the vertical bar already holds that edge.
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final sidebarLeft = resolved == GlassChromePlacement.leftRail
         ? false
@@ -562,8 +548,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       resolved,
       occlusions,
     );
-    // With horizontal bars, a status bar in a top corner shares the top bar's
-    // row, as on the unfolded iPhone Duo in portrait.
     final corner = rail
         ? null
         : _ChromeLayout.topCorner(media.size, occlusions);
@@ -572,8 +556,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final leading =
         widget.leading ??
         (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
-    // In the rail the leading control (a back button) takes the column's
-    // top, a 48 pt circle and the rail gap above the actions.
     final railLeading = rail && leading != null
         ? 48 + _ChromeLayout._railGap
         : 0;
@@ -620,15 +602,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final scaler = media.textScaler;
     final titleLine =
         scaler.scale(titleStyle.fontSize ?? 17) * (titleStyle.height ?? 1.2);
-    // The leading control, actions and trailing widget keep this row.
-    // In the iPhone Duo rail layout the row matches the rail's 48 pt circles:
-    // a SwiftUI text button there is 48.3 pt tall from the 24 pt top margin.
     final barHeight = rail ? 48.0 : LiquidPrismScaffold.topBarHeight;
     final controlRowHeight = widget.title == null
         ? barHeight
         : math.max(barHeight, titleLine + 8);
-    // A glass title capsule, and an avatar above it, can make the title
-    // taller than that row: the bar grows below the controls to hold it.
     final titleRowHeight = switch (widget.title) {
       final LiquidPrismTitle title => math.max(
         controlRowHeight,
@@ -642,11 +619,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       ),
       _ => controlRowHeight,
     };
-    // Measured: a 52-point row from the bar frame holding the 40.67-point
-    // 34-point bold line, 3.67 points below the row's top.
-    // With a subtitle the row grows to 71.33 points for its 11-point line,
-    // which sits 38.33 points below the large title's top (6.67 below the
-    // row's).
     final expandedHeight = widget.largeTitle == null
         ? 0.0
         : scaler.scale(largeTitleStyle.fontSize ?? 34) *
@@ -657,7 +629,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
                         6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
-    // Past this offset the layout no longer changes with the scroll.
     _layoutCap = math.max(extent, expandedHeight) + largeTitleLead + 1;
     _layoutOffset.value = math.min(_scrollOffset.value, _layoutCap);
     final revealExtent =
@@ -667,7 +638,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ).revealExtent ??
         GlassScrollEdgeStyle.defaultRevealExtent;
     final swaps = widget.largeTitle != null || widget.header != null;
-    // The edge effects stay while they fade out.
     final edges = widget.scrollEdge || !_edgePresence.isDismissed;
     _collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
@@ -678,9 +648,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _collapsed = false;
       _largeFade.value = _inlineFade.value = 0;
     }
-    // With actions in the bar, the title leads instead of centring.
     final titleLeads = widget._allActions.isNotEmpty || widget.trailing != null;
-    // The shared glass content blur, so titles focus in like glass content.
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
     Widget header(
       Widget child,
@@ -697,22 +665,17 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           child: child,
         ),
       );
-      // Without a large title or header the inline title simply shows.
-      // A tappable glass title takes touches whenever it shows.
       if (!swaps) return IgnorePointer(ignoring: !interactive, child: text);
       return AnimatedBuilder(
         animation: Listenable.merge([_largeFade, _inlineFade]),
         builder: (context, child) {
           final visible = large ? !_collapsed : _collapsed;
-          // Opacity clamps; the rise keeps the spring's overshoot.
           final inline = _inlineFade.value;
           final opacity = large ? 1 - _largeFade.value : inline;
           return ExcludeSemantics(
             excluding: !visible,
             child: IgnorePointer(
               ignoring: !interactive || !visible,
-              // The titles focus in and out as they fade, as native soft
-              // bars do: blurred when absent, sharp when present.
               child: GlassContentPresence(
                 presence: opacity,
                 blur: titleBlur,
@@ -733,11 +696,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final topBar =
         widget.title != null ||
         widget.largeTitle != null ||
-        // Like the actions, a leading control in the rail needs no bar row.
         (!rail && leading != null) ||
         widget.trailing != null ||
-        // Native keeps the bar row with the sidebar shown or hidden, so
-        // content does not jump when the toggle moves into it.
         sidebarTabs != null ||
         (!rail && widget._allActions.isNotEmpty);
     final layout = CustomMultiChildLayout(
@@ -805,8 +765,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             ),
           ),
         ),
-        // Behind the bar's controls, over the body: it shares their captures
-        // and is cut out of their contours (see LiquidPrismEdgeBlur).
         if (edges && (topBar || widget.accessory != null))
           LayoutId(
             id: _Slot.scrollEdge,
@@ -867,8 +825,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 widget.subtitle,
                 subtitleStyle,
                 large: false,
-                // A glass title capsule stays centred beside controls, so its
-                // subtitle centres under it too.
                 leading: titleLeads && title is! LiquidPrismTitle,
               ),
               titleStyle,
@@ -882,7 +838,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         if (widget.largeTitle case final title?)
           LayoutId(
             id: _Slot.largeTitle,
-            // Unclipped: it scrolls up into the bar and fades there.
             child: Align(
               alignment: AlignmentDirectional.topStart,
               child: header(
@@ -904,14 +859,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             id: _Slot.accessory,
             child: GlassGroupMembers(child: accessory),
           ),
-        // Beneath the panel, as natively: the panel slides over it.
         if (sidebarTabs != null)
           LayoutId(
             id: _Slot.sidebarToggle,
             child: LiquidPrismVisibility(
               visible: sidebarToggle,
-              // It materializes as the panel leaves and goes at once when the
-              // panel returns over it.
               transition: sidebarToggle
                   ? GlassTransition.materialize
                   : GlassTransition.identity,
@@ -947,8 +899,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               ),
             ),
           ),
-        // The floating chrome shares backdrop captures: it paints over the
-        // body with nothing between its surfaces (see GlassGroupHost).
         if (leading case final leading?)
           LayoutId(
             id: _Slot.leading,
@@ -961,8 +911,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               child: groups.length == 1
                   ? LiquidPrismToolbarGroup(
                       items: groups.single,
-                      // Measured: a 44 pt navigation capsule in the top bar,
-                      // a 48 pt wide column in the rail.
                       size: rail || corner != null
                           ? GlassToolbarSize.bottom
                           : GlassToolbarSize.navigation,
@@ -982,7 +930,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             id: _Slot.trailing,
             child: GlassGroupMembers(child: trailing),
           ),
-        // A bottom tab bar would sit under the keyboard; native hides it too.
         if (showTabBar)
           LayoutId(
             id: _Slot.tabBar,
@@ -1000,7 +947,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       child: Stack(
         children: [
           Positioned.fill(child: layout),
-          // Hit at the status bar only while this scaffold is in front.
           Positioned(
             top: 0,
             left: 0,
@@ -1064,7 +1010,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final actionsLength =
         actions.fold<double>(0, (sum, item) => sum + item.width) +
         14 * (actions.length - groups) +
-        // Each further capsule adds its own insets and the gap between.
         (10 + 8) * (groups - 1) +
         10;
     final tabsLength = switch (tabs) {
@@ -1224,8 +1169,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       expandedHeight,
       collapseExtent,
       titleGutter,
-      // The large title's line below its row's top: 3.67 points, 6.67 with
-      // a subtitle, as measured.
       largeTitleTop,
       titleGap;
   final ValueListenable<double> scrollOffset;
@@ -1318,7 +1261,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           region.bottom,
     ];
     if (inRail.isNotEmpty) return inRail.reduce(math.max);
-    // UIKit reports nothing in this rail: no status bar shares it.
     if (reported || viewPadding.top > 0) {
       return math.max(viewPadding.top, _minimumTop);
     }
@@ -1327,22 +1269,17 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         : _railActionsTopPortrait;
   }
 
-  // Measured on iOS 27 simulators; see doc/native_adaptive_layout.md.
   static const _edge = 16.0;
 
   /// Between [LiquidPrismScaffold.trailing] and the first capsule, as the
   /// capsules space themselves.
   static const _trailingGap = 8.0;
   static const _minimumTop = 24.0;
-  // Measured: in a sheet the bar's controls sit 16 pt below its top.
   static const _sheetTop = 16.0;
   static const _bottomBarGap = 21.0;
   static const _railGap = 12.0;
   static const _railEdge = 24.0;
   static const _railStrip = _railGap + 48 + _railEdge;
-  // Without reserved regions: measured at y 170 in the folded (portrait)
-  // window and y 120 in the unfolded (landscape) one, where the status bar's
-  // occlusion region ends.
   static const _railActionsTopPortrait = 170.0;
   static const _railActionsTopLandscape = 120.0;
 
@@ -1350,21 +1287,16 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   void performLayout(Size size) {
     final rail = placement.isRail;
     final right = placement == GlassChromePlacement.rightRail;
-    // The top bar starts at the status bar's bottom; with the status bar in
-    // the rail it keeps a 24 pt margin.
     final top = sheet
         ? _sheetTop
         : corner == null
         ? math.max(viewPadding.top, _minimumTop)
         : _minimumTop;
     final rtl = textDirection == TextDirection.rtl;
-    // The rail sits inside the safe area; the bars and content sit beside
-    // the sidebar too.
     final railLeft = viewPadding.left;
     final railRight = size.width - viewPadding.right;
     final sidebarWidth = NativeSidebar.width;
     final shown = sidebar == null ? 0.0 : reveal.value.clamp(0.0, 1.0);
-    // The panel slides by its width while the body reflows with it.
     final contentLeft = sidebar == AxisDirection.left
         ? railLeft + (math.max(railLeft, sidebarWidth) - railLeft) * shown
         : railLeft;
@@ -1374,8 +1306,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                   shown
         : railRight;
     final barRow = topBar ? titleRowHeight : 0.0;
-    // A large title's row starts at the bar frame, below the controls, and
-    // the content directly below it; an accessory keeps its clearance.
     final lead = expandedHeight > 0 ? largeTitleLead : 0.0;
     final expanded = expandedHeight + lead;
     final collapse = collapseExtent == 0
@@ -1396,7 +1326,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                     : LiquidPrismScaffold.topBarClearance)
           : top,
     );
-    // The top bar row ends where a corner status bar begins.
     final barLeft = corner != null && corner!.left <= 1
         ? math.max(contentLeft, corner!.right)
         : contentLeft;
@@ -1405,8 +1334,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         : contentRight;
 
     if (hasChild(_Slot.scrollEdge)) {
-      // The bar's box, status bar and accessory included; a soft effect
-      // reaches below it.
       layoutChild(
         _Slot.scrollEdge,
         BoxConstraints.tight(
@@ -1417,7 +1344,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                 largeHeight +
                 accessoryHeight +
                 edgeFrame -
-                // The lead is the bar frame the edge already reaches.
                 (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
           ),
         ),
@@ -1455,12 +1381,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       );
     }
 
-    // Controls centre on their own row at the bar's top; a taller title
-    // (a capsule under an avatar) extends the bar below it.
     final controlRow = topBar ? controlRowHeight : 0.0;
     double centred(Size child) => top + (controlRow - child.height) / 2;
-    // The show-sidebar toggle holds its measured place while the body
-    // reflows beneath the panel; the leading widget follows the body.
     var leadingOffset = _edge;
     var leadingEnd = barLeft;
     var actionsInBar = false;
@@ -1473,11 +1395,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       const inset = NativeSidebar.toggleInset;
       positionChild(
         _Slot.sidebarToggle,
-        Offset(
-          rtl ? railRight - inset - toggle.width : railLeft + inset,
-          // Measured at the top bar's top, as the panel's own toggle.
-          top,
-        ),
+        Offset(rtl ? railRight - inset - toggle.width : railLeft + inset, top),
       );
       if (!toggle.isEmpty) leadingOffset = inset + toggle.width + 8;
       if (!toggle.isEmpty) {
@@ -1488,15 +1406,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         }
       }
     }
-    // Rail column: 48 pt wide, 12 pt outside the safe area's edge.
     double railX(double width) => right
         ? railRight + _railGap + (48 - width) / 2
         : railLeft - _railGap - 48 + (48 - width) / 2;
 
-    // With a rail, native moves the leading control (a back button) to the
-    // top of the column, where the actions would start, and the actions the
-    // rail gap below it (Apple Music on the closed iPhone Duo: a 48 pt back
-    // button under the status bar, the next capsule about 12 pt below).
     var railTop = actionsTop;
     if (rail && hasChild(_Slot.leading)) {
       final child = layoutChild(
@@ -1512,7 +1425,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       if (rail) {
         positionChild(_Slot.actions, Offset(railX(actions.width), railTop));
       } else {
-        // Beside a corner status bar the group meets its edge, as measured.
         final x = rtl
             ? barLeft + (corner != null && barLeft > contentLeft ? 0 : _edge)
             : barRight -
@@ -1532,10 +1444,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     }
 
     if (hasChild(_Slot.trailing)) {
-      // Before the capsules in the bar, or at its trailing edge.
       final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
-      // Beside the rail the column's 12 pt gap is the margin: a text button
-      // (Invite, measured on iPhone Duo) ends at the content's edge.
       final edge = rail && right != rtl ? 0.0 : _edge;
       final x = rtl
           ? (actionsInBar ? leadingEnd + _trailingGap : barLeft + edge)
@@ -1551,9 +1460,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     }
 
     if (!rail && hasChild(_Slot.leading)) {
-      // Bounded by the actions and trailing widget, a title gap before them,
-      // so a wide leading widget (a menu trigger, say) ellipsizes rather
-      // than running under them.
       final room = rtl
           ? barRight -
                 leadingOffset -
@@ -1592,7 +1498,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
       if (actionsInBar && !centreTitle) {
-        // Beside actions the title leads, after the leading control.
         final title = layoutChild(
           _Slot.title,
           BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
@@ -1617,7 +1522,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       }
     }
     if (hasChild(_Slot.largeTitle)) {
-      // The title rides the content up, as measured, while the row shrinks.
       layoutChild(
         _Slot.largeTitle,
         BoxConstraints.tightFor(
@@ -1647,8 +1551,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           Offset(railX(bar.width), railBottom - bar.height),
         );
       } else {
-        // Native floating housing sits 21 pt from the screen edge on iOS
-        // (doc/native_tab_bar_spec.md), within the gesture inset.
         final gap = iOS ? _bottomBarGap : viewPadding.bottom + 10;
         final width = math.max(0.0, contentRight - contentLeft - 2 * 24);
         final bar = layoutChild(
@@ -1662,16 +1564,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
             size.height - gap - bar.height,
           ),
         );
-        // Measured: content clears the bar by 3 pt (safe area 86 for a 62 pt bar).
         covered = covered.copyWith(bottom: gap + bar.height + 3);
       }
     }
 
     if (hasChild(_Slot.bottomBar)) {
-      // Above the keyboard, else above the tab bar, else on the tab bar's
-      // own line: native bottom glass sits inside the home indicator's
-      // inset (a bottom search field rests 28 points above the screen's
-      // edge, a tab bar 21), not above it.
       final floor = keyboard > 0
           ? keyboard
           : covered.bottom > 0
@@ -1695,8 +1592,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       );
       covered = covered.copyWith(bottom: size.height - barTop);
       if (hasChild(_Slot.bottomScrollEdge)) {
-        // From the bar's top to the screen's bottom; a soft effect reaches
-        // above it.
         layoutChild(
           _Slot.bottomScrollEdge,
           BoxConstraints.tight(
@@ -1807,15 +1702,12 @@ class _SliverPageState extends State<_SliverPage> {
     return CustomScrollView(
       controller: widget.controller,
       primary: widget.controller == null ? true : null,
-      // Pull to refresh and the bounce need room to scroll on a short page.
       physics: const AlwaysScrollableScrollPhysics(),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
         if (onRefresh != null)
           CupertinoSliverRefreshControl(
             onRefresh: onRefresh,
-            // The control sits above the top inset; its indicator draws below
-            // the bar, in the gap the pull opens over the content.
             builder:
                 (
                   context,
@@ -1834,8 +1726,6 @@ class _SliverPageState extends State<_SliverPage> {
                   ),
                 ),
           ),
-        // Pinned and empty: content scrolls under the bar, while the app's
-        // own pinned headers stack below it rather than behind it.
         SliverPersistentHeader(pinned: true, delegate: _TopInset(padding.top)),
         SliverPadding(
           padding: EdgeInsets.only(left: padding.left, right: padding.right),
@@ -1897,7 +1787,6 @@ class _RenderSizeReporter extends RenderProxyBox {
     final height = size.height;
     if (height == _reported) return;
     _reported = height;
-    // Outside layout: the scaffold rebuilds with the new threshold.
     WidgetsBinding.instance.addPostFrameCallback((_) => onHeight(height));
   }
 }

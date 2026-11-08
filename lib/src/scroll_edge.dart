@@ -178,7 +178,6 @@ class GlassScrollEdgeStyle {
     spring,
   );
 
-  // Measured on iOS 27.0; see doc/native_scroll_edge_spec.md.
   static const double defaultSigma = 1.5;
   static const double defaultFalloff = 98;
   static const double defaultExtension = 50;
@@ -337,7 +336,6 @@ class LiquidPrismScrollEdge extends StatelessWidget {
           ),
         ),
         if (hairline)
-          // Spanning the edge, a device pixel thick at its far side.
           Positioned(
             top: edge == GlassEdge.bottom || !edge.isHorizontal ? 0 : null,
             bottom: edge == GlassEdge.top || !edge.isHorizontal ? 0 : null,

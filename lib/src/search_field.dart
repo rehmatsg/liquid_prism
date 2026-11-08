@@ -145,8 +145,6 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
   final _ownedController = TextEditingController();
   final _ownedFocus = FocusNode(debugLabel: 'Glass search');
   late final _focus = RetargetableGlassSpring(vsync: this);
-  // The cancel action materializes on its own spring so it can settle with a
-  // little overshoot after the field has made room for it.
   late final _reveal = RetargetableGlassSpring(vsync: this);
   TextEditingController get _controller =>
       widget.controller ?? _ownedController;
@@ -351,8 +349,6 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
       builder: (context, _) => LayoutBuilder(
         builder: (context, constraints) {
           final progress = _focus.value.clamp(0.0, 1.0);
-          // Keep the editor usable in narrow parents; cancellation remains
-          // available from the keyboard/focus API when its action cannot fit.
           final showCancel = widget._hasCancel
               ? widget.showCancelButton
               : appearance.showCancelButton ?? widget.showCancelButton;
@@ -366,7 +362,6 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
               (widget.cancelVisibility ?? appearance.cancelVisibility) ==
               GlassSearchCancelVisibility.always;
           final cancel = fits ? (pinned ? 1.0 : progress) : 0.0;
-          // Unclamped so the action's bounce carries through its slide/scale.
           final reveal = fits ? (pinned ? 1.0 : _reveal.value) : 0.0;
           final active = pinned || _node.hasFocus;
           final inset =
@@ -407,7 +402,6 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
                       progress: pinned ? kAlwaysCompleteAnimation : _reveal,
                       materialize: false,
                       child: Transform.translate(
-                        // Slides in from the trailing edge, toward the field.
                         offset: Offset(
                           (1 - reveal) * cancelWidth * .6 * (rtl ? -1 : 1),
                           0,
@@ -436,8 +430,6 @@ class _LiquidPrismSearchFieldState extends State<LiquidPrismSearchField>
                                       size: 17,
                                     ),
                                     onPressed: _cancel,
-                                    // The inset sizes this to cancelWidth,
-                                    // which need not equal the field height.
                                     width: 38,
                                   ),
                                 ],

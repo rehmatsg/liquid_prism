@@ -277,8 +277,6 @@ class _ControlInteractionState extends State<ControlInteraction>
     if (_grabbed) {
       _raise();
     } else if (!widget.continuous) {
-      // As native: the touched option dims; the selection does not lift or
-      // move until release. A slider track shows nothing while held.
       _press(_quantize(widget.positionAt(_downX)));
     }
   }
@@ -380,8 +378,6 @@ class _ControlInteractionState extends State<ControlInteraction>
     _pointer = null;
     _press(null);
     final travels = _quantize(next) != _quantize(widget.value);
-    // A press on another option lifts the selection only for its travel,
-    // as the native segmented selection does after release.
     if (!_grabbed && travels && !widget.continuous) _raise();
     _activate(next);
     if (!_grabbed) _unlift();
@@ -393,12 +389,10 @@ class _ControlInteractionState extends State<ControlInteraction>
     widget.onChangeStart?.call(widget.value);
     if (!_grabbed) {
       if (!widget.continuous) {
-        // The highlight follows the finger; the selection commits on release.
         _candidate = _quantize(widget.positionAt(details.localPosition.dx));
         _press(_candidate);
         return;
       }
-      // A track drag takes the thumb to the finger, then follows it.
       _grabbed = true;
       _downValue = widget.positionAt(_downX);
       _raise();
@@ -417,9 +411,6 @@ class _ControlInteractionState extends State<ControlInteraction>
     _candidate = (_downValue + delta).clamp(0.0, 1.0);
     final target = widget.continuous ? _quantize(_candidate) : _candidate;
     if (widget.continuous) {
-      // A grabbed slider follows the contact on the next frame. The captured
-      // spring constructor describes animation, not a delay on every sample.
-      // Taps, external updates and release still use the native travel spring.
       _position.value = target;
     } else {
       _animate(_position, target, widget.trackingSpring);

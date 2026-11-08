@@ -258,7 +258,6 @@ class _LiquidPrismEdgeBlurState extends State<LiquidPrismEdgeBlur> {
       specs: widget.edges,
       program: LiquidPrism.isShaderSupported ? LiquidPrism._edgeProgram : null,
       pixelRatio: MediaQuery.devicePixelRatioOf(context),
-      group: _GlassGroupScope.of(context),
       child: widget.child,
     );
   }
@@ -269,24 +268,21 @@ class _EdgeBlurRenderWidget extends SingleChildRenderObjectWidget {
     required this.specs,
     required this.program,
     required this.pixelRatio,
-    required this.group,
     super.child,
   });
   final List<GlassEdgeBlur> specs;
   final ui.FragmentProgram? program;
   final double pixelRatio;
-  final _GlassGroupData? group;
 
   @override
   _RenderEdgeBlur createRenderObject(BuildContext context) =>
-      _RenderEdgeBlur(specs, program, pixelRatio, group);
+      _RenderEdgeBlur(specs, program, pixelRatio);
 
   @override
   void updateRenderObject(BuildContext context, _RenderEdgeBlur renderObject) {
     renderObject
       ..program = program
       ..pixelRatio = pixelRatio
-      ..group = group
       ..specs = specs;
   }
 }
@@ -324,11 +320,10 @@ class _EdgePassFilter {
 /// scaled page under a sheet) moves this box without repainting it, and the
 /// strip's screen origin must follow it frame by frame.
 class _RenderEdgeBlur extends RenderProxyBox {
-  _RenderEdgeBlur(this._specs, this._program, this.pixelRatio, this._group);
+  _RenderEdgeBlur(this._specs, this._program, this.pixelRatio);
 
   final _contentLayer = LayerHandle<_EdgeContentLayer>();
   final _inputClipLayer = LayerHandle<ClipRectLayer>();
-  final _hoistLayer = LayerHandle<_EdgeHoistLayer>();
   final _stripClipLayers = [
     LayerHandle<ClipPathLayer>(),
     LayerHandle<ClipPathLayer>(),
@@ -341,14 +336,6 @@ class _RenderEdgeBlur extends RenderProxyBox {
   final _hazeClipLayer = LayerHandle<ClipPathLayer>();
   final _hazeLayer = LayerHandle<_EdgeHazeLayer>();
   ({double sigma, ui.ImageFilter filter})? _hazeBlur;
-
-  /// The hoisted haze's own backdrop layer, whose child weights it in the
-  /// host's space; [_hazeLayer]'s child weights it in this box's space.
-  final _hoistHazeFilter = LayerHandle<BackdropFilterLayer>(
-    BackdropFilterLayer(),
-  );
-  final _hoistHazeWeights = LayerHandle<PictureLayer>();
-  List<Object> _hoistHazeSignature = const [];
 
   List<_EdgePassFilter>? _screenFilters;
   List<_EdgePassFilter>? _textureFilters;
@@ -388,14 +375,6 @@ class _RenderEdgeBlur extends RenderProxyBox {
   /// Physical px per logical px of the screen the box is composited onto.
   double pixelRatio;
 
-  _GlassGroupData? _group;
-  set group(_GlassGroupData? value) {
-    if (value == _group) return;
-    if (attached) _group?.edges.remove(this);
-    _group = value;
-    if (attached) _group?.edges.add(this);
-  }
-
   /// Strips that blur, given a program to run them.
   Iterable<GlassEdgeBlur> get _blurs =>
       _program == null ? const [] : _specs.where((spec) => spec.blurs);
@@ -412,16 +391,8 @@ class _RenderEdgeBlur extends RenderProxyBox {
   bool get alwaysNeedsCompositing => _isActive;
 
   @override
-  void attach(PipelineOwner owner) {
-    super.attach(owner);
-    _group?.edges.add(this);
-  }
-
-  @override
   void detach() {
-    _group?.edges.remove(this);
     _contentLayer.layer?.blur = null;
-    _hoistLayer.layer?.blur = null;
     _fadeLayer.layer?.blur = null;
     _hazeLayer.layer?.blur = null;
     for (final handle in _passLayers) {
@@ -435,9 +406,6 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _releaseLayers();
     _disposeFilters();
     _fadePicture?.dispose();
-    _hoistFadePicture?.dispose();
-    _hoistHazeWeights.layer = null;
-    _hoistHazeFilter.layer = null;
     super.dispose();
   }
 
@@ -445,8 +413,6 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _contentLayer.layer?.blur = null;
     _contentLayer.layer = null;
     _inputClipLayer.layer = null;
-    _hoistLayer.layer?.blur = null;
-    _hoistLayer.layer = null;
     _fadeLayer.layer?.blur = null;
     _fadeLayer.layer = null;
     _hazeClipLayer.layer = null;
@@ -469,11 +435,6 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _textureCompose = null;
   }
 
-  // ─── Paint ─────────────────────────────────────────────────────────────────
-
-  /// Where [paint] placed this box within its enclosing layer.
-  Offset _paintOffset = Offset.zero;
-
   @override
   void paint(PaintingContext context, Offset offset) {
     if (!_isActive || size.isEmpty) {
@@ -481,18 +442,11 @@ class _RenderEdgeBlur extends RenderProxyBox {
       super.paint(context, offset);
       return;
     }
-    _paintOffset = offset;
     final content = _contentLayer.layer ??= _EdgeContentLayer();
     content
       ..blur = this
       ..paintOffset = offset;
     context.pushLayer(content, _paintContent, offset);
-
-    // The group hoists this effect's passes from here, outside the strip
-    // clips, so the members' shadows and frost it paints are not clipped.
-    final hoist = _hoistLayer.layer ??= _EdgeHoistLayer();
-    hoist.blur = this;
-    context.pushLayer(hoist, (_, _) {}, offset);
 
     if (_blurring) {
       final strips = _stripPath(_blurs);
@@ -628,8 +582,6 @@ class _RenderEdgeBlur extends RenderProxyBox {
 
   static final Paint _coveragePaint = Paint()..color = const Color(0x01000000);
 
-  // ─── Fade ──────────────────────────────────────────────────────────────────
-
   ui.Picture? _fadePicture;
   List<Object> _fadeSignature = const [];
 
@@ -665,8 +617,6 @@ class _RenderEdgeBlur extends RenderProxyBox {
       );
     }
   }
-
-  // ─── Filters ───────────────────────────────────────────────────────────────
 
   /// The self-contained two-pass filter for the texture frame, rebuilt only
   /// when the strips or the size change.
@@ -824,115 +774,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
       end?.floor ?? 0,
     ];
   }
-
-  // ─── Hoisting ──────────────────────────────────────────────────────────────
-
-  ui.Picture? _hoistFadePicture;
-  List<Object> _hoistFadeSignature = const [];
-  Path? _hoistStrips;
-  List<Object> _hoistStripSignature = const [];
-
-  /// Adds this effect's passes and fade to the scene inside a group hoist,
-  /// in [host]'s enclosing layer space, cut out of [contours] (the shared
-  /// members' glass contours in that space). The horizontal pass reads the
-  /// frost capture and the vertical pass the optical capture, so the members'
-  /// optical passes see neither the finished blur nor the fade.
-  ///
-  /// It runs in two phases, every hoisted effect's [horizontal] pass first and
-  /// then the rest: the vertical passes read the group's shared capture, which
-  /// is taken at the first of them, so it must already hold every effect's
-  /// horizontal result. Interleaved, a second effect (a bottom bar's under a
-  /// top bar's) blurred only vertically.
-  void _hoistInto(
-    ui.SceneBuilder builder,
-    _GlassGroupData group,
-    Matrix4 toHost,
-    List<Path> contours,
-    List<Path> clips, {
-    required bool horizontal,
-  }) {
-    _locateOnScreen();
-    final signature = <Object>[size, ...toHost.storage, ..._specs];
-    for (final contour in contours) {
-      signature.add(contour.getBounds());
-    }
-    final blurs = _blurs.toList();
-    final fades = _fades.toList();
-    final hazes = _hazes.toList();
-    if (_hoistStrips == null || !listEquals(signature, _hoistStripSignature)) {
-      _hoistStripSignature = signature;
-      var strips = _stripPath(
-        _specs.where((spec) => spec.blurs || spec.fades || spec.hazes),
-      ).transform(toHost.storage);
-      for (final contour in contours) {
-        strips = Path.combine(PathOperation.difference, strips, contour);
-      }
-      _hoistStrips = strips;
-    }
-    final strips = _hoistStrips!;
-    for (final clip in clips) {
-      builder.pushClipPath(clip);
-    }
-    if (blurs.isNotEmpty) {
-      for (final pass in horizontal ? const [0] : const [1]) {
-        final layer = _passLayers[pass].layer;
-        if (layer == null) continue;
-        layer.filter
-          ..filter = _screenFrameFilter(pass)
-          ..backdropKey = pass == 0 ? group.frostKey : group.sharedKey;
-        builder.pushClipPath(strips);
-        layer.filter.addToScene(builder);
-        builder.pop();
-      }
-    }
-    if (horizontal) {
-      for (final _ in clips) {
-        builder.pop();
-      }
-      return;
-    }
-    // The haze reads the optical capture like the vertical pass, so the
-    // members' optical passes see neither.
-    if (hazes.isNotEmpty) {
-      final haze = _hoistHazeFilter.layer!
-        ..filter = _hazeScreenFilter()
-        ..backdropKey = group.sharedKey;
-      var weights = _hoistHazeWeights.layer;
-      if (weights == null || !listEquals(signature, _hoistHazeSignature)) {
-        _hoistHazeSignature = signature;
-        final recorder = ui.PictureRecorder();
-        _paintHazeWeights(Canvas(recorder)..transform(toHost.storage));
-        weights?.remove();
-        weights = _hoistHazeWeights.layer = PictureLayer(Rect.largest)
-          ..picture = recorder.endRecording();
-        haze.append(weights);
-      }
-      builder.pushClipPath(strips);
-      haze.addToScene(builder);
-      builder.pop();
-    }
-    if (fades.isNotEmpty) {
-      final fadeSignature = <Object>[...signature];
-      if (_hoistFadePicture == null ||
-          !listEquals(fadeSignature, _hoistFadeSignature)) {
-        _hoistFadeSignature = fadeSignature;
-        _hoistFadePicture?.dispose();
-        final recorder = ui.PictureRecorder();
-        final canvas = Canvas(recorder)
-          ..clipPath(strips)
-          ..transform(toHost.storage);
-        _drawFades(canvas);
-        _hoistFadePicture = recorder.endRecording();
-      }
-      builder.addPicture(Offset.zero, _hoistFadePicture!);
-    }
-    for (final _ in clips) {
-      builder.pop();
-    }
-  }
 }
-
-// ─── Layers ──────────────────────────────────────────────────────────────────
 
 /// Whether an ancestor composites [layer]'s subtree through its own offscreen
 /// pass, so a backdrop read inside it sees that pass rather than the screen.
@@ -1008,34 +850,9 @@ class _EdgeContentLayer extends ContainerLayer {
   }
 }
 
-/// Where a group hoists shared members' shadows and frost together with this
-/// effect's passes when the effect reaches the scene before any shared member.
-class _EdgeHoistLayer extends ContainerLayer {
-  _RenderEdgeBlur? blur;
-
-  @override
-  bool get alwaysNeedsAddToScene => true;
-
-  @override
-  void addToScene(ui.SceneBuilder builder) {
-    final owner = blur;
-    if (owner == null || !owner.attached) return;
-    final group = owner._group;
-    if (group == null ||
-        owner._isolated ||
-        group._hoistHost != null ||
-        !group.hoistEdges.contains(owner)) {
-      return;
-    }
-    group._hoistHost = owner;
-    group._hoist(builder, owner, owner._paintOffset);
-  }
-}
-
 /// One blur pass over the strips, as a backdrop filter whose uniforms follow
 /// the box's screen transform at composition. Adds nothing while the subtree
-/// is isolated (the content layer blurs in the texture frame instead) or
-/// while a group has hoisted this effect.
+/// is isolated (the content layer blurs in the texture frame instead).
 class _EdgePassLayer extends ContainerLayer {
   _EdgePassLayer(this.pass);
 
@@ -1061,7 +878,6 @@ class _EdgePassLayer extends ContainerLayer {
     final owner = blur;
     if (owner == null || !owner.attached) return;
     if (owner._isolated && owner.hasChild) return;
-    if (owner._group?._hoistedEdges.contains(owner) ?? false) return;
     filter
       ..filter = owner._screenFrameFilter(pass)
       ..backdropKey = null;
@@ -1070,7 +886,7 @@ class _EdgePassLayer extends ContainerLayer {
 }
 
 /// The haze over the strips: a heavy engine blur blended in by a per-row
-/// weight, after the variable blur. Adds nothing while isolated or hoisted.
+/// weight, after the variable blur. Adds nothing while isolated.
 class _EdgeHazeLayer extends ContainerLayer {
   _RenderEdgeBlur? blur;
   final _filter = LayerHandle<BackdropFilterLayer>(BackdropFilterLayer());
@@ -1090,7 +906,6 @@ class _EdgeHazeLayer extends ContainerLayer {
     final owner = blur;
     if (owner == null || !owner.attached) return;
     if (owner._isolated) return;
-    if (owner._group?._hoistedEdges.contains(owner) ?? false) return;
     filter
       ..filter = owner._hazeScreenFilter()
       ..backdropKey = null;
@@ -1098,9 +913,7 @@ class _EdgeHazeLayer extends ContainerLayer {
   }
 }
 
-/// The fade over the strips, painted after the blur. Adds nothing while a
-/// group has hoisted this effect: the hoist paints the fade before the
-/// members' optical passes, cut out of their contours.
+/// The fade over the strips, painted after the blur.
 class _EdgeFadeLayer extends ContainerLayer {
   _RenderEdgeBlur? blur;
   Offset offset = Offset.zero;
@@ -1112,7 +925,6 @@ class _EdgeFadeLayer extends ContainerLayer {
   void addToScene(ui.SceneBuilder builder) {
     final owner = blur;
     if (owner == null || !owner.attached) return;
-    if (owner._group?._hoistedEdges.contains(owner) ?? false) return;
     builder.addPicture(Offset.zero, owner._fadeFor(offset));
   }
 }

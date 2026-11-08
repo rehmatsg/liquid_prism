@@ -123,16 +123,12 @@ class LiquidPrismSlider extends StatelessWidget {
             releaseSpring:
                 timing.release?.description ?? NativeControl.smallRelease,
             hangTime: timing.minimumLiftDuration ?? Duration.zero,
-            // The held thumb's half width, at least half a 44-point target.
             grabExtent: math.max(22.0, thumb.width * heldScale / 2),
             builder: (context, position, lift, stretch, activate) {
               final p = position.clamp(0.0, 1.0);
               final x = center + travel * (rtl ? 1 - p : p);
               final thumbWidth = thumb.width * (1 + (heldScale - 1) * lift),
                   thumbHeight = thumb.height * (1 + (heldScale - 1) * lift);
-              // Native fill follows the thumb except at the first/last 2%,
-              // where it blends continuously to proportional track progress.
-              // Direct layer measurements: doc/native_slider_fill_spec.json.
               final edgeBlend =
                   ((.02 - p) / .02).clamp(0.0, 1.0) +
                   ((p - .98) / .02).clamp(0.0, 1.0);

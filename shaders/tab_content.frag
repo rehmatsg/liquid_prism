@@ -19,7 +19,7 @@ out vec4 frag_color;
 #include "superellipse.glsl"
 #include "chromatic_fringe.glsl"
 
-// Circular SDF displacement profile: 1 at the contour, 0 past depth h.
+// Circular SDF profile: one at the contour, zero past depth h.
 float fieldProfile(float depth, float h) {
     float t = clamp(1.-depth/h,0.,1.);
     return 1.-sqrt(max(1.-t*t,0.));
@@ -37,9 +37,6 @@ vec4 readContent(vec2 p) {
 void main() {
     vec2 pixel = FlutterFragCoord().xy;
     vec2 p = pixel / u_geometry.x - u_origin;
-    // Outside the contour's box the field is positive: pass the pixel through
-    // without the contour search. The filter covers the whole foreground row,
-    // most of it beyond the pill.
     if (any(lessThan(p, vec2(0.))) || any(greaterThan(p, u_extent))) {
         frag_color = readContent(pixel);
         return;
@@ -56,45 +53,29 @@ void main() {
                  q.x > q.y ? vec2(sign(rel.x),0.) : vec2(0.,sign(rel.y));
         field = vec3(d,n);
     }
-    if (field.x >= 0.) { frag_color = readContent(pixel); return; }
-    // Native warps the selected copy twice over the same 11.2-point SDF: the
-    // lens's content wrapper (-17.5, u_wrapper) and inside it the
-    // ContentLensingView (-14, u_effect.x), read where the outer pass has
-    // already moved the sample, as the backdrop's passes compose. Both pull
-    // source samples inward near the rim: glyphs bulge across the contour
-    // while the flat center keeps its ordinary size. On held iOS 27 glyphs
-    // the 3-7 point band shows only the stretched door of the house icon,
-    // which this composition reproduces and the single -14 pass folds back
-    // into the wall. This pass never samples or grades the page/housing.
+    if (field.x >= 0.) {
+        frag_color = readContent(pixel);
+        return;
+    }
     float depth = -field.x;
     float lift = u_geometry.y;
+    // Compose wrapper and inner lens at the outer pass's displaced depth.
     float outer = u_wrapper*lift*fieldProfile(depth,u_effect.y);
     float inner = u_effect.x*lift*fieldProfile(depth+outer,u_effect.y);
     vec2 displaced = pixel-field.yz*((outer+inner)*u_geometry.x);
     vec4 green = readContent(displaced);
-    // Native aberration inputs grow with the lens (H/19): fringe size and
-    // reach follow the pill's height, against the 73.6-point held tab pill
-    // they were measured on.
     float size = min(u_extent.x,u_extent.y)/73.6;
     float band = u_effect.w*size;
     if (u_effect.z > 0. && band > 0. && depth < 3.1*band) {
-        // Each channel is shifted by .77 of the backdrop's split and blended
-        // half with the unshifted sample. Measured on held iOS 27 tab glyphs:
-        // red and blue 50% crossings 2.7 points apart, green midway, amber
-        // and azure bands; the half blend keeps those colours (a full split
-        // turns them into pure primaries) and soft tints on thin strokes.
         vec2 shift = chromaticDirection(field.yz) *
             (.77*glyphFringeWeight(depth,band)*size*u_effect.z);
         vec4 red = readContent(displaced-shift);
         vec4 blue = readContent(displaced+shift);
-        // Each source channel is already premultiplied and <= its own alpha,
-        // so the union alpha bounds all three. Native disperses the glyphs
-        // over the bar, so a channel whose shifted sample misses the glyph
-        // shows the bar there; on this transparent layer it would read zero at
-        // the union alpha and paint near black. Fill each channel's missing
-        // coverage with the bar's tone; the result stays premultiplied.
+        // Fill missing channel coverage with the bar tone to stay premultiplied.
         vec4 split = vec4(red.r,green.g,blue.b,max(max(red.a,green.a),blue.a));
         split.rgb += (split.a-vec3(red.a,green.a,blue.a))*u_tone;
         frag_color = mix(green,split,.5);
-    } else { frag_color = green; }
+    } else {
+        frag_color = green;
+    }
 }

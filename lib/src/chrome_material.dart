@@ -33,8 +33,6 @@ class ChromeMaterial extends StatelessWidget {
       glass: (glass ?? theme.glass ?? Glass.regular).interactive(false),
       shape: shape ?? GlassShape.capsule,
       role: role,
-      // The bar's own frost (5) follows the device's Liquid Glass setting;
-      // an app's blur or optics replace it with a plain frost.
       blur: blur ?? ownOptics?.frost ?? theme.blur,
       materialOptics: ownOptics == null,
       optics:

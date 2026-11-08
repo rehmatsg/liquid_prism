@@ -16,10 +16,6 @@ class ControlLensMotion {
   Timer? _idle;
   double _speed = 0;
 
-  // Captured small-loupe settings: response .444, damping .56, movement scale
-  // 10 points, associated dimension 37, normalization 2000, bounds .9–1.1.
-  // Retarget impulse is .032. Applying it as a spring-force impulse is a fit:
-  // UIKit's private velocity integrator is not exposed by these settings.
   static final spring = SpringDescription.withDurationAndBounce(
     duration: const Duration(milliseconds: 444),
     bounce: .44,
@@ -45,9 +41,6 @@ class ControlLensMotion {
   }
 
   void follow() {
-    // Start with the researched displacement per speed, normalized to a held
-    // small lens. This keeps brief flicks visible instead of attenuating their
-    // target before the shape spring has time to respond.
     final motion = settings?.call() ?? const GlassControlMotion();
     _emit(
       ((motion.flexStrength ?? NativeMotion.stretchPerSpeed) * _speed / 57.35)

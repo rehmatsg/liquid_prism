@@ -138,7 +138,6 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
           width: width,
           height: hitHeight,
           child: ControlInteraction(
-            // Replacing/reordering keys cancels an obsolete in-flight gesture.
             key: ValueKey(Object.hashAll(keys)),
             value: selected / (count - 1),
             steps: count - 1,
@@ -171,7 +170,6 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                 timing.release?.description ?? NativeControl.largeLift,
             hangTime:
                 timing.minimumLiftDuration ?? const Duration(milliseconds: 220),
-            // Only the selected segment grabs the selection.
             grabExtent: slot / 2,
             builder: (context, position, lift, stretch, activate) {
               final preview = (position * (count - 1)).round().clamp(
@@ -230,7 +228,6 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                       ),
                     ),
                     Positioned.fill(
-                      // Native labels bend near the held selection's rim.
                       child: ContentLensWindow(
                         lens: Rect.fromCenter(
                           center: pill.center,
@@ -259,8 +256,6 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                                   onTap: onValueChanged == null
                                       ? null
                                       : () => activate(i / (count - 1)),
-                                  // Native press on another segment: its label
-                                  // fades to .4 (~.45 s) and back (~.2 s).
                                   child: AnimatedOpacity(
                                     opacity: i == pressed && i != selected
                                         ? .4

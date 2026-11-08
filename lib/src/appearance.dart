@@ -11,9 +11,6 @@ enum GlassButtonStyle { glass, glassProminent }
 /// Native toolbar placement presets.
 enum GlassToolbarSize { navigation, bottom }
 
-// Nullable fields mean inherit. copyWith keeps null arguments; merge fills only
-// the supplied fields. Widget resolution supplies the captured native defaults.
-
 /// Optics and elevation shared by lifted handles and selection pills.
 ///
 /// Unspecified fields inherit the surrounding theme, then native defaults.

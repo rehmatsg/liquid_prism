@@ -121,7 +121,6 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
       color: colors.label,
     ).merge(navigation.largeTitleStyle);
     final scaler = media.textScaler;
-    // The same measured geometry as LiquidPrismScaffold's top bar.
     final top = sheet ? 16.0 : math.max(media.padding.top, 24.0);
     final subtitleStyle = TextStyle(
       fontSize: 12,
@@ -140,7 +139,6 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
                     (titleStyle.height ?? 1.2) +
                 8,
           );
-    // With a subtitle the row grows for its 11-point line (71.33 points).
     final largeRow = largeTitle == null
         ? 0.0
         : scaler.scale(largeTitleStyle.fontSize ?? 34) *
@@ -151,9 +149,6 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
                   : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
                         6.13);
     final accessoryHeight = accessory?.preferredSize.height ?? 0;
-    // The large title's row starts at the bar frame, 10 points below the
-    // controls, and content follows it directly; collapsed, the bar keeps
-    // its frame. An accessory keeps the usual clearance.
     final lead = largeTitle == null ? 0.0 : largeTitleLead;
     final clearance = lead > 0 && accessoryHeight == 0
         ? lead
@@ -264,8 +259,6 @@ class _SliverBar extends StatefulWidget {
 }
 
 class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
-  // As in LiquidPrismScaffold: once the large title's row has scrolled away
-  // the titles swap on springs (see GlassNavigationBarStyle).
   late final _largeFade = RetargetableGlassSpring(vsync: this);
   late final _inlineFade = RetargetableGlassSpring(vsync: this);
   bool _collapsed = false;
@@ -391,14 +384,11 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       animation: Listenable.merge([_largeFade, _inlineFade]),
       builder: (context, child) {
         final visible = large ? !_collapsed : _collapsed;
-        // Opacity clamps; the rise keeps the spring's overshoot.
         final inline = _inlineFade.value;
         final opacity = large ? 1 - _largeFade.value : inline;
         return ExcludeSemantics(
           excluding: !visible,
           child: IgnorePointer(
-            // The titles focus in and out as they fade, as native soft bars
-            // do: blurred when absent, sharp when present.
             child: GlassContentPresence(
               presence: opacity,
               blur: _titleBlur,
@@ -566,8 +556,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     var leadingEnd = 0.0, trailingStart = size.width;
 
     if (hasChild(_Slot.edge)) {
-      // The bar's box, status bar and accessory included; a soft effect
-      // reaches below it.
       layoutChild(
         _Slot.edge,
         BoxConstraints.tight(
@@ -578,7 +566,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
                 largeHeight +
                 accessoryHeight +
                 edgeFrame -
-                // The lead is the bar frame the edge already reaches.
                 (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
           ),
         ),
@@ -596,7 +583,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       positionChild(_Slot.actions, Offset(x, centred(child)));
     }
     if (hasChild(_Slot.trailing)) {
-      // Before the capsules, or at the trailing edge without them.
       final actions = hasChild(_Slot.actions);
       final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
       final x = rtl
@@ -611,7 +597,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       positionChild(_Slot.trailing, Offset(x, centred(child)));
     }
     if (hasChild(_Slot.leading)) {
-      // Bounded by the actions and trailing widget, a title gap before them.
       final bounded = hasChild(_Slot.actions) || hasChild(_Slot.trailing);
       final room = rtl
           ? size.width - _edge - (bounded ? leadingEnd + gap : _edge)
@@ -636,7 +621,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         trailingStart - (trailingStart < size.width ? gap : 0),
       );
       if (hasChild(_Slot.actions) || hasChild(_Slot.trailing)) {
-        // Beside actions the title leads, after the leading control.
         final title = layoutChild(
           _Slot.title,
           BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
@@ -658,7 +642,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       }
     }
     if (hasChild(_Slot.largeTitle)) {
-      // The title rides the content up, as measured, while its row shrinks.
       final child = layoutChild(
         _Slot.largeTitle,
         BoxConstraints(maxWidth: math.max(0, size.width - 2 * gutter)),
