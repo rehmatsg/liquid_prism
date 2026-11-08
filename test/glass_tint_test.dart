@@ -18,8 +18,6 @@ import 'package:liquid_prism/src/system_chrome.dart' show SystemChromeListener;
 
 import 'support/rendering.dart';
 
-const _lighten = BlendMode.lighten;
-
 GlassRecipe _recipe(
   Glass glass, {
   bool dark = false,
@@ -76,28 +74,22 @@ void main() {
   });
 
   group('frost passes', () {
-    test('regular glass keeps its plain frost from iOS default up', () {
-      for (final tint in [.5, .75, 1.0]) {
-        expect(_frost(Glass.regular, tint), [
-          const FrostPass(GlassRecipe.regularFrost),
-        ]);
+    test('regular frost follows the fitted light and dark setting sweep', () {
+      const light = [5.2, 6.76, 8.32, 10.11, 12.0];
+      const dark = [2.98, 5.07, 7.12, 9.62, 12.0];
+      for (var i = 0; i < GlassTint.amounts.length; i++) {
+        for (final isDark in [false, true]) {
+          final pass = _frost(
+            Glass.regular,
+            GlassTint.amounts[i],
+            dark: isDark,
+          ).single;
+          expect(pass.sigma, closeTo((isDark ? dark : light)[i], 1e-12));
+          expect(pass.covers, isTrue);
+          expect(pass.blendMode, BlendMode.srcOver);
+        }
       }
-    });
-
-    test('regular glass below the default blends its blur fill', () {
-      expect(_frost(Glass.regular, .25), [
-        const FrostPass(3.3, .5),
-        const FrostPass(3.3, 0.7874999642372131, _lighten),
-      ]);
-      // Tint 0: no normal blend, the measured lighten alone.
-      expect(_frost(Glass.regular, 0), [
-        const FrostPass(3.3, 0.6749999523162842, _lighten),
-      ]);
-      // Dark appearance darkens instead (lighten 0 and darken 0.9 at 0.5).
-      expect(
-        _frost(Glass.regular, 0, dark: true).single.blendMode,
-        BlendMode.darken,
-      );
+      expect(_frost(Glass.regular, .375).single.sigma, closeTo(7.54, 1e-12));
     });
 
     test('clear glass scales its blur and fades in a blur fill to tint 1', () {
@@ -106,10 +98,10 @@ void main() {
       expect(_frost(Glass.clear, .5), [const FrostPass(1.8)]);
       expect(_frost(Glass.clear, .75), [
         const FrostPass(1.8),
-        const FrostPass(GlassRecipe.regularFrost, .5),
+        const FrostPass(GlassRecipe.blurFillFrost, .5),
       ]);
       expect(_frost(Glass.clear, 1), [
-        const FrostPass(GlassRecipe.regularFrost),
+        const FrostPass(GlassRecipe.blurFillFrost),
       ]);
     });
 
@@ -135,8 +127,8 @@ void main() {
     });
 
     test('the optical pass assumes only a blur that covers the face', () {
-      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .5)), 3.3);
-      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .25)), 0);
+      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .5)), 8.32);
+      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .25)), 6.76);
       expect(FrostPass.effectiveSigma(_frost(Glass.clear, .75)), 1.8);
       expect(FrostPass.effectiveSigma(const []), 0);
     });
@@ -145,21 +137,36 @@ void main() {
   group('face packet', () {
     test('the white fill follows the tint; the ring keeps its strength', () {
       final button = _recipe(Glass.regular, role: GlassRole.button);
-      expect(button.faceUniforms, [.2, NativeGlassShadow.ringOpacity, 0, 0]);
+      expect(button.faceUniforms, [.2, NativeGlassShadow.ringOpacity, .94, 1]);
       expect(button.withTint(0).faceUniforms.first, 0);
       expect(button.withTint(.25).faceUniforms.first, closeTo(.1, 1e-12));
       expect(button.withTint(1).faceUniforms.first, .5);
-      // Standalone regular surfaces draw the half-strength ring, custom
-      // optics none, and the held lens none.
       expect(
         _recipe(Glass.regular).faceUniforms[1],
-        NativeGlassShadow.ringOpacity * .5,
+        NativeGlassShadow.ringOpacity,
       );
       expect(_recipe(Glass.regular, customOptics: true).faceUniforms[1], 0);
       expect(
         _recipe(Glass.regular, role: GlassRole.tabLens).faceUniforms[1],
         0,
       );
+    });
+
+    test('dark face settings preserve captured size limits and gray fills', () {
+      final recipe = _recipe(Glass.regular, dark: true);
+      for (final tint in [0.0, .25, .5, .75, 1.0]) {
+        final resolved = recipe
+            .withTint(tint)
+            .withPresence(.5)
+            .withChromaticFringe(3.5, 4.8);
+        final small = resolved.faceUniformsFor(48);
+        final large = resolved.faceUniformsFor(96);
+        expect(small[2], closeTo(.6, 1e-12));
+        expect(large[2], closeTo(tint < .5 ? .48 - .16 * tint : .4, 1e-12));
+        expect(small[0], tint <= .5 ? 0 : tint - .5);
+        expect(small[3], closeTo((tint - .5).abs() * .25, 1e-12));
+        expect(resolved.withLensRim(1).faceUniformsFor(96), large);
+      }
     });
 
     test('Dart packets agree with the shaders', () {
@@ -247,7 +254,7 @@ void main() {
     final native = await bar();
     expect(native.materialOptics, isTrue);
     expect(native.blur, isNull);
-    expect(native.optics!.frost, 5);
+    expect(native.optics!.frost, GlassRecipe.regularFrost);
     // An app's blur or optics replace it with a plain frost.
     expect((await bar(blur: 2)).blur, 2);
     expect(

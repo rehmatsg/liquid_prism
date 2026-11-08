@@ -28,9 +28,7 @@ uniform vec4 u_curve[65];
 // thresholds (px^2), chromatic split (px); [2] broad and rim reflection ends, rim tap
 // spacing, radius; [3] reflection end, 1/dpr, extent aspect, smooth bypass depth.
 uniform vec4 u_derived[4];
-// Face inputs: x is the white face fill alpha of light regular glass, which
-// follows the device's Liquid Glass setting; y is the inner ring shadow's
-// opacity; z and w are reserved (zero).
+// Face: fill alpha, inner ring opacity, SDR luma limit, fill gray.
 uniform vec4 u_face;
 uniform sampler2D u_backdrop;
 out vec4 frag_color;

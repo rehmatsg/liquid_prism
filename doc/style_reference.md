@@ -39,11 +39,11 @@ refracted foreground. Generic optical dispersion is a separate setting.
 | --- | --- |
 | `buttonStyle` | `GlassButtonStyle.glass`; prominent is the tinted preset |
 | `glass`, `optics`, `blur`, `motion`, `shape` | Component overrides of surface/theme settings |
-| `padding` | Standard/menu: horizontal 20, vertical 14, so a 17-point label is 48 points tall like a bar's text button (Invite measured 48.3 on iPhone Duo); icon: 12 all sides |
+| `padding` | Standard/menu: horizontal 20, vertical 15, matching the native large button's 50.3-point height with a 17-point label; icon: 12 all sides |
 | `minimumSize` | Standard/menu: no added minimum; icon: 48×48 |
-| `textStyle` | 17-point semibold, merged with surrounding text style |
+| `textStyle` | 17-point regular, merged with surrounding text style |
 | `iconSize` | Ambient icon size |
-| `foregroundColor` | Calibrated resting accent; prominent defaults white |
+| `foregroundColor` | Semantic tint; prominent defaults white |
 
 An icon button defaults to `GlassShape.circle`. Explicitly colored child content
 keeps its own colors. Disabled controls use the semantic disabled label.

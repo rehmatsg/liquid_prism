@@ -1,13 +1,14 @@
 import 'package:flutter/widgets.dart';
 
-/// Default normal-contrast foreground palette. iOS adapts its
-/// actual pixels to the backdrop; this inexpensive palette is an approximation.
-Color restingGlassAccent(Color tint, Brightness brightness) {
+/// Normal-contrast accents over the grouped page background. Native vibrancy
+/// adapts to the backdrop; a fixed palette only approximates other backgrounds.
+Color glassAccent(Color tint, Brightness brightness, {bool held = false}) {
   if (tint.a < 1) return tint;
   final dark = brightness == Brightness.dark;
+  if (held && !dark) return tint;
   final systemBlue = dark ? const Color(0xFF0091FF) : const Color(0xFF0088FF);
   if (tint.toARGB32() == systemBlue.toARGB32()) {
-    return Color(dark ? 0xFF3BCCFF : 0xFF005DC7);
+    return Color(dark ? (held ? 0xFF27B8FF : 0xFF0697FF) : 0xFF0081F5);
   }
   return Color.from(
     alpha: tint.a,

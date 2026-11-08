@@ -1,0 +1,904 @@
+{
+  "capture": {
+    "date": "2026-11-08",
+    "baseline": "30262c6",
+    "primary": {
+      "model": "iPhone 17 Pro simulator",
+      "os": "iOS 27.0 (24A434)",
+      "points": [
+        402,
+        874
+      ],
+      "dpr": 3
+    },
+    "secondary": {
+      "model": "iPhone Duo simulator",
+      "os": "iOS 27.1 (24A94232)"
+    },
+    "method": "SwiftUI glassEffect/TabView/Toggle/Slider/Picker, genuine XCTest holds; private layer reads stay in tool/."
+  },
+  "measured": {
+    "light": [
+      {
+        "tint": 0,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.6749999523162842,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 0,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 0,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.6749999523162842,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          }
+        ]
+      },
+      {
+        "tint": 0.25,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.7874999642372131,
+              "inputBlurFillNormalOpacity": 0.25,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 0,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 0.375,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.7874999642372131,
+              "inputBlurFillNormalOpacity": 0.25,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          }
+        ]
+      },
+      {
+        "tint": 0.5,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.8999999761581421,
+              "inputBlurFillNormalOpacity": 0.5,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 0,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 0.75,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.8999999761581421,
+              "inputBlurFillNormalOpacity": 0.5,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          }
+        ]
+      },
+      {
+        "tint": 0.75,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.8999999761581421,
+              "inputBlurFillNormalOpacity": 0.75,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.5,
+              "inputBlurRadius": 0.75,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.8999999761581421,
+              "inputBlurFillNormalOpacity": 0.75,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          }
+        ]
+      },
+      {
+        "tint": 1,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.8999999761581421,
+              "inputBlurFillNormalOpacity": 1,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 1,
+              "inputBlurRadius": 0.75,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0.8999999761581421,
+              "inputBlurFillNormalOpacity": 1,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.4000000059604645,
+              "inputFaceColorMatrixMaxLumaSDR": 0.9399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2000000476837158,
+              "inputFaceColorMatrixWhite": 1.0299999713897705
+            }
+          }
+        ]
+      }
+    ],
+    "dark": [
+      {
+        "tint": 0,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.6749999523162842,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 0,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 0,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.6749999523162842,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.47999998927116394,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          }
+        ]
+      },
+      {
+        "tint": 0.25,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.7874999642372131,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.25,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 0,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 0.375,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.7874999642372131,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.25,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.4399999976158142,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          }
+        ]
+      },
+      {
+        "tint": 0.5,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.8999999761581421,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.5,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 0,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0,
+              "inputBlurRadius": 0.75,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.8999999761581421,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.5,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.4000000059604645,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          }
+        ]
+      },
+      {
+        "tint": 0.75,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.8999999761581421,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.75,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.5,
+              "inputBlurRadius": 0.75,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.8999999761581421,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 0.75,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.4000000059604645,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          }
+        ]
+      },
+      {
+        "tint": 1,
+        "materials": [
+          {
+            "bounds": [
+              30,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.8999999761581421,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 1,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.6000000238418579,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          },
+          {
+            "bounds": [
+              222,
+              116,
+              150,
+              48
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 1,
+              "inputBlurRadius": 0.75,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 1,
+              "inputFaceColorMatrixSaturation": 1.059999942779541,
+              "inputFaceColorMatrixWhite": 1.0800000429153442
+            }
+          },
+          {
+            "bounds": [
+              30,
+              202,
+              150,
+              96
+            ],
+            "inputs": {
+              "inputBlurFillBlurRadius": 8,
+              "inputBlurFillDarkenOpacity": 0.8999999761581421,
+              "inputBlurFillLightenOpacity": 0,
+              "inputBlurFillNormalOpacity": 1,
+              "inputBlurRadius": 5,
+              "inputFaceColorMatrixBlack": 0.125,
+              "inputFaceColorMatrixMaxLumaSDR": 0.4000000059604645,
+              "inputFaceColorMatrixSaturation": 1.2999999523162842,
+              "inputFaceColorMatrixWhite": 1.125
+            }
+          }
+        ]
+      }
+    ],
+    "palette": {
+      "dark": {
+        "background": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "blue": [
+          0,
+          0.5686274509803921,
+          1,
+          1
+        ],
+        "cell": [
+          0.10980392156862745,
+          0.10980392156862745,
+          0.11764705882352941,
+          1
+        ],
+        "grouped": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "label": [
+          1.0000001192092896,
+          1.0000001192092896,
+          1.0000001192092896,
+          1
+        ],
+        "secondaryLabel": [
+          0.9215686274509803,
+          0.9215686274509803,
+          0.9607843137254902,
+          0.6
+        ],
+        "separator": [
+          0.32941176470588235,
+          0.32941176470588235,
+          0.34509803921568627,
+          0.5
+        ]
+      },
+      "light": {
+        "background": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "blue": [
+          0,
+          0.5333333333333333,
+          1,
+          1
+        ],
+        "cell": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "grouped": [
+          0.9490196078431372,
+          0.9490196078431372,
+          0.9686274509803922,
+          1
+        ],
+        "label": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "secondaryLabel": [
+          0.23529411764705882,
+          0.23529411764705882,
+          0.2627450980392157,
+          0.6
+        ],
+        "separator": [
+          0.23529411764705882,
+          0.23529411764705882,
+          0.2627450980392157,
+          0.12
+        ]
+      }
+    },
+    "selected_tab_blur_radius": 2,
+    "regular_highlight_matrix_both_appearances": [
+      1.1201999187469482,
+      -0.18940000236034393,
+      -0.01899999938905239,
+      0,
+      0.14710000157356262,
+      -0.056299999356269836,
+      0.9870999455451965,
+      -0.019099999219179153,
+      0,
+      0.14710000157356262,
+      -0.056299999356269836,
+      -0.18930000066757202,
+      1.1574000120162964,
+      0,
+      0.14710000157356262,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    "disabled_prominent_tint": {
+      "light": {
+        "diagonal": 0.30867475271224976,
+        "offset": 0.285163551568985,
+        "alpha": 0.44999998807907104
+      },
+      "dark": {
+        "diagonal": 0.3086487948894501,
+        "offset": 0.31474554538726807,
+        "alpha": 0.3499999940395355
+      }
+    },
+    "grouped_background_selected_tab_colors": {
+      "light": {
+        "rest": [
+          0,
+          129,
+          245
+        ],
+        "held": [
+          0,
+          136,
+          255
+        ]
+      },
+      "dark": {
+        "rest": [
+          6,
+          151,
+          255
+        ],
+        "held": [
+          39,
+          184,
+          255
+        ]
+      }
+    }
+  },
+  "fitted": {
+    "regular_frost_sigma": {
+      "amounts": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "light": [
+        5.2,
+        6.76,
+        8.32,
+        10.11,
+        12
+      ],
+      "dark": [
+        2.98,
+        5.07,
+        7.12,
+        9.62,
+        12
+      ]
+    },
+    "clear_blur_fill_sigma": 12,
+    "dark_tone": ".125 + luma * (.97 + (maxLuma - .97) * luma)",
+    "dark_size_progress": "clamp((shortestSide - 64) / 40, 0, 1)",
+    "dark_max_luma": ".6 - .25 * sizeProgress + .2 * sizeProgress * max(.5 - tintAmount, 0)",
+    "limitations": [
+      "Gaussian equivalents approximate native asymmetric lighten/darken blur fills; they are not recovered Apple kernels.",
+      "Tone and size interpolation are renderer fits between the recorded inputs.",
+      "Native SF Symbols and Flutter Cupertino glyphs have different outlines; whole-frame pixel equality is not the target."
+    ],
+    "disabled_dark_segment_thumb_before_half_alpha": "#5A5A60"
+  },
+  "validation": {
+    "metric": "Mean absolute 8-bit RGB channel error",
+    "region_physical_pixels": [
+      180,
+      666,
+      450,
+      705
+    ],
+    "scene": "grayx, period 32, regular 150x96 surface interior above text",
+    "values": [
+      {
+        "appearance": "light",
+        "amount": 0.0,
+        "before": 12.16,
+        "after": 7.73
+      },
+      {
+        "appearance": "light",
+        "amount": 0.25,
+        "before": 15.3,
+        "after": 6.03
+      },
+      {
+        "appearance": "light",
+        "amount": 0.5,
+        "before": 16.94,
+        "after": 3.78
+      },
+      {
+        "appearance": "light",
+        "amount": 0.75,
+        "before": 16.57,
+        "after": 1.51
+      },
+      {
+        "appearance": "light",
+        "amount": 1.0,
+        "before": 14.84,
+        "after": 1.06
+      },
+      {
+        "appearance": "dark",
+        "amount": 0.0,
+        "before": 41.12,
+        "after": 5.11
+      },
+      {
+        "appearance": "dark",
+        "amount": 0.25,
+        "before": 44.92,
+        "after": 5.12
+      },
+      {
+        "appearance": "dark",
+        "amount": 0.5,
+        "before": 48.44,
+        "after": 3.94
+      },
+      {
+        "appearance": "dark",
+        "amount": 0.75,
+        "before": 64.33,
+        "after": 1.28
+      },
+      {
+        "appearance": "dark",
+        "amount": 1.0,
+        "before": 78.66,
+        "after": 1.17
+      }
+    ]
+  }
+}

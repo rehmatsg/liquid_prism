@@ -222,7 +222,13 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                         child: ControlThumb(
                           lift: lift,
                           small: false,
-                          color: thumbColor ?? appearance.thumbColor,
+                          color:
+                              thumbColor ??
+                              appearance.thumbColor ??
+                              (onValueChanged == null &&
+                                      colors.brightness == Brightness.dark
+                                  ? const Color(0xFF5A5A60)
+                                  : null),
                           style: appearance.lens,
                         ),
                       ),
@@ -288,8 +294,10 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                                                       appearance
                                                           .labelStyle
                                                           ?.color ??
-                                                      (i == selected &&
-                                                              lift < .5
+                                                      (onValueChanged == null
+                                                          ? colors.label
+                                                          : i == selected &&
+                                                                lift < .5
                                                           ? colors
                                                                 .controlThumbLabel
                                                           : colors.label),

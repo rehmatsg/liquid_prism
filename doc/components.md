@@ -92,7 +92,8 @@ The icon constructor defaults to a circle and a 48-point minimum extent.
 Style overrides include typography, icon size, material, optics, blur, shape,
 padding, foreground and motion. A direct `buttonStyle`, `padding` or
 `foregroundColor` wins over the style, including explicit defaults. Prominent
-buttons default to white text. Null callbacks disable every activation path.
+buttons default to white text and use a neutral material tint while disabled.
+Null callbacks disable every activation path.
 Async callbacks can overlap; set `onPressed: null` while exclusive work runs.
 
 ## Switches

@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  />
+  <title>Liquid Glass · Native defaults</title>
+  <style>
+    :root {
+      font:
+        15px/1.5 -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      color: #20242b;
+      background: #f4f5f7;
+      color-scheme: light;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+    }
+    header {
+      padding: 48px max(24px, calc((100vw - 1440px) / 2));
+      background: #fff;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    header small {
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #657181;
+      font-size: 11px;
+      font-weight: 650;
+    }
+    h1 {
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.1;
+      letter-spacing: -0.045em;
+      margin: 10px 0 16px;
+    }
+    p {
+      max-width: 800px;
+      color: #657181;
+      margin: 10px 0;
+    }
+    .stats {
+      display: flex;
+      gap: 28px;
+      margin-top: 28px;
+    }
+    .stats strong {
+      font-size: 25px;
+      letter-spacing: -0.04em;
+      display: block;
+      color: #20242b;
+    }
+    .stats span {
+      font-size: 12px;
+      color: #657181;
+    }
+    .filters {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 20px max(24px, calc((100vw - 1440px) / 2));
+      position: sticky;
+      top: 0;
+      background: #ffffffed;
+      backdrop-filter: blur(12px);
+      z-index: 3;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 11px;
+      color: #657181;
+      letter-spacing: 0.03em;
+    }
+    select {
+      font: inherit;
+      font-size: 13px;
+      color: #20242b;
+      background: #f4f5f7;
+      border: 1px solid #dce0e5;
+      border-radius: 7px;
+      padding: 8px 28px 8px 9px;
+      min-height: 36px;
+    }
+    .status {
+      padding: 18px 24px;
+      color: #657181;
+      max-width: 1488px;
+      margin: auto;
+      font-size: 12px;
+    }
+    main {
+      max-width: 1488px;
+      margin: auto;
+      padding: 0 24px 48px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+      gap: 22px;
+    }
+    article {
+      background: #fff;
+      border: 1px solid #e1e4e8;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 14px #18243305;
+    }
+    article header {
+      padding: 16px 18px;
+      border: 0;
+      background: none;
+    }
+    h2 {
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    article small {
+      font-size: 11px;
+      color: #657181;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: #e1e4e8;
+    }
+    .pane {
+      background: #fff;
+    }
+    .pane span {
+      display: block;
+      padding: 8px 12px;
+      background: #f9fafb;
+      font-size: 11px;
+      font-weight: 650;
+      color: #657181;
+    }
+    .viewport {
+      position: relative;
+      overflow: hidden;
+      background: #f2f2f7;
+    }
+    .viewport img {
+      position: absolute;
+      max-width: none;
+      height: auto;
+    }
+    button.zoom {
+      display: block;
+      width: 100%;
+      padding: 11px;
+      border: 0;
+      background: #fff;
+      color: #2765c3;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+    .empty {
+      padding: 48px;
+      color: #657181;
+      grid-column: 1/-1;
+    }
+    footer {
+      padding: 28px 24px;
+      border-top: 1px solid #e1e4e8;
+      background: #fff;
+    }
+    footer div {
+      max-width: 1440px;
+      margin: auto;
+    }
+    footer p {
+      font-size: 12px;
+    }
+    a {
+      color: #2765c3;
+    }
+    dialog {
+      border: 1px solid #dce0e5;
+      border-radius: 12px;
+      width: min(96vw, 1100px);
+      max-height: 96vh;
+      padding: 20px;
+      box-shadow: 0 20px 80px #0005;
+    }
+    dialog::backdrop {
+      background: #101725b3;
+    }
+    dialog .pair {
+      max-height: 75vh;
+      overflow: auto;
+    }
+    dialog h2 {
+      margin-bottom: 15px;
+    }
+    .close {
+      float: right;
+      cursor: pointer;
+      border: 0;
+      background: #f4f5f7;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font: inherit;
+    }
+    .wipe {
+      position: relative;
+      margin-top: 15px;
+    }
+    .wipe .overlay {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .wipe-label {
+      font-size: 12px;
+      color: #657181;
+      display: block;
+      margin-top: 14px;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #2765c3;
+    }
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+    @media (max-width: 620px) {
+      header {
+        padding-top: 28px;
+      }
+      .filters {
+        padding: 12px 16px;
+        gap: 8px;
+      }
+      label {
+        flex: 1 1 28%;
+      }
+      select {
+        width: 100%;
+        font-size: 12px;
+      }
+      .stats {
+        gap: 20px;
+      }
+      main {
+        padding: 0 12px 24px;
+      }
+      .status {
+        padding: 12px 16px;
+      }
+    }
+  </style>
+  <header>
+    <small>Liquid Prism · calibration record</small>
+    <h1>Liquid Glass defaults</h1>
+    <p>
+      SwiftUI and Flutter with matching inputs. Inspect material color, frost,
+      rims, shadows and control states. Select a component for a closer view.
+    </p>
+    <div class="stats">
+      <div><strong id="total"></strong><span>comparison pairs</span></div>
+      <div><strong>5</strong><span>device setting positions</span></div>
+      <div><strong>2</strong><span>appearances</span></div>
+    </div>
+  </header>
+  <div class="filters">
+    <label
+      >View<select id="suite">
+        <option value="fixture">Calibration fixture</option>
+        <option value="showcase">Showcase pages</option>
+        <option value="all">Both</option>
+      </select></label
+    ><label
+      >Appearance<select id="appearance">
+        <option value="all">Light + dark</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select></label
+    ><label
+      >Glass amount<select id="tint">
+        <option value="all">All positions</option>
+        <option>0</option>
+        <option>0.25</option>
+        <option selected>0.5</option>
+        <option>0.75</option>
+        <option>1</option>
+      </select></label
+    ><label
+      >Background<select id="pattern">
+        <option value="all">All backgrounds</option>
+        <option value="grouped" selected>Grouped page</option>
+        <option value="cell">Grouped cell</option>
+        <option value="white">Plain white</option>
+        <option value="grayx">Vertical texture</option>
+        <option value="grayy">Horizontal texture</option>
+      </select></label
+    ><label
+      >State<select id="state">
+        <option value="all">All states</option>
+        <option value="rest" selected>Resting</option>
+        <option value="held">Held / pressed</option>
+        <option value="released">Released</option>
+        <option value="disabled">Disabled</option>
+        <option value="selected">Selections / endpoints</option>
+      </select></label
+    ><label
+      >Component<select id="component">
+        <option value="all">All controls</option>
+        <option value="surfaces">Glass surfaces</option>
+        <option value="buttons">Buttons</option>
+        <option value="switches">Switches</option>
+        <option value="slider">Slider</option>
+        <option value="segments">Segments</option>
+        <option value="search">Search field</option>
+        <option value="tabs">Tab bar</option>
+      </select></label
+    ><label
+      >Flutter revision<select id="revision">
+        <option value="flutter">Calibrated</option>
+        <option value="before">Before · resting cases</option>
+      </select></label
+    >
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <main id="grid"></main>
+  <footer>
+    <div>
+      <strong>How to read this comparison</strong>
+      <p>
+        Captured on the same iPhone 17 Pro simulator, iOS 27.0 (24A434), 402 ×
+        874 points at 3×. Native controls use genuine XCTest touches. The
+        gallery removes the system status bar from its viewport. Images are
+        lossless WebP conversions of the original captures.
+      </p>
+      <p>
+        The page backgrounds and 2-point selected-tab blur already match native.
+        The calibration adjusts regular frost, dark face grading, standalone
+        shadows, button defaults and showcase separators. Gaussian frost and
+        tone rolloff are renderer fits; their values are separate from the
+        directly measured UIKit filter inputs.
+      </p>
+      <p>
+        SF Symbols and Cupertino glyph outlines, text metrics and some control
+        geometry still differ. This gallery makes those differences visible; it
+        does not assert pixel identity. The before revision is available for the
+        resting matrix and eight showcase pages. Holds show a settled press, and
+        release captures follow the same interaction sequence; these stills do
+        not establish continuous animation parity.
+      </p>
+      <p>
+        <a href="cases.json">Download the case manifest</a> ·
+        <a href="https://github.com/rehmatsg/liquid_prism"
+          >Liquid Prism source</a
+        >
+      </p>
+    </div>
+  </footer>
+  <dialog id="detail">
+    <button class="close" onclick="document.querySelector('#detail').close()">
+      Close
+    </button>
+    <h2 id="detail-title"></h2>
+    <div id="detail-pair"></div>
+    <label class="wipe-label"
+      >Overlay: SwiftUI ← → Flutter<input
+        id="wipe"
+        type="range"
+        min="0"
+        max="100"
+        value="50"
+    /></label>
+    <div id="detail-wipe"></div>
+  </dialog>
+  <script>
+    const cases = __CASES__;
+    const $ = (s) => document.querySelector(s);
+    const boxes = {
+      all: [0, 62, 402, 812],
+      surfaces: [18, 95, 366, 219],
+      buttons: [35, 310, 332, 85],
+      switches: [40, 390, 322, 90],
+      slider: [20, 470, 362, 82],
+      segments: [20, 550, 362, 85],
+      search: [20, 625, 362, 95],
+      tabs: [35, 763, 332, 105],
+    };
+    const names = {
+      grouped: "Grouped page",
+      cell: "Grouped cell",
+      white: "Plain white",
+      grayx: "Vertical texture",
+      grayy: "Horizontal texture",
+    };
+    function viewport(src, c) {
+      const b = boxes[c?.suite === "showcase" ? "all" : $("#component").value];
+      const w = document.createElement("div");
+      w.className = "viewport";
+      w.style.aspectRatio = `${b[2]}/${b[3]}`;
+      const im = document.createElement("img");
+      im.src = src;
+      im.alt = "";
+      im.loading = "lazy";
+      im.style.width = `${(402 / b[2]) * 100}%`;
+      im.style.left = `${(-b[0] / b[2]) * 100}%`;
+      im.style.top = `${(-b[1] / b[3]) * 100}%`;
+      w.append(im);
+      return w;
+    }
+    function pair(c) {
+      const el = document.createElement("div");
+      el.className = "pair";
+      [
+        ["SwiftUI", c.native],
+        [
+          $("#revision").value === "before"
+            ? "Flutter · before"
+            : "Flutter · calibrated",
+          c[$("#revision").value],
+        ],
+      ].forEach(([label, src]) => {
+        const pane = document.createElement("div");
+        pane.className = "pane";
+        const tag = document.createElement("span");
+        tag.textContent = label;
+        pane.append(tag, viewport(src, c));
+        el.append(pane);
+      });
+      return el;
+    }
+    function title(c) {
+      if (c.suite === "showcase")
+        return `${(c.scroll || c.screen)
+          .split("-")
+          .map((w) => w[0].toUpperCase() + w.slice(1))
+          .join(" ")} · ${c.dark ? "Dark" : "Light"}`;
+      return `${names[c.pattern] || c.pattern} · ${c.dark ? "Dark" : "Light"} · ${c.state.replaceAll("-", " ")}`;
+    }
+    function show(c) {
+      $("#detail-title").textContent = title(c) + ` · amount ${c.tint}`;
+      $("#detail-pair").replaceChildren(pair(c));
+      const wipe = document.createElement("div");
+      wipe.className = "wipe";
+      wipe.append(viewport(c.native, c));
+      const overlay = document.createElement("div");
+      overlay.className = "overlay";
+      overlay.append(viewport(c[$("#revision").value], c));
+      wipe.append(overlay);
+      $("#detail-wipe").replaceChildren(wipe);
+      function update() {
+        overlay.style.clipPath = `inset(0 ${100 - Number($("#wipe").value)}% 0 0)`;
+      }
+      $("#wipe").oninput = update;
+      update();
+      $("#detail").showModal();
+    }
+    function render() {
+      const comp = $("#component").value,
+        suite = $("#suite").value,
+        a = $("#appearance").value,
+        t = $("#tint").value,
+        p = $("#pattern").value,
+        s = $("#state").value,
+        r = $("#revision").value;
+      const selected = cases.filter(
+        (c) =>
+          (suite === "all" || (c.suite || "fixture") === suite) &&
+          (c.suite !== "showcase" ||
+            comp === "all" ||
+            c.screen ===
+              {
+                surfaces: "surfaces",
+                buttons: "buttons",
+                switches: "switches",
+                slider: "sliders",
+                segments: "segments",
+                search: "search",
+                tabs: "tabs",
+              }[comp]) &&
+          (a === "all" || (c.dark ? "dark" : "light") === a) &&
+          (t === "all" || c.tint === Number(t)) &&
+          (c.suite === "showcase" || p === "all" || c.pattern === p) &&
+          (s === "all" || c.state === s || c.state.endsWith("-" + s)) &&
+          c[r],
+      );
+      $("#status").textContent =
+        `${selected.length} of ${cases.length} pairs · select Inspect to enlarge or overlay a pair`;
+      const frag = document.createDocumentFragment();
+      for (const c of selected) {
+        const card = document.createElement("article");
+        const head = document.createElement("header");
+        const h = document.createElement("h2");
+        h.textContent = title(c);
+        const note = document.createElement("small");
+        note.textContent = `Device glass amount ${c.tint}`;
+        head.append(h, note);
+        const zoom = document.createElement("button");
+        zoom.className = "zoom";
+        zoom.textContent = "Inspect pair ↗";
+        zoom.onclick = () => show(c);
+        card.append(head, pair(c), zoom);
+        frag.append(card);
+      }
+      if (!selected.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "No captures match these filters.";
+        frag.append(empty);
+      }
+      $("#grid").replaceChildren(frag);
+    }
+    $("#total").textContent = cases.length;
+    document.querySelectorAll("select").forEach((el) =>
+      el.addEventListener("change", () => {
+        if (el.id === "suite" && el.value === "showcase") {
+          $("#state").value = "rest";
+          $("#tint").value = "0.5";
+        }
+        render();
+      }),
+    );
+    render();
+  </script>
+</html>

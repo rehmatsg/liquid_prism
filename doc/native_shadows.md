@@ -126,13 +126,11 @@ empirically verified rule for these fixtures, not recovered Apple source code.
 
 ## Flutter implementation and limits
 
-Regular material retains the exterior shadow from before this extraction pass,
-as requested after the live native shadow proved unreliable in screenshots.
-The recovered size-dependent native shadow rule remains reference data; it does
-not replace the established Flutter exterior shadow. Standalone surfaces use half exterior-shadow and inner-ring opacity in Regular
-compared with Clear, as requested. Buttons and tab bars instead use the captured
-control profile described below. Their strength remains independent of blur. This 0.5 factor
-is a user-requested visual adjustment, not an extracted Apple parameter. The optical edge highlight still follows the material. The optical shader draws the ring under the key/fill highlight and below foreground content (`u_face.y` carries its opacity).
+Standalone Regular surfaces use the captured exterior-shadow and inner-ring
+strengths, matching Clear at a given size. Buttons and tab bars use the separate
+captured control profile described below. Strength is independent of frost. The
+optical shader draws the ring under the key/fill highlight and below foreground
+content (`u_face.y` carries its opacity).
 All passes follow the same continuous/circular contour and press transform.
 
 The native inputs above are extracted values. The compositor implementation is
@@ -193,8 +191,7 @@ They now select a separate captured control profile by `GlassRole.button` or
 of frost. The default native button/tab-bar material is Regular; changing the
 showcase's surface material does not change the SwiftUI button/tab-bar material.
 
-The half-strength Regular rule now applies only to standalone surfaces. Controls
-use their captured Regular profile without that extra multiplier. Explicit Clear
+Controls use their captured Regular profile. Explicit Clear
 controls retain this shadow as requested for mode-independent control shadows;
 that is app policy rather than an extracted native Clear-button profile. The
 radius-to-sigma conversion still has the compositor limitation described above.

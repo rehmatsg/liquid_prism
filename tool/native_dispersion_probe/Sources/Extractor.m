@@ -2,6 +2,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 #import <math.h>
+#import <dlfcn.h>
 // Research only: records every layer's filters (all input keys, found from the
 // class properties and the keyed archive) DumpDelay (default 1.0 s) after each
 // touch begins, then writes a marker so the runner can screenshot the held state.
@@ -11,6 +12,17 @@ static id Enc(id o){
  if(!o) return [NSNull null];
  if([o isKindOfClass:NSNumber.class]){ double x=[o doubleValue]; return isfinite(x)?o:@"nonfinite"; }
  if([o isKindOfClass:NSString.class]) return o;
+ if ([o isKindOfClass:NSValue.class]) {
+  NSUInteger size = 0;
+  NSGetSizeAndAlignment([o objCType], &size, NULL);
+  if (size == 20 * sizeof(float)) {
+   float values[20];
+   [o getValue:values size:sizeof(values)];
+   NSMutableArray *array = [NSMutableArray new];
+   for (int i = 0; i < 20; i++) [array addObject:@(values[i])];
+   return array;
+  }
+ }
  if([o isKindOfClass:NSArray.class]){ NSMutableArray *a=[NSMutableArray new]; for(id v in o)[a addObject:Enc(v)]; return a; }
  if([o isKindOfClass:NSDictionary.class]){ NSMutableDictionary *d=[NSMutableDictionary new]; for(id k in o) d[[k description]]=Enc(o[k]); return d; }
  if([NSStringFromClass([o class]) containsString:@"CGColor"]){ CGColorRef c=(__bridge CGColorRef)o; size_t n=CGColorGetNumberOfComponents(c); const CGFloat *v=CGColorGetComponents(c); NSMutableArray *a=[NSMutableArray new]; for(size_t i=0;i<n;i++)[a addObject:@(v[i])]; return a; }
@@ -47,7 +59,16 @@ static void Walk(CALayer *l, CALayer *win, NSString *path, NSMutableArray *out){
 void DumpFilters(NSString *name){
  NSMutableArray *a=[NSMutableArray new]; int i=0;
  for(UIScene *s in UIApplication.sharedApplication.connectedScenes) if([s isKindOfClass:UIWindowScene.class]) for(UIWindow *w in [(UIWindowScene*)s windows]) Walk(w.layer, w.layer, [NSString stringWithFormat:@"window%d",i++], a);
- NSDictionary *d=@{@"run":Run?:@"", @"state":name, @"os":NSProcessInfo.processInfo.operatingSystemVersionString, @"scale":@(UIScreen.mainScreen.scale), @"layers":a};
+ NSMutableDictionary *palette=[NSMutableDictionary new];
+ for(NSString *mode in @[@"light",@"dark"]){
+  UITraitCollection *traits=[UITraitCollection traitCollectionWithUserInterfaceStyle:[mode isEqual:@"light"]?UIUserInterfaceStyleLight:UIUserInterfaceStyleDark];
+  NSMutableDictionary *colors=[NSMutableDictionary new];
+  NSDictionary *semantic=@{@"background":UIColor.systemBackgroundColor,@"grouped":UIColor.systemGroupedBackgroundColor,@"cell":UIColor.secondarySystemGroupedBackgroundColor,@"blue":UIColor.systemBlueColor,@"label":UIColor.labelColor,@"secondaryLabel":UIColor.secondaryLabelColor,@"separator":UIColor.separatorColor};
+  for(NSString *key in semantic){ CGFloat r,g,b,alpha; [[semantic[key] resolvedColorWithTraitCollection:traits] getRed:&r green:&g blue:&b alpha:&alpha]; colors[key]=@[@(r),@(g),@(b),@(alpha)]; }
+  palette[mode]=colors;
+ }
+ id (*readTint)(void)=dlsym(RTLD_DEFAULT,"UIViewGlassGetTintAmount");
+ NSDictionary *d=@{@"run":Run?:@"", @"state":name, @"os":NSProcessInfo.processInfo.operatingSystemVersionString, @"scale":@(UIScreen.mainScreen.scale), @"tintAmount":readTint?Enc(readTint()):NSNull.null, @"palette":palette, @"layers":a};
  NSURL *dir=[[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject URLByAppendingPathComponent:@"extracted"];
  [[NSFileManager defaultManager] createDirectoryAtURL:dir withIntermediateDirectories:YES attributes:nil error:nil];
  NSData *json=[NSJSONSerialization dataWithJSONObject:d options:NSJSONWritingPrettyPrinted|NSJSONWritingSortedKeys error:nil];

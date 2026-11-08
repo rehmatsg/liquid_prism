@@ -9,7 +9,7 @@ choosing and using the package.
 | Understand the code | [Architecture](architecture.md) |
 | Change a public API | [API contracts](api-design.md), [customization](../customization.md), [components](../components.md), [style reference](../style_reference.md) |
 | Add or customize a component | [Implementation recipes](implementation-recipes.md) |
-| Change motion or optics | [Rendering](rendering.md), [motion guide](../motion_and_lenses.md), [native comparison](native-comparison.md) |
+| Change motion or optics | [Rendering](rendering.md), [motion guide](../motion_and_lenses.md), [native comparison](native-comparison.md), [native defaults](../native_defaults.md) |
 | Verify behavior | [Testing](testing.md) |
 | Build, install or package | [Delivery](release.md) |
 | Diagnose an issue | [Troubleshooting](troubleshooting.md) |

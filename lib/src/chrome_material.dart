@@ -40,7 +40,7 @@ class ChromeMaterial extends StatelessWidget {
           LiquidPrismStyle(
             edgeWidth: height / 4,
             refraction: height / 2,
-            frost: 5,
+            frost: GlassRecipe.regularFrost,
             reflection: .08,
             dispersion: 0,
             brightness: 0,

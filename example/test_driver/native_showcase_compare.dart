@@ -112,7 +112,13 @@ Future<void> main() async {
           '${out.path}/$id-flutter.png',
         ]);
 
-        await simctl(['launch', device, native, '--inspect']);
+        await simctl([
+          'launch',
+          '--terminate-running-process',
+          device,
+          native,
+          '--inspect',
+        ]);
         await pause(1200);
         final data = File('${documents.path}/$id.json');
         if (data.existsSync()) data.deleteSync();

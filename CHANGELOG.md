@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Match native Liquid Glass defaults more closely: setting-dependent regular
+  frost, dark face grading and gray fill, regular rim lighting and standalone
+  shadow strength. Explicit blur and optical overrides retain precedence.
+- Match native large-button typography and spacing, semantic button tint,
+  grouped-background tab accents, disabled prominent buttons and dark disabled
+  segmented selections. Correct showcase separator alpha.
+- Add reproducible SwiftUI/Flutter material and control-state comparisons, with
+  captured native inputs documented separately from renderer fits.
+
 ## 0.6.0
 
 - The held slider's shadow in light appearance matches native over white:

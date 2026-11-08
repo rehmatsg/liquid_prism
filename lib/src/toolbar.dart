@@ -637,7 +637,7 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
         widget.foregroundColor ??
         appearance.foregroundColor ??
         theme.foregroundColor ??
-        restingGlassAccent(LiquidPrismTheme.tintOf(context), colors.brightness);
+        glassAccent(LiquidPrismTheme.tintOf(context), colors.brightness);
     final present = [
       for (final entry in _entries)
         if (!entry.leaving) entry,

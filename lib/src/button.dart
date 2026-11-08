@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'glass.dart';
-import 'foreground.dart';
 import 'material.dart';
 import 'pressable.dart';
 import 'recipe.dart';
@@ -40,7 +39,7 @@ class LiquidPrismButton extends StatelessWidget {
   }) : buttonStyle = buttonStyle ?? GlassButtonStyle.glass,
        _hasButtonStyle = buttonStyle != null,
        padding =
-           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
        _hasPadding = padding != null,
        _iconOnly = false,
        menu = null,
@@ -95,7 +94,7 @@ class LiquidPrismButton extends StatelessWidget {
   }) : buttonStyle = buttonStyle ?? GlassButtonStyle.glass,
        _hasButtonStyle = buttonStyle != null,
        padding =
-           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+           padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
        _hasPadding = padding != null,
        _iconOnly = false,
        onPressed = null,
@@ -153,10 +152,7 @@ class LiquidPrismButton extends StatelessWidget {
         : base;
     final foreground = !enabled
         ? colors.disabledLabel
-        : explicitForeground ??
-              (prominent
-                  ? const Color(0xFFFFFFFF)
-                  : restingGlassAccent(tint, colors.brightness));
+        : explicitForeground ?? (prominent ? const Color(0xFFFFFFFF) : tint);
     return LiquidPrismPressable.glass(
       label: label,
       motion: motion ?? appearance.motion,
@@ -176,12 +172,13 @@ class LiquidPrismButton extends StatelessWidget {
           optics: optics ?? appearance.optics,
           blur: blur ?? appearance.blur,
           role: GlassRole.button,
+          disabledProminent: !enabled && prominent && base.tintColor == null,
           child: Padding(
             padding: _hasPadding ? padding : appearance.padding ?? padding,
             child: DefaultTextStyle.merge(
               style: const TextStyle(
                 fontSize: 17,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w400,
               ).merge(appearance.textStyle).copyWith(color: foreground),
               child: IconTheme.merge(
                 data: IconThemeData(

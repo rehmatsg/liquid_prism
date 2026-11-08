@@ -10,8 +10,19 @@ extension ShowcaseColors on GlassColors {
   Color get groupedBackground =>
       _dark ? const Color(0xFF000000) : const Color(0xFFF2F2F7);
   Color get cell => _dark ? const Color(0xFF1C1C1E) : const Color(0xFFFFFFFF);
-  Color get separator =>
-      _dark ? const Color(0x99545458) : const Color(0x4A3C3C43);
+  Color get separator => _dark
+      ? const Color.from(
+          alpha: .5,
+          red: 84 / 255,
+          green: 84 / 255,
+          blue: 88 / 255,
+        )
+      : const Color.from(
+          alpha: .12,
+          red: 60 / 255,
+          green: 60 / 255,
+          blue: 67 / 255,
+        );
 }
 
 Color ink(BuildContext context) => GlassColors.of(context).label;

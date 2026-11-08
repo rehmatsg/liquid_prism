@@ -134,11 +134,13 @@ on the widgets. The [component guide](components.md) lists these independently.
 | Tab style `labelStyle.color` | Independent label color |
 | Tab style `selectionColor` | Selection pill fill |
 
-Ordinary buttons and selected tabs share the measured resting accent:
-`#3BCCFF` in dark mode and `#005DC7` in light mode for the default blue tint.
-These displayed colors are distinct from `GlassColors.blue`, the semantic source
-used for material tint. Custom opaque tints use an approximate brightness adjustment;
-translucent tints and explicit foreground overrides retain their literal values.
+Ordinary buttons use the semantic tint directly, matching native SwiftUI glass
+buttons. Selected tabs use `#0697FF` in dark mode and `#0081F5` in light mode for
+the default blue tint, measured over the grouped page background. A held dark
+tab uses `#27B8FF`; a held light tab uses the semantic tint. Native tab
+vibrancy adapts to the backdrop; this fixed palette approximates other backgrounds.
+Custom opaque tab tints use an approximate brightness adjustment; translucent
+tints and explicit foreground overrides retain their literal values.
 Prominent buttons default to white; disabled controls use a muted semantic color.
 Explicitly colored icons, styled text, and custom artwork retain their colors.
 

@@ -633,7 +633,7 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
         style.selectedColor == null &&
         LiquidPrismTheme.of(context).foregroundColor == null;
     final selectedAccent = calibrated
-        ? restingGlassAccent(accent, colors.brightness)
+        ? glassAccent(accent, colors.brightness)
         : accent;
     final vertical = _vertical;
     final padding =
@@ -735,9 +735,9 @@ class _LiquidPrismTabBarState extends State<LiquidPrismTabBar>
             ],
           ),
         );
-        final heldAccent = colors.brightness == Brightness.dark
-            ? selectedAccent
-            : accent;
+        final heldAccent = calibrated
+            ? glassAccent(accent, colors.brightness, held: true)
+            : selectedAccent;
         Widget selectedContent(double lift) => Flex(
           direction: vertical ? Axis.vertical : Axis.horizontal,
           children: [
