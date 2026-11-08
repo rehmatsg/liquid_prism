@@ -86,8 +86,8 @@ width for its continuous endpoint blend, even when the held knob grows or flexes
 | `trackHeight`, `thumbHeight`, `selectionInset` | 32 / 28 / 2, before scale |
 | `liftInset` | (12, 8) extra space on each side, before scale |
 | `labelStyle` | 13-point; medium selected, regular unselected |
-| `backgroundColor`, `thumbColor` | Tertiary system fill / white |
-| `foregroundColor`, `selectedForegroundColor` | Semantic label / black above the resting white pill |
+| `backgroundColor`, `thumbColor` | Tertiary system fill / white in light, translucent gray in dark |
+| `foregroundColor`, `selectedForegroundColor` | Semantic label / black in light, white in dark |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
 
 Segments divide final width equally. `foregroundColor` overrides both label states;

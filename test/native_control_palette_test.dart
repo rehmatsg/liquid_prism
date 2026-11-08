@@ -94,6 +94,87 @@ void main() {
   }
 
   testWidgets(
+    'dark resting segments composite the native fill over the track',
+    (tester) async {
+      final imageKey = GlobalKey();
+      Future<List<int>> render({
+        Color background = const Color(0xFF000000),
+        Brightness brightness = Brightness.dark,
+        bool enabled = true,
+        Color? thumb,
+        GlassSegmentedStyle? style,
+        GlassSegmentedStyle? themed,
+      }) async {
+        await tester.pumpWidget(
+          glassHarness(
+            imageKey: imageKey,
+            background: background,
+            platformBrightness: brightness,
+            child: LiquidPrismTheme(
+              data: LiquidPrismThemeData(segmentedControl: themed),
+              child: LiquidPrismSegmentedControl<int>(
+                selectedValue: 0,
+                onValueChanged: enabled ? (_) {} : null,
+                thumbColor: thumb,
+                style: style,
+                children: const {
+                  0: Text('One'),
+                  1: Text('Two'),
+                  2: Text('Three'),
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        return (await pixelsAt(tester, imageKey, [
+          const Offset(10, 80),
+        ])).single;
+      }
+
+      for (final (background, expected) in [
+        (const Color(0xFF000000), [90, 90, 95, 255]),
+        (const Color(0xFF1C1C1E), [105, 105, 111, 255]),
+        (const Color(0xFFFFFFFF), [226, 226, 231, 255]),
+      ]) {
+        final actual = await render(background: background);
+        for (var channel = 0; channel < 4; channel++) {
+          expect(actual[channel], closeTo(expected[channel], 1));
+        }
+        expect(
+          DefaultTextStyle.of(tester.element(find.text('One'))).style.color,
+          const Color(0xFFFFFFFF),
+        );
+      }
+      expect(await render(enabled: false), [45, 45, 48, 255]);
+      expect(await render(brightness: Brightness.light), [255, 255, 255, 255]);
+      expect(
+        DefaultTextStyle.of(tester.element(find.text('One'))).style.color,
+        const Color(0xFF000000),
+      );
+      const red = Color(0xFFFF0000), blue = Color(0xFF0000FF);
+      expect(
+        await render(themed: const GlassSegmentedStyle(thumbColor: blue)),
+        [0, 0, 255, 255],
+      );
+      expect(
+        await render(
+          themed: const GlassSegmentedStyle(thumbColor: blue),
+          style: const GlassSegmentedStyle(thumbColor: red),
+        ),
+        [255, 0, 0, 255],
+      );
+      expect(
+        await render(
+          style: const GlassSegmentedStyle(thumbColor: blue),
+          thumb: red,
+        ),
+        [255, 0, 0, 255],
+      );
+    },
+  );
+
+  testWidgets(
     'resting thumb follows an independent continuous capsule contour',
     (tester) async {
       final imageKey = GlobalKey();

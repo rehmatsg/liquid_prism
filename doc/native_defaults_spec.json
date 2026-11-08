@@ -792,6 +792,35 @@
           255
         ]
       }
+    },
+    "dark_resting_segment_pixels": {
+      "grouped": [
+        90,
+        90,
+        95
+      ],
+      "cell": [
+        105,
+        105,
+        111
+      ],
+      "white": [
+        226,
+        226,
+        231
+      ],
+      "selected_label": [
+        255,
+        255,
+        255
+      ],
+      "amounts": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ]
     }
   },
   "fitted": {
@@ -827,7 +856,15 @@
       "Tone and size interpolation are renderer fits between the recorded inputs.",
       "Native SF Symbols and Flutter Cupertino glyphs have different outlines; whole-frame pixel equality is not the target."
     ],
-    "disabled_dark_segment_thumb_before_half_alpha": "#5A5A60"
+    "dark_resting_segment_fill": {
+      "rgb": [
+        235,
+        235,
+        245
+      ],
+      "alpha": 0.3,
+      "composition": "Over tertiarySystemFill; disabled alpha .5 wraps the whole control."
+    }
   },
   "validation": {
     "metric": "Mean absolute 8-bit RGB channel error",

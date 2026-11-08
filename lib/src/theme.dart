@@ -41,8 +41,8 @@ final class GlassColors {
   /// Native small-control resting fill, independent of appearance.
   Color get controlThumb => const Color(0xFFFFFFFF);
 
-  /// Content above the opaque white segmented selection.
-  Color get controlThumbLabel => const Color(0xFF000000);
+  /// Content above the resting segmented selection.
+  Color get controlThumbLabel => label;
 
   /// Extracted UISlider maximum track: 10% white/black in dark/light mode.
   Color get sliderTrack => _dark

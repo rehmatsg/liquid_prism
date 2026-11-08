@@ -7,7 +7,8 @@
   shadow strength. Explicit blur and optical overrides retain precedence.
 - Match native large-button typography and spacing, semantic button tint,
   grouped-background tab accents, disabled prominent buttons and dark disabled
-  segmented selections. Correct showcase separator alpha.
+  segmented selections. Dark resting selections use a translucent gray fill and
+  white text that adapt to the backdrop. Correct showcase separator alpha.
 - Add reproducible SwiftUI/Flutter material and control-state comparisons, with
   captured native inputs documented separately from renderer fits.
 

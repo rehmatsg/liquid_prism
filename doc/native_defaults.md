@@ -54,8 +54,9 @@ adapts to other backgrounds, which the fixed foreground palette approximates.
 Explicit appearance overrides retain precedence.
 
 Disabled prominent buttons use the native neutral tint matrix instead of the
-enabled accent. Disabled dark segmented controls use the native subdued pill and
-label contrast, fitted over the grouped background. Explicit material/selection
+enabled accent. Dark segmented selections use a translucent (235, 235, 245) fill at .3 alpha
+over the track and white text. This matches native over grouped, cell and white
+backgrounds; disabled controls apply .5 alpha to the same composition. Explicit material/selection
 color overrides retain precedence.
 
 ## Validation
