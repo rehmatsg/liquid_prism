@@ -553,7 +553,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       resolved,
       occlusions,
     );
-    final corner = rail
+    final corner = rail || widget.sheet
         ? null
         : _ChromeLayout.topCorner(media.size, occlusions);
     final showTabBar =
@@ -1757,7 +1757,12 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     }
 
     if (hasChild(_Slot.title)) {
-      final centre = (barLeft + barRight) / 2;
+      final centre =
+          (contentLeft +
+              contentPadding.left +
+              contentRight -
+              contentPadding.right) /
+          2;
       final left = math.max(
         barLeft + titleGutter,
         leadingEnd + (leadingEnd > barLeft ? titleGap : 0),
@@ -1784,14 +1789,19 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           ),
         );
       } else {
-        final half = math.max(0.0, math.min(centre - left, right - centre));
+        final half = math.min(centre - left, right - centre);
+        // Keep an interactive title usable when controls cross the center.
+        final width = math.max(0.0, 2 * half >= 44 ? 2 * half : right - left);
         final title = layoutChild(
           _Slot.title,
-          BoxConstraints.loose(Size(2 * half, barRow)),
+          BoxConstraints.loose(Size(width, barRow)),
         );
+        final x = (centre - title.width / 2)
+            .clamp(left, math.max(left, right - title.width))
+            .toDouble();
         positionChild(
           _Slot.title,
-          Offset(centre - title.width / 2, top + (barRow - title.height) / 2),
+          Offset(x, top + (barRow - title.height) / 2),
         );
       }
     }

@@ -795,6 +795,10 @@ trailing alignment. `controlRowHeight` sets the minimum row height (44 by defaul
 `largeTitleExtent` replaces the typography-measured expanded row height. These
 fields apply to both scaffold and sliver app bars.
 
+Centered scaffold titles use the content area's center, shifting only as far as
+needed to fit between the visible controls. A window's corner status-bar region
+still bounds top-row controls, but does not move a sheet title below that region.
+
 `GlassScaffoldStyle`, through scaffold `style` or theme `scaffold`, controls
 `tabBarMargin`, `tabBarAlignment`, `tabBarMaxWidth`, `bottomBarMargin`,
 `bottomBarAlignment` and `bottomBarMaxWidth`. Margins replace the corresponding
