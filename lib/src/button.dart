@@ -161,6 +161,13 @@ class LiquidPrismButton extends StatelessWidget {
         ? colors.disabledLabel
         : explicitForeground ?? (prominent ? const Color(0xFFFFFFFF) : tint);
     final alignment = appearance.alignment ?? Alignment.center;
+    final iconSize =
+        appearance.iconSize ??
+        (child != null
+            ? null
+            : _iconOnly
+            ? metrics.iconSize
+            : metrics.fontSize);
     final bounds = BoxConstraints(
       minWidth:
           appearance.minimumSize?.width ?? (_iconOnly ? metrics.iconExtent : 0),
@@ -214,12 +221,7 @@ class LiquidPrismButton extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                     ).merge(appearance.textStyle).copyWith(color: foreground),
                     child: IconTheme.merge(
-                      data: IconThemeData(
-                        color: foreground,
-                        size:
-                            appearance.iconSize ??
-                            (_iconOnly ? metrics.iconSize : metrics.fontSize),
-                      ),
+                      data: IconThemeData(color: foreground, size: iconSize),
                       child: _content(appearance),
                     ),
                   ),

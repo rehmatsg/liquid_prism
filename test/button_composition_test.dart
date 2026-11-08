@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
@@ -41,6 +42,33 @@ void main() {
     expect(find.text('Custom'), findsOneWidget);
     expect(find.bySemanticsLabel('Save document'), findsOneWidget);
     expect(find.bySemanticsLabel('Custom'), findsNothing);
+  });
+
+  testWidgets('custom content keeps ambient icon sizing unless overridden', (
+    tester,
+  ) async {
+    Future<void> render(GlassButtonStyle? style) => show(
+      tester,
+      IconTheme(
+        data: const IconThemeData(size: 32),
+        child: LiquidPrismButton(
+          label: 'Custom',
+          onPressed: () {},
+          style: style,
+          child: const Icon(CupertinoIcons.star, key: ValueKey('custom-icon')),
+        ),
+      ),
+    );
+    await render(null);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('custom-icon'))),
+      const Size(32, 32),
+    );
+    await render(const GlassButtonStyle(iconSize: 20));
+    expect(
+      tester.getSize(find.byKey(const ValueKey('custom-icon'))),
+      const Size(20, 20),
+    );
   });
 
   testWidgets(
