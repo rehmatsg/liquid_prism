@@ -277,7 +277,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   static const scrollEdgeFadeDuration = Duration(milliseconds: 900);
 
   /// Overrides the theme's [GlassScrollEdgeStyle] field by field. Its
-  /// `fadeColor` applies when [backgroundColor] is null.
+  /// `fadeColor` applies when [backgroundColor] is null. The bottom bar uses
+  /// the soft variant. Set [scrollEdge] to false to disable both edges.
   final GlassScrollEdgeStyle? scrollEdgeStyle;
 
   /// The placement of the nearest scaffold, or null outside one.
@@ -697,6 +698,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ).revealExtent ??
         GlassScrollEdgeStyle.defaultRevealExtent;
     final swaps = widget.largeTitle != null || widget.header != null;
+    final hidesOnScrollDown =
+        navigation.minimizationBehavior ==
+        GlassToolbarMinimizationBehavior.onScrollDown;
+    final scrollsAway =
+        hidesOnScrollDown &&
+        navigation.minimizationRestoration ==
+            GlassToolbarMinimizationRestoration.atScrollEdge;
     final minimizes = switch (navigation.minimizationBehavior) {
       GlassToolbarMinimizationBehavior.onScrollDown ||
       GlassToolbarMinimizationBehavior.onScrollUp => true,
@@ -729,13 +737,21 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           _largeFade,
           _inlineFade,
           _minimization.progress,
+          _minimization.revealed,
         ]),
         builder: (context, child) {
-          final visible = !swaps || (large ? !_collapsed : _collapsed);
+          final eligible =
+              large ||
+              !swaps ||
+              !hidesOnScrollDown ||
+              _minimization.revealed.value;
+          final visible =
+              eligible && (!swaps || (large ? !_collapsed : _collapsed));
           final inline = _inlineFade.value;
           final opacity =
               (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
-              (1 - _minimization.progress.value);
+              (1 - _minimization.progress.value) *
+              (eligible ? 1 : 0);
           return ExcludeSemantics(
             excluding: !visible,
             child: ExcludeFocus(
@@ -866,9 +882,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     listenable: Listenable.merge([
                       _scrollOffset,
                       _edgeStrength,
+                      _minimization.revealed,
                     ]),
                     progress: () =>
-                        _edgeStrength.value *
+                        (widget.accessory != null ||
+                                !hidesOnScrollDown ||
+                                _minimization.revealed.value
+                            ? _edgeStrength.value
+                            : 0) *
                         LiquidPrismScrollEdge.progressFor(
                           _scrollOffset.value,
                           revealExtent: revealExtent,
@@ -901,7 +922,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                         edge: GlassEdge.bottom,
                         progress: progress,
                         color: widget.backgroundColor,
-                        style: widget.scrollEdgeStyle,
+                        style:
+                            (widget.scrollEdgeStyle ??
+                                    const GlassScrollEdgeStyle())
+                                .copyWith(variant: GlassScrollEdgeVariant.soft),
                       ),
                     ),
                   ),
@@ -912,7 +936,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 id: _Slot.bottomBar,
                 child: GlassGroupMembers(child: bottomBar),
               ),
-            if (inlineTitle case final title?)
+            if (inlineTitle case final title? when !(scrollsAway && swaps))
               LayoutId(
                 id: _Slot.title,
                 child: header(

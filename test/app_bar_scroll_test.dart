@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
@@ -14,6 +15,8 @@ Widget page({
   bool scrollEdge = true,
   FocusNode? focus,
   PreferredSizeWidget? accessory,
+  Widget? title,
+  Widget? header,
 }) => CupertinoApp(
   home: Builder(
     builder: (context) => MediaQuery(
@@ -28,7 +31,7 @@ Widget page({
                     navigationBarStyle: style,
                     scrollEdge: scrollEdge,
                     accessory: accessory,
-                    title: const Text('Inline'),
+                    title: title ?? const Text('Inline'),
                     largeTitle: large ? const Text('Large') : null,
                     leading: LiquidPrismButton(
                       label: 'Back',
@@ -43,7 +46,8 @@ Widget page({
                 navigationBarStyle: style,
                 scrollEdge: scrollEdge,
                 accessory: accessory,
-                title: const Text('Inline'),
+                title: title ?? const Text('Inline'),
+                header: header,
                 largeTitle: large ? const Text('Large') : null,
                 leading: LiquidPrismButton(
                   label: 'Back',
@@ -202,6 +206,130 @@ void main() {
     });
   }
   for (final sliver in [false, true]) {
+    testWidgets(
+      'compact title lifecycle follows scroll-away and reveal modes, sliver $sliver',
+      (tester) async {
+        phone(tester);
+        final semantics = tester.ensureSemantics();
+        try {
+          for (final header in sliver ? [false] : [false, true]) {
+            for (final away in [true, false]) {
+              await tester.pumpWidget(const SizedBox.shrink());
+              final scroll = ScrollController();
+              final focus = FocusNode();
+              addTearDown(scroll.dispose);
+              addTearDown(focus.dispose);
+              var builds = 0, taps = 0;
+              const compactKey = Key('deferred compact title');
+              Widget subject({bool sticky = false}) => page(
+                sliver: sliver,
+                scroll: scroll,
+                large: !header,
+                header: header
+                    ? const SizedBox(height: 60, child: Text('Page heading'))
+                    : null,
+                title: Builder(
+                  builder: (_) {
+                    builds++;
+                    return LiquidPrismButton(
+                      key: compactKey,
+                      label: 'Deferred compact',
+                      focusNode: focus,
+                      onPressed: () => taps++,
+                    );
+                  },
+                ),
+                style: GlassNavigationBarStyle(
+                  minimizationBehavior: sticky
+                      ? GlassToolbarMinimizationBehavior.never
+                      : GlassToolbarMinimizationBehavior.onScrollDown,
+                  minimizationRestoration: away
+                      ? GlassToolbarMinimizationRestoration.atScrollEdge
+                      : GlassToolbarMinimizationRestoration.automatic,
+                ),
+              );
+              Future<void> hidden() async {
+                if (away) {
+                  expect(builds, 0);
+                  expect(find.byKey(compactKey), findsNothing);
+                } else {
+                  expect(find.byKey(compactKey), findsOneWidget);
+                  final opacity = tester
+                      .widgetList<Opacity>(
+                        find.ancestor(
+                          of: find.byKey(compactKey),
+                          matching: find.byType(Opacity),
+                        ),
+                      )
+                      .fold(1.0, (value, widget) => value * widget.opacity);
+                  expect(opacity, 0);
+                  expect(
+                    find.semantics.byLabel('Deferred compact'),
+                    findsNothing,
+                  );
+                  expect(focus.canRequestFocus, isFalse);
+                  final before = taps;
+                  await tester.tapAt(tester.getCenter(find.byKey(compactKey)));
+                  await tester.pumpAndSettle();
+                  expect(taps, before);
+                }
+              }
+
+              await tester.pumpWidget(subject());
+              await tester.pumpAndSettle();
+              await hidden();
+              final retained = away
+                  ? null
+                  : tester.element(find.byKey(compactKey));
+              for (final offset in [8.0, 30.0, 80.0, 160.0]) {
+                scroll.jumpTo(offset);
+                await tester.pumpAndSettle();
+                await hidden();
+              }
+              scroll.jumpTo(155);
+              await tester.pumpAndSettle();
+              if (away) {
+                await hidden();
+              } else {
+                expect(tester.element(find.byKey(compactKey)), same(retained));
+                expect(
+                  find.semantics.byLabel('Deferred compact'),
+                  findsOneWidget,
+                );
+                expect(focus.canRequestFocus, isTrue);
+                focus.requestFocus();
+                await tester.pump();
+                await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+                await tester.pumpAndSettle();
+                expect(taps, 1);
+                scroll.jumpTo(80);
+                await tester.pumpAndSettle();
+                await tester.tap(find.byKey(compactKey));
+                await tester.pumpAndSettle();
+                expect(taps, 2);
+                scroll.jumpTo(220);
+                await tester.pumpAndSettle();
+                await hidden();
+                expect(tester.element(find.byKey(compactKey)), same(retained));
+              }
+              scroll.jumpTo(0);
+              await tester.pumpAndSettle();
+              await hidden();
+              scroll.jumpTo(300);
+              await tester.pumpAndSettle();
+              await tester.pumpWidget(subject(sticky: true));
+              await tester.pumpAndSettle();
+              expect(builds, greaterThan(0));
+              expect(find.byKey(compactKey), findsOneWidget);
+              expect(tester.takeException(), isNull);
+            }
+          }
+        } finally {
+          semantics.dispose();
+        }
+      },
+    );
+
     testWidgets(
       'default minimization keeps content motion continuous, sliver $sliver',
       (tester) async {

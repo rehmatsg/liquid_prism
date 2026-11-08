@@ -4,6 +4,12 @@
 
 ## 0.7.1
 
+- Suppress the outgoing header edge on initial downward scroll. Reveal the
+  compact title and its edge during actual upward restoration; scroll-away
+  expanded headings do not build a compact title. Accessories retain their edge.
+- Keep scaffold bottom-bar edges soft, or off when scroll edges are disabled,
+  even when the top edge uses the hard variant.
+
 - Regroup action-only toolbars without replaying entry/exit animations;
   genuinely added and removed actions retain their transitions.
 

@@ -237,7 +237,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
       style: navigation,
       collapseExtent: largeTitle == null ? 0 : largeRow + lead,
       extent: minimizingExtent,
-      builder: (minimization) {
+      builder: (minimization, revealed) {
         final reduction =
             navigation.minimizationSafeAreaAdjustment ==
                 GlassToolbarMinimizationSafeAreaAdjustment.enabled
@@ -248,6 +248,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
           delegate: _SliverBarDelegate(
             bar: this,
             minimization: minimization,
+            revealed: revealed,
             leading: barLeading,
             inlineTitle: inlineTitle,
             accessory: barAccessory,
@@ -281,7 +282,7 @@ class _MinimizingSliverBar extends StatefulWidget {
   });
   final GlassNavigationBarStyle style;
   final double collapseExtent, extent;
-  final Widget Function(Animation<double> minimization) builder;
+  final Widget Function(Animation<double> minimization, bool revealed) builder;
 
   @override
   State<_MinimizingSliverBar> createState() => _MinimizingSliverBarState();
@@ -332,8 +333,12 @@ class _MinimizingSliverBarState extends State<_MinimizingSliverBar>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _minimization.progress,
-    builder: (context, _) => widget.builder(_minimization.progress),
+    animation: Listenable.merge([
+      _minimization.progress,
+      _minimization.revealed,
+    ]),
+    builder: (context, _) =>
+        widget.builder(_minimization.progress, _minimization.revealed.value),
   );
 }
 
@@ -341,6 +346,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverBarDelegate({
     required this.bar,
     required this.minimization,
+    required this.revealed,
     required this.leading,
     required this.inlineTitle,
     required this.accessory,
@@ -360,6 +366,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.maxExtent,
   }) : minimizationValue = minimization.value;
   final double minimizationValue;
+  final bool revealed;
   final LiquidPrismSliverAppBar bar;
   final Animation<double> minimization;
   final Widget? leading, inlineTitle, accessory;
@@ -388,6 +395,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
       old.bar != bar ||
       old.minimization != minimization ||
       old.minimizationValue != minimizationValue ||
+      old.revealed != revealed ||
       old.leading != leading ||
       old.inlineTitle != inlineTitle ||
       old.accessory != accessory ||
@@ -538,11 +546,19 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
     return AnimatedBuilder(
       animation: Listenable.merge([_largeFade, _inlineFade, _d.minimization]),
       builder: (context, child) {
-        final visible = !swaps || (large ? !_collapsed : _collapsed);
+        final eligible =
+            large ||
+            !swaps ||
+            _d.navigation.minimizationBehavior !=
+                GlassToolbarMinimizationBehavior.onScrollDown ||
+            _d.revealed;
+        final visible =
+            eligible && (!swaps || (large ? !_collapsed : _collapsed));
         final inline = _inlineFade.value;
         final opacity =
             (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
-            (1 - _d.minimization.value);
+            (1 - _d.minimization.value) *
+            (eligible ? 1 : 0);
         return ExcludeSemantics(
           excluding: !visible,
           child: ExcludeFocus(
@@ -570,6 +586,13 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final bar = _d.bar;
+    final hidesOnScrollDown =
+        _d.navigation.minimizationBehavior ==
+        GlassToolbarMinimizationBehavior.onScrollDown;
+    final scrollsAway =
+        hidesOnScrollDown &&
+        _d.navigation.minimizationRestoration ==
+            GlassToolbarMinimizationRestoration.atScrollEdge;
     final content = glassToolbarAt(
       bar.toolbar,
       GlassToolbarPlacement.topTrailing,
@@ -621,7 +644,11 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                     child: ScrollEdgeProgressBuilder(
                       listenable: Listenable.merge([_scrolled, _edgeStrength]),
                       progress: () =>
-                          _edgeStrength.value *
+                          (_d.accessory != null ||
+                                  !hidesOnScrollDown ||
+                                  _d.revealed
+                              ? _edgeStrength.value
+                              : 0) *
                           LiquidPrismScrollEdge.progressFor(
                             _scrolled.value,
                             revealExtent:
@@ -660,7 +687,8 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                 ),
               if (_d.accessory case final accessory?)
                 LayoutId(id: _Slot.accessory, child: accessory),
-              if (_d.inlineTitle case final title?)
+              if (_d.inlineTitle case final title?
+                  when !(bar.largeTitle != null && scrollsAway))
                 LayoutId(
                   id: _Slot.title,
                   child: _header(

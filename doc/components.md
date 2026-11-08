@@ -299,6 +299,11 @@ region while the title minimizes. A top-docked tab bar follows the navigation ba
 independent. Minimization follows scroll progress, without a separate fixed-time
 animation. An accessory row stays visible and interactive, moving up to the safe
 top edge as the bar leaves. Its scroll-edge effect and content clearance remain.
+On initial downward departure, the outgoing header does not introduce an edge
+blur/fade band. Reveal-on-scroll-up makes the compact title and its edge eligible
+when scrolling actually restores the bar. With at-scroll-edge restoration, an
+expanded title or `header` has no compact-title subtree. A sole inline title still
+appears at the top. Accessories retain their edge protection in all modes.
 These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
 
 Use `largeTitle` plus `title` for large-to-inline collapse under pinned controls.
@@ -582,7 +587,9 @@ glass controls refract the content beneath, not the blur.
 `LiquidPrismScaffold` draws this effect under its top bar while the body's
 outermost scroll view is scrolled, fading toward its `backgroundColor`
 (without one, it blurs only). `scrollEdge: false` turns it off and
-`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it. The defaults are
+`scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it. A scaffold bottom bar
+always uses the soft variant, including when its top edge is hard;
+`scrollEdge: false` disables both edges. The defaults are
 measured from iOS 27's own effect ([spec](native_scroll_edge_spec.md)): a
 1.5-point variable blur and a half-opacity fade held over the top third of the
 strip and falling along a smoothstep over its last 98 points, a 16-point haze
