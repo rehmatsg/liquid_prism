@@ -18,7 +18,7 @@ void main() {
   Widget app({
     bool scrollEdge = true,
     Widget? leading,
-    List<GlassToolbarItem> actions = const [],
+    List<GlassToolbarItem> toolbar = const [],
     Color? background = const Color(0xFF101010),
     required ScrollController controller,
   }) => CupertinoApp(
@@ -27,7 +27,7 @@ void main() {
       scrollEdge: scrollEdge,
       backgroundColor: background,
       leading: leading,
-      actions: actions,
+      toolbar: toolbar,
       body: ListView.builder(
         key: _body,
         controller: controller,
@@ -47,7 +47,7 @@ void main() {
       await tester.pumpWidget(
         app(
           controller: controller,
-          actions: [
+          toolbar: [
             GlassToolbarItem(
               icon: const Icon(CupertinoIcons.star),
               label: 'Star',
@@ -82,7 +82,7 @@ void main() {
         tester.widget<LiquidPrismEdgeBlur>(blur).edges.single.sigma,
         GlassScrollEdgeStyle.defaultSigma,
       );
-      // Painted over the body and under the actions.
+      // Painted over the body and under the toolbar.
       final order = [
         find.byKey(_body),
         find.byType(LiquidPrismScrollEdge),
@@ -208,7 +208,7 @@ void accessoryTests() {
     expect(tabs.height, 36);
     expect(tabs.width, 402);
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
-    expect(padding.top, 62 + 44 + 36 + 16);
+    expect(padding.top, 62 + 44 + 36 + 10);
 
     controller.jumpTo(100);
     await tester.pump();

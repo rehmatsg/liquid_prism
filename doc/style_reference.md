@@ -33,17 +33,17 @@ Chromatic split/band do not scale with lens height and remain independent of
 `optics`; split scales with lift and surface presence. They affect backdrop and
 refracted foreground. Generic optical dispersion is a separate setting.
 
-## Buttons: `GlassButtonAppearance`
+## Buttons: `GlassButtonStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
-| `buttonStyle` | `GlassButtonStyle.glass`; prominent is the tinted preset |
+| `variant` | `GlassButtonVariant.regular`; prominent is the tinted preset |
 | `glass`, `optics`, `blur`, `motion`, `shape` | Component overrides of surface/theme settings |
-| `padding` | Standard/menu: horizontal 20, vertical 14, so a 17-point label is 48 points tall like a bar's text button (Invite measured 48.3 on iPhone Duo); icon: 12 all sides |
+| `padding` | Standard/menu: horizontal 20, vertical 15, matching the native large button's 50.3-point height with a 17-point label; icon: 12 all sides |
 | `minimumSize` | Standard/menu: no added minimum; icon: 48×48 |
-| `textStyle` | 17-point semibold, merged with surrounding text style |
+| `textStyle` | 17-point regular, merged with surrounding text style |
 | `iconSize` | Ambient icon size |
-| `foregroundColor` | Calibrated resting accent; prominent defaults white |
+| `foregroundColor` | Semantic tint; prominent defaults white |
 
 An icon button defaults to `GlassShape.circle`. Explicitly colored child content
 keeps its own colors. Disabled controls use the semantic disabled label.
@@ -86,8 +86,8 @@ width for its continuous endpoint blend, even when the held knob grows or flexes
 | `trackHeight`, `thumbHeight`, `selectionInset` | 32 / 28 / 2, before scale |
 | `liftInset` | (12, 8) extra space on each side, before scale |
 | `labelStyle` | 13-point; medium selected, regular unselected |
-| `backgroundColor`, `thumbColor` | Tertiary system fill / white |
-| `foregroundColor`, `selectedForegroundColor` | Semantic label / black above the resting white pill |
+| `backgroundColor`, `thumbColor` | Tertiary system fill / white in light, translucent gray in dark |
+| `foregroundColor`, `selectedForegroundColor` | Semantic label / black in light, white in dark |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
 
 Segments divide final width equally. `foregroundColor` overrides both label states;
@@ -100,7 +100,7 @@ and artwork can override ambient styling themselves.
 | --- | --- |
 | `glass`, `optics`, `blur`, `motion` | Housing/travel overrides; lifted optics use `lens` separately |
 | `height`, `padding`, `iconSize`, `labelStyle` | 54-point minimum, horizontal 8 / vertical 4 padding, 25-point symbols, 10-point labels with 1.2 line height; text can require greater height |
-| `expanded` | False: compact, centered within available width |
+| `sizing` | `GlassTabBarSizing.compact`; `.fill` fills a bounded main axis |
 | `minimumTabWidth`, `labelPadding` | 86 / 32; spacing uses the widest measured label |
 | `labelBehavior` | Always; selected/never hide visual labels, not semantic names |
 | `selectedColor`, `unselectedColor` | Calibrated accent / semantic label |
@@ -147,8 +147,8 @@ label, callback/menu, key and optional foreground. Group spacing is independent.
 | `focusSpring` | 380 ms with zero bounce; field focus, shortening and cancel exit |
 | `cancelSpring` | 520 ms with 0.22 bounce; cancel slides in, scales up and fades in |
 
-Apply this through search `appearance` or theme `search`. Search `style` remains
-its direct editor `TextStyle`. Input configuration, custom prefix/suffix and
+Apply this through search `style` or theme `search`. Search `textStyle` overrides
+the editor typography directly. Input configuration, custom prefix/suffix and
 controller/focus ownership stay on the widget. A custom suffix replaces clearing.
 Autocomplete hooks (`fieldBuilder`, `suffixBuilder`, `groupId`, `onTapOutside`,
 `onFocusChange`) are widget arguments; see [components](components.md#hosting-autocomplete).
@@ -181,10 +181,18 @@ separate scopes, native timings and input guarantees.
 | Tab / toolbar `badgeTextStyle` | 12-point medium, white (measured) |
 | `GlassNavigationBarStyle.titleStyle` | 17-point semibold, semantic label |
 | `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold, semantic label |
+| `titleAlignment` / `largeTitleAlignment` | Centered inline / leading expanded; automatic follows those defaults |
 | `gutter` / `controlGap` | 16 / 12 |
+| `contentSpacing` | 10 below a standard top bar; 16 in rail/sidebar layouts |
+| `minimizationBehavior` | `automatic` (pinned); `never`, `onScrollDown`, `onScrollUp` |
+| `minimizationRestoration` | `automatic` restores on reversal; `atScrollEdge` waits for the top with on-scroll-down |
+| `minimizationSafeAreaAdjustment` | `automatic` adjusts content insets; `enabled` or `disabled` explicitly |
+| `minimizationThreshold` | Fitted initial travel 13⅓ points, after large-title collapse |
 | `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; capsule at least 38 tall, padding 14 × 9 around the title; leading 22 with `leadingPadding` 12 start, 11 top and bottom, 10 before the title (a 44-point capsule); regular glass (measured from iOS 27 SwiftUI apps' device screenshots) |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
-| `revealCurve` | easeOutCubic (fitted) for the inline title's 0.53 s fade and 15-point rise |
+| `revealSpring` / `hideSpring` | Native-fitted inline fade/rise springs: mass 1, stiffness/damping 225/28.3 entering, 93.3/18.22 leaving |
+| `inlineTitleDelay` | Fitted 12 ms onset after the large fade, only when starting at rest; zero disables it |
+| `largeTitleFadeDuration` / `largeTitleFadeCurve` | Measured 200 ms / `Curves.easeInOut`; independent of inline springs |
 
 Measured on iOS 27: badges are 18.33-point capsules (18 on toolbar items) with
 4 points of padding; a tab badge's leading edge sits 5 points inside the glyph's
@@ -196,3 +204,21 @@ See [evidence and adoption](package_features_spec.md).
 Theme `haptics` replaces native calls with `GlassHaptics`, subject to component
 haptics flags. Scaffold titles resolve `navigationBarStyle` above theme
 `navigationBar`; scaffold `resizeToAvoidBottomInset` defaults true.
+
+## Composition layout
+
+| Style / fields | Default / meaning |
+| --- | --- |
+| `GlassButtonStyle.variant`, `size` | Regular glass / large; widget arguments override these |
+| `sizing`, `labelPlacement`, `spacing`, `alignment` | Intrinsic / trailing / 8 / center |
+| `minimumSize`, `maximumSize` | Native preset minimum / unbounded visual maximum; hit area at least 44 where possible |
+| `GlassToolbarStyle.textStyle` | 17-point semibold text actions; labels measure their width |
+| `GlassNavigationBarStyle.titleAlignment` | Automatic centers the inline title; explicit leading/trailing remain available |
+| `controlRowHeight`, `contentPadding`, `largeTitleExtent` | Native 44 (48 in system rail) / zero / measured typography |
+| `GlassScaffoldStyle.tabBarMargin`, `tabBarMaxWidth`, `tabBarAlignment` | Bottom horizontal 24, native bottom gap; explicit top/side 12 all around / 440 / center |
+| `bottomBarMargin`, `bottomBarMaxWidth`, `bottomBarAlignment` | Native bottom gap or 8 above tabs / unbounded / center |
+
+Alignment uses the dock's cross axis. Directional insets/alignment follow RTL.
+Explicit zero margins replace package gaps. Top/side docks and their body insets
+avoid the keyboard; bottom tabs hide while it is open. Custom toolbar content owns
+its own gestures and semantics.

@@ -245,13 +245,15 @@ above are interpolated linearly between the measured amounts
 
 | Part | Measured | Fitted (this package) |
 | --- | --- | --- |
-| Light regular face fill | white alpha 0 / .1 / .2 / .5 | — (used as captured) |
-| Light regular face tone | black 0.4, white 1.03, saturation 1.2 (`inputFaceColorMatrix*`); `inputFaceColorMatrixMaxLumaSDR` 0.94 at every amount (`inputFaceColorMatrixMaxLuma` 1; clear glass 1) | The face level is fitted to native glass over flat greys (below). The fitted curve starts at the measured black, 0.4, and rolls off to 0.995 at white, where `mix(black, white)` reached 1.03 and left a light face pure white. How iOS applies the 0.94 limit is not recovered. Clear glass matches `mix(black, white)` exactly. Dark appearance keeps `mix(black, white)` and is unmeasured. |
-| Regular blur fill | lighten (darken in dark) and normal opacities above; radius 8 | The blur-fill sigma is the recipe's fitted frost (3.3, bars 5), which was calibrated at 0.5 and already stood for the blur fill there. Its normal opacity is the measured one divided by its 0.5 value, capped at 1, so 0.5 and above stay the plain frost they were and 0 is the sharp backdrop lightened at 0.675. |
-| Clear blur | radius 0 / .375 / .75 / .75 | The fitted frost (1.8, bars 5) scales with radius ÷ 0.75. |
-| Clear blur fill | normal 0 → 1 at tint 1, radius 8 | Same sigma as the regular blur fill. |
-| Dark appearance | at 0.5 only: darken 0.9, lighten 0, normal 0.5, fill clear | The light curves with darken for lighten; the fill stays clear. Not measured away from 0.5. |
-| Reduce Transparency | reported, not measured | Not applied: no capture shows what it changes in glass. |
+| Light regular face fill | White alpha 0 / .1 / .2 / .35 / .5 at amounts 0 / .25 / .5 / .75 / 1 | Used as captured. |
+| Regular face tone | Light black .4, white 1.03, saturation 1.2, SDR limit .94. Dark black .125, white 1.125, saturation 1.3; size-dependent SDR limit. | Light and dark quadratic rolloff; dark size interpolation. |
+| Regular blur fill | Lighten (darken in dark) plus normal opacity, radius 8 | Opaque Gaussian equivalents fitted separately by appearance and amount. |
+| Clear blur | Radius 0 / .375 / .75 / .75 / .75 | Fitted frost 1.8 scales with radius ÷ .75. |
+| Clear blur fill | Normal opacity 0 / 0 / 0 / .5 / 1, radius 8 when active | Fitted sigma 12. |
+| Reduce Transparency | Reported, not measured | Not applied: no capture shows what it changes in glass. |
+
+See [native defaults](native_defaults.md) for the current fit tables, dark face
+fill and measured inputs. Explicit blur or optics retain literal Gaussian frost.
 
 Native glass over flat sRGB greys (`tool/native_dispersion_probe --scene
 levels --light`, iOS 27.0 simulator, default tint), the face at each band's
@@ -270,18 +272,11 @@ Clear glass's `mix(0.125, 1.08, v)` matches its row exactly. On an iPhone Duo
 with iOS 27.2, native toolbar glass measured about 2 levels lower: 247 over
 (242, 241, 246) and 252–253 over white.
 
-The blur fill is a backdrop filter layer per blend (normal, lighten or darken),
-each a Gaussian blur faded to its opacity and composited with that blend mode;
-a surface's layers share one capture, so the order does not change the result:
-for a lighten opacity `l` and normal `n` both give `s + n(b − s)` where the blur
-`b` is darker than the backdrop `s`, and `b − (1 − l)(1 − n)(b − s)` where it is
-lighter. An explicit `blur` (theme or widget) or explicit optics keep a plain
-frost, as before. Held control lenses keep their captured optics.
+Regular material uses one covering Gaussian backdrop pass. Native's asymmetric
+lighten/darken composition is approximated because those blend modes are not
+supported as Impeller backdrop pipeline blends. Clear material can fade a second
+Gaussian over its light base blur. Held control lenses keep their captured optics.
 
-Verified on macOS Impeller at a 3x raster (the showcase's Duo frame scaled 1.5
-on a 2x display): at 0.5 the frost passes are the single plain pass of before,
-and a textured scene changes by 0.2 levels on average (99th percentile 5, all
-from the rim highlight below); grouped surfaces batch at 0.5 and 1 and share
-captures at 0.25 and 0, matching ungrouped renders within 3 levels. Pixels at
-other amounts were not compared with native glass: the white-backdrop
-screenshots cannot show a blur.
+The current comparison includes textured native/Flutter pairs at all five
+settings in both appearances, plus genuine native held/released control states.
+See [the defaults calibration](native_defaults.md) for reproduction and limits.

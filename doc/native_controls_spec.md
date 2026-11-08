@@ -32,8 +32,9 @@ The probe records the settings object as well as constructors with their native
 call sites; a constructor is not a complete description of the private scheduler.
 
 The track colors come from native layer backgrounds or the native generated
-UIImage's center pixel, not a composited screenshot. Small thumbs and the
-segmented selection are opaque white at rest. The segmented track resolves to
+UIImage's center pixel, not a composited screenshot. Small thumbs are opaque white at rest. The segmented selection is white in
+light appearance; in dark it composites a fitted (235, 235, 245) fill at .3 alpha
+over the track, with white selected text. See [native defaults](native_defaults.md). The segmented track resolves to
 tertiarySystemFill. Disabled native visual elements have alpha .5. The slider thumb has a native
 layer shadow with opacity .14, radius 5 and offset (0, 1); the held lens adds
 opacity .06, radius 3 and offset (0, 7). Its filter ring shadow has width 4,

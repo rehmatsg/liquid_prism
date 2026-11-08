@@ -7,13 +7,15 @@ import 'glass.dart';
 import 'glass_transition.dart';
 import 'motion.dart';
 import 'navigation_bar_style.dart';
+import 'navigation_title_motion.dart';
+import 'navigation_bar_minimization.dart';
 import 'scroll_edge.dart';
 import 'theme.dart';
 import 'toolbar.dart';
 
 /// A pinned navigation bar for a [CustomScrollView], laid out as
 /// [LiquidPrismScaffold]'s top bar: a [leading] control, an inline [title],
-/// trailing [actions], a collapsing [largeTitle] and an [accessory] row, over
+/// trailing [toolbar], a collapsing [largeTitle] and an [accessory] row, over
 /// the scroll edge effect.
 ///
 /// Its glass and its edge effect share one [LiquidPrismGroup], so the bar's
@@ -26,7 +28,7 @@ import 'toolbar.dart';
 ///     LiquidPrismSliverAppBar(
 ///       title: const Text('Inbox'),
 ///       largeTitle: const Text('Inbox'),
-///       actions: [[filter], [share, more]],
+///       toolbar: [GlassToolbarGroup(items: [filter]), GlassToolbarGroup(items: [share, more])],
 ///     ),
 ///     SliverList.builder(...),
 ///   ],
@@ -45,7 +47,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
     this.sheet = false,
     this.leading,
     this.automaticallyImplyLeading = true,
-    this.actions = const [],
+    this.toolbar = const [],
     this.trailing,
     this.accessory,
     this.backgroundColor,
@@ -54,7 +56,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
     this.navigationBarStyle,
   });
 
-  /// Inline header, centred between [leading] and [actions].
+  /// Inline header, centred between [leading] and [toolbar].
   final Widget? title;
 
   /// Expanded header in a row below the controls; supply [title] too for the
@@ -75,11 +77,11 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
   /// fullscreen dialog, when the route can pop.
   final bool automaticallyImplyLeading;
 
-  /// Top-trailing actions: [GlassToolbarItem]s or lists of them, as
-  /// [LiquidPrismScaffold.actions].
-  final List<Object> actions;
+  /// Typed toolbar content, as [LiquidPrismScaffold.toolbar]. Bottom placements
+  /// form a pinned row below the accessory rather than a window footer.
+  final List<GlassToolbarContent> toolbar;
 
-  /// A widget before the [actions], as [LiquidPrismScaffold.trailing].
+  /// A widget before the [toolbar], as [LiquidPrismScaffold.trailing].
   final Widget? trailing;
 
   /// A row below the bar and inside its scroll edge effect, such as segmented
@@ -111,17 +113,47 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             .merge(navigationBarStyle);
     final colors = GlassColors.of(context);
     final titleStyle = TextStyle(
+      fontFamily: 'CupertinoSystemText',
       fontSize: subtitle == null ? 17 : 15,
       fontWeight: FontWeight.w600,
+      letterSpacing: subtitle == null ? -.41 : -.23,
       color: colors.label,
     ).merge(navigation.titleStyle);
     final largeTitleStyle = TextStyle(
+      fontFamily: 'CupertinoSystemDisplay',
       fontSize: 34,
       fontWeight: FontWeight.w700,
+      letterSpacing: .38,
       color: colors.label,
     ).merge(navigation.largeTitleStyle);
     final scaler = media.textScaler;
-    final top = sheet ? 16.0 : math.max(media.padding.top, 24.0);
+    final insets = (navigation.contentPadding ?? EdgeInsets.zero).resolve(
+      Directionality.of(context),
+    );
+    final top = (sheet ? 16.0 : math.max(media.padding.top, 24.0)) + insets.top;
+    final principal = glassToolbarAt(toolbar, GlassToolbarPlacement.principal);
+    final inlineTitle = principal.isEmpty
+        ? title
+        : LiquidPrismToolbar(
+            content: principal,
+            style: glassToolbarStyleFor(context, GlassToolbarSize.navigation),
+          );
+    final bottom = glassBottomToolbarContent(toolbar);
+    final accessoryHeight =
+        (accessory?.preferredSize.height ?? 0) + (bottom.isEmpty ? 0 : 48);
+    final Widget? barAccessory = bottom.isEmpty
+        ? accessory
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (accessory != null)
+                SizedBox(
+                  height: accessory!.preferredSize.height,
+                  child: accessory,
+                ),
+              SizedBox(height: 48, child: LiquidPrismToolbar(content: bottom)),
+            ],
+          );
     final subtitleStyle = TextStyle(
       fontSize: 12,
       color: colors.secondaryLabel,
@@ -131,28 +163,34 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
       fontWeight: FontWeight.w500,
       color: colors.secondaryLabel,
     ).merge(navigation.largeSubtitleStyle);
-    final barRow = title == null
-        ? LiquidPrismScaffold.topBarHeight
-        : math.max(
-            LiquidPrismScaffold.topBarHeight,
-            scaler.scale(titleStyle.fontSize ?? 17) *
-                    (titleStyle.height ?? 1.2) +
-                8,
-          );
+    final rowHeight =
+        navigation.controlRowHeight ?? LiquidPrismScaffold.topBarHeight;
+    final barRow =
+        (inlineTitle == null
+            ? rowHeight
+            : math.max(
+                rowHeight,
+                scaler.scale(titleStyle.fontSize ?? 17) *
+                        (titleStyle.height ?? 1.2) +
+                    8,
+              )) +
+        insets.bottom;
     final largeRow = largeTitle == null
         ? 0.0
-        : scaler.scale(largeTitleStyle.fontSize ?? 34) *
-                  (largeTitleStyle.height ?? 1.2) +
-              11.33 +
-              (subtitle == null
-                  ? 0
-                  : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
-                        6.13);
-    final accessoryHeight = accessory?.preferredSize.height ?? 0;
+        : navigation.largeTitleExtent ??
+              scaler.scale(largeTitleStyle.fontSize ?? 34) *
+                      (largeTitleStyle.height ?? 1.2) +
+                  11.33 +
+                  (subtitle == null
+                      ? 0
+                      : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
+                            6.13);
     final lead = largeTitle == null ? 0.0 : largeTitleLead;
-    final clearance = lead > 0 && accessoryHeight == 0
-        ? lead
-        : LiquidPrismScaffold.topBarClearance;
+    final clearance =
+        navigation.contentSpacing ??
+        (lead > 0 && accessoryHeight == 0
+            ? lead
+            : LiquidPrismScaffold.topBarClearance);
     final minExtent = top + barRow + accessoryHeight + clearance;
     final maxExtent = largeTitle == null
         ? minExtent
@@ -170,33 +208,142 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
                 close: route is PageRoute && route.fullscreenDialog,
               )
             : null);
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: _SliverBarDelegate(
-        bar: this,
-        leading: impliedLeading,
-        titleStyle: titleStyle,
-        largeTitleStyle: largeTitleStyle,
-        subtitleStyle: subtitleStyle,
-        largeSubtitleStyle: largeSubtitleStyle,
-        navigation: navigation,
-        top: top,
-        barRow: barRow,
-        largeRow: largeRow,
-        lead: lead,
-        largeTitleTop: subtitle == null ? 3.67 : 6.67,
-        accessoryHeight: accessoryHeight,
-        minExtent: minExtent,
-        maxExtent: maxExtent,
-      ),
+    final leadingContent = glassToolbarAt(
+      toolbar,
+      GlassToolbarPlacement.topLeading,
+    );
+    final barLeading = leadingContent.isEmpty
+        ? impliedLeading
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (impliedLeading != null) ...[
+                impliedLeading,
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: LiquidPrismToolbar(
+                  content: leadingContent,
+                  style: glassToolbarStyleFor(
+                    context,
+                    GlassToolbarSize.navigation,
+                  ),
+                ),
+              ),
+            ],
+          );
+    return _MinimizingSliverBar(
+      style: navigation,
+      collapseExtent: largeTitle == null ? 0 : largeRow + lead,
+      extent: minExtent - top,
+      builder: (minimization) {
+        final reduction =
+            navigation.minimizationSafeAreaAdjustment ==
+                GlassToolbarMinimizationSafeAreaAdjustment.disabled
+            ? 0.0
+            : (minExtent - top) * minimization.value;
+        return SliverPersistentHeader(
+          pinned: true,
+          delegate: _SliverBarDelegate(
+            bar: this,
+            minimization: minimization,
+            leading: barLeading,
+            inlineTitle: inlineTitle,
+            accessory: barAccessory,
+            insets: insets,
+            titleStyle: titleStyle,
+            largeTitleStyle: largeTitleStyle,
+            subtitleStyle: subtitleStyle,
+            largeSubtitleStyle: largeSubtitleStyle,
+            navigation: navigation,
+            top: top,
+            barRow: barRow,
+            largeRow: largeRow,
+            lead: lead,
+            largeTitleTop: subtitle == null ? 3.67 : 6.67,
+            accessoryHeight: accessoryHeight,
+            minExtent: minExtent - reduction,
+            maxExtent: maxExtent - reduction,
+          ),
+        );
+      },
     );
   }
+}
+
+class _MinimizingSliverBar extends StatefulWidget {
+  const _MinimizingSliverBar({
+    required this.style,
+    required this.collapseExtent,
+    required this.extent,
+    required this.builder,
+  });
+  final GlassNavigationBarStyle style;
+  final double collapseExtent, extent;
+  final Widget Function(Animation<double> minimization) builder;
+
+  @override
+  State<_MinimizingSliverBar> createState() => _MinimizingSliverBarState();
+}
+
+class _MinimizingSliverBarState extends State<_MinimizingSliverBar>
+    with SingleTickerProviderStateMixin {
+  late final _minimization = NavigationBarMinimization(vsync: this);
+  ScrollPosition? _position;
+
+  void _configure() => _minimization.configure(
+    widget.style,
+    extent: widget.extent,
+    collapseExtent: widget.collapseExtent,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _configure();
+    final position = Scrollable.maybeOf(context)?.position;
+    if (position != _position) {
+      _position?.removeListener(_track);
+      _position = position?..addListener(_track);
+      _track();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_MinimizingSliverBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _configure();
+  }
+
+  void _track() {
+    final position = _position;
+    if (position != null && position.hasContentDimensions) {
+      _minimization.update(position);
+    }
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_track);
+    _minimization.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _minimization.progress,
+    builder: (context, _) => widget.builder(_minimization.progress),
+  );
 }
 
 class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverBarDelegate({
     required this.bar,
+    required this.minimization,
     required this.leading,
+    required this.inlineTitle,
+    required this.accessory,
+    required this.insets,
     required this.titleStyle,
     required this.largeTitleStyle,
     required this.subtitleStyle,
@@ -212,7 +359,9 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.maxExtent,
   });
   final LiquidPrismSliverAppBar bar;
-  final Widget? leading;
+  final Animation<double> minimization;
+  final Widget? leading, inlineTitle, accessory;
+  final EdgeInsets insets;
   final TextStyle titleStyle, largeTitleStyle;
   final TextStyle subtitleStyle, largeSubtitleStyle;
   final GlassNavigationBarStyle navigation;
@@ -235,7 +384,11 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SliverBarDelegate old) =>
       old.bar != bar ||
+      old.minimization != minimization ||
       old.leading != leading ||
+      old.inlineTitle != inlineTitle ||
+      old.accessory != accessory ||
+      old.insets != insets ||
       old.titleStyle != titleStyle ||
       old.largeTitleStyle != largeTitleStyle ||
       old.navigation != navigation ||
@@ -327,20 +480,13 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
     final collapsed = _isCollapsed;
     if (collapsed == _collapsed) return;
     _collapsed = collapsed;
-    final immediate = MediaQuery.disableAnimationsOf(context);
-    final target = collapsed ? 1.0 : 0.0;
-    springGlass(
-      _largeFade,
-      target,
-      GlassNavigationBarStyle.largeTitleSpring.description,
-      immediate: immediate,
-    );
-    springGlass(
-      _inlineFade,
-      target,
-      (_d.navigation.revealSpring ?? GlassNavigationBarStyle.titleSpring)
-          .description,
-      immediate: immediate,
+    animateNavigationTitle(
+      large: _largeFade,
+      inline: _inlineFade,
+      style: _d.navigation,
+      collapsed: collapsed,
+      immediate: MediaQuery.disableAnimationsOf(context),
+      isMounted: () => mounted,
     );
   }
 
@@ -379,25 +525,37 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         child: child,
       ),
     );
-    if (_d.bar.largeTitle == null) return IgnorePointer(child: text);
+    final swaps = _d.bar.largeTitle != null;
+    final minimizes = switch (_d.navigation.minimizationBehavior) {
+      GlassToolbarMinimizationBehavior.onScrollDown ||
+      GlassToolbarMinimizationBehavior.onScrollUp => true,
+      _ => false,
+    };
+    if (!swaps && !minimizes) return text;
     return AnimatedBuilder(
-      animation: Listenable.merge([_largeFade, _inlineFade]),
+      animation: Listenable.merge([_largeFade, _inlineFade, _d.minimization]),
       builder: (context, child) {
-        final visible = large ? !_collapsed : _collapsed;
+        final visible = !swaps || (large ? !_collapsed : _collapsed);
         final inline = _inlineFade.value;
-        final opacity = large ? 1 - _largeFade.value : inline;
+        final opacity =
+            (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
+            (1 - _d.minimization.value);
         return ExcludeSemantics(
           excluding: !visible,
-          child: IgnorePointer(
-            child: GlassContentPresence(
-              presence: opacity,
-              blur: _titleBlur,
-              child: large
-                  ? child!
-                  : Transform.translate(
-                      offset: Offset(0, 15 * (1 - inline)),
-                      child: child,
-                    ),
+          child: ExcludeFocus(
+            excluding: !visible,
+            child: IgnorePointer(
+              ignoring: !visible,
+              child: GlassContentPresence(
+                presence: opacity,
+                blur: _titleBlur,
+                child: large || !swaps
+                    ? child!
+                    : Transform.translate(
+                        offset: Offset(0, 15 * (1 - inline)),
+                        child: child,
+                      ),
+              ),
             ),
           ),
         );
@@ -409,108 +567,134 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final bar = _d.bar;
-    final groups = glassActionGroups(bar.actions);
+    final content = glassToolbarAt(
+      bar.toolbar,
+      GlassToolbarPlacement.topTrailing,
+    );
     final shrink = widget.shrinkOffset.clamp(0.0, _d.maxExtent - _d.minExtent);
     final edgeStyle = GlassScrollEdgeStyle.resolve(
       context,
       bar.scrollEdgeStyle,
     );
-    return LiquidPrismGroup(
-      child: CustomMultiChildLayout(
-        delegate: _SliverBarLayout(
-          textDirection: Directionality.of(context),
-          top: _d.top,
-          barRow: _d.barRow,
-          largeRow: _d.largeRow,
-          lead: _d.lead,
-          largeTitleTop: _d.largeTitleTop,
-          shrink: shrink,
-          accessoryHeight: _d.accessoryHeight,
-          gutter: _d.navigation.gutter ?? 16,
-          gap: _d.navigation.controlGap ?? 12,
-          edgeFrame:
-              bar.accessory == null &&
-                  edgeStyle.variant == GlassScrollEdgeVariant.hard
-              ? 10
-              : 0,
-        ),
-        children: [
-          if (bar.scrollEdge || !_edgePresence.isDismissed)
-            LayoutId(
-              id: _Slot.edge,
-              child: IgnorePointer(
-                child: ScrollEdgeProgressBuilder(
-                  listenable: Listenable.merge([_scrolled, _edgeStrength]),
-                  progress: () =>
-                      _edgeStrength.value *
-                      LiquidPrismScrollEdge.progressFor(
-                        _scrolled.value,
-                        revealExtent:
-                            edgeStyle.revealExtent ??
-                            GlassScrollEdgeStyle.defaultRevealExtent,
-                      ),
-                  builder: (context, progress) => LiquidPrismScrollEdge(
-                    progress: progress,
-                    color: bar.backgroundColor,
-                    style: bar.scrollEdgeStyle,
+    return NavigationBarPresence(
+      progress: _d.minimization,
+      child: LiquidPrismGroup(
+        child: CustomMultiChildLayout(
+          delegate: _SliverBarLayout(
+            textDirection: Directionality.of(context),
+            largeTitleAlignment:
+                _d.navigation.largeTitleAlignment ??
+                GlassTitleAlignment.leading,
+            titleAlignment:
+                _d.navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+            insets: _d.insets,
+            top:
+                _d.top -
+                (_d.barRow +
+                        _d.accessoryHeight +
+                        (_d.navigation.contentSpacing ??
+                            (_d.lead > 0 && _d.accessoryHeight == 0
+                                ? _d.lead
+                                : LiquidPrismScaffold.topBarClearance))) *
+                    _d.minimization.value,
+            barRow: _d.barRow,
+            largeRow: _d.largeRow,
+            lead: _d.lead,
+            largeTitleTop: _d.largeTitleTop,
+            shrink: shrink,
+            accessoryHeight: _d.accessoryHeight,
+            gutter: _d.navigation.gutter ?? 16,
+            gap: _d.navigation.controlGap ?? 12,
+            edgeFrame:
+                bar.accessory == null &&
+                    edgeStyle.variant == GlassScrollEdgeVariant.hard
+                ? 10
+                : 0,
+          ),
+          children: [
+            if (bar.scrollEdge || !_edgePresence.isDismissed)
+              LayoutId(
+                id: _Slot.edge,
+                child: IgnorePointer(
+                  child: ScrollEdgeProgressBuilder(
+                    listenable: Listenable.merge([_scrolled, _edgeStrength]),
+                    progress: () =>
+                        _edgeStrength.value *
+                        LiquidPrismScrollEdge.progressFor(
+                          _scrolled.value,
+                          revealExtent:
+                              edgeStyle.revealExtent ??
+                              GlassScrollEdgeStyle.defaultRevealExtent,
+                        ),
+                    builder: (context, progress) => LiquidPrismScrollEdge(
+                      progress: progress,
+                      color: bar.backgroundColor,
+                      style: bar.scrollEdgeStyle,
+                    ),
                   ),
                 ),
               ),
-            ),
-          if (bar.largeTitle case final large?)
-            LayoutId(
-              id: _Slot.largeTitle,
-              child: _header(
-                glassTitled(
-                  large,
-                  bar.subtitle,
-                  _d.largeSubtitleStyle,
+            if (bar.largeTitle case final large?)
+              LayoutId(
+                id: _Slot.largeTitle,
+                child: _header(
+                  glassTitled(
+                    large,
+                    bar.subtitle,
+                    _d.largeSubtitleStyle,
+                    large: true,
+                    alignment:
+                        _d.navigation.largeTitleAlignment ??
+                        GlassTitleAlignment.leading,
+                    subtitleOffset:
+                        MediaQuery.textScalerOf(context)
+                            .scale(_d.largeTitleStyle.fontSize ?? 34) *
+                        38.33 /
+                        34,
+                  ),
+                  _d.largeTitleStyle,
                   large: true,
-                  subtitleOffset:
-                      MediaQuery.textScalerOf(context)
-                          .scale(_d.largeTitleStyle.fontSize ?? 34) *
-                      38.33 /
-                      34,
                 ),
-                _d.largeTitleStyle,
-                large: true,
               ),
-            ),
-          if (bar.accessory case final accessory?)
-            LayoutId(id: _Slot.accessory, child: accessory),
-          if (bar.title case final title?)
-            LayoutId(
-              id: _Slot.title,
-              child: _header(
-                glassTitled(
-                  title,
-                  bar.subtitle,
-                  _d.subtitleStyle,
+            if (_d.accessory case final accessory?)
+              LayoutId(id: _Slot.accessory, child: accessory),
+            if (_d.inlineTitle case final title?)
+              LayoutId(
+                id: _Slot.title,
+                child: _header(
+                  glassTitled(
+                    title,
+                    bar.subtitle,
+                    _d.subtitleStyle,
+                    large: false,
+                    alignment:
+                        _d.navigation.titleAlignment == null ||
+                            _d.navigation.titleAlignment ==
+                                GlassTitleAlignment.automatic
+                        ? GlassTitleAlignment.center
+                        : _d.navigation.titleAlignment!,
+                  ),
+                  _d.titleStyle,
                   large: false,
-                  leading: bar.actions.isNotEmpty || bar.trailing != null,
                 ),
-                _d.titleStyle,
-                large: false,
               ),
-            ),
-          if (_d.leading case final leading?)
-            LayoutId(id: _Slot.leading, child: leading),
-          if (groups.isNotEmpty)
-            LayoutId(
-              id: _Slot.actions,
-              child: groups.length == 1
-                  ? LiquidPrismToolbarGroup(
-                      items: groups.single,
-                      size: GlassToolbarSize.navigation,
-                    )
-                  : LiquidPrismToolbar(
-                      groups: groups,
-                      size: GlassToolbarSize.navigation,
-                    ),
-            ),
-          if (bar.trailing case final trailing?)
-            LayoutId(id: _Slot.trailing, child: trailing),
-        ],
+            if (_d.leading case final leading?)
+              LayoutId(id: _Slot.leading, child: leading),
+            if (content.isNotEmpty)
+              LayoutId(
+                id: _Slot.actions,
+                child: LiquidPrismToolbar(
+                  content: content,
+                  style: glassToolbarStyleFor(
+                    context,
+                    GlassToolbarSize.navigation,
+                  ),
+                ),
+              ),
+            if (bar.trailing case final trailing?)
+              LayoutId(id: _Slot.trailing, child: trailing),
+          ],
+        ),
       ),
     );
   }
@@ -521,6 +705,9 @@ enum _Slot { edge, leading, actions, trailing, title, largeTitle, accessory }
 class _SliverBarLayout extends MultiChildLayoutDelegate {
   _SliverBarLayout({
     required this.textDirection,
+    required this.titleAlignment,
+    required this.largeTitleAlignment,
+    required this.insets,
     required this.top,
     required this.barRow,
     required this.largeRow,
@@ -533,6 +720,8 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     required this.edgeFrame,
   });
   final TextDirection textDirection;
+  final GlassTitleAlignment titleAlignment, largeTitleAlignment;
+  final EdgeInsets insets;
   final double top, barRow, largeRow, shrink, accessoryHeight, gutter, gap;
 
   /// The bar frame above a large title's row, and its line within the row.
@@ -553,7 +742,8 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     final rtl = textDirection == TextDirection.rtl;
     final largeHeight = math.max(0.0, lead + largeRow - shrink);
     double centred(Size child) => top + (barRow - child.height) / 2;
-    var leadingEnd = 0.0, trailingStart = size.width;
+    final leftInset = insets.left, rightInset = insets.right;
+    var leadingEnd = leftInset, trailingStart = size.width - rightInset;
 
     if (hasChild(_Slot.edge)) {
       layoutChild(
@@ -561,12 +751,15 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         BoxConstraints.tight(
           Size(
             size.width,
-            top +
-                barRow +
-                largeHeight +
-                accessoryHeight +
-                edgeFrame -
-                (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
+            math.max(
+              0,
+              top +
+                  barRow +
+                  largeHeight +
+                  accessoryHeight +
+                  edgeFrame -
+                  (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
+            ),
           ),
         ),
       );
@@ -574,7 +767,9 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     }
     if (hasChild(_Slot.actions)) {
       final child = layoutChild(_Slot.actions, BoxConstraints.loose(size));
-      final x = rtl ? _edge : size.width - _edge - child.width;
+      final x = rtl
+          ? leftInset + _edge
+          : size.width - rightInset - _edge - child.width;
       if (rtl) {
         leadingEnd = x + child.width;
       } else {
@@ -586,8 +781,10 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       final actions = hasChild(_Slot.actions);
       final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
       final x = rtl
-          ? (actions ? leadingEnd + _trailingGap : _edge)
-          : (actions ? trailingStart - _trailingGap : size.width - _edge) -
+          ? (actions ? leadingEnd + _trailingGap : leftInset + _edge)
+          : (actions
+                    ? trailingStart - _trailingGap
+                    : size.width - rightInset - _edge) -
                 child.width;
       if (rtl) {
         leadingEnd = x + child.width;
@@ -599,13 +796,18 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     if (hasChild(_Slot.leading)) {
       final bounded = hasChild(_Slot.actions) || hasChild(_Slot.trailing);
       final room = rtl
-          ? size.width - _edge - (bounded ? leadingEnd + gap : _edge)
-          : (bounded ? trailingStart - gap : size.width - _edge) - _edge;
+          ? size.width -
+                _edge -
+                (bounded ? leadingEnd + gap : leftInset + _edge)
+          : (bounded ? trailingStart - gap : size.width - rightInset - _edge) -
+                _edge;
       final child = layoutChild(
         _Slot.leading,
         BoxConstraints.loose(Size(math.max(0, room), size.height)),
       );
-      final x = rtl ? size.width - _edge - child.width : _edge;
+      final x = rtl
+          ? size.width - rightInset - _edge - child.width
+          : leftInset + _edge;
       if (rtl) {
         trailingStart = x;
       } else {
@@ -614,20 +816,31 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       positionChild(_Slot.leading, Offset(x, centred(child)));
     }
     if (hasChild(_Slot.title)) {
-      final centre = size.width / 2;
-      final left = math.max(gutter, leadingEnd + (leadingEnd > 0 ? gap : 0));
+      final centre = (leftInset + size.width - rightInset) / 2;
+      final left = math.max(
+        leftInset + gutter,
+        leadingEnd + (leadingEnd > 0 ? gap : 0),
+      );
       final right = math.min(
-        size.width - gutter,
+        size.width - rightInset - gutter,
         trailingStart - (trailingStart < size.width ? gap : 0),
       );
-      if (hasChild(_Slot.actions) || hasChild(_Slot.trailing)) {
+      final alignment = titleAlignment == GlassTitleAlignment.automatic
+          ? GlassTitleAlignment.center
+          : titleAlignment;
+      if (alignment != GlassTitleAlignment.center) {
         final title = layoutChild(
           _Slot.title,
           BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
         );
         positionChild(
           _Slot.title,
-          Offset(rtl ? right - title.width : left, centred(title)),
+          Offset(
+            (alignment == GlassTitleAlignment.trailing) != rtl
+                ? right - title.width
+                : left,
+            centred(title),
+          ),
         );
       } else {
         final half = math.max(0.0, math.min(centre - left, right - centre));
@@ -644,14 +857,27 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     if (hasChild(_Slot.largeTitle)) {
       final child = layoutChild(
         _Slot.largeTitle,
-        BoxConstraints(maxWidth: math.max(0, size.width - 2 * gutter)),
+        BoxConstraints(
+          maxWidth: math.max(
+            0,
+            size.width - leftInset - rightInset - 2 * gutter,
+          ),
+        ),
       );
       positionChild(
         _Slot.largeTitle,
-        Offset(
-          rtl ? size.width - gutter - child.width : gutter,
-          top + barRow + lead + largeTitleTop - shrink,
-        ),
+        Offset(switch (largeTitleAlignment) {
+          GlassTitleAlignment.center =>
+            (leftInset + size.width - rightInset - child.width) / 2,
+          GlassTitleAlignment.trailing =>
+            rtl
+                ? leftInset + gutter
+                : size.width - rightInset - gutter - child.width,
+          _ =>
+            rtl
+                ? size.width - rightInset - gutter - child.width
+                : leftInset + gutter,
+        }, top + barRow + lead + largeTitleTop - shrink),
       );
     }
     if (hasChild(_Slot.accessory)) {
@@ -666,6 +892,9 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
   @override
   bool shouldRelayout(_SliverBarLayout old) =>
       old.textDirection != textDirection ||
+      old.titleAlignment != titleAlignment ||
+      old.largeTitleAlignment != largeTitleAlignment ||
+      old.insets != insets ||
       old.top != top ||
       old.barRow != barRow ||
       old.largeRow != largeRow ||

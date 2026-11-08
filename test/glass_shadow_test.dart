@@ -11,7 +11,7 @@ import 'package:liquid_prism/src/recipe.dart';
 
 void main() {
   testWidgets(
-    'regular shadow has half the clear opacity independently of blur',
+    'regular and clear surfaces keep native shadow strength at any blur',
     (tester) async {
       final key = GlobalKey();
       Future<List<List<int>>> render(Glass glass, double blur) async {
@@ -64,7 +64,7 @@ void main() {
       final clear = await render(Glass.clear, 0);
       expect(await render(Glass.clear, 8), clear);
       for (var i = 0; i < baseline.length; i++) {
-        expect(255 - baseline[i][0], closeTo((255 - clear[i][0]) / 2, 1));
+        expect(255 - baseline[i][0], closeTo(255 - clear[i][0], 1));
       }
       expect(await render(Glass.regular, 0), baseline);
     },

@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'glass.dart';
+import 'appearance.dart';
 import 'glass_transition.dart';
 import 'menu/menu.dart';
 import 'menu/menu_elements.dart';
@@ -21,6 +22,9 @@ import 'title.dart';
 import 'toolbar.dart';
 import 'theme.dart';
 import 'navigation_bar_style.dart';
+import 'navigation_title_motion.dart';
+import 'navigation_bar_minimization.dart';
+import 'scaffold_style.dart';
 
 /// Where [LiquidPrismScaffold] floats its tab bar and actions.
 ///
@@ -82,7 +86,7 @@ class LiquidPrismChrome extends InheritedWidget {
 /// A full-window layout that floats glass chrome over scrolling content and
 /// puts it where iOS would for the current window.
 ///
-/// On iPhone the [actions] sit at the top trailing edge and the [tabBar] floats
+/// On iPhone the [toolbar] sit at the top trailing edge and the [tabBar] floats
 /// above the bottom edge. Wherever iOS uses a vertical bar, as on iPhone Duo,
 /// both move into a rail on that edge, below the status bar, and the tab bar
 /// turns icon-only. When the rail is too short, the actions collapse into one
@@ -113,9 +117,10 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.subtitle,
     this.sheet = false,
     this.navigationBarStyle,
+    this.style,
     this.leading,
     this.automaticallyImplyLeading = true,
-    this.actions = const [],
+    this.toolbar = const [],
     this.trailing,
     this.accessory,
     this.tabBar,
@@ -202,6 +207,7 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// iOS 27.
   final bool sheet;
   final GlassNavigationBarStyle? navigationBarStyle;
+  final GlassScaffoldStyle? style;
 
   /// Fold the keyboard into body padding and consume its bottom view inset.
   /// False leaves keyboard avoidance to descendants.
@@ -218,28 +224,18 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// route can pop: a back chevron, or a close mark on a fullscreen dialog.
   final bool automaticallyImplyLeading;
 
-  /// Top-trailing actions, or atop the rail. Each element is a
-  /// [GlassToolbarItem] or a list of them: loose items next to each other
-  /// share one capsule, and each list is a capsule of its own, so
-  /// `[share, more]` is one capsule and `[[filter], [share, more]]` two.
-  /// Capsules lay out as [LiquidPrismToolbar] does: declare every group the
-  /// bar can show and let the lists carry state, so an empty list draws
-  /// nothing and materializes in when it gains an item. In the rail they
-  /// stack, and fold into one "More" menu when they do not fit.
-  final List<Object> actions;
+  /// Typed toolbar content. Automatic items occupy the top trailing region.
+  /// Explicit placements populate leading, principal and bottom regions.
+  final List<GlassToolbarContent> toolbar;
 
-  /// A widget in the top bar before the [actions], such as a status pill or
-  /// a counter: laid out as given, without glass of its own, centred on the
-  /// controls' row 8 points from the first capsule (or at the trailing edge
-  /// without actions). The inline title leads beside it as beside actions.
+  /// Additional content before the top trailing toolbar.
   final Widget? trailing;
 
-  /// The trailing capsules, in order.
-  List<List<GlassToolbarItem>> get _actionGroups => glassActionGroups(actions);
-
-  /// Every trailing action, in order.
+  List<GlassToolbarContent> get _trailingContent =>
+      glassToolbarAt(toolbar, GlassToolbarPlacement.topTrailing);
   List<GlassToolbarItem> get _allActions => [
-    for (final group in _actionGroups) ...group,
+    for (final entry in glassToolbarSegments(_trailingContent))
+      if (entry is GlassToolbarGroup) ...entry.items,
   ];
 
   /// A row below the top bar and inside its scroll edge effect, such as
@@ -291,10 +287,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// The top bar's measured height: 44 pt navigation capsules.
   static const double topBarHeight = 44;
 
-  /// Space the body keeps below the top bar. Measured: the content safe area
-  /// on iPhone Duo starts 58 pt below the bar's top, 14 pt under its capsules;
-  /// this package keeps 16, matching the 16-point side margins.
-  static const double topBarClearance = 16;
+  /// Native navigation frame clearance below its 44-point controls.
+  static const double topBarClearance = 10;
 
   @override
   State<LiquidPrismScaffold> createState() => _LiquidPrismScaffoldState();
@@ -331,6 +325,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// Tab reselections, shared by this scaffold's tab bar and the pages in its
   /// body; each page's scroll view returns to the top.
   final _reselection = LiquidPrismTabReselection();
+  late final _minimization = NavigationBarMinimization(vsync: this);
 
   final _statusBarKey = GlobalKey();
 
@@ -401,8 +396,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   final _layoutOffset = ValueNotifier<double>(0);
   double _layoutCap = double.infinity;
 
-  bool _onScroll(ScrollMetrics metrics) {
+  bool _onScroll(ScrollMetrics metrics, {bool dimensionsChanged = false}) {
     if (metrics.axis == Axis.vertical) {
+      _minimization.update(metrics, dimensionsChanged: dimensionsChanged);
       _scrollOffset.value = math.max(
         0,
         metrics.pixels - metrics.minScrollExtent,
@@ -423,27 +419,21 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   double _collapseAt = double.infinity;
 
   void _syncTitle() {
-    final collapsed = _scrollOffset.value >= _collapseAt;
+    final collapsed =
+        _scrollOffset.value > 0 && _scrollOffset.value >= _collapseAt;
     if (collapsed == _collapsed) return;
     _collapsed = collapsed;
     final navigation =
         (LiquidPrismTheme.of(context).navigationBar ??
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
-    final immediate = MediaQuery.disableAnimationsOf(context);
-    final target = collapsed ? 1.0 : 0.0;
-    springGlass(
-      _largeFade,
-      target,
-      GlassNavigationBarStyle.largeTitleSpring.description,
-      immediate: immediate,
-    );
-    springGlass(
-      _inlineFade,
-      target,
-      (navigation.revealSpring ?? GlassNavigationBarStyle.titleSpring)
-          .description,
-      immediate: immediate,
+    animateNavigationTitle(
+      large: _largeFade,
+      inline: _inlineFade,
+      style: navigation,
+      collapsed: collapsed,
+      immediate: MediaQuery.disableAnimationsOf(context),
+      isMounted: () => mounted,
     );
   }
 
@@ -473,6 +463,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _inlineFade.dispose();
     _scrollOffset.dispose();
     _layoutOffset.dispose();
+    _minimization.dispose();
     _scrollRemaining.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _reselection.dispose();
@@ -508,6 +499,20 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           _ => GlassChromePlacement.rightRail,
         };
     final rail = resolved.isRail;
+    final explicitDock = switch (widget.tabBarPlacement) {
+      GlassTabBarPlacement.bottom ||
+      GlassTabBarPlacement.top ||
+      GlassTabBarPlacement.leading ||
+      GlassTabBarPlacement.trailing => widget.tabBarPlacement,
+      _ => null,
+    };
+    final verticalTabs = explicitDock == null
+        ? rail
+        : explicitDock == GlassTabBarPlacement.leading ||
+              explicitDock == GlassTabBarPlacement.trailing;
+    final scaffoldStyle =
+        (LiquidPrismTheme.of(context).scaffold ?? const GlassScaffoldStyle())
+            .merge(widget.style);
     final keyboard = media.viewInsets.bottom > 0;
 
     final regular = switch (system?.horizontalSizeClass) {
@@ -552,23 +557,70 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ? null
         : _ChromeLayout.topCorner(media.size, occlusions);
     final showTabBar =
-        tabBar != null && sidebarTabs == null && (rail || !keyboard);
-    final leading =
+        tabBar != null &&
+        sidebarTabs == null &&
+        (verticalTabs || explicitDock == GlassTabBarPlacement.top || !keyboard);
+    final leadingContent = glassToolbarAt(
+      widget.toolbar,
+      GlassToolbarPlacement.topLeading,
+    );
+    final principal = glassToolbarAt(
+      widget.toolbar,
+      GlassToolbarPlacement.principal,
+    );
+    final leadingWidget =
         widget.leading ??
         (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
+    final leading = leadingContent.isEmpty
+        ? leadingWidget
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (leadingWidget != null) ...[
+                leadingWidget,
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: LiquidPrismToolbar(
+                  content: leadingContent,
+                  style: glassToolbarStyleFor(
+                    context,
+                    GlassToolbarSize.navigation,
+                  ),
+                ),
+              ),
+            ],
+          );
+    final inlineTitle = principal.isEmpty
+        ? widget.title
+        : LiquidPrismToolbar(
+            content: principal,
+            style: glassToolbarStyleFor(context, GlassToolbarSize.navigation),
+          );
+    final bottomContent = glassBottomToolbarContent(widget.toolbar);
+    final bottomBar = bottomContent.isEmpty
+        ? widget.bottomBar
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LiquidPrismToolbar(content: bottomContent),
+              if (widget.bottomBar != null) ...[
+                const SizedBox(height: 8),
+                widget.bottomBar!,
+              ],
+            ],
+          );
     final railLeading = rail && leading != null
         ? 48 + _ChromeLayout._railGap
         : 0;
-    final groups =
+    final content =
         rail &&
             !_fitsRail(
               railBottom - actionsTop - railLeading,
-              tabs: showTabBar ? tabBar : null,
+              tabs: showTabBar && explicitDock == null ? tabBar : null,
             )
-        ? [
-            [LiquidPrismScaffold._overflow(widget._allActions)],
-          ]
-        : widget._actionGroups;
+        ? _overflowRailContent()
+        : widget._trailingContent;
     final features = addFeatures
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
@@ -580,13 +632,17 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
     final titleStyle = TextStyle(
+      fontFamily: 'CupertinoSystemText',
       fontSize: widget.subtitle == null ? 17 : 15,
       fontWeight: FontWeight.w600,
+      letterSpacing: widget.subtitle == null ? -.41 : -.23,
       color: GlassColors.of(context).label,
     ).merge(navigation.titleStyle);
     final largeTitleStyle = TextStyle(
+      fontFamily: 'CupertinoSystemDisplay',
       fontSize: 34,
       fontWeight: FontWeight.w700,
+      letterSpacing: .38,
       color: GlassColors.of(context).label,
     ).merge(navigation.largeTitleStyle);
     final colors = GlassColors.of(context);
@@ -602,11 +658,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final scaler = media.textScaler;
     final titleLine =
         scaler.scale(titleStyle.fontSize ?? 17) * (titleStyle.height ?? 1.2);
-    final barHeight = rail ? 48.0 : LiquidPrismScaffold.topBarHeight;
-    final controlRowHeight = widget.title == null
+    final barHeight =
+        navigation.controlRowHeight ??
+        (rail ? 48.0 : LiquidPrismScaffold.topBarHeight);
+    final controlRowHeight = inlineTitle == null
         ? barHeight
         : math.max(barHeight, titleLine + 8);
-    final titleRowHeight = switch (widget.title) {
+    final titleRowHeight = switch (inlineTitle) {
       final LiquidPrismTitle title => math.max(
         controlRowHeight,
         LiquidPrismTitle.extentOf(
@@ -621,13 +679,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     };
     final expandedHeight = widget.largeTitle == null
         ? 0.0
-        : scaler.scale(largeTitleStyle.fontSize ?? 34) *
-                  (largeTitleStyle.height ?? 1.2) +
-              11.33 +
-              (widget.subtitle == null
-                  ? 0
-                  : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
-                        6.13);
+        : navigation.largeTitleExtent ??
+              scaler.scale(largeTitleStyle.fontSize ?? 34) *
+                      (largeTitleStyle.height ?? 1.2) +
+                  11.33 +
+                  (widget.subtitle == null
+                      ? 0
+                      : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
+                            6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
     _layoutCap = math.max(extent, expandedHeight) + largeTitleLead + 1;
     _layoutOffset.value = math.min(_scrollOffset.value, _layoutCap);
@@ -638,6 +697,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ).revealExtent ??
         GlassScrollEdgeStyle.defaultRevealExtent;
     final swaps = widget.largeTitle != null || widget.header != null;
+    final minimizes = switch (navigation.minimizationBehavior) {
+      GlassToolbarMinimizationBehavior.onScrollDown ||
+      GlassToolbarMinimizationBehavior.onScrollUp => true,
+      _ => false,
+    };
     final edges = widget.scrollEdge || !_edgePresence.isDismissed;
     _collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
@@ -648,14 +712,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _collapsed = false;
       _largeFade.value = _inlineFade.value = 0;
     }
-    final titleLeads = widget._allActions.isNotEmpty || widget.trailing != null;
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
-    Widget header(
-      Widget child,
-      TextStyle style, {
-      required bool large,
-      bool interactive = false,
-    }) {
+    Widget header(Widget child, TextStyle style, {required bool large}) {
       Widget text = Semantics(
         header: true,
         child: DefaultTextStyle(
@@ -665,26 +723,35 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           child: child,
         ),
       );
-      if (!swaps) return IgnorePointer(ignoring: !interactive, child: text);
+      if (!swaps && !minimizes) return text;
       return AnimatedBuilder(
-        animation: Listenable.merge([_largeFade, _inlineFade]),
+        animation: Listenable.merge([
+          _largeFade,
+          _inlineFade,
+          _minimization.progress,
+        ]),
         builder: (context, child) {
-          final visible = large ? !_collapsed : _collapsed;
+          final visible = !swaps || (large ? !_collapsed : _collapsed);
           final inline = _inlineFade.value;
-          final opacity = large ? 1 - _largeFade.value : inline;
+          final opacity =
+              (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
+              (1 - _minimization.progress.value);
           return ExcludeSemantics(
             excluding: !visible,
-            child: IgnorePointer(
-              ignoring: !interactive || !visible,
-              child: GlassContentPresence(
-                presence: opacity,
-                blur: titleBlur,
-                child: large
-                    ? child!
-                    : Transform.translate(
-                        offset: Offset(0, 15 * (1 - inline)),
-                        child: child,
-                      ),
+            child: ExcludeFocus(
+              excluding: !visible,
+              child: IgnorePointer(
+                ignoring: !visible,
+                child: GlassContentPresence(
+                  presence: opacity,
+                  blur: titleBlur,
+                  child: large || !swaps
+                      ? child!
+                      : Transform.translate(
+                          offset: Offset(0, 15 * (1 - inline)),
+                          child: child,
+                        ),
+                ),
               ),
             ),
           );
@@ -694,15 +761,26 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     }
 
     final topBar =
-        widget.title != null ||
+        inlineTitle != null ||
         widget.largeTitle != null ||
         (!rail && leading != null) ||
         widget.trailing != null ||
         sidebarTabs != null ||
-        (!rail && widget._allActions.isNotEmpty);
+        (!rail && glassToolbarHasContent(content));
+    _minimization.configure(
+      navigation,
+      collapseExtent: widget.largeTitle == null ? 0 : extent + largeTitleLead,
+    );
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         placement: resolved,
+        minimization: _minimization.progress,
+        onMinimizationExtent: _minimization.setExtent,
+        adjustsMinimizationInsets:
+            navigation.minimizationSafeAreaAdjustment !=
+            GlassToolbarMinimizationSafeAreaAdjustment.disabled,
+        tabDock: explicitDock,
+        style: scaffoldStyle,
         viewPadding: padding,
         keyboard: widget.resizeToAvoidBottomInset ? media.viewInsets.bottom : 0,
         textDirection: Directionality.of(context),
@@ -711,7 +789,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         accessoryHeight: widget.accessory?.preferredSize.height ?? 0,
         titleRowHeight: titleRowHeight,
         controlRowHeight: controlRowHeight,
-        centreTitle: widget.title is LiquidPrismTitle,
+        contentSpacing:
+            navigation.contentSpacing ??
+            (rail || sidebar || corner != null
+                ? 16
+                : LiquidPrismScaffold.topBarClearance),
+        titleAlignment:
+            navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+        contentPadding: (navigation.contentPadding ?? EdgeInsets.zero).resolve(
+          Directionality.of(context),
+        ),
         expandedHeight: expandedHeight,
         largeTitleTop: widget.subtitle == null ? 3.67 : 6.67,
         collapseExtent: extent,
@@ -736,212 +823,247 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             : null,
         reveal: _reveal,
       ),
-      children: [
-        LayoutId(
-          id: _Slot.body,
-          child: LiquidPrismChrome(
-            placement: resolved,
-            child: _InsetBody(
-              consumeKeyboard: widget.resizeToAvoidBottomInset,
-              media: features.isEmpty
-                  ? media
-                  : media.copyWith(
-                      displayFeatures: [...media.displayFeatures, ...features],
-                    ),
-              child:
-                  ((edges || swaps) && (topBar || widget.accessory != null)) ||
-                      widget.bottomBar != null
-                  ? NotificationListener<ScrollMetricsNotification>(
-                      onNotification: (n) =>
-                          n.depth == widget.scrollDepth && _onScroll(n.metrics),
-                      child: NotificationListener<ScrollNotification>(
-                        onNotification: (n) =>
-                            n.depth == widget.scrollDepth &&
-                            _onScroll(n.metrics),
-                        child: _content(),
-                      ),
-                    )
-                  : _content(),
-            ),
-          ),
-        ),
-        if (edges && (topBar || widget.accessory != null))
-          LayoutId(
-            id: _Slot.scrollEdge,
-            child: GlassGroupMembers(
-              child: ScrollEdgeProgressBuilder(
-                listenable: Listenable.merge([_scrollOffset, _edgeStrength]),
-                progress: () =>
-                    _edgeStrength.value *
-                    LiquidPrismScrollEdge.progressFor(
-                      _scrollOffset.value,
-                      revealExtent: revealExtent,
-                    ),
-                builder: (context, progress) => LiquidPrismScrollEdge(
-                  progress: progress,
-                  color: widget.backgroundColor,
-                  style: widget.scrollEdgeStyle,
-                ),
-              ),
-            ),
-          ),
-        if (edges && widget.bottomBar != null)
-          LayoutId(
-            id: _Slot.bottomScrollEdge,
-            child: GlassGroupMembers(
-              child: IgnorePointer(
-                child: ScrollEdgeProgressBuilder(
-                  listenable: Listenable.merge([
-                    _scrollRemaining,
-                    _edgeStrength,
-                  ]),
-                  progress: () =>
-                      _edgeStrength.value *
-                      LiquidPrismScrollEdge.progressFor(
-                        _scrollRemaining.value,
-                        revealExtent: revealExtent,
-                      ),
-                  builder: (context, progress) => LiquidPrismScrollEdge(
-                    edge: GlassEdge.bottom,
-                    progress: progress,
-                    color: widget.backgroundColor,
-                    style: widget.scrollEdgeStyle,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        if (widget.bottomBar case final bottomBar?)
-          LayoutId(
-            id: _Slot.bottomBar,
-            child: GlassGroupMembers(child: bottomBar),
-          ),
-        if (widget.title case final title?)
-          LayoutId(
-            id: _Slot.title,
-            child: header(
-              glassTitled(
-                title,
-                widget.subtitle,
-                subtitleStyle,
-                large: false,
-                leading: titleLeads && title is! LiquidPrismTitle,
-              ),
-              titleStyle,
-              large: false,
-              interactive: switch (title) {
-                LiquidPrismTitle(:final onPressed) => onPressed != null,
-                _ => false,
-              },
-            ),
-          ),
-        if (widget.largeTitle case final title?)
-          LayoutId(
-            id: _Slot.largeTitle,
-            child: Align(
-              alignment: AlignmentDirectional.topStart,
-              child: header(
-                glassTitled(
-                  title,
-                  widget.subtitle,
-                  largeSubtitleStyle,
-                  large: true,
-                  subtitleOffset:
-                      scaler.scale(largeTitleStyle.fontSize ?? 34) * 38.33 / 34,
-                ),
-                largeTitleStyle,
-                large: true,
-              ),
-            ),
-          ),
-        if (widget.accessory case final accessory?)
-          LayoutId(
-            id: _Slot.accessory,
-            child: GlassGroupMembers(child: accessory),
-          ),
-        if (sidebarTabs != null)
-          LayoutId(
-            id: _Slot.sidebarToggle,
-            child: LiquidPrismVisibility(
-              visible: sidebarToggle,
-              transition: sidebarToggle
-                  ? GlassTransition.materialize
-                  : GlassTransition.identity,
-              style: GlassTransitionStyle(
-                enterSpring: GlassSpring.physical(NativeSidebar.spring),
-              ),
-              child: Builder(
-                builder: (context) => Transform.scale(
-                  scale:
-                      NativeSidebar.toggleEntryScale -
-                      (NativeSidebar.toggleEntryScale - 1) *
-                          LiquidPrismPresence.of(context),
-                  child: SidebarToggle(
-                    label: 'Show sidebar',
-                    onPressed: () => _setSidebarHidden(false),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        if (sidebar)
-          LayoutId(
-            id: _Slot.sidebar,
-            child: IgnorePointer(
-              ignoring: _sidebarHidden,
-              child: ExcludeSemantics(
-                excluding: _sidebarHidden,
-                child: GlassSidebar(
-                  tabBar: sidebarTabs,
-                  top: top,
-                  onHide: () => _setSidebarHidden(true),
-                ),
-              ),
-            ),
-          ),
-        if (leading case final leading?)
-          LayoutId(
-            id: _Slot.leading,
-            child: GlassGroupMembers(child: leading),
-          ),
-        if (groups.isNotEmpty)
-          LayoutId(
-            id: _Slot.actions,
-            child: GlassGroupMembers(
-              child: groups.length == 1
-                  ? LiquidPrismToolbarGroup(
-                      items: groups.single,
-                      size: rail || corner != null
-                          ? GlassToolbarSize.bottom
-                          : GlassToolbarSize.navigation,
-                      axis: rail ? Axis.vertical : Axis.horizontal,
-                    )
-                  : LiquidPrismToolbar(
-                      groups: groups,
-                      size: rail || corner != null
-                          ? GlassToolbarSize.bottom
-                          : GlassToolbarSize.navigation,
-                      axis: rail ? Axis.vertical : Axis.horizontal,
-                    ),
-            ),
-          ),
-        if (widget.trailing case final trailing?)
-          LayoutId(
-            id: _Slot.trailing,
-            child: GlassGroupMembers(child: trailing),
-          ),
-        if (showTabBar)
-          LayoutId(
-            id: _Slot.tabBar,
-            child: GlassGroupMembers(
+      children:
+          [
+            LayoutId(
+              id: _Slot.body,
               child: LiquidPrismChrome(
                 placement: resolved,
-                axis: rail ? Axis.vertical : Axis.horizontal,
-                child: tabBar,
+                child: _InsetBody(
+                  consumeKeyboard: widget.resizeToAvoidBottomInset,
+                  media: features.isEmpty
+                      ? media
+                      : media.copyWith(
+                          displayFeatures: [
+                            ...media.displayFeatures,
+                            ...features,
+                          ],
+                        ),
+                  child:
+                      ((edges || swaps || minimizes) &&
+                              (topBar || widget.accessory != null)) ||
+                          bottomBar != null
+                      ? NotificationListener<ScrollMetricsNotification>(
+                          onNotification: (n) =>
+                              n.depth == widget.scrollDepth &&
+                              _onScroll(n.metrics, dimensionsChanged: true),
+                          child: NotificationListener<ScrollNotification>(
+                            onNotification: (n) =>
+                                n.depth == widget.scrollDepth &&
+                                _onScroll(n.metrics),
+                            child: _content(),
+                          ),
+                        )
+                      : _content(),
+                ),
               ),
             ),
-          ),
-      ],
+            if (edges && (topBar || widget.accessory != null))
+              LayoutId(
+                id: _Slot.scrollEdge,
+                child: GlassGroupMembers(
+                  child: ScrollEdgeProgressBuilder(
+                    listenable: Listenable.merge([
+                      _scrollOffset,
+                      _edgeStrength,
+                    ]),
+                    progress: () =>
+                        _edgeStrength.value *
+                        LiquidPrismScrollEdge.progressFor(
+                          _scrollOffset.value,
+                          revealExtent: revealExtent,
+                        ),
+                    builder: (context, progress) => LiquidPrismScrollEdge(
+                      progress: progress,
+                      color: widget.backgroundColor,
+                      style: widget.scrollEdgeStyle,
+                    ),
+                  ),
+                ),
+              ),
+            if (edges && bottomBar != null)
+              LayoutId(
+                id: _Slot.bottomScrollEdge,
+                child: GlassGroupMembers(
+                  child: IgnorePointer(
+                    child: ScrollEdgeProgressBuilder(
+                      listenable: Listenable.merge([
+                        _scrollRemaining,
+                        _edgeStrength,
+                      ]),
+                      progress: () =>
+                          _edgeStrength.value *
+                          LiquidPrismScrollEdge.progressFor(
+                            _scrollRemaining.value,
+                            revealExtent: revealExtent,
+                          ),
+                      builder: (context, progress) => LiquidPrismScrollEdge(
+                        edge: GlassEdge.bottom,
+                        progress: progress,
+                        color: widget.backgroundColor,
+                        style: widget.scrollEdgeStyle,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (bottomBar case final bottomBar?)
+              LayoutId(
+                id: _Slot.bottomBar,
+                child: GlassGroupMembers(child: bottomBar),
+              ),
+            if (inlineTitle case final title?)
+              LayoutId(
+                id: _Slot.title,
+                child: header(
+                  glassTitled(
+                    title,
+                    widget.subtitle,
+                    subtitleStyle,
+                    large: false,
+                    alignment:
+                        navigation.titleAlignment == null ||
+                            navigation.titleAlignment ==
+                                GlassTitleAlignment.automatic
+                        ? GlassTitleAlignment.center
+                        : navigation.titleAlignment!,
+                  ),
+                  titleStyle,
+                  large: false,
+                ),
+              ),
+            if (widget.largeTitle case final title?)
+              LayoutId(
+                id: _Slot.largeTitle,
+                child: Align(
+                  alignment: glassTitleBoxAlignment(
+                    navigation.largeTitleAlignment ??
+                        GlassTitleAlignment.leading,
+                  ),
+                  child: header(
+                    glassTitled(
+                      title,
+                      widget.subtitle,
+                      largeSubtitleStyle,
+                      large: true,
+                      alignment:
+                          navigation.largeTitleAlignment ??
+                          GlassTitleAlignment.leading,
+                      subtitleOffset:
+                          scaler.scale(largeTitleStyle.fontSize ?? 34) *
+                          38.33 /
+                          34,
+                    ),
+                    largeTitleStyle,
+                    large: true,
+                  ),
+                ),
+              ),
+            if (widget.accessory case final accessory?)
+              LayoutId(
+                id: _Slot.accessory,
+                child: GlassGroupMembers(child: accessory),
+              ),
+            if (sidebarTabs != null)
+              LayoutId(
+                id: _Slot.sidebarToggle,
+                child: LiquidPrismVisibility(
+                  visible: sidebarToggle,
+                  transition: sidebarToggle
+                      ? GlassTransition.materialize
+                      : GlassTransition.identity,
+                  style: GlassTransitionStyle(
+                    enterSpring: GlassSpring.physical(NativeSidebar.spring),
+                  ),
+                  child: Builder(
+                    builder: (context) => Transform.scale(
+                      scale:
+                          NativeSidebar.toggleEntryScale -
+                          (NativeSidebar.toggleEntryScale - 1) *
+                              LiquidPrismPresence.of(context),
+                      child: SidebarToggle(
+                        label: 'Show sidebar',
+                        onPressed: () => _setSidebarHidden(false),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (sidebar)
+              LayoutId(
+                id: _Slot.sidebar,
+                child: IgnorePointer(
+                  ignoring: _sidebarHidden,
+                  child: ExcludeSemantics(
+                    excluding: _sidebarHidden,
+                    child: GlassSidebar(
+                      tabBar: sidebarTabs,
+                      top: top,
+                      onHide: () => _setSidebarHidden(true),
+                    ),
+                  ),
+                ),
+              ),
+            if (leading case final leading?)
+              LayoutId(
+                id: _Slot.leading,
+                child: GlassGroupMembers(child: leading),
+              ),
+            if (content.isNotEmpty)
+              LayoutId(
+                id: _Slot.actions,
+                child: GlassGroupMembers(
+                  child: LiquidPrismToolbar(
+                    content: content,
+                    style: glassToolbarStyleFor(
+                      context,
+                      rail || corner != null
+                          ? GlassToolbarSize.bottom
+                          : GlassToolbarSize.navigation,
+                    ),
+                    axis: rail ? Axis.vertical : Axis.horizontal,
+                  ),
+                ),
+              ),
+            if (widget.trailing case final trailing?)
+              LayoutId(
+                id: _Slot.trailing,
+                child: GlassGroupMembers(child: trailing),
+              ),
+            if (showTabBar)
+              LayoutId(
+                id: _Slot.tabBar,
+                child: GlassGroupMembers(
+                  child: LiquidPrismChrome(
+                    placement: resolved,
+                    axis: verticalTabs ? Axis.vertical : Axis.horizontal,
+                    child: tabBar,
+                  ),
+                ),
+              ),
+          ].map((child) {
+            final moves = switch (child.id) {
+              _Slot.title ||
+              _Slot.largeTitle ||
+              _Slot.scrollEdge ||
+              _Slot.accessory ||
+              _Slot.sidebarToggle ||
+              _Slot.leading ||
+              _Slot.actions ||
+              _Slot.trailing => true,
+              _Slot.tabBar => explicitDock == GlassTabBarPlacement.top,
+              _ => false,
+            };
+            return moves
+                ? LayoutId(
+                    id: child.id,
+                    child: NavigationBarPresence(
+                      progress: _minimization.progress,
+                      child: child.child,
+                    ),
+                  )
+                : child;
+          }).toList(),
     );
     Widget hosted = GlassGroupHost(
       child: Stack(
@@ -1001,22 +1123,67 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     );
   }
 
-  /// Whether the actions and [tabs] both fit a rail of [height] below the
-  /// actions' top, with the measured gaps.
+  List<GlassToolbarContent> _overflowRailContent() {
+    final actions = widget._allActions
+        .where((item) => item.child == null)
+        .toList();
+    if (actions.length < 2) return widget._trailingContent;
+    final result = <GlassToolbarContent>[];
+    var inserted = false;
+    for (final entry in glassToolbarSegments(widget._trailingContent)) {
+      if (entry is! GlassToolbarGroup) {
+        result.add(entry);
+        continue;
+      }
+      if (!inserted && entry.items.any((item) => item.child == null)) {
+        result.add(LiquidPrismScaffold._overflow(actions));
+        inserted = true;
+      }
+      final custom = entry.items.where((item) => item.child != null).toList();
+      if (custom.isNotEmpty) {
+        result.add(
+          GlassToolbarGroup(key: entry.key, style: entry.style, items: custom),
+        );
+      }
+    }
+    return result;
+  }
+
   bool _fitsRail(double height, {required Widget? tabs}) {
-    final actions = widget._allActions;
-    if (actions.length < 2) return true;
-    final groups = widget._actionGroups.where((g) => g.isNotEmpty).length;
-    final actionsLength =
-        actions.fold<double>(0, (sum, item) => sum + item.width) +
-        14 * (actions.length - groups) +
-        (10 + 8) * (groups - 1) +
-        10;
+    final theme =
+        LiquidPrismTheme.of(context).toolbar ?? const GlassToolbarStyle();
+    var length = 0.0, gap = 0.0;
+    for (final entry in glassToolbarSegments(widget._trailingContent)) {
+      if (entry is GlassToolbarSpacer) {
+        length += entry.extent ?? 0;
+        gap = 0;
+      } else if (entry is GlassToolbarItem) {
+        length += gap + (entry.width ?? 48);
+        gap = theme.groupSpacing ?? 8;
+      } else if (entry is GlassToolbarGroup && entry.items.isNotEmpty) {
+        final style = theme.merge(entry.style);
+        final extent = style.height ?? 48, inset = style.inset ?? 5;
+        length +=
+            gap + inset * 2 + (entry.items.length - 1) * (style.spacing ?? 14);
+        for (final item in entry.items) {
+          length += glassToolbarItemExtent(
+            context,
+            item,
+            style,
+            lone: entry.items.length == 1,
+            height: extent,
+            inset: inset,
+            vertical: true,
+          );
+        }
+        gap = theme.groupSpacing ?? 8;
+      }
+    }
     final tabsLength = switch (tabs) {
       LiquidPrismTabBar(:final tabs) => 50.0 * tabs.length + 12,
       _ => 0.0,
     };
-    return actionsLength + _ChromeLayout._railGap + tabsLength <= height;
+    return length + _ChromeLayout._railGap + tabsLength <= height;
   }
 }
 
@@ -1125,6 +1292,11 @@ const double largeTitleLead = 10;
 class _ChromeLayout extends MultiChildLayoutDelegate {
   _ChromeLayout({
     required this.placement,
+    required this.minimization,
+    required this.onMinimizationExtent,
+    required this.adjustsMinimizationInsets,
+    required this.tabDock,
+    required this.style,
     required this.viewPadding,
     required this.keyboard,
     required this.textDirection,
@@ -1133,7 +1305,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.accessoryHeight,
     required this.titleRowHeight,
     required this.controlRowHeight,
-    required this.centreTitle,
+    required this.contentSpacing,
+    required this.titleAlignment,
+    required this.contentPadding,
     required this.expandedHeight,
     required this.largeTitleTop,
     required this.collapseExtent,
@@ -1147,10 +1321,15 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.corner,
     required this.sidebar,
     required this.reveal,
-  }) : super(relayout: Listenable.merge([reveal, scrollOffset]));
+  }) : super(relayout: Listenable.merge([reveal, scrollOffset, minimization]));
 
   final GlassChromePlacement placement;
   final EdgeInsets viewPadding;
+  final GlassTabBarPlacement? tabDock;
+  final Animation<double> minimization;
+  final ValueChanged<double> onMinimizationExtent;
+  final bool adjustsMinimizationInsets;
+  final GlassScaffoldStyle style;
   final double keyboard, actionsTop, railBottom;
   final bool sheet;
 
@@ -1162,8 +1341,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   /// Height of the row below the top bar, 0 without one.
   final double accessoryHeight;
 
-  /// A glass title capsule centres even beside controls, as measured.
-  final bool centreTitle;
+  final double contentSpacing;
+  final GlassTitleAlignment titleAlignment;
+  final EdgeInsets contentPadding;
   final double titleRowHeight,
       controlRowHeight,
       expandedHeight,
@@ -1287,25 +1467,28 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   void performLayout(Size size) {
     final rail = placement.isRail;
     final right = placement == GlassChromePlacement.rightRail;
-    final top = sheet
-        ? _sheetTop
-        : corner == null
-        ? math.max(viewPadding.top, _minimumTop)
-        : _minimumTop;
+    var top =
+        (sheet
+            ? _sheetTop
+            : corner == null
+            ? math.max(viewPadding.top, _minimumTop)
+            : _minimumTop) +
+        contentPadding.top;
+    final naturalTop = top;
     final rtl = textDirection == TextDirection.rtl;
     final railLeft = viewPadding.left;
     final railRight = size.width - viewPadding.right;
     final sidebarWidth = NativeSidebar.width;
     final shown = sidebar == null ? 0.0 : reveal.value.clamp(0.0, 1.0);
-    final contentLeft = sidebar == AxisDirection.left
+    var contentLeft = sidebar == AxisDirection.left
         ? railLeft + (math.max(railLeft, sidebarWidth) - railLeft) * shown
         : railLeft;
-    final contentRight = sidebar == AxisDirection.right
+    var contentRight = sidebar == AxisDirection.right
         ? railRight -
               (railRight - math.min(railRight, size.width - sidebarWidth)) *
                   shown
         : railRight;
-    final barRow = topBar ? titleRowHeight : 0.0;
+    final barRow = topBar ? titleRowHeight + contentPadding.bottom : 0.0;
     final lead = expandedHeight > 0 ? largeTitleLead : 0.0;
     final expanded = expandedHeight + lead;
     final collapse = collapseExtent == 0
@@ -1321,17 +1504,99 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                 barRow +
                 expanded +
                 accessoryHeight +
-                (lead > 0 && accessoryHeight == 0
-                    ? 0
-                    : LiquidPrismScaffold.topBarClearance)
+                (lead > 0 && accessoryHeight == 0 ? 0 : contentSpacing)
           : top,
     );
-    final barLeft = corner != null && corner!.left <= 1
-        ? math.max(contentLeft, corner!.right)
-        : contentLeft;
-    final barRight = corner != null && corner!.left > 1
-        ? math.min(contentRight, corner!.left)
-        : contentRight;
+    var topDockHeight = 0.0;
+    final dockMargin = style.tabBarMargin?.resolve(textDirection);
+    final dockAlignment = (style.tabBarAlignment ?? Alignment.center).resolve(
+      textDirection,
+    );
+    final sideDock =
+        tabDock == GlassTabBarPlacement.leading ||
+        tabDock == GlassTabBarPlacement.trailing;
+    if (hasChild(_Slot.tabBar) &&
+        (sideDock || tabDock == GlassTabBarPlacement.top)) {
+      final margin = dockMargin ?? const EdgeInsets.all(12);
+      final dockTop = top + barRow + largeHeight + accessoryHeight;
+      final availableHeight = math.max(
+        0.0,
+        size.height -
+            math.max(keyboard, viewPadding.bottom) -
+            dockTop -
+            margin.vertical,
+      );
+      final availableWidth = math.max(
+        0.0,
+        contentRight - contentLeft - margin.horizontal,
+      );
+      final bar = layoutChild(
+        _Slot.tabBar,
+        BoxConstraints.loose(
+          Size(
+            math.min(availableWidth, style.tabBarMaxWidth ?? 440),
+            availableHeight,
+          ),
+        ),
+      );
+      if (sideDock) {
+        final left = (tabDock == GlassTabBarPlacement.leading) != rtl;
+        final x = left
+            ? contentLeft + margin.left
+            : contentRight - margin.right - bar.width;
+        final y =
+            dockTop +
+            margin.top +
+            (availableHeight - bar.height) * (dockAlignment.y + 1) / 2;
+        positionChild(_Slot.tabBar, Offset(x, y));
+        if (left) {
+          contentLeft += bar.width + margin.horizontal;
+        } else {
+          contentRight -= bar.width + margin.horizontal;
+        }
+      } else {
+        positionChild(
+          _Slot.tabBar,
+          Offset(
+            contentLeft +
+                margin.left +
+                (availableWidth - bar.width) * (dockAlignment.x + 1) / 2,
+            dockTop +
+                margin.top -
+                (barRow +
+                        accessoryHeight +
+                        contentSpacing +
+                        bar.height +
+                        margin.vertical) *
+                    minimization.value,
+          ),
+        );
+        topDockHeight = bar.height + margin.vertical;
+        covered = covered.copyWith(top: covered.top + topDockHeight);
+      }
+    }
+    final minimizedExtent =
+        barRow + accessoryHeight + contentSpacing + topDockHeight;
+    onMinimizationExtent(minimizedExtent);
+    top -= minimizedExtent * minimization.value;
+    if (adjustsMinimizationInsets) {
+      covered = covered.copyWith(
+        top: math.max(
+          naturalTop,
+          covered.top - minimizedExtent * minimization.value,
+        ),
+      );
+    }
+    final barLeft =
+        contentPadding.left +
+        (corner != null && corner!.left <= 1
+            ? math.max(contentLeft, corner!.right)
+            : contentLeft);
+    final barRight =
+        (corner != null && corner!.left > 1
+            ? math.min(contentRight, corner!.left)
+            : contentRight) -
+        contentPadding.right;
 
     if (hasChild(_Slot.scrollEdge)) {
       layoutChild(
@@ -1339,12 +1604,16 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         BoxConstraints.tight(
           Size(
             math.max(0, contentRight - contentLeft),
-            top +
-                barRow +
-                largeHeight +
-                accessoryHeight +
-                edgeFrame -
-                (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
+            math.max(
+              0,
+              top +
+                  barRow +
+                  largeHeight +
+                  accessoryHeight +
+                  topDockHeight +
+                  edgeFrame -
+                  (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
+            ),
           ),
         ),
       );
@@ -1410,14 +1679,14 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? railRight + _railGap + (48 - width) / 2
         : railLeft - _railGap - 48 + (48 - width) / 2;
 
-    var railTop = actionsTop;
+    var railTop = actionsTop - minimizedExtent * minimization.value;
     if (rail && hasChild(_Slot.leading)) {
       final child = layoutChild(
         _Slot.leading,
         BoxConstraints.loose(Size(48, size.height)),
       );
-      positionChild(_Slot.leading, Offset(railX(child.width), actionsTop));
-      if (!child.isEmpty) railTop = actionsTop + child.height + _railGap;
+      positionChild(_Slot.leading, Offset(railX(child.width), railTop));
+      if (!child.isEmpty) railTop += child.height + _railGap;
     }
 
     if (hasChild(_Slot.actions)) {
@@ -1497,7 +1766,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      if (actionsInBar && !centreTitle) {
+      final alignment = titleAlignment == GlassTitleAlignment.automatic
+          ? GlassTitleAlignment.center
+          : titleAlignment;
+      if (alignment != GlassTitleAlignment.center) {
         final title = layoutChild(
           _Slot.title,
           BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
@@ -1505,7 +1777,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         positionChild(
           _Slot.title,
           Offset(
-            rtl ? right - title.width : left,
+            (alignment == GlassTitleAlignment.trailing) != rtl
+                ? right - title.width
+                : left,
             top + (barRow - title.height) / 2,
           ),
         );
@@ -1540,57 +1814,94 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ),
       );
     }
-    if (hasChild(_Slot.tabBar)) {
-      if (rail) {
+    if (hasChild(_Slot.tabBar) &&
+        !sideDock &&
+        tabDock != GlassTabBarPlacement.top) {
+      if (rail && tabDock == null) {
         final bar = layoutChild(
           _Slot.tabBar,
-          BoxConstraints.loose(Size(size.width, math.max(0, railBottom - top))),
+          BoxConstraints.loose(
+            Size(size.width, math.max(0, railBottom - naturalTop)),
+          ),
         );
         positionChild(
           _Slot.tabBar,
           Offset(railX(bar.width), railBottom - bar.height),
         );
       } else {
-        final gap = iOS ? _bottomBarGap : viewPadding.bottom + 10;
-        final width = math.max(0.0, contentRight - contentLeft - 2 * 24);
+        final margin =
+            dockMargin ??
+            EdgeInsets.fromLTRB(
+              24,
+              0,
+              24,
+              iOS ? _bottomBarGap : viewPadding.bottom + 10,
+            );
+        final width = math.max(
+          0.0,
+          contentRight - contentLeft - margin.horizontal,
+        );
         final bar = layoutChild(
           _Slot.tabBar,
-          BoxConstraints.loose(Size(math.min(width, 440), size.height)),
+          BoxConstraints.loose(
+            Size(
+              math.min(width, style.tabBarMaxWidth ?? 440),
+              math.max(0.0, size.height - covered.top - margin.vertical),
+            ),
+          ),
         );
         positionChild(
           _Slot.tabBar,
           Offset(
-            contentLeft + (contentRight - contentLeft - bar.width) / 2,
-            size.height - gap - bar.height,
+            contentLeft +
+                margin.left +
+                (width - bar.width) * (dockAlignment.x + 1) / 2,
+            size.height - margin.bottom - bar.height,
           ),
         );
-        covered = covered.copyWith(bottom: gap + bar.height + 3);
+        covered = covered.copyWith(bottom: margin.vertical + bar.height + 3);
       }
     }
 
     if (hasChild(_Slot.bottomBar)) {
+      final margin = style.bottomBarMargin?.resolve(textDirection);
       final floor = keyboard > 0
-          ? keyboard
+          ? keyboard + (margin?.bottom ?? 0)
           : covered.bottom > 0
-          ? covered.bottom + 8
-          : iOS
-          ? _bottomBarGap
-          : viewPadding.bottom;
+          ? covered.bottom + (margin?.bottom ?? 8)
+          : margin?.bottom ?? (iOS ? _bottomBarGap : viewPadding.bottom);
+      final width = math.max(
+        0.0,
+        contentRight - contentLeft - (margin?.horizontal ?? 0),
+      );
       final bar = layoutChild(
         _Slot.bottomBar,
         BoxConstraints.loose(
-          Size(math.max(0, contentRight - contentLeft), size.height),
+          Size(
+            math.min(width, style.bottomBarMaxWidth ?? double.infinity),
+            math.max(
+              0.0,
+              size.height - floor - covered.top - (margin?.top ?? 0),
+            ),
+          ),
         ),
       );
       final barTop = size.height - floor - bar.height;
+      final alignment = (style.bottomBarAlignment ?? Alignment.center).resolve(
+        textDirection,
+      );
       positionChild(
         _Slot.bottomBar,
         Offset(
-          contentLeft + (contentRight - contentLeft - bar.width) / 2,
+          contentLeft +
+              (margin?.left ?? 0) +
+              (width - bar.width) * (alignment.x + 1) / 2,
           barTop,
         ),
       );
-      covered = covered.copyWith(bottom: size.height - barTop);
+      covered = covered.copyWith(
+        bottom: size.height - barTop + (margin?.top ?? 0),
+      );
       if (hasChild(_Slot.bottomScrollEdge)) {
         layoutChild(
           _Slot.bottomScrollEdge,
@@ -1613,6 +1924,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   @override
   bool shouldRelayout(_ChromeLayout old) =>
       placement != old.placement ||
+      minimization != old.minimization ||
+      adjustsMinimizationInsets != old.adjustsMinimizationInsets ||
+      onMinimizationExtent != old.onMinimizationExtent ||
+      tabDock != old.tabDock ||
+      style != old.style ||
       viewPadding != old.viewPadding ||
       keyboard != old.keyboard ||
       textDirection != old.textDirection ||
@@ -1621,7 +1937,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       accessoryHeight != old.accessoryHeight ||
       titleRowHeight != old.titleRowHeight ||
       controlRowHeight != old.controlRowHeight ||
-      centreTitle != old.centreTitle ||
+      contentSpacing != old.contentSpacing ||
+      titleAlignment != old.titleAlignment ||
+      contentPadding != old.contentPadding ||
       expandedHeight != old.expandedHeight ||
       largeTitleTop != old.largeTitleTop ||
       collapseExtent != old.collapseExtent ||

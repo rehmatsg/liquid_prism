@@ -43,6 +43,7 @@ class LiquidPrism extends StatefulWidget {
     this.underlay = 0,
     this.resting = false,
     this.materialOptics = false,
+    this.disabledProminent = false,
   }) : assert(blur == null || (blur >= 0 && blur <= 12)),
        assert(lensRim >= 0),
        assert(chromaticSplit >= 0),
@@ -86,6 +87,8 @@ class LiquidPrism extends StatefulWidget {
   /// material recipe's does.
   @internal
   final bool materialOptics;
+  @internal
+  final bool disabledProminent;
   final Widget? child;
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
@@ -311,6 +314,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
               LiquidPrismTheme.materialBrightnessOf(context),
               widget.role,
               customOptics: optics != null,
+              disabledProminent: widget.disabledProminent,
             )
             .withTint(tint)
             .withPresence(presence)
@@ -333,7 +337,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
           widget.blur == null &&
           theme.blur == null &&
           (optics == null || widget.materialOptics),
-      fillFrost: widget.materialOptics ? style.frost : GlassRecipe.regularFrost,
+      fillFrost: GlassRecipe.blurFillFrost,
     );
     if (presence < 1) {
       // Frost is its own backdrop pass, which the output fade cannot reach,
@@ -485,7 +489,7 @@ List<FrostPass> resolveSurfaceFrost(
   double frost, {
   required double tint,
   required bool followsTint,
-  double fillFrost = GlassRecipe.regularFrost,
+  double fillFrost = GlassRecipe.blurFillFrost,
 }) => FrostPass.resolve(
   kind: recipe.kind,
   dark: recipe.dark,
@@ -825,7 +829,7 @@ class _RenderGlass extends RenderProxyBox {
       ...recipe.uniforms,
       ..._contour,
       ..._derivedUniforms(rect, m),
-      ...recipe.faceUniforms,
+      ...recipe.faceUniformsFor(rect.shortestSide),
     ];
     assert(values.length == glassUniformCount);
     writeChromaticFringeUniforms(values, recipe, pixelRatio);

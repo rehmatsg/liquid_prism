@@ -4,7 +4,7 @@
 /// [LiquidPrismTheme] above your glass widgets to share material and color defaults.
 library;
 
-export 'src/button.dart' show GlassButtonStyle, LiquidPrismButton;
+export 'src/button.dart' show GlassButtonVariant, LiquidPrismButton;
 export 'src/chrome_layout.dart' show GlassChromePlacement, LiquidPrismScaffold;
 export 'src/sidebar.dart' show GlassTabBarPlacement;
 export 'src/system_chrome.dart'
@@ -36,7 +36,10 @@ export 'src/motion.dart' show GlassMotion, GlassSpring, GlassControlMotion;
 export 'src/appearance.dart'
     show
         GlassLensStyle,
-        GlassButtonAppearance,
+        GlassButtonStyle,
+        GlassControlSize,
+        GlassButtonSizing,
+        GlassLabelPlacement,
         GlassSwitchStyle,
         GlassSliderStyle,
         GlassSegmentedStyle,
@@ -48,7 +51,8 @@ export 'src/pressable.dart' show LiquidPrismPressable;
 export 'src/selection.dart' show LiquidPrismSelection;
 export 'src/style.dart' show LiquidPrismStyle;
 export 'src/tab_bar.dart' show LiquidPrismTab, LiquidPrismTabBar;
-export 'src/tab_bar_style.dart' show GlassTabBarStyle, GlassTabLabelBehavior;
+export 'src/tab_bar_style.dart'
+    show GlassTabBarStyle, GlassTabLabelBehavior, GlassTabBarSizing;
 export 'src/title.dart' show GlassTitleStyle, LiquidPrismTitle;
 export 'src/theme.dart'
     show LiquidPrismTheme, LiquidPrismThemeData, GlassColors;
@@ -60,7 +64,11 @@ export "src/segmented_control.dart" show LiquidPrismSegmentedControl;
 export 'src/toolbar.dart'
     show
         GlassToolbarSize,
+        GlassToolbarContent,
+        GlassToolbarPlacement,
         GlassToolbarItem,
+        GlassToolbarGroup,
+        GlassToolbarSpacer,
         LiquidPrismBackButton,
         LiquidPrismToolbar,
         LiquidPrismToolbarGroup;
@@ -77,4 +85,12 @@ export 'src/haptics.dart'
 
 export 'src/badge.dart' show GlassBadge;
 
-export 'src/navigation_bar_style.dart' show GlassNavigationBarStyle;
+export 'src/navigation_bar_style.dart'
+    show
+        GlassNavigationBarStyle,
+        GlassTitleAlignment,
+        GlassToolbarMinimizationBehavior,
+        GlassToolbarMinimizationRestoration,
+        GlassToolbarMinimizationSafeAreaAdjustment;
+
+export 'src/scaffold_style.dart' show GlassScaffoldStyle;

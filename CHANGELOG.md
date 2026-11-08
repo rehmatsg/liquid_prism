@@ -2,6 +2,43 @@
 
 ## Unreleased
 
+## 0.7.0
+
+- Breaking: replace untyped scaffold/sliver `actions` and nested toolbar `groups`
+  with typed `toolbar`/`content`: text or icon actions, native menus, custom
+  widgets, explicit groups, fixed/flexible spacers and positional placements.
+- Keep visible title widgets interactive. Add independent inline/expanded title
+  alignment and SwiftUI-style whole-bar minimization/restoration and inset control.
+  Match measured large-title fade timing and separate inline reveal/hide profiles.
+  Center inline titles by default, use Cupertino title fonts, and match standard
+  navigation content clearance to 10 points.
+- Add navigation control-row height, directional content padding
+  and expanded-title extent. Add scaffold dock margins, alignment and maximum
+  widths, plus top, bottom, leading and trailing tab docks.
+- Breaking: rename `GlassButtonAppearance` to `GlassButtonStyle`, button variants
+  to `GlassButtonVariant.regular`/`.prominent` and `buttonStyle` to `variant`.
+  Text buttons generate their label; add icon/label arrangements, native control
+  sizes, intrinsic/fill sizing, visual bounds and borrowed focus/cursor control.
+- Breaking: standardize search styling on `style: GlassSearchStyle(...)` and
+  direct typography on `textStyle:`.
+- Breaking: replace tab `expanded` with `GlassTabBarSizing.compact`/`.fill` and
+  remove obsolete navigation `revealCurve` (use `revealSpring`). Vertical tabs
+  honor explicit label behavior. Compact sizing remains the default.
+- Avoid rebuilding scroll edges during viewport layout when the keyboard or
+  dock geometry changes.
+- Add a runnable composition example and [0.7 migration guide](doc/releases/0.7.md).
+  Native rendering, shader packets and controlled-input contracts are preserved.
+
+- Match native Liquid Glass defaults more closely: setting-dependent regular
+  frost, dark face grading and gray fill, regular rim lighting and standalone
+  shadow strength. Explicit blur and optical overrides retain precedence.
+- Match native large-button typography and spacing, semantic button tint,
+  grouped-background tab accents, disabled prominent buttons and dark disabled
+  segmented selections. Dark resting selections use a translucent gray fill and
+  white text that adapt to the backdrop. Correct showcase separator alpha.
+- Add reproducible SwiftUI/Flutter material and control-state comparisons, with
+  captured native inputs documented separately from renderer fits.
+
 ## 0.6.0
 
 - The held slider's shadow in light appearance matches native over white:

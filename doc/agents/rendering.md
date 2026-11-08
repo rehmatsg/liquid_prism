@@ -68,10 +68,11 @@ resize, not only a settled pill.
 ## Face block and frost passes
 
 `u_face` closes the scalar packet (floats 338–341, `glassUniformCount` 342):
-x is the white face fill alpha of light regular glass (it follows the tint
-amount; the shader ignores it for clear and dark), y the inner ring shadow's
-opacity (`NativeGlassShadow.ringOpacity` × shadow strength, zero for custom
-optics and lenses), z and w reserved zeros. The batch shader carries it as
+x is regular glass's face-fill alpha, y the inner ring shadow's opacity
+(`NativeGlassShadow.ringOpacity` × shadow strength, zero for custom optics and
+lenses), z the SDR luma limit and w the fill gray. The last two fields are used
+by dark regular grading; clear glass and lenses bypass that grading. The batch
+shader carries it as
 each lens's seventeenth vec4 (`batchLensStride` 68 floats), so a batch holds
 at most `batchMaxLenses` 15 lenses in its 256 vec4. `test/glass_tint_test.dart`
 parses both shaders against these constants.
@@ -89,7 +90,9 @@ captured once and each pass blurs the same pixels; hoisted members' passes use
 treats two as equal filters on one key. `style.frost` handed to the optical
 pass is `FrostPass.effectiveSigma`: zero while sharp detail shows through. A
 batch composes one plain frost, so only members whose frost is a single
-covering pass batch (the default tint and above); the rest share captures.
+covering pass batch; the rest share captures. Regular material uses a fitted
+Gaussian at every device tint amount, while Clear can use two passes. The
+calibration and limits are in [native defaults](../native_defaults.md).
 
 ## Shared captures
 

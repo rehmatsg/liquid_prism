@@ -100,18 +100,17 @@ Use [the runnable example](../example/lib/api_main.dart) for complete state/layo
 
 | Component | Local configuration | Theme field |
 | --- | --- | --- |
-| Button | `style: GlassButtonAppearance(...)` | `button` |
+| Button | `style: GlassButtonStyle(...)` | `button` |
 | Switch | `style: GlassSwitchStyle(...)` | `switchStyle` |
 | Slider | `style: GlassSliderStyle(...)` | `slider` |
 | Segmented control | `style: GlassSegmentedStyle(...)` | `segmentedControl` |
 | Tab bar | `style: GlassTabBarStyle(...)` | `tabBar` |
 | Toolbar | `style: GlassToolbarStyle(...)` | `toolbar` |
-| Search | `appearance: GlassSearchStyle(...)` | `search` |
+| Search | `style: GlassSearchStyle(...)` | `search` |
 | All lifted lenses | component style's `lens` | `lens` |
 | Small-control motion | widget's `motion: GlassControlMotion(...)` | `controlMotion` |
 
-Search's existing `style` argument remains a `TextStyle`; it overrides
-`appearance.textStyle`. Style objects configure geometry, colors, contours,
+Search's direct `textStyle` overrides `GlassSearchStyle.textStyle`. Style objects configure geometry, colors, contours,
 material and optics. Geometry is in logical pixels; `scale` multiplies the
 switch/slider/segment dimensions. Text sizing and lens minification are separate.
 Parent constraints can limit preferred widths; lifted lenses paint beyond the
@@ -134,11 +133,13 @@ on the widgets. The [component guide](components.md) lists these independently.
 | Tab style `labelStyle.color` | Independent label color |
 | Tab style `selectionColor` | Selection pill fill |
 
-Ordinary buttons and selected tabs share the measured resting accent:
-`#3BCCFF` in dark mode and `#005DC7` in light mode for the default blue tint.
-These displayed colors are distinct from `GlassColors.blue`, the semantic source
-used for material tint. Custom opaque tints use an approximate brightness adjustment;
-translucent tints and explicit foreground overrides retain their literal values.
+Ordinary buttons use the semantic tint directly, matching native SwiftUI glass
+buttons. Selected tabs use `#0697FF` in dark mode and `#0081F5` in light mode for
+the default blue tint, measured over the grouped page background. A held dark
+tab uses `#27B8FF`; a held light tab uses the semantic tint. Native tab
+vibrancy adapts to the backdrop; this fixed palette approximates other backgrounds.
+Custom opaque tab tints use an approximate brightness adjustment; translucent
+tints and explicit foreground overrides retain their literal values.
 Prominent buttons default to white; disabled controls use a muted semantic color.
 Explicitly colored icons, styled text, and custom artwork retain their colors.
 
@@ -309,10 +310,12 @@ silences it. No hook retains native feedback and platform gates. A custom hook
 receives switch/slider feedback on all platforms.
 
 Theme `navigationBar` and scaffold `navigationBarStyle` merge title styles,
-large-title styles, gutter, controlGap, revealExtent and revealCurve field by
-field. Titles retain explicit child text styles. As measured on iOS 27, the
+large-title styles, inline/expanded alignment, spacing, collapse timing and toolbar
+minimization field by field. Titles retain explicit child text styles. As measured on iOS 27, the
 large title scrolls with the content; once the scroll passes `revealExtent`
-(its 52-point row) the titles swap on a timer, not with the scroll. Zero
+(its 52-point row) the large title fades over 200 ms with ease-in-out timing;
+the inline title uses separate fitted reveal/hide springs. These animations run
+on time, independently of subsequent scroll movement. Zero
 revealExtent swaps on the first positive scroll offset. The native snap of a
 half-scrolled title on release is not reproduced.
 
@@ -325,3 +328,20 @@ body's bottom viewInset when keyboard height is folded into padding.
 
 [Feature evidence and contracts](package_features_spec.md) lists the measured
 values and what remains fitted.
+
+## Composition and placement
+
+Use `LiquidPrismButton(label: 'Save', onPressed: save)` for a generated text label.
+An optional icon combines with the label using `GlassButtonStyle.labelPlacement`
+and `spacing`; `child` replaces generated content. `GlassControlSize` chooses a
+native size preset, and `GlassButtonSizing.fill` fills a bounded width.
+`alignment`, `minimumSize` and `maximumSize` control the content and visual bounds.
+The input area remains at least 44 points when its parent allows it. The button
+borrows `focusNode` and accepts `autofocus`, `onFocusChange` and `mouseCursor`.
+
+Set scaffold `toolbar` to typed `GlassToolbarContent`: actions, groups, custom
+widgets and spacers. Placement belongs to the content; native menu actions keep
+their iOS bridge. Navigation and scaffold styles control title alignment, row
+geometry, dock alignment, margins and maximum widths. See
+[0.7 composition examples and migration](releases/0.7.md) and run
+`example/lib/composition_main.dart` for an interactive example.

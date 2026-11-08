@@ -551,7 +551,7 @@ void main() {
             child: SizedBox(
               width: 300,
               child: LiquidPrismSearchField(
-                appearance: GlassSearchStyle(
+                style: GlassSearchStyle(
                   padding: EdgeInsets.symmetric(vertical: 4),
                 ),
               ),

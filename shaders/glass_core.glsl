@@ -92,8 +92,7 @@ vec3 vibrantHighlight(vec3 color, float strength) {
     vec3 g = vec3(-0.3507,1.8199,-0.1192);
     vec3 b = vec3(-0.3509,-1.1799,2.8809);
     float bias = 0.15;
-    if (u_material.x > 2.5 || (u_material.x > 0.5 && u_material.x < 1.5 &&
-                               u_material.y < 0.5)) {
+    if (u_material.x > 2.5 || (u_material.x > 0.5 && u_material.x < 1.5)) {
         r = vec3(1.1202,-0.1894,-0.0190);
         g = vec3(-0.0563,0.9871,-0.0191);
         b = vec3(-0.0563,-0.1893,1.1574);
@@ -130,15 +129,17 @@ vec3 gradeFace(vec3 color) {
         float value = dot(color,vec3(.2126,.7152,.0722));
         float black = clear || dark ? .125 : .4000000059604645;
         float white = clear ? 1.0800000429153442 :
-            (dark ? 1.100000023841858 : 1.0299999713897705);
+            (dark ? 1.125 : 1.0299999713897705);
         float saturation = clear ? 1.059999942779541 :
-            (dark ? 1.399999976158142 : 1.2000000476837158);
+            (dark ? 1.2999999523162842 : 1.2000000476837158);
         float tone = mix(black,white,value);
         // Fitted light-regular face curve; see doc/native_adaptive_layout.md.
         if (!clear && !dark) tone = .4 + value*(.7239-.129*value);
+        // Fitted SDR tone rolloff; the limit and gray fill are measured inputs.
+        if (!clear && dark) tone = .125 + value*(.97+(u_face.z-.97)*value);
         color = (color-vec3(value))*saturation + tone;
-        float fill = clear || dark ? 0. : u_face.x;
-        color = clamp(mix(color,vec3(1.),fill),0.,1.);
+        float fill = clear ? 0. : u_face.x;
+        color = clamp(mix(color,vec3(u_face.w),fill),0.,1.);
     }
     if (u_material.w > 0.) {
         vec4 inputColor = vec4(color,1.);

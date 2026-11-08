@@ -24,7 +24,7 @@ void main() {
           onTap: () => taps++,
           child: pill,
         );
-        final actions = [_item('Filter')];
+        final toolbar = [_item('Filter')];
         await tester.pumpWidget(
           CupertinoApp(
             home: Directionality(
@@ -34,7 +34,7 @@ void main() {
                       slivers: [
                         LiquidPrismSliverAppBar(
                           title: const Text('Matches'),
-                          actions: actions,
+                          toolbar: toolbar,
                           trailing: tappable,
                         ),
                         ...rows(),
@@ -42,7 +42,7 @@ void main() {
                     )
                   : LiquidPrismScaffold(
                       title: const Text('Matches'),
-                      actions: actions,
+                      toolbar: toolbar,
                       trailing: tappable,
                       slivers: rows(),
                     ),
@@ -59,13 +59,13 @@ void main() {
         }
         // Centred on the controls' row.
         expect(trailing.center.dy, closeTo(capsule.center.dy, .01));
-        // The title leads and stops before it.
+        // The centered title stays clear of the trailing content.
         final title = tester.getRect(find.text('Matches'));
         if (rtl) {
           expect(title.left, greaterThanOrEqualTo(trailing.right));
         } else {
           expect(title.right, lessThanOrEqualTo(trailing.left));
-          expect(title.left, 16);
+          expect(title.center.dx, closeTo(201, .01));
         }
         await tester.tap(find.byKey(const ValueKey('pill')));
         expect(taps, 1);
@@ -73,7 +73,7 @@ void main() {
     }
   }
 
-  testWidgets('without actions trailing takes the trailing edge', (
+  testWidgets('without toolbar trailing takes the trailing edge', (
     tester,
   ) async {
     phone(tester);

@@ -6,7 +6,14 @@ import 'motion.dart';
 import 'style.dart';
 
 /// Native button material treatments.
-enum GlassButtonStyle { glass, glassProminent }
+enum GlassButtonVariant { regular, prominent }
+
+enum GlassControlSize { mini, small, regular, large, extraLarge }
+
+enum GlassButtonSizing { intrinsic, fill }
+
+/// Label position relative to the icon, resolved in the text direction.
+enum GlassLabelPlacement { leading, trailing, above, below }
 
 /// Native toolbar placement presets.
 enum GlassToolbarSize { navigation, bottom }
@@ -195,9 +202,14 @@ class GlassLensStyle {
 ///
 /// Unspecified fields inherit the surrounding theme, then native defaults.
 @immutable
-class GlassButtonAppearance {
-  const GlassButtonAppearance({
-    this.buttonStyle,
+class GlassButtonStyle {
+  const GlassButtonStyle({
+    this.variant,
+    this.size,
+    this.sizing,
+    this.labelPlacement,
+    this.spacing,
+    this.alignment,
     this.glass,
     this.optics,
     this.blur,
@@ -205,12 +217,19 @@ class GlassButtonAppearance {
     this.shape,
     this.padding,
     this.minimumSize,
+    this.maximumSize,
     this.textStyle,
     this.iconSize,
     this.foregroundColor,
   }) : assert(blur == null || blur >= 0 && blur <= 12),
-       assert(iconSize == null || iconSize > 0);
-  final GlassButtonStyle? buttonStyle;
+       assert(iconSize == null || iconSize > 0),
+       assert(spacing == null || spacing >= 0);
+  final GlassButtonVariant? variant;
+  final GlassControlSize? size;
+  final GlassButtonSizing? sizing;
+  final GlassLabelPlacement? labelPlacement;
+  final double? spacing;
+  final AlignmentGeometry? alignment;
   final Glass? glass;
 
   /// A complete optical packet; supplied values replace the calculated recipe.
@@ -222,13 +241,19 @@ class GlassButtonAppearance {
 
   /// Minimum button extent; larger content can still expand it.
   final Size? minimumSize;
+  final Size? maximumSize;
   final TextStyle? textStyle;
   final double? iconSize;
   final Color? foregroundColor;
 
   /// Keep existing fields when an argument is null.
-  GlassButtonAppearance copyWith({
-    GlassButtonStyle? buttonStyle,
+  GlassButtonStyle copyWith({
+    GlassButtonVariant? variant,
+    GlassControlSize? size,
+    GlassButtonSizing? sizing,
+    GlassLabelPlacement? labelPlacement,
+    double? spacing,
+    AlignmentGeometry? alignment,
     Glass? glass,
     LiquidPrismStyle? optics,
     double? blur,
@@ -236,11 +261,17 @@ class GlassButtonAppearance {
     GlassShape? shape,
     EdgeInsetsGeometry? padding,
     Size? minimumSize,
+    Size? maximumSize,
     TextStyle? textStyle,
     double? iconSize,
     Color? foregroundColor,
-  }) => GlassButtonAppearance(
-    buttonStyle: buttonStyle ?? this.buttonStyle,
+  }) => GlassButtonStyle(
+    variant: variant ?? this.variant,
+    size: size ?? this.size,
+    sizing: sizing ?? this.sizing,
+    labelPlacement: labelPlacement ?? this.labelPlacement,
+    spacing: spacing ?? this.spacing,
+    alignment: alignment ?? this.alignment,
     glass: glass ?? this.glass,
     optics: optics ?? this.optics,
     blur: blur ?? this.blur,
@@ -248,16 +279,22 @@ class GlassButtonAppearance {
     shape: shape ?? this.shape,
     padding: padding ?? this.padding,
     minimumSize: minimumSize ?? this.minimumSize,
+    maximumSize: maximumSize ?? this.maximumSize,
     textStyle: textStyle ?? this.textStyle,
     iconSize: iconSize ?? this.iconSize,
     foregroundColor: foregroundColor ?? this.foregroundColor,
   );
 
   /// Apply a partial override, retaining unspecified fields.
-  GlassButtonAppearance merge(GlassButtonAppearance? other) => other == null
+  GlassButtonStyle merge(GlassButtonStyle? other) => other == null
       ? this
-      : GlassButtonAppearance(
-          buttonStyle: other.buttonStyle ?? buttonStyle,
+      : GlassButtonStyle(
+          variant: other.variant ?? variant,
+          size: other.size ?? size,
+          sizing: other.sizing ?? sizing,
+          labelPlacement: other.labelPlacement ?? labelPlacement,
+          spacing: other.spacing ?? spacing,
+          alignment: other.alignment ?? alignment,
           glass: other.glass ?? glass,
           optics: other.optics ?? optics,
           blur: other.blur ?? blur,
@@ -265,6 +302,7 @@ class GlassButtonAppearance {
           shape: other.shape ?? shape,
           padding: other.padding ?? padding,
           minimumSize: other.minimumSize ?? minimumSize,
+          maximumSize: other.maximumSize ?? maximumSize,
           textStyle: textStyle?.merge(other.textStyle) ?? other.textStyle,
           iconSize: other.iconSize ?? iconSize,
           foregroundColor: other.foregroundColor ?? foregroundColor,
@@ -632,6 +670,7 @@ class GlassToolbarStyle {
     this.inset,
     this.spacing,
     this.iconSize,
+    this.textStyle,
     this.badgeColor,
     this.badgeTextStyle,
     this.foregroundColor,
@@ -660,6 +699,7 @@ class GlassToolbarStyle {
   final double? inset;
   final double? spacing;
   final double? iconSize;
+  final TextStyle? textStyle;
   final Color? foregroundColor;
 
   /// Badge fill and count typography; null inherits the theme, then the
@@ -709,6 +749,7 @@ class GlassToolbarStyle {
     double? inset,
     double? spacing,
     double? iconSize,
+    TextStyle? textStyle,
     Color? badgeColor,
     TextStyle? badgeTextStyle,
     Color? foregroundColor,
@@ -732,6 +773,7 @@ class GlassToolbarStyle {
     inset: inset ?? this.inset,
     spacing: spacing ?? this.spacing,
     iconSize: iconSize ?? this.iconSize,
+    textStyle: textStyle ?? this.textStyle,
     badgeColor: badgeColor ?? this.badgeColor,
     badgeTextStyle: badgeTextStyle ?? this.badgeTextStyle,
     foregroundColor: foregroundColor ?? this.foregroundColor,
@@ -760,6 +802,7 @@ class GlassToolbarStyle {
           inset: other.inset ?? inset,
           spacing: other.spacing ?? spacing,
           iconSize: other.iconSize ?? iconSize,
+          textStyle: textStyle?.merge(other.textStyle) ?? other.textStyle,
           badgeColor: other.badgeColor ?? badgeColor,
           badgeTextStyle:
               badgeTextStyle?.merge(other.badgeTextStyle) ??

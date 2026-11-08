@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'edge_fade.dart';
@@ -571,6 +572,7 @@ class ScrollEdgeProgressBuilder extends StatefulWidget {
 
 class _ScrollEdgeProgressBuilderState extends State<ScrollEdgeProgressBuilder> {
   late double _progress = widget.progress();
+  bool _scheduled = false;
 
   @override
   void initState() {
@@ -590,7 +592,20 @@ class _ScrollEdgeProgressBuilderState extends State<ScrollEdgeProgressBuilder> {
 
   void _changed() {
     final progress = widget.progress();
-    if (progress != _progress) setState(() => _progress = progress);
+    if (progress == _progress) return;
+    // Viewport dimension changes can dispatch scroll notifications in layout.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      if (!_scheduled) {
+        _scheduled = true;
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          _scheduled = false;
+          if (mounted) _changed();
+        });
+      }
+      return;
+    }
+    setState(() => _progress = progress);
   }
 
   @override

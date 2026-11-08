@@ -19,9 +19,9 @@ void main() {
     Widget page(bool mail) => CupertinoApp(
       home: LiquidPrismScaffold(
         title: const Text('Applications'),
-        actions: [
-          [if (mail) _item('Mail')],
-          [_item('Filter'), _item('Search')],
+        toolbar: [
+          GlassToolbarGroup(items: [if (mail) _item('Mail')]),
+          GlassToolbarGroup(items: [_item('Filter'), _item('Search')]),
         ],
         slivers: rows(),
       ),
@@ -49,9 +49,9 @@ void main() {
         alignment: Alignment.topLeft,
         child: LiquidPrismToolbar(
           axis: Axis.vertical,
-          groups: [
-            [if (mail) _item('Mail')],
-            [_item('Filter')],
+          content: [
+            GlassToolbarGroup(items: [if (mail) _item('Mail')]),
+            GlassToolbarGroup(items: [_item('Filter')]),
           ],
         ),
       ),

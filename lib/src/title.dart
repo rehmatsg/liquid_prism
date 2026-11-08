@@ -2,7 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-import 'button.dart';
+import 'pressable.dart';
+import 'recipe.dart';
 import 'glass.dart';
 import 'material.dart';
 import 'theme.dart';
@@ -235,7 +236,7 @@ class LiquidPrismTitle extends StatelessWidget {
             shape: GlassShape.capsule,
             child: Padding(padding: inset, child: content),
           )
-        : LiquidPrismButton(
+        : LiquidPrismPressable.glass(
             onPressed: onPressed,
             label:
                 semanticLabel ??
@@ -243,13 +244,21 @@ class LiquidPrismTitle extends StatelessWidget {
                   Text(:final data?) => data,
                   _ => '',
                 },
-            glass: glass.interactive(),
-            shape: GlassShape.capsule,
-            padding: inset,
-            foregroundColor:
-                DefaultTextStyle.of(context).style.color ??
-                GlassColors.of(context).label,
-            child: content,
+            child: LiquidPrism(
+              glass: glass.interactive(false),
+              role: GlassRole.button,
+              shape: GlassShape.capsule,
+              child: Padding(
+                padding: inset,
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  child: content,
+                ),
+              ),
+            ),
           );
     final avatar = this.avatar;
     if (avatar == null) return GlassGroupMembers(child: capsule);

@@ -28,7 +28,7 @@ abstract final class NativeControl {
   static final largeLift = spring(250, 1);
 }
 
-/// Native white resting fill dissolves into a live lens when held. Opacity is
+/// The resting fill dissolves into a live lens when held. Opacity is
 /// applied to painted fills, never an ancestor saveLayer that isolates backdrop.
 class ControlThumb extends StatelessWidget {
   const ControlThumb({
@@ -45,17 +45,23 @@ class ControlThumb extends StatelessWidget {
   final Color? color;
   final GlassLensStyle? style;
   @override
-  Widget build(BuildContext context) => ControlLens(
-    lift: lift,
-    role: !small
-        ? GlassRole.segmentLens
-        : minifyUnderlay
-        ? GlassRole.controlThumb
-        : GlassRole.sliderLens,
-    restingColor: color ?? GlassColors.of(context).controlThumb,
-    restingShadow: restingShadow,
-    style: style,
-  );
+  Widget build(BuildContext context) {
+    final colors = GlassColors.of(context);
+    final fill = !small && colors.brightness == Brightness.dark
+        ? colors.tertiaryLabel.withValues(alpha: .3)
+        : colors.controlThumb;
+    return ControlLens(
+      lift: lift,
+      role: !small
+          ? GlassRole.segmentLens
+          : minifyUnderlay
+          ? GlassRole.controlThumb
+          : GlassRole.sliderLens,
+      restingColor: color ?? fill,
+      restingShadow: restingShadow,
+      style: style,
+    );
+  }
 }
 
 /// Uses the same continuous capsule contour as control optics and shadows.

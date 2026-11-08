@@ -317,7 +317,8 @@ SpringSimulation _glassSimulation(
 ///
 /// [precision] is the value-space change below which the spring's remaining
 /// motion is invisible (see [GlassSettle.precision]); null keeps Flutter's
-/// default tolerance.
+/// default tolerance. [delay] applies only when starting at rest; an active
+/// spring retargets immediately to preserve velocity.
 @internal
 void springGlass(
   AnimationController controller,
@@ -326,6 +327,7 @@ void springGlass(
   double? velocity,
   bool immediate = false,
   double? precision,
+  Duration delay = Duration.zero,
 }) {
   if (immediate) {
     controller.value = target;
@@ -335,20 +337,42 @@ void springGlass(
       spring,
       velocity: velocity,
       precision: precision,
+      delay: delay,
     );
   } else {
     unawaited(
       controller.animateWith(
-        _glassSimulation(
-          spring,
-          controller.value,
-          target,
-          velocity ?? controller.velocity,
-          precision,
+        _delaySpring(
+          _glassSimulation(
+            spring,
+            controller.value,
+            target,
+            velocity ?? controller.velocity,
+            precision,
+          ),
+          controller.isAnimating ? Duration.zero : delay,
         ),
       ),
     );
   }
+}
+
+Simulation _delaySpring(SpringSimulation spring, Duration delay) =>
+    delay == Duration.zero ? spring : _DelayedSpring(spring, delay);
+
+class _DelayedSpring extends Simulation {
+  _DelayedSpring(this.spring, Duration delay)
+    : delay = delay.inMicroseconds / 1e6,
+      assert(!delay.isNegative);
+  final SpringSimulation spring;
+  final double delay;
+
+  @override
+  double x(double time) => spring.x(math.max(0, time - delay));
+  @override
+  double dx(double time) => time < delay ? 0 : spring.dx(time - delay);
+  @override
+  bool isDone(double time) => time >= delay && spring.isDone(time - delay);
 }
 
 /// A continuously driven spring. Retargeting changes the simulation on the
@@ -365,13 +389,17 @@ class RetargetableGlassSpring extends AnimationController {
     SpringDescription spring, {
     double? velocity,
     double? precision,
+    Duration delay = Duration.zero,
   }) {
-    final next = _glassSimulation(
-      spring,
-      value,
-      target,
-      velocity ?? this.velocity,
-      precision,
+    final next = _delaySpring(
+      _glassSimulation(
+        spring,
+        value,
+        target,
+        velocity ?? this.velocity,
+        precision,
+      ),
+      isAnimating ? Duration.zero : delay,
     );
     if (isAnimating && _running != null) {
       _running!.retarget(next);
@@ -390,10 +418,10 @@ class RetargetableGlassSpring extends AnimationController {
 
 class _RetargetedSpring extends Simulation {
   _RetargetedSpring(this._spring);
-  SpringSimulation _spring;
+  Simulation _spring;
   double _origin = 0, _time = 0;
 
-  void retarget(SpringSimulation spring) {
+  void retarget(Simulation spring) {
     _spring = spring;
     _origin = _time;
   }

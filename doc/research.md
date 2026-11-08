@@ -28,16 +28,17 @@ contracts. Rendering probes are confined to the reference apps. The shipped iOS 
 | Sampling | Display-resolution geometry, bilinear sampling, and integration over compressed pixel footprints reduce jagged refraction at the rim. Gaussian blur runs before refraction; ordinary surface foreground stays sharp. Lifted tab foreground uses its own transparent refraction pass. |
 | Materials | Regular and clear glass have different face and highlight treatments. Regular surfaces and buttons use a luminance response measured against iOS 27; tab bars retain their separate role calibration. |
 | Tint | All 12 named accents use full extracted regular-glass RGB matrices in light/dark appearances. Clear glass has separate matrices for blue, green, orange, and pink; unmeasured inputs retain the custom-color approximation. |
-| Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons and selected tabs share the measured iOS 27 resting palette. The lifted tab pill refracts selected icons and labels in a separate GPU pass; content outside it stays sharp. |
+| Foregrounds | Semantic source colors differ from displayed pixels. Ordinary buttons use the semantic tint; selected tabs use a grouped-background fit. The lifted tab pill refracts selected icons and labels in a separate GPU pass; content outside it stays sharp. |
 | Selection | The selected pill has its own color adjustment and an additional 2-point blur, including when bar blur is zero. The measured iOS 27 dark pill is darker than the iOS 26 treatment. |
 | Touch | A held native button expanded to about 1.10× its resting size. Springs were tuned by comparison; their timing was not extracted from Apple. |
 | Rendering cost | Simulator profiling motivated sharing compatible optical passes. Nearby, overlapping, clipped, scaled, or fractionally positioned surfaces retain separate passes to preserve their appearance. |
 
 The default semantic blue is `#0088FF` in light mode and `#0091FF` in dark mode.
 The resting iOS 27 foreground measured on our reference wallpaper is `#005DC7`
-and `#3BCCFF`, respectively. Those foreground values are useful defaults, not
+and `#3BCCFF`, respectively. Those wallpaper samples are reference measurements, not
 universal native colors: Apple's output changes with the backdrop and settings.
-The implementation lives in [material recipes](../lib/src/recipe.dart),
+Current grouped-background defaults and renderer fits are recorded in
+[native defaults](native_defaults.md). The implementation lives in [material recipes](../lib/src/recipe.dart),
 [foreground colors](../lib/src/foreground.dart), [selection](../lib/src/selection.dart),
 and the [shared shader](../shaders/glass_core.glsl).
 

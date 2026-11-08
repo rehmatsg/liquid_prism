@@ -22,68 +22,7 @@ import 'menu/menus.dart';
 /// Native navigation bars use 44-point capsules; bottom toolbars use 48.
 export 'appearance.dart' show GlassToolbarSize;
 
-/// One icon action in a shared toolbar capsule.
-@immutable
-class GlassToolbarItem {
-  const GlassToolbarItem({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    this.key,
-    this.selected = false,
-    this.foregroundColor,
-    this.badge,
-    double? width,
-  }) : menu = null,
-       onMenuSelected = null,
-       _menuEnabled = false,
-       width = width ?? 38,
-       _hasWidth = width != null,
-       assert(width == null || width >= 36);
-
-  const GlassToolbarItem.menu({
-    required this.icon,
-    required this.label,
-    required LiquidMenu this.menu,
-    ValueChanged<Object?>? onSelected,
-    bool enabled = true,
-    this.key,
-    this.selected = false,
-    this.foregroundColor,
-    this.badge,
-    double? width,
-  }) : onPressed = null,
-       onMenuSelected = onSelected,
-       _menuEnabled = enabled,
-       width = width ?? 38,
-       _hasWidth = width != null,
-       assert(width == null || width >= 36);
-  final Widget icon;
-  final GlassBadge? badge;
-  final String label;
-  final FutureOr<void> Function()? onPressed;
-
-  /// Identifies the item across rebuilds, so a group animates the right item
-  /// in or out when the list changes. Items without a key are matched by
-  /// [label].
-  final Key? key;
-  final bool selected;
-  final Color? foregroundColor;
-  final LiquidMenu? menu;
-  final ValueChanged<Object?>? onMenuSelected;
-  final bool _menuEnabled;
-  bool get _isEnabled => menu == null ? onPressed != null : _menuEnabled;
-
-  /// Native item width depends on the symbol. The captured minimum is 38;
-  /// callers can supply the measured width for wider or custom symbols.
-  ///
-  /// Left unset on the only item of a group, the item fills a circle: the
-  /// group is as wide as it is tall (44 points in a navigation bar, 48 in a
-  /// bottom toolbar), as native iOS draws a lone bar button. An explicit width
-  /// is kept, so a wider custom item stays a capsule.
-  final double width;
-  final bool _hasWidth;
-}
+part 'toolbar_content.dart';
 
 /// A lone navigation-bar control that pops the route: a back chevron, or a
 /// close mark for a modally presented screen.
@@ -167,55 +106,13 @@ class LiquidPrismBackButton extends StatelessWidget {
   }
 }
 
-/// Capsules from a bar's `actions`: each element is a [GlassToolbarItem] or
-/// a list of them. Loose items next to each other share one capsule, and each
-/// list is a capsule of its own.
-List<List<GlassToolbarItem>> glassActionGroups(List<Object> actions) {
-  final groups = <List<GlassToolbarItem>>[];
-  List<GlassToolbarItem>? loose;
-  for (final entry in actions) {
-    switch (entry) {
-      case GlassToolbarItem():
-        if (loose == null) groups.add(loose = []);
-        loose.add(entry);
-      case List():
-        assert(
-          entry.every((item) => item is GlassToolbarItem),
-          'A list in actions holds only GlassToolbarItems.',
-        );
-        loose = null;
-        groups.add(entry.whereType<GlassToolbarItem>().toList());
-      default:
-        assert(
-          false,
-          'actions holds GlassToolbarItems or lists of them, '
-          'not ${entry.runtimeType}.',
-        );
-    }
-  }
-  return groups;
-}
-
-/// Several capsules of icon actions in a row, as a navigation bar's trailing
-/// toolbars: one [LiquidPrismToolbarGroup] per group, [spacing] apart.
-///
-/// Declare every group a bar can show and let the lists carry state: an
-/// empty group draws nothing and materializes in when it gains an item, so
-/// the groups keep their positions.
-///
-/// ```dart
-/// LiquidPrismToolbar(
-///   size: GlassToolbarSize.navigation,
-///   groups: [
-///     [if (hasSuggestions) suggestionsItem],
-///     [sortItem, moreItem],
-///   ],
-/// )
-/// ```
+/// A row or column of typed toolbar content. Consecutive loose actions share
+/// a capsule; explicit groups, custom widgets and spacers break the capsule.
+/// Empty groups retain their place and animate when populated.
 class LiquidPrismToolbar extends StatefulWidget {
   const LiquidPrismToolbar({
     super.key,
-    required this.groups,
+    required this.content,
     this.size,
     this.style,
     this.glass,
@@ -227,8 +124,8 @@ class LiquidPrismToolbar extends StatefulWidget {
     this.spacing,
   }) : assert(spacing == null || spacing >= 0);
 
-  /// The capsules, leading to trailing, each a list of items.
-  final List<List<GlassToolbarItem>> groups;
+  /// Content in declaration order. Placement is interpreted by the scaffold.
+  final List<GlassToolbarContent> content;
   final GlassToolbarSize? size;
   final GlassToolbarStyle? style;
   final Glass? glass;
@@ -277,15 +174,19 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
     _sync(animated: true);
   }
 
+  List<GlassToolbarContent> get _content =>
+      glassToolbarSegments(widget.content);
+
   void _sync({required bool animated}) {
-    while (_presence.length < widget.groups.length) {
+    final content = _content;
+    while (_presence.length < content.length) {
       _presence.add(
         RetargetableGlassSpring(vsync: this)..addStatusListener((status) {
           if (status.isCompleted || status.isDismissed) setState(() {});
         }),
       );
     }
-    while (_presence.length > widget.groups.length) {
+    while (_presence.length > content.length) {
       _presence.removeLast().dispose();
     }
     final immediate =
@@ -293,8 +194,12 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
         _appearance.itemTransition == GlassTransition.identity ||
         MediaQuery.disableAnimationsOf(context);
     final transition = _transition;
-    for (var i = 0; i < widget.groups.length; i++) {
-      final target = widget.groups[i].isEmpty ? 0.0 : 1.0;
+    for (var i = 0; i < content.length; i++) {
+      final target =
+          (content[i] is GlassToolbarGroup &&
+              (content[i] as GlassToolbarGroup).items.isEmpty)
+          ? 0.0
+          : 1.0;
       final spring = _presence[i];
       if (spring.value == target && !spring.isAnimating) continue;
       springGlass(
@@ -328,30 +233,57 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
         (widget.axis ?? LiquidPrismChrome.maybeOf(context)?.axis) ==
         Axis.vertical;
     final spacing = widget.spacing ?? _appearance.groupSpacing ?? 8.0;
+    final content = _content;
     return AnimatedBuilder(
       animation: Listenable.merge(_presence),
       builder: (context, _) {
         final children = <Widget>[];
         var before = 0.0;
-        for (var i = 0; i < widget.groups.length; i++) {
+        for (var i = 0; i < content.length; i++) {
           final spring = _presence[i];
           final presence = spring.value.clamp(0.0, 1.0);
           if (presence <= 0 && !spring.isAnimating) continue;
           final gap = spacing * before;
           before = math.max(before, presence);
+          final entry = content[i];
+          if (entry case GlassToolbarSpacer(:final extent, :final flex)) {
+            children.add(
+              extent != null
+                  ? SizedBox(
+                      width: vertical ? 0 : extent,
+                      height: vertical ? extent : 0,
+                    )
+                  : Spacer(flex: flex),
+            );
+            before = 0;
+            continue;
+          }
           Widget group = LiquidPrismPresence(
             progress: spring,
-            child: LiquidPrismToolbarGroup(
-              items: widget.groups[i],
-              size: widget.size,
-              style: widget.style,
-              glass: widget.glass,
-              optics: widget.optics,
-              blur: widget.blur,
-              motion: widget.motion,
-              foregroundColor: widget.foregroundColor,
-              axis: widget.axis,
-            ),
+            child: switch (entry) {
+              GlassToolbarGroup(:final items, :final style) =>
+                LiquidPrismToolbarGroup(
+                  key: entry.key,
+                  items: items,
+                  size: widget.size,
+                  style: (widget.style ?? const GlassToolbarStyle()).merge(
+                    style,
+                  ),
+                  glass: widget.glass,
+                  optics: widget.optics,
+                  blur: widget.blur,
+                  motion: widget.motion,
+                  foregroundColor: widget.foregroundColor,
+                  axis: widget.axis,
+                ),
+              GlassToolbarItem(:final child, :final width) => SizedBox(
+                key: entry.key,
+                width: vertical ? null : width,
+                height: vertical ? width : null,
+                child: child,
+              ),
+              GlassToolbarSpacer() => const SizedBox.shrink(),
+            },
           );
           group = Padding(
             padding: vertical
@@ -371,12 +303,42 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
               ),
             );
           }
-          children.add(KeyedSubtree(key: ValueKey<int>(i), child: group));
+          children.add(
+            KeyedSubtree(key: entry.key ?? ValueKey<int>(i), child: group),
+          );
         }
-        return Flex(
-          direction: vertical ? Axis.vertical : Axis.horizontal,
-          mainAxisSize: MainAxisSize.min,
-          children: children,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final bounded = vertical
+                ? constraints.hasBoundedHeight
+                : constraints.hasBoundedWidth;
+            if (children.length == 1 && children.single is! Spacer) {
+              return children.single;
+            }
+            final flexible = children.any((child) => child is Spacer);
+            final layout = Flex(
+              direction: vertical ? Axis.vertical : Axis.horizontal,
+              mainAxisSize: flexible && bounded
+                  ? MainAxisSize.max
+                  : MainAxisSize.min,
+              children: [
+                for (final child in children)
+                  if (child is Spacer)
+                    if (bounded)
+                      Spacer(flex: child.flex)
+                    else
+                      const SizedBox.shrink()
+                  else
+                    child,
+              ],
+            );
+            return flexible
+                ? layout
+                : SingleChildScrollView(
+                    scrollDirection: vertical ? Axis.vertical : Axis.horizontal,
+                    child: layout,
+                  );
+          },
         );
       },
     );
@@ -398,7 +360,7 @@ class LiquidPrismToolbarGroup extends StatefulWidget {
   const LiquidPrismToolbarGroup({
     super.key,
     required this.items,
-    GlassToolbarSize? size,
+    this.size,
     this.style,
     this.glass,
     this.optics,
@@ -406,11 +368,9 @@ class LiquidPrismToolbarGroup extends StatefulWidget {
     this.motion,
     this.foregroundColor,
     this.axis,
-  }) : size = size ?? GlassToolbarSize.bottom,
-       _hasSize = size != null;
+  });
   final List<GlassToolbarItem> items;
-  final GlassToolbarSize size;
-  final bool _hasSize;
+  final GlassToolbarSize? size;
   final GlassToolbarStyle? style;
   final Glass? glass;
   final LiquidPrismStyle? optics;
@@ -626,9 +586,7 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     final theme = LiquidPrismTheme.of(context),
         colors = GlassColors.of(context);
     final appearance = _appearance;
-    final placement = widget._hasSize
-        ? widget.size
-        : appearance.size ?? widget.size;
+    final placement = widget.size ?? appearance.size ?? GlassToolbarSize.bottom;
     final navigation = placement == GlassToolbarSize.navigation;
     final height = appearance.height ?? (navigation ? 44.0 : 48.0);
     final inset = appearance.inset ?? (navigation ? 4.0 : 5.0);
@@ -637,12 +595,23 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
         widget.foregroundColor ??
         appearance.foregroundColor ??
         theme.foregroundColor ??
-        restingGlassAccent(LiquidPrismTheme.tintOf(context), colors.brightness);
+        glassAccent(LiquidPrismTheme.tintOf(context), colors.brightness);
     final present = [
       for (final entry in _entries)
         if (!entry.leaving) entry,
     ];
-    final widths = _itemWidths(present, height, inset);
+    final widths = [
+      for (final entry in present)
+        glassToolbarItemExtent(
+          context,
+          entry.item,
+          appearance,
+          lone: present.length == 1,
+          height: height,
+          inset: inset,
+          vertical: vertical,
+        ),
+    ];
     for (var i = 0; i < present.length; i++) {
       present[i].width = widths[i];
     }
@@ -805,20 +774,6 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     );
   }
 
-  /// Visual item extents along the group's axis. A lone item without an
-  /// explicit width fills a circle, as UIKit measured: a 36-point button in the
-  /// 44-point navigation circle and a 38-point button in the 48-point bottom one.
-  static List<double> _itemWidths(
-    List<_ToolbarEntry> items,
-    double height,
-    double inset,
-  ) => [
-    if (items.length == 1 && !items.single.item._hasWidth)
-      math.max(height - inset * 2, 0)
-    else
-      for (final entry in items) entry.item.width,
-  ];
-
   /// The item's badge, in a cell the size of its slot. Measured on iOS 27:
   /// an 18-point badge whose top sits 2.8 points above the capsule and whose
   /// trailing edge overhangs the item by about 3 points.
@@ -890,77 +845,99 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
   ) {
     final item = entry.item;
     final extent = entry.width + left + right;
-    Widget cell = Builder(
-      builder: (actionContext) => LiquidPrismPressable.glass(
-        label: item.badge == null
-            ? item.label
-            : '${item.label}, ${item.badge!.semanticLabel}',
-        selected: item.selected,
-        motion: widget.motion ?? appearance.motion,
-        onPressed: item.menu == null
-            ? item.onPressed
-            : !item._isEnabled
-            ? null
-            : () async {
-                final result = await liquidMenus.show<Object?>(
-                  context: actionContext,
-                  menu: item.menu!,
-                );
-                if (actionContext.mounted) item.onMenuSelected?.call(result);
-              },
-        child: Builder(
-          builder: (context) {
-            final press = LiquidPrismPressFeedback.of(context);
-            final color = !item._isEnabled
-                ? colors.disabledLabel
-                : item.foregroundColor ?? foreground;
-            return SizedBox(
-              width: vertical ? height : extent,
-              height: vertical ? extent : height,
-              child: Padding(
-                padding: vertical
-                    ? EdgeInsets.only(top: left, bottom: right)
-                    : EdgeInsetsDirectional.only(start: left, end: right),
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Padding(
+    Widget cell = item.child != null
+        ? SizedBox(
+            width: vertical ? height : extent,
+            height: vertical ? extent : height,
+            child: Padding(
+              padding: vertical
+                  ? EdgeInsets.only(top: left, bottom: right)
+                  : EdgeInsetsDirectional.only(start: left, end: right),
+              child: Center(child: item.child),
+            ),
+          )
+        : Builder(
+            builder: (actionContext) => LiquidPrismPressable.glass(
+              label: item.badge == null
+                  ? item.label
+                  : '${item.label}, ${item.badge!.semanticLabel}',
+              selected: item.selected,
+              motion: widget.motion ?? appearance.motion,
+              onPressed: item.menu == null
+                  ? item.onPressed
+                  : !item._isEnabled
+                  ? null
+                  : () async {
+                      final result = await liquidMenus.show<Object?>(
+                        context: actionContext,
+                        menu: item.menu!,
+                      );
+                      if (actionContext.mounted) {
+                        item.onMenuSelected?.call(result);
+                      }
+                    },
+              child: Builder(
+                builder: (context) {
+                  final press = LiquidPrismPressFeedback.of(context);
+                  final color = !item._isEnabled
+                      ? colors.disabledLabel
+                      : item.foregroundColor ?? foreground;
+                  return SizedBox(
+                    width: vertical ? height : extent,
+                    height: vertical ? extent : height,
+                    child: Padding(
                       padding: vertical
-                          ? EdgeInsets.symmetric(horizontal: inset)
-                          : EdgeInsets.symmetric(vertical: inset),
-                      child: ClipPath(
-                        clipper: GlassShapeClipper(
-                          appearance.itemShape ?? GlassShape.capsule,
-                        ),
-                        child: ColoredBox(
-                          color:
-                              (appearance.pressedColor ??
-                                      colors.label.withValues(alpha: .12))
-                                  .withValues(
-                                    alpha:
-                                        (appearance.pressedColor?.a ?? .12) *
-                                        press,
-                                  ),
-                          child: const SizedBox.expand(),
-                        ),
+                          ? EdgeInsets.only(top: left, bottom: right)
+                          : EdgeInsetsDirectional.only(start: left, end: right),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          Padding(
+                            padding: vertical
+                                ? EdgeInsets.symmetric(horizontal: inset)
+                                : EdgeInsets.symmetric(vertical: inset),
+                            child: ClipPath(
+                              clipper: GlassShapeClipper(
+                                appearance.itemShape ?? GlassShape.capsule,
+                              ),
+                              child: ColoredBox(
+                                color:
+                                    (appearance.pressedColor ??
+                                            colors.label.withValues(alpha: .12))
+                                        .withValues(
+                                          alpha:
+                                              (appearance.pressedColor?.a ??
+                                                  .12) *
+                                              press,
+                                        ),
+                                child: const SizedBox.expand(),
+                              ),
+                            ),
+                          ),
+                          IconTheme.merge(
+                            data: IconThemeData(
+                              color: color,
+                              size: appearance.iconSize ?? 25.5,
+                            ),
+                            child:
+                                item.icon ??
+                                DefaultTextStyle(
+                                  style: glassToolbarTextStyle(appearance)
+                                      .copyWith(color: color),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  child: Text(item.label),
+                                ),
+                          ),
+                        ],
                       ),
                     ),
-                    IconTheme.merge(
-                      data: IconThemeData(
-                        color: color,
-                        size: appearance.iconSize ?? 25.5,
-                      ),
-                      child: item.icon,
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
-    );
+            ),
+          );
     if (progress < 1) {
       // The slot grows or shrinks so the capsule resizes and neighbours slide
       // together, while the item itself holds its final size and place: it is

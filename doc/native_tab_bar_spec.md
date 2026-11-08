@@ -226,6 +226,6 @@ The recovered portrait rule uses 86-point minimum centre spacing, or the widest
 unselected label's pixel-rounded width plus 32 points, with 16 points of default
 outer padding. The result is capped to available space. Flutter now uses this
 compact sizing by default, centering the actual housing even in a tight parent.
-`GlassTabBarStyle.expanded` opts into the previous full-width layout. Label-font
+`GlassTabBarStyle.sizing: GlassTabBarSizing.fill` opts into the previous full-width layout. Label-font
 metrics and custom styles remain subject to the rendering engine's typography.
 The tab's researched lift, tracking and two-axis deformation remain unchanged.

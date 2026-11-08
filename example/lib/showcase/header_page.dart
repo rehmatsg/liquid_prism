@@ -24,19 +24,21 @@ class _HeaderPageState extends State<HeaderPage> {
       backgroundColor: colors.groupedBackground,
       title: const Text('Glass Surfaces'),
       subtitle: const Text('Component'),
-      actions: [
-        [
-          GlassToolbarItem(
-            icon: const Icon(CupertinoIcons.bookmark),
-            label: 'Save',
-            onPressed: () {},
-          ),
-          GlassToolbarItem(
-            icon: const Icon(CupertinoIcons.ellipsis),
-            label: 'More',
-            onPressed: () {},
-          ),
-        ],
+      toolbar: [
+        GlassToolbarGroup(
+          items: [
+            GlassToolbarItem(
+              icon: const Icon(CupertinoIcons.bookmark),
+              label: 'Save',
+              onPressed: () {},
+            ),
+            GlassToolbarItem(
+              icon: const Icon(CupertinoIcons.ellipsis),
+              label: 'More',
+              onPressed: () {},
+            ),
+          ],
+        ),
       ],
       trailing: Container(
         key: const ValueKey('header-trailing'),

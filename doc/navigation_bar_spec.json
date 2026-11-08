@@ -1,0 +1,137 @@
+{
+  "reference": {
+    "framework": "SwiftUI NavigationStack on UIKit",
+    "os": "iOS 27.0 simulator",
+    "device": "iPhone 17 Pro",
+    "viewportPoints": [
+      402,
+      874
+    ],
+    "devicePixelRatio": 3,
+    "appearance": "light, default text size",
+    "probe": "tool/native_dispersion_probe --scene navigation",
+    "capture": "public UILabel geometry and Core Animation model/presentation layers sampled by CADisplayLink",
+    "tests": [
+      "NavigationTests/testTitleTiming",
+      "NavigationTests/testNavigationModes",
+      "NavigationTests/testRestorationAtEdge"
+    ]
+  },
+  "measured": {
+    "controlRow": {
+      "top": 62,
+      "height": 44,
+      "bottomClearance": 10
+    },
+    "inlineTitle": {
+      "fontSize": 17,
+      "fontName": ".SFUI-Semibold",
+      "frame": [
+        172.666667,
+        73.666667,
+        56.333333,
+        20.666667
+      ],
+      "verticalTravel": 15
+    },
+    "largeTitle": {
+      "fontSize": 34,
+      "fontName": ".SFUI-Bold",
+      "restFrame": [
+        16,
+        119.666667,
+        111.666667,
+        40.666667
+      ],
+      "rowHeight": 52
+    },
+    "largeTitleOpacity": {
+      "animationType": "CABasicAnimation",
+      "durationSeconds": 0.2,
+      "timingControlPoints": [
+        0.42,
+        0,
+        0.58,
+        1
+      ],
+      "directions": [
+        "enter",
+        "exit"
+      ]
+    },
+    "minimization": {
+      "moves": "title and controls together",
+      "inlineSafeAreaTop": {
+        "resting": 116,
+        "minimized": 62
+      },
+      "opacity": "linear with minimization progress",
+      "automaticRestoration": "scroll reversal restores chrome away from the content edge",
+      "atScrollEdgeRestoration": "reversal away from the top keeps chrome hidden; pulling through the top gradually restores it",
+      "progress": "scroll-driven; no constant animation duration was measured"
+    }
+  },
+  "rendererFits": {
+    "inlineRevealSpring": {
+      "mass": 1,
+      "stiffness": 225,
+      "damping": 28.3
+    },
+    "inlineHideSpring": {
+      "mass": 1,
+      "stiffness": 93.3,
+      "damping": 18.22
+    },
+    "springPrecision": 0.005,
+    "minimizationThresholdPoints": 13.333333,
+    "method": "damped response fit to effective presentation opacity; the 15-point translation follows the same measured progress",
+    "regressionFixture": "test/fixtures/navigation_title_motion.json",
+    "regressionToleranceAbsoluteOpacity": 0.015,
+    "provenance": "These are fitted renderer inputs, not recovered native algorithms or intercepted SwiftUI spring constructors. Each capture has subframe onset uncertainty.",
+    "titleTypography": {
+      "inlineFamily": "CupertinoSystemText",
+      "inlineLetterSpacing": -0.41,
+      "largeFamily": "CupertinoSystemDisplay",
+      "largeLetterSpacing": 0.38,
+      "LibraryMeasuredWidths": {
+        "nativeInline": 56.333333,
+        "flutterInline": 56.463787,
+        "nativeLarge": 111.666667,
+        "flutterLarge": 111.41684
+      },
+      "provenance": "Flutter system-font aliases and tracking validated against native label geometry; not inferred native font construction."
+    },
+    "inlineOnsetDelaySeconds": 0.012,
+    "observedOnsetLagRangeSeconds": [
+      0.0113,
+      0.0175
+    ],
+    "regressionAlignment": "Shared onset derived from the directly captured large-title ease-in-out opacity animation; inline data includes its onset lag."
+  },
+  "limits": [
+    "ToolbarTitleAlignment requires iOS 27.2; available simulators run iOS 27.0/27.1. Explicit alignment follows the public API contract, with RTL/layout tests, rather than a runnable 27.2 native comparison.",
+    "Automatic minimization keeps the non-minimizing default. Native searchable toolbarPrincipal integration is not inferred from arbitrary Flutter widgets.",
+    "At-scroll-edge restoration uses the content's top in Flutter. UIKit's overscroll/inset feedback and momentum through that edge are not reproduced exactly.",
+    "SwiftUI inlineLarge was captured as an additional reference; it is not a new implicit title duplication API in this release."
+  ],
+  "documentation": [
+    "https://developer.apple.com/documentation/swiftui/view/toolbarminimizationbehavior(_:for:)",
+    "https://developer.apple.com/documentation/swiftui/toolbarminimizationrestoration",
+    "https://developer.apple.com/documentation/swiftui/toolbarminimizationsafeareaadjustment",
+    "https://developer.apple.com/documentation/swiftui/toolbartitlealignment"
+  ],
+  "validation": {
+    "impellerOpacityComparison": {
+      "timeRangeSeconds": [
+        0.025,
+        0.65
+      ],
+      "sampleIntervalSeconds": 0.005,
+      "maxAbsoluteOpacityError": {
+        "inlineReveal": 0.00835,
+        "inlineHide": 0.00895
+      },
+      "note": "Native presentation trace vs rendered Flutter frames, shared large-title onset; one representative slow transition each, both scaffold/sliver."
+    }
+  }
+}

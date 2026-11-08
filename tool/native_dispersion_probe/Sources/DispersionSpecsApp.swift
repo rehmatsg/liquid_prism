@@ -29,6 +29,7 @@ func value(_ k: String, _ d: String) -> String {
     return a.firstIndex(of: k).map { a[$0 + 1] } ?? d
 }
 func run() -> String {
+    if flag("--run-name") { return value("--run-name", "defaults") }
     var r = "\(value("--scene", "controls"))-\(value("--pattern", "v"))-\(flag("--light") ? "light" : "dark")"
     if flag("--period") { r += "-p\(value("--period", "32"))" }
     if flag("--shift") { r += "-s\(value("--shift", "0"))" }
@@ -73,6 +74,9 @@ struct Root: View {
             if flag("--mono") { TabsFixture().tint(.black) } else { TabsFixture() }
         case "toolbar": ToolbarFixture()
         case "tint": TintFixture()
+        case "defaults": DefaultsFixture()
+        case "navigation":
+            if #available(iOS 27.0, *) { NavigationFixture() }
         case "levels": LevelsFixture()
         default: ControlsFixture()
         }

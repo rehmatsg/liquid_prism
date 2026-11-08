@@ -18,6 +18,10 @@ class LiquidPrismPressable extends StatefulWidget {
     required this.label,
     this.selected = false,
     this.motion,
+    this.focusNode,
+    this.autofocus = false,
+    this.onFocusChange,
+    this.mouseCursor,
   }) : _glass = false,
        _feedbackOnly = false;
   const LiquidPrismPressable.glass({
@@ -27,6 +31,10 @@ class LiquidPrismPressable extends StatefulWidget {
     required this.label,
     this.selected = false,
     this.motion,
+    this.focusNode,
+    this.autofocus = false,
+    this.onFocusChange,
+    this.mouseCursor,
   }) : _glass = true,
        _feedbackOnly = false;
 
@@ -38,6 +46,10 @@ class LiquidPrismPressable extends StatefulWidget {
   }) : onPressed = null,
        label = '',
        selected = false,
+       focusNode = null,
+       autofocus = false,
+       onFocusChange = null,
+       mouseCursor = null,
        _glass = true,
        _feedbackOnly = true;
   final Widget child;
@@ -45,6 +57,10 @@ class LiquidPrismPressable extends StatefulWidget {
   final String label;
   final bool selected;
   final GlassMotion? motion;
+  final FocusNode? focusNode;
+  final bool autofocus;
+  final ValueChanged<bool>? onFocusChange;
+  final MouseCursor? mouseCursor;
   final bool _glass, _feedbackOnly;
   @override
   State<LiquidPrismPressable> createState() => _LiquidPrismPressableState();
@@ -266,6 +282,10 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
       excludeSemantics: true,
       child: FocusableActionDetector(
         enabled: _enabled,
+        focusNode: widget.focusNode,
+        autofocus: widget.autofocus,
+        onFocusChange: widget.onFocusChange,
+        mouseCursor: widget.mouseCursor ?? MouseCursor.defer,
         actions: {
           ActivateIntent: CallbackAction<ActivateIntent>(
             onInvoke: (_) {

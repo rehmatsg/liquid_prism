@@ -8,6 +8,8 @@ import 'style.dart';
 /// Labels remain available to accessibility even when visually hidden.
 enum GlassTabLabelBehavior { always, selected, never }
 
+enum GlassTabBarSizing { compact, fill }
+
 /// Layout and colors; null fields inherit the enclosing glass theme.
 @immutable
 class GlassTabBarStyle {
@@ -30,7 +32,7 @@ class GlassTabBarStyle {
     this.shape,
     this.selectionShape,
     this.haptics,
-    this.expanded,
+    this.sizing,
     this.minimumTabWidth,
     this.labelPadding,
     this.lens,
@@ -62,7 +64,7 @@ class GlassTabBarStyle {
   final GlassMotion? motion;
   final GlassTabLabelBehavior? labelBehavior;
   final double? height, iconSize;
-  final EdgeInsets? padding;
+  final EdgeInsetsGeometry? padding;
   final TextStyle? labelStyle;
 
   /// Badge fill and count typography; null inherits the theme, then the
@@ -78,9 +80,9 @@ class GlassTabBarStyle {
   final GlassShape? shape, selectionShape;
   final bool? haptics;
 
-  /// Fill the parent's available width. Defaults to false: the floating bar
-  /// sizes to its tabs and stays compact, even inside a wide or tight parent.
-  final bool? expanded;
+  /// Compact by default. Fill uses the bounded main axis, horizontally or
+  /// vertically, and falls back to compact under unbounded constraints.
+  final GlassTabBarSizing? sizing;
 
   /// Minimum tab center spacing before label measurement. Defaults to 86.
   final double? minimumTabWidth;
@@ -108,7 +110,7 @@ class GlassTabBarStyle {
     GlassMotion? motion,
     GlassTabLabelBehavior? labelBehavior,
     double? height,
-    EdgeInsets? padding,
+    EdgeInsetsGeometry? padding,
     double? iconSize,
     Color? badgeColor,
     TextStyle? badgeTextStyle,
@@ -120,7 +122,7 @@ class GlassTabBarStyle {
     GlassShape? shape,
     GlassShape? selectionShape,
     bool? haptics,
-    bool? expanded,
+    GlassTabBarSizing? sizing,
     double? minimumTabWidth,
     double? labelPadding,
     GlassLensStyle? lens,
@@ -147,7 +149,7 @@ class GlassTabBarStyle {
     shape: shape ?? this.shape,
     selectionShape: selectionShape ?? this.selectionShape,
     haptics: haptics ?? this.haptics,
-    expanded: expanded ?? this.expanded,
+    sizing: sizing ?? this.sizing,
     minimumTabWidth: minimumTabWidth ?? this.minimumTabWidth,
     labelPadding: labelPadding ?? this.labelPadding,
     lens: lens ?? this.lens,
@@ -180,7 +182,7 @@ class GlassTabBarStyle {
           shape: other.shape ?? shape,
           selectionShape: other.selectionShape ?? selectionShape,
           haptics: other.haptics ?? haptics,
-          expanded: other.expanded ?? expanded,
+          sizing: other.sizing ?? sizing,
           minimumTabWidth: other.minimumTabWidth ?? minimumTabWidth,
           labelPadding: other.labelPadding ?? labelPadding,
           lens: (lens ?? const GlassLensStyle()).merge(other.lens),

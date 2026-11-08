@@ -16,7 +16,7 @@ Widget _bar({
   Widget? leading,
   Widget? title,
   Widget? trailing,
-  List<Object> actions = const [],
+  List<GlassToolbarContent> toolbar = const [],
 }) => CupertinoApp(
   home: Directionality(
     textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
@@ -27,7 +27,7 @@ Widget _bar({
                 leading: leading,
                 title: title,
                 trailing: trailing,
-                actions: actions,
+                toolbar: toolbar,
               ),
               ...rows(),
             ],
@@ -36,7 +36,7 @@ Widget _bar({
             leading: leading,
             title: title,
             trailing: trailing,
-            actions: actions,
+            toolbar: toolbar,
             slivers: rows(),
           ),
   ),
@@ -46,7 +46,7 @@ void main() {
   for (final sliver in [false, true]) {
     for (final rtl in [false, true]) {
       final name = '${sliver ? 'sliver bar' : 'scaffold'}, rtl: $rtl';
-      testWidgets('a wide leading widget stops before the actions ($name)', (
+      testWidgets('a wide leading widget stops before the toolbar ($name)', (
         tester,
       ) async {
         phone(tester);
@@ -65,7 +65,7 @@ void main() {
               width: 60,
               height: 30,
             ),
-            actions: [_item('Preferences')],
+            toolbar: [_item('Preferences')],
           ),
         );
         await tester.pumpAndSettle();
@@ -95,18 +95,18 @@ void main() {
               mainAxisSize: MainAxisSize.min,
               children: [Text('Product Engineer'), Text('Acme')],
             ),
-            actions: [_item('Save')],
+            toolbar: [_item('Save')],
           ),
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         final title = rectOf(tester, 'title');
-        final actions = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+        final toolbar = tester.getRect(find.byType(LiquidPrismToolbarGroup));
         // Within the bar's row: the row's height at this text size.
         final row = 17 * 2 * 1.2 + 8;
         expect(title.height, lessThanOrEqualTo(row + .01));
         expect(title.center.dy, closeTo(62 + row / 2, .01));
-        expect(actions.center.dy, closeTo(62 + row / 2, .01));
+        expect(toolbar.center.dy, closeTo(62 + row / 2, .01));
       });
     }
   }

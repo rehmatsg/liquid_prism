@@ -36,7 +36,7 @@ void main() {
         home: LiquidPrismScaffold(
           title: const Text('Inline'),
           largeTitle: const Text('Large'),
-          actions: [
+          toolbar: [
             GlassToolbarItem(
               icon: const Icon(CupertinoIcons.star),
               label: 'Star',
@@ -470,13 +470,13 @@ void main() {
     expect(colors, isNot(contains(GlassScrollEdgeStyle.hairlineColor)));
   });
 
-  testWidgets('beside actions the title leads; without them it centres', (
+  testWidgets('the inline title centers with and without toolbar content', (
     tester,
   ) async {
     phone(tester);
-    Widget page({required bool actions, bool sliverBar = false}) {
+    Widget page({required bool toolbar, bool sliverBar = false}) {
       final items = [
-        if (actions)
+        if (toolbar)
           GlassToolbarItem(
             icon: const Icon(CupertinoIcons.star),
             label: 'Star',
@@ -491,28 +491,28 @@ void main() {
                   LiquidPrismSliverAppBar(
                     leading: leading,
                     title: const Text('Title'),
-                    actions: items,
+                    toolbar: items,
                   ),
                 ],
               )
             : LiquidPrismScaffold(
                 leading: leading,
                 title: const Text('Title'),
-                actions: items,
+                toolbar: items,
                 slivers: rows(),
               ),
       );
     }
 
     for (final sliverBar in [false, true]) {
-      await tester.pumpWidget(page(actions: true, sliverBar: sliverBar));
+      await tester.pumpWidget(page(toolbar: true, sliverBar: sliverBar));
       await tester.pumpAndSettle();
       expect(
-        tester.getRect(find.text('Title')).left,
-        rectOf(tester, 'leading').right + 12,
+        tester.getRect(find.text('Title')).center.dx,
+        closeTo(201, .5),
         reason: 'sliverBar: $sliverBar',
       );
-      await tester.pumpWidget(page(actions: false, sliverBar: sliverBar));
+      await tester.pumpWidget(page(toolbar: false, sliverBar: sliverBar));
       await tester.pumpAndSettle();
       expect(
         tester.getRect(find.text('Title')).center.dx,
@@ -551,6 +551,10 @@ void main() {
     await tester.pumpAndSettle();
     final settled = tester.getTopLeft(find.text('Inline')).dy;
     expect(rest, greaterThan(settled), reason: 'it starts low and rises');
-    expect(highest, lessThan(settled), reason: 'and overshoots, as a spring');
+    expect(
+      highest,
+      closeTo(settled, .01),
+      reason: 'the measured reveal has no visible overshoot',
+    );
   });
 }

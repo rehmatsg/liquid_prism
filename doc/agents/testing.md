@@ -48,7 +48,9 @@ flutter run -d <simulator-id> -t lib/api_main.dart
 
 After Dart edits, hot reload/restart and observe the updated app. After GLSL or
 shader uniform changes, terminate and rebuild; cached programs can survive a hot
-restart. Check logs for shader, layout and range errors. Exercise light/dark,
+restart. Changes in included GLSL files may also reuse a compiled asset; clean
+the example build when the asset predates an include, then rebuild. Check logs
+for shader, layout and range errors. Exercise light/dark,
 narrow layout, large text, held/slow/fast drag, release and repeated interaction.
 
 The driver fixture supports deterministic interaction and capture:

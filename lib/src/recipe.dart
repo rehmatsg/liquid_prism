@@ -32,7 +32,7 @@ abstract final class GlassTint {
   static const standard = 0.5;
 
   /// Tint amounts the tables below were measured at.
-  static const amounts = <double>[0, .25, .5, 1];
+  static const amounts = <double>[0, .25, .5, .75, 1];
 
   /// Regular: blur fill lighten opacity (float32 inputs as captured).
   static const regularLighten = <double>[
@@ -40,19 +40,25 @@ abstract final class GlassTint {
     0.7874999642372131,
     0.8999999761581421,
     0.8999999761581421,
+    0.8999999761581421,
   ];
 
   /// Regular: blur fill normal opacity.
-  static const regularNormal = <double>[0, .25, .5, 1];
+  static const regularNormal = <double>[0, .25, .5, .75, 1];
 
   /// Regular, light: alpha of the white face fill colour.
-  static const regularFaceFill = <double>[0, .1, .2, .5];
+  static const regularFaceFill = <double>[0, .1, .2, .35, .5];
 
   /// Clear: blur radius (the face's own, light blur).
-  static const clearBlurRadius = <double>[0, .375, .75, .75];
+  static const clearBlurRadius = <double>[0, .375, .75, .75, .75];
 
   /// Clear: blur fill normal opacity (its radius is 8 only at tint 1).
-  static const clearFillNormal = <double>[0, 0, 0, 1];
+  static const clearFillNormal = <double>[0, 0, 0, .5, 1];
+
+  // Gaussian equivalents fitted to native 32-point texture captures. Backdrop
+  // layers cannot use Impeller's unsupported lighten/darken pipeline blends.
+  static const regularFrostLight = <double>[5.2, 6.76, 8.32, 10.11, 12];
+  static const regularFrostDark = <double>[2.98, 5.07, 7.12, 9.62, 12];
 
   /// [values] at tint amount [t], linear between the measured amounts.
   static double sample(List<double> values, double t) {
@@ -106,8 +112,7 @@ final class FrostPass {
   @override
   String toString() => 'FrostPass($sigma, $opacity, ${blendMode.name})';
 
-  /// Composites the measured blur fills at [tint]. Regular frost is calibrated
-  /// at tint 0.5; normal opacity is normalized to that value and capped at 1.
+  /// Fitted Gaussian frost for native materials; explicit optics stay literal.
   static List<FrostPass> resolve({
     required double kind,
     required bool dark,
@@ -119,19 +124,14 @@ final class FrostPass {
       return frost > 0.05 ? [FrostPass(frost)] : const [];
     }
     if (kind == 1) {
-      final normal = math.min(
-        1.0,
-        GlassTint.sample(GlassTint.regularNormal, tint) /
-            GlassTint.sample(GlassTint.regularNormal, GlassTint.standard),
-      );
-      if (frost <= 0.05) return const [];
-      if (normal >= 1) return [FrostPass(frost)];
-      final blend = GlassTint.sample(GlassTint.regularLighten, tint);
-      return [
-        if (normal > 0) FrostPass(frost, normal),
-        if (blend > 0)
-          FrostPass(frost, blend, dark ? BlendMode.darken : BlendMode.lighten),
-      ];
+      final sigma =
+          frost *
+          GlassTint.sample(
+            dark ? GlassTint.regularFrostDark : GlassTint.regularFrostLight,
+            tint,
+          ) /
+          GlassRecipe.regularFrost;
+      return sigma > 0.05 ? [FrostPass(sigma)] : const [];
     }
     final radius = GlassTint.sample(GlassTint.clearBlurRadius, tint);
     final base =
@@ -175,6 +175,8 @@ final class GlassRecipe {
     this.chromaticBand = 0,
     this.underlay = 0,
     this.faceFill = .2,
+    this.faceGray = 1,
+    this.tintAmount = GlassTint.standard,
   ]);
   final double kind;
   final bool dark;
@@ -204,11 +206,10 @@ final class GlassRecipe {
   /// the optics' rim refraction: native gives each its own pass.
   final double underlay;
 
-  /// Alpha of the white face fill of light regular glass, which follows the
-  /// device's Liquid Glass setting ([GlassTint.regularFaceFill]); 0.2 at iOS's
-  /// default. The shader ignores it for clear glass and dark appearance, whose
-  /// measured fill is clear.
+  /// Regular-glass face fill alpha, resolved from the device setting.
   final double faceFill;
+  final double faceGray;
+  final double tintAmount;
 
   GlassRecipe _copyWith({
     double? presence,
@@ -217,6 +218,8 @@ final class GlassRecipe {
     double? chromaticBand,
     double? underlay,
     double? faceFill,
+    double? faceGray,
+    double? tintAmount,
   }) => GlassRecipe(
     kind,
     dark,
@@ -229,12 +232,17 @@ final class GlassRecipe {
     chromaticBand ?? this.chromaticBand,
     underlay ?? this.underlay,
     faceFill ?? this.faceFill,
+    faceGray ?? this.faceGray,
+    tintAmount ?? this.tintAmount,
   );
 
-  GlassRecipe withTint(double tint) {
-    final fill = GlassTint.sample(GlassTint.regularFaceFill, tint);
-    return fill == faceFill ? this : _copyWith(faceFill: fill);
-  }
+  GlassRecipe withTint(double tint) => _copyWith(
+    faceFill: dark
+        ? math.max(tint - .5, 0)
+        : GlassTint.sample(GlassTint.regularFaceFill, tint),
+    faceGray: dark ? (tint - .5).abs() * .25 : 1,
+    tintAmount: tint,
+  );
 
   GlassRecipe withChromaticFringe(double split, double band) =>
       _copyWith(chromaticSplit: split, chromaticBand: band);
@@ -249,20 +257,35 @@ final class GlassRecipe {
       value == lensRim ? this : _copyWith(lensRim: value);
 
   bool get usesNativeControlShadow => kind != 0 && role != GlassRole.surface;
-  double get shadowStrength =>
-      presence *
-      (kind == 3 ? 0 : (usesNativeControlShadow ? 1 : (kind == 1 ? 0.5 : 1)));
+  double get shadowStrength => presence * (kind == 3 ? 0 : 1);
   static GlassRecipe resolve(
     Glass glass,
     Brightness brightness,
     GlassRole role, {
     required bool customOptics,
+    bool disabledProminent = false,
   }) {
     final dark = brightness == Brightness.dark;
     final tint = glass.tintColor;
     final rgb = tint == null ? 0 : tint.toARGB32() & 0xFFFFFF;
-    final matrix =
-        nativeTintMatrices[(glass.variant == GlassVariant.clear, dark, rgb)];
+    final disabledScale = dark ? .3086487948894501 : .30867475271224976;
+    final disabledBias = dark ? .31474554538726807 : .285163551568985;
+    final matrix = disabledProminent
+        ? <double>[
+            disabledScale,
+            0,
+            0,
+            disabledBias,
+            0,
+            disabledScale,
+            0,
+            disabledBias,
+            0,
+            0,
+            disabledScale,
+            disabledBias,
+          ]
+        : nativeTintMatrices[(glass.variant == GlassVariant.clear, dark, rgb)];
     final fallback = <double>[
       for (final component in [tint?.r ?? 0, tint?.g ?? 0, tint?.b ?? 0]) ...[
         0.12 * (1 - component) * 0.2126,
@@ -281,12 +304,21 @@ final class GlassRecipe {
       GlassRole.controlLensUnminified => 3.0,
       _ => customOptics ? 0.0 : materialKind,
     };
-    return GlassRecipe(kind, dark, role, matrix ?? fallback, tint?.a ?? 0);
+    return GlassRecipe(
+      kind,
+      dark,
+      role,
+      matrix ?? fallback,
+      disabledProminent
+          ? (dark ? .3499999940395355 : .44999998807907104)
+          : tint?.a ?? 0,
+    );
   }
 
   /// The regular recipe's frost: the blur fill a clear surface fades in
   /// towards tint 1, which native draws with the same captured radius.
-  static const regularFrost = 3.3;
+  static const regularFrost = 8.32;
+  static const blurFillFrost = 12.0;
 
   LiquidPrismStyle optics(double radius) => kind == 2
       ? LiquidPrismStyle.clear.copyWith(
@@ -315,13 +347,21 @@ final class GlassRecipe {
     0, 0, 1 - presence, lensRim,
   ];
 
-  /// `u_face`: white fill, inner ring opacity, two reserved zeros.
-  List<double> get faceUniforms => [
-    faceFill,
-    kind == 0 ? 0 : NativeGlassShadow.ringOpacity * shadowStrength,
-    0,
-    0,
-  ];
+  /// `u_face`: face fill, inner ring opacity, SDR luma limit, fill gray.
+  List<double> get faceUniforms => faceUniformsFor(64);
+
+  List<double> faceUniformsFor(double extent) {
+    final size = ((extent - 64) / 40).clamp(0.0, 1.0);
+    final limit = dark
+        ? .6 - .25 * size + .2 * size * math.max(.5 - tintAmount, 0)
+        : .94;
+    return [
+      faceFill,
+      kind == 0 ? 0 : NativeGlassShadow.ringOpacity * shadowStrength,
+      limit,
+      faceGray,
+    ];
+  }
 }
 
 /// Extracted iOS 27 glassBackground shadow inputs. Kernel conversion belongs to

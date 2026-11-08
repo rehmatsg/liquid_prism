@@ -23,6 +23,7 @@ JSON; preserve unresolved questions instead of upgrading an approximation to fac
   [compact layout measurements](../native_tab_layout_spec.json).
 - [Control sizes/timing](../native_controls_spec.md),
   [continuous slider endpoint fill](../native_slider_fill_spec.json).
+- [Navigation geometry, title motion and minimization](../navigation_bar_spec.json).
 - [Toolbar/search geometry](../native_chrome_spec.md).
 - [Scroll edge effect composition, mask curve and pixel profile](../native_scroll_edge_spec.md),
   from `tool/native_scroll_edge_probe`.
@@ -36,7 +37,7 @@ Flutter apps on the same simulator/OS with matching fixture values.
 
 ## Regression checks
 
-1. Tabs stay compact unless expanded is explicit. The three-tab native fixture is
+1. Tabs stay compact unless fill sizing is explicit. The three-tab native fixture is
    274×62 points under its specified typography; that is not a universal width.
 2. Lifted switch, segment and tab lenses reveal a smaller underlay. Slider knobs
    grow, but their tracks retain scale. Customization may opt out explicitly.

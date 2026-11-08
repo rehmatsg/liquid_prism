@@ -11,6 +11,7 @@ import 'tab_bar_style.dart';
 import 'appearance.dart';
 import 'haptics.dart';
 import 'navigation_bar_style.dart';
+import 'scaffold_style.dart';
 
 /// Native iOS 27 semantic source colors, resolved for the current appearance.
 /// These are tint inputs, not the final composited glass pixel colors.
@@ -41,8 +42,8 @@ final class GlassColors {
   /// Native small-control resting fill, independent of appearance.
   Color get controlThumb => const Color(0xFFFFFFFF);
 
-  /// Content above the opaque white segmented selection.
-  Color get controlThumbLabel => const Color(0xFF000000);
+  /// Content above the resting segmented selection.
+  Color get controlThumbLabel => label;
 
   /// Extracted UISlider maximum track: 10% white/black in dark/light mode.
   Color get sliderTrack => _dark
@@ -177,6 +178,7 @@ class LiquidPrismThemeData {
     this.shape,
     this.motion,
     this.navigationBar,
+    this.scaffold,
     this.tabBar,
     this.lens,
     this.button,
@@ -230,9 +232,10 @@ class LiquidPrismThemeData {
   final GlassShape? shape;
   final GlassMotion? motion;
   final GlassNavigationBarStyle? navigationBar;
+  final GlassScaffoldStyle? scaffold;
   final GlassTabBarStyle? tabBar;
   final GlassLensStyle? lens;
-  final GlassButtonAppearance? button;
+  final GlassButtonStyle? button;
   final GlassSwitchStyle? switchStyle;
   final GlassSliderStyle? slider;
   final GlassSegmentedStyle? segmentedControl;
@@ -261,9 +264,10 @@ class LiquidPrismThemeData {
     GlassShape? shape,
     GlassMotion? motion,
     GlassNavigationBarStyle? navigationBar,
+    GlassScaffoldStyle? scaffold,
     GlassTabBarStyle? tabBar,
     GlassLensStyle? lens,
-    GlassButtonAppearance? button,
+    GlassButtonStyle? button,
     GlassSwitchStyle? switchStyle,
     GlassSliderStyle? slider,
     GlassSegmentedStyle? segmentedControl,
@@ -286,6 +290,7 @@ class LiquidPrismThemeData {
     shape: shape ?? this.shape,
     motion: motion ?? this.motion,
     navigationBar: navigationBar ?? this.navigationBar,
+    scaffold: scaffold ?? this.scaffold,
     tabBar: tabBar ?? this.tabBar,
     lens: lens ?? this.lens,
     button: button ?? this.button,
@@ -316,9 +321,12 @@ class LiquidPrismThemeData {
         navigationBar: (navigationBar ?? const GlassNavigationBarStyle()).merge(
           other.navigationBar,
         ),
+        scaffold: (scaffold ?? const GlassScaffoldStyle()).merge(
+          other.scaffold,
+        ),
         tabBar: (tabBar ?? const GlassTabBarStyle()).merge(other.tabBar),
         lens: (lens ?? const GlassLensStyle()).merge(other.lens),
-        button: (button ?? const GlassButtonAppearance()).merge(other.button),
+        button: (button ?? const GlassButtonStyle()).merge(other.button),
         switchStyle: (switchStyle ?? const GlassSwitchStyle()).merge(
           other.switchStyle,
         ),

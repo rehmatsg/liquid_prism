@@ -75,10 +75,9 @@ Wire the option through public export, style constructor/fields, typed `copyWith
 `merge`, theme resolution, actual layout/paint, and docs. Test observable behavior
 and precedence. A field that is accepted but ignored is a broken API.
 
-Keep names consistent with Flutter conventions. Search already has `style` for
-`TextStyle`, so its component configuration is named `appearance`; changing that
-would break source compatibility. Button's treatment enum remains `buttonStyle`,
-while `style` accepts `GlassButtonAppearance`.
+Keep names consistent: component configuration uses `style`, direct typography
+uses `textStyle`, and button treatment uses `variant`. Toolbar composition uses
+`GlassToolbarContent` rather than runtime-checked lists of objects.
 
 Avoid new dependencies for a configuration object. Keep styles const-friendly,
 immutable and typed. Preserve direct-import enum reexports when moving declarations.

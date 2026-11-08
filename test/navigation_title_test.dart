@@ -23,7 +23,7 @@ void main() {
                     revealExtent: 80,
                   ),
                   leading: const SizedBox(width: 44, height: 44),
-                  actions: [
+                  toolbar: [
                     GlassToolbarItem(
                       icon: const Icon(Icons.mail),
                       label: 'Mail',

@@ -285,7 +285,10 @@ void main() {
     'prominent button applies theme tint to its face and preserves contrast',
     (tester) async {
       final imageKey = GlobalKey();
-      Future<List<List<int>>> render(GlassButtonStyle style, Color tint) async {
+      Future<List<List<int>>> render(
+        GlassButtonVariant style,
+        Color tint,
+      ) async {
         await tester.pumpWidget(
           glassHarness(
             imageKey: imageKey,
@@ -294,7 +297,7 @@ void main() {
               tint: tint,
               child: LiquidPrismButton(
                 label: 'Action',
-                buttonStyle: style,
+                variant: style,
                 onPressed: () {},
                 padding: EdgeInsets.zero,
                 child: SizedBox(
@@ -324,15 +327,15 @@ void main() {
       }
 
       const purple = Color(0xFFAA00CC);
-      final plain = await render(GlassButtonStyle.glass, purple);
+      final plain = await render(GlassButtonVariant.regular, purple);
       expect(plain.last[0], greaterThan(plain.last[1]));
       expect(plain.last[2], greaterThan(plain.last[1]));
-      final prominent = await render(GlassButtonStyle.glassProminent, purple);
+      final prominent = await render(GlassButtonVariant.prominent, purple);
       expect(prominent.first, [170, 0, 204, 255]);
       expect(prominent.first, isNot(plain.first));
       expect(prominent.last, [255, 255, 255, 255]);
       final changed = await render(
-        GlassButtonStyle.glassProminent,
+        GlassButtonVariant.prominent,
         const Color(0xFF00AA44),
       );
       expect(changed.first, [0, 170, 68, 255]);

@@ -66,7 +66,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
       bool inherit = true,
       bool enabled = true,
       int selectedIndex = 0,
-      GlassButtonStyle buttonStyle = GlassButtonStyle.glass,
+      GlassButtonVariant variant = GlassButtonVariant.regular,
       Color background = const Color(0xFF666666),
     }) async {
       await tester.pumpWidget(
@@ -116,7 +116,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
                     label: 'Button',
                     onPressed: enabled ? () {} : null,
                     foregroundColor: buttonColor,
-                    buttonStyle: buttonStyle,
+                    variant: variant,
                     padding: const EdgeInsets.all(10),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -157,8 +157,8 @@ Future<void> _verifyForeground(WidgetTester tester) async {
     ];
     final restingButton = await pixelsAt(tester, imageKey, buttonPoints);
     final expected = brightness == Brightness.dark
-        ? const Color(0xFF3BCCFF)
-        : const Color(0xFF005DC7);
+        ? const Color(0xFF0697FF)
+        : const Color(0xFF0081F5);
     final rgba = [
       (expected.r * 255).round(),
       (expected.g * 255).round(),
@@ -169,10 +169,11 @@ Future<void> _verifyForeground(WidgetTester tester) async {
       expect(pixels[0][channel], closeTo(rgba[channel], 1));
       expect(pixels[1][channel], closeTo(rgba[channel], 1));
     }
+    final buttonBlue = brightness == Brightness.dark ? 145 : 136;
     expect(restingButton, [
-      pixels[0],
-      pixels[1],
-    ], reason: 'Ordinary button icon and text use the same blue as navigation');
+      [0, buttonBlue, 255, 255],
+      [0, buttonBlue, 255, 255],
+    ], reason: 'Ordinary buttons retain the native semantic tint');
     const appForeground = Color(0xFFCC4400);
     final foregroundPoints = [...points.take(2), ...buttonPoints];
     await render(appForeground: appForeground);
@@ -210,7 +211,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
     expect(await pixelsAt(tester, imageKey, foregroundPoints), disabledPixels);
     await render(
       appForeground: appForeground,
-      buttonStyle: GlassButtonStyle.glassProminent,
+      variant: GlassButtonVariant.prominent,
     );
     expect(await pixelsAt(tester, imageKey, buttonPoints), [
       [255, 255, 255, 255],
@@ -218,7 +219,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
     ]);
     await render(
       appForeground: appForeground,
-      buttonStyle: GlassButtonStyle.glassProminent,
+      variant: GlassButtonVariant.prominent,
       buttonColor: const Color(0xFFAA22DD),
     );
     expect(await pixelsAt(tester, imageKey, buttonPoints), [
@@ -261,10 +262,9 @@ Future<void> _verifyForeground(WidgetTester tester) async {
     await render(tint: customTint);
     final customPixels = await pixelsAt(tester, imageKey, foregroundPoints);
     expect(
-      customPixels,
-      everyElement(customPixels.first),
-      reason:
-          'A custom tint is calibrated consistently for button and tab content',
+      customPixels.skip(2),
+      everyElement([128, 64, 32, 255]),
+      reason: 'Ordinary buttons preserve a custom semantic tint',
     );
     for (var channel = 0; channel < 3; channel++) {
       expect(

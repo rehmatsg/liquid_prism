@@ -78,8 +78,7 @@ class ControlLens extends StatelessWidget {
             alpha: restingColor.a * (1 - progress),
           ),
         );
-        // At rest every optic is scaled to zero and the fill covers the lens,
-        // so the glass would only cost a full-screen backdrop pass per thumb.
+        // At rest every optic is zero, so only the fill contributes.
         // Custom optics or frost, a presence fade or the tab glint keep it.
         final resting =
             progress == 0 &&

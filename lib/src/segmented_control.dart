@@ -288,8 +288,10 @@ class LiquidPrismSegmentedControl<T extends Object> extends StatelessWidget {
                                                       appearance
                                                           .labelStyle
                                                           ?.color ??
-                                                      (i == selected &&
-                                                              lift < .5
+                                                      (onValueChanged == null
+                                                          ? colors.label
+                                                          : i == selected &&
+                                                                lift < .5
                                                           ? colors
                                                                 .controlThumbLabel
                                                           : colors.label),
