@@ -19,10 +19,11 @@ dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: v0.2.0
+      ref: v0.7.0
 ```
 
-Run `flutter pub get`. Each [release](https://github.com/rehmatsg/liquid_prism/releases)
+Run `flutter pub get`. For breaking API changes, see the [0.7 migration guide](doc/releases/0.7.md).
+Each [release](https://github.com/rehmatsg/liquid_prism/releases)
 is a `vX.Y.Z` tag; see the [changelog](CHANGELOG.md). The package is not on
 pub.dev.
 

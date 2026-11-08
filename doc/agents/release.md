@@ -44,9 +44,23 @@ an iPhone install. Do not commit device identifiers or signing credentials to do
 Run `flutter pub publish --dry-run` from the repository root. Inspect its file
 list and warnings. `.pubignore` excludes tooling, tests, local artifacts and
 platform-generated example directories. Public docs and agent guides are small
-text sources and may ship in the archive. The package is not published yet;
-README installation currently uses Git.
+text sources and may ship in the archive. The package is distributed through Git tags and GitHub Releases; it is not
+published on pub.dev.
 
 No runtime code may depend on `_research/`, `artifacts/` or a local probe. Native
 popup bridge code and shader assets must be packaged. Keep the BSD and merged
 Liquid Menu MIT notices available to consumers.
+
+## Tagged GitHub releases
+
+The release preparation PR keeps `pubspec.yaml`, `ios/liquid_prism.podspec`,
+`CHANGELOG.md` and the README installation ref aligned. For a version increase,
+`python3 tool/release.py bump X.Y.Z` moves the Unreleased notes into that version.
+Check an already prepared version with `python3 tool/release.py check --tag vX.Y.Z`
+and inspect `python3 tool/release.py notes X.Y.Z`.
+
+After the preparation PR merges and its CI passes, tag that main-branch commit
+as `vX.Y.Z` and push the tag. `.github/workflows/release.yml` verifies version
+consistency, runs the checks and creates the GitHub Release from the changelog.
+Wait for the workflow and confirm the published release before upgrading a
+consumer to its tag. Publishing requires the user's explicit release authorization.
