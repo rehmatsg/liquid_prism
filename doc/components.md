@@ -291,9 +291,11 @@ participates in focus and accessibility.
 `automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
 and restores it on reversal; `onScrollUp` reverses those directions.
 `minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
-an on-scroll-down bar hidden until content reaches the top. Set
-`minimizationSafeAreaAdjustment` to `disabled` to keep body insets fixed while
-chrome moves. A top-docked tab bar follows the navigation bar; other docks remain
+an on-scroll-down bar hidden until content reaches the top. Automatic safe-area
+adjustment keeps content insets stable so rows follow scrolling one for one.
+`minimizationSafeAreaAdjustment: enabled` explicitly makes insets follow the bar;
+`disabled` keeps them fixed. Rail controls stay fixed below the system status
+region while the title minimizes. A top-docked tab bar follows the navigation bar; other docks remain
 independent. Minimization follows scroll progress, without a separate fixed-time
 animation. An accessory row stays visible and interactive, moving up to the safe
 top edge as the bar leaves. Its scroll-edge effect and content clearance remain.
@@ -390,11 +392,10 @@ before the effect.
 ## Adaptive layout
 
 `LiquidPrismScaffold` places a `tabBar`, typed `toolbar` content and a
-`leading` control over a full-window `body`. Each action is a
-`GlassToolbarItem` or a list of them: `[share, more]` is one capsule,
-`[[filter], [share, more]]` two, and loose items next to each other share a
-capsule; an empty list draws nothing and materializes in when it gains an item, and
-in the iPhone Duo rail the groups stack or fold into one "More" menu. With no `leading`, a route that
+`leading` control over a full-window `body`. Consecutive `GlassToolbarItem`s
+share a capsule; explicit `GlassToolbarGroup(items: [...])` entries create
+separate capsules. An empty group draws nothing and materializes in when it gains
+an item. In the iPhone Duo rail, groups stack or fold into one "More" menu. With no `leading`, a route that
 can pop gets a `LiquidPrismBackButton`: a glass back chevron, or a close mark
 on a fullscreen dialog, popping through `Navigator.maybePop`. Pass
 `automaticallyImplyLeading: false` to suppress it, or your own
@@ -549,7 +550,10 @@ Null callbacks disable individual actions; menu items use `enabled: false`.
 Items may come and go: an item added to `items` materializes in while the
 capsule widens, and a removed one leaves the same way. Items are matched by
 `key`, else by `label`. An empty list materializes the whole capsule away and
-draws nothing, so a list whose items all depend on state is fine.
+draws nothing, so a list whose items all depend on state is fine. Regrouping the
+same ordered actions between capsules keeps them fully present and interactive;
+it does not replay item entry/exit transitions. Use keys or distinct labels to
+identify actions.
 `GlassToolbarStyle.itemTransition: GlassTransition.identity` swaps at once, as
 Reduce Motion does; `itemTransitionStyle` sets the springs.
 

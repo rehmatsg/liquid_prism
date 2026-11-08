@@ -59,6 +59,94 @@ Widget page({
 );
 
 void main() {
+  testWidgets('rail controls stay fixed while the header minimizes', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      for (final left in [false, true]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        final padding = FakeViewPadding(
+          left: left ? 84 : 0,
+          right: left ? 0 : 84,
+          bottom: 34,
+        );
+        tester.view
+          ..devicePixelRatio = 1
+          ..physicalSize = const Size(466, 678)
+          ..padding = padding
+          ..viewPadding = padding;
+        addTearDown(tester.view.reset);
+        final scroll = ScrollController();
+        addTearDown(scroll.dispose);
+        var backTaps = 0, actionTaps = 0;
+        const backKey = Key('rail back');
+        await tester.pumpWidget(
+          CupertinoApp(
+            home: LiquidPrismScaffold(
+              title: const Text('Rail page'),
+              navigationBarStyle: const GlassNavigationBarStyle(
+                minimizationBehavior:
+                    GlassToolbarMinimizationBehavior.onScrollDown,
+              ),
+              leading: LiquidPrismButton(
+                key: backKey,
+                label: 'Rail Back',
+                onPressed: () => backTaps++,
+                child: const Icon(CupertinoIcons.chevron_back),
+              ),
+              toolbar: [
+                GlassToolbarItem(
+                  icon: const Icon(CupertinoIcons.ellipsis),
+                  label: 'Rail action',
+                  onPressed: () => actionTaps++,
+                ),
+              ],
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final back = tester.getRect(find.byKey(backKey));
+        final actions = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+        expect(back.top, greaterThan(82));
+        var expectedTaps = 0;
+        for (final offset in [0.0, 20.0, 80.0, 300.0, 295.0, 240.0, 0.0]) {
+          scroll.jumpTo(offset);
+          await tester.pumpAndSettle();
+          expect(find.semantics.byLabel('Rail Back'), findsOneWidget);
+          expect(find.semantics.byLabel('Rail action'), findsOneWidget);
+          expect(
+            tester.getRect(find.byKey(backKey)),
+            back,
+            reason: 'left $left offset $offset',
+          );
+          expect(
+            tester.getRect(find.byType(LiquidPrismToolbarGroup)),
+            actions,
+            reason: 'left $left offset $offset',
+          );
+          if (offset == 300) {
+            expect(find.semantics.byLabel('Rail page'), findsNothing);
+          } else if (offset == 240 || offset == 0) {
+            expect(find.semantics.byLabel('Rail page'), findsOneWidget);
+          }
+          await tester.tapAt(back.center);
+          await tester.pumpAndSettle();
+          await tester.tapAt(actions.center);
+          await tester.pumpAndSettle();
+          expectedTaps++;
+          expect(backTaps, expectedTaps);
+          expect(actionTaps, expectedTaps);
+        }
+        expect(tester.takeException(), isNull);
+      }
+    } finally {
+      semantics.dispose();
+    }
+  });
+
   for (final dock in [GlassTabBarPlacement.top, GlassTabBarPlacement.bottom]) {
     testWidgets('only integrated top tabs minimize with the bar, $dock', (
       tester,
@@ -115,6 +203,74 @@ void main() {
   }
   for (final sliver in [false, true]) {
     testWidgets(
+      'default minimization keeps content motion continuous, sliver $sliver',
+      (tester) async {
+        phone(tester);
+        for (final accessory in [false, true]) {
+          await tester.pumpWidget(const SizedBox.shrink());
+          final scroll = ScrollController();
+          addTearDown(scroll.dispose);
+          await tester.pumpWidget(
+            page(
+              sliver: sliver,
+              scroll: scroll,
+              style: const GlassNavigationBarStyle(
+                minimizationBehavior:
+                    GlassToolbarMinimizationBehavior.onScrollDown,
+              ),
+              accessory: accessory
+                  ? const PreferredSize(
+                      preferredSize: Size.fromHeight(44),
+                      child: Text('Motion accessory'),
+                    )
+                  : null,
+            ),
+          );
+          await tester.pumpAndSettle();
+          final anchor = find.byKey(const ValueKey('row8'));
+          final headerTop = tester.getTopLeft(find.text('Back')).dy;
+          var y = tester.getTopLeft(anchor).dy;
+          var previous = 0.0;
+          for (final offset in [
+            20.0,
+            40.0,
+            80.0,
+            120.0,
+            115.0,
+            100.0,
+            60.0,
+            20.0,
+            0.0,
+          ]) {
+            scroll.jumpTo(offset);
+            await tester.pumpAndSettle();
+            expect(scroll.offset, offset);
+            if (offset == 80 || offset == 120) {
+              expect(
+                tester.getTopLeft(find.text('Back')).dy,
+                lessThan(headerTop),
+              );
+            } else if (offset == 0) {
+              expect(
+                tester.getTopLeft(find.text('Back')).dy,
+                closeTo(headerTop, .01),
+              );
+            }
+            final nextY = tester.getTopLeft(anchor).dy;
+            expect(
+              nextY - y,
+              closeTo(previous - offset, .01),
+              reason: 'accessory $accessory: $previous to $offset',
+            );
+            y = nextY;
+            previous = offset;
+          }
+          expect(tester.takeException(), isNull);
+        }
+      },
+    );
+
+    testWidgets(
       'accessories remain usable while navigation scrolls, sliver $sliver',
       (tester) async {
         phone(tester);
@@ -123,16 +279,22 @@ void main() {
           const modes = {
             'sticky': GlassNavigationBarStyle(
               minimizationBehavior: GlassToolbarMinimizationBehavior.never,
+              minimizationSafeAreaAdjustment:
+                  GlassToolbarMinimizationSafeAreaAdjustment.enabled,
             ),
             'scroll-away': GlassNavigationBarStyle(
               minimizationBehavior:
                   GlassToolbarMinimizationBehavior.onScrollDown,
               minimizationRestoration:
                   GlassToolbarMinimizationRestoration.atScrollEdge,
+              minimizationSafeAreaAdjustment:
+                  GlassToolbarMinimizationSafeAreaAdjustment.enabled,
             ),
             'reveal-on-scroll-up': GlassNavigationBarStyle(
               minimizationBehavior:
                   GlassToolbarMinimizationBehavior.onScrollDown,
+              minimizationSafeAreaAdjustment:
+                  GlassToolbarMinimizationSafeAreaAdjustment.enabled,
             ),
           };
           for (final mode in modes.entries) {
@@ -240,7 +402,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester.getTopLeft(find.byKey(const ValueKey('row5'))).dy,
-        closeTo(initial - 200 - 54, .01),
+        closeTo(initial - 200, .01),
       );
       expect(tester.takeException(), isNull);
     });

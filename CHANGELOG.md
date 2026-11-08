@@ -4,6 +4,13 @@
 
 ## 0.7.1
 
+- Regroup existing toolbar actions without replaying entry/exit animations;
+  genuinely added and removed actions retain their transitions.
+
+- Keep side-rail controls fixed when the navigation title minimizes, and retain
+  stable content insets by default so header hide/reveal does not double scroll.
+  Explicit enabled safe-area adjustment still follows the bar.
+
 - Keep centered navigation titles aligned with the content area beside corner
   status regions, and keep crowded interactive titles usable. Sheets no longer
   reserve horizontal space for the window status bar above them.

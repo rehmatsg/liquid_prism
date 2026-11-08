@@ -74,7 +74,7 @@ class GlassNavigationBarStyle {
   final GlassTitleAlignment? largeTitleAlignment;
 
   /// Automatic retains the captured non-minimizing default.
-  /// The title and controls minimize together; an accessory stays visible.
+  /// Top-bar controls follow the title; rail controls and accessories stay visible.
   final GlassToolbarMinimizationBehavior? minimizationBehavior;
 
   /// Initial scroll distance before minimization starts; fitted default 13⅓ pt.
@@ -84,8 +84,9 @@ class GlassNavigationBarStyle {
   /// to on-scroll-down minimization and waits until the content reaches its top.
   final GlassToolbarMinimizationRestoration? minimizationRestoration;
 
-  /// Automatic adjusts body safe-area insets as the bar minimizes. Disabled
-  /// keeps them fixed for content drawn beneath the chrome.
+  /// Automatic and disabled retain stable body insets as the bar minimizes,
+  /// so content follows scrolling one for one. Enabled opts into insets that
+  /// shrink and grow with the bar.
   final GlassToolbarMinimizationSafeAreaAdjustment?
   minimizationSafeAreaAdjustment;
 

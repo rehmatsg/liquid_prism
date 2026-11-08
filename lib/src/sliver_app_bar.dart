@@ -240,9 +240,9 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
       builder: (minimization) {
         final reduction =
             navigation.minimizationSafeAreaAdjustment ==
-                GlassToolbarMinimizationSafeAreaAdjustment.disabled
-            ? 0.0
-            : minimizingExtent * minimization.value;
+                GlassToolbarMinimizationSafeAreaAdjustment.enabled
+            ? minimizingExtent * minimization.value
+            : 0.0;
         return SliverPersistentHeader(
           pinned: true,
           delegate: _SliverBarDelegate(
@@ -358,7 +358,8 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.accessoryHeight,
     required this.minExtent,
     required this.maxExtent,
-  });
+  }) : minimizationValue = minimization.value;
+  final double minimizationValue;
   final LiquidPrismSliverAppBar bar;
   final Animation<double> minimization;
   final Widget? leading, inlineTitle, accessory;
@@ -386,6 +387,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_SliverBarDelegate old) =>
       old.bar != bar ||
       old.minimization != minimization ||
+      old.minimizationValue != minimizationValue ||
       old.leading != leading ||
       old.inlineTitle != inlineTitle ||
       old.accessory != accessory ||

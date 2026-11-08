@@ -777,8 +777,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         minimization: _minimization.progress,
         onMinimizationExtent: _minimization.setExtent,
         adjustsMinimizationInsets:
-            navigation.minimizationSafeAreaAdjustment !=
-            GlassToolbarMinimizationSafeAreaAdjustment.disabled,
+            navigation.minimizationSafeAreaAdjustment ==
+            GlassToolbarMinimizationSafeAreaAdjustment.enabled,
         tabDock: explicitDock,
         style: scaffoldStyle,
         viewPadding: padding,
@@ -1046,9 +1046,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               _Slot.title ||
               _Slot.largeTitle ||
               _Slot.sidebarToggle ||
-              _Slot.leading ||
-              _Slot.actions ||
               _Slot.trailing => true,
+              _Slot.leading || _Slot.actions => !rail,
               _Slot.scrollEdge => widget.accessory == null,
               _Slot.tabBar => explicitDock == GlassTabBarPlacement.top,
               _ => false,
@@ -1494,9 +1493,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? (scrollOffset.value > 0 ? 1.0 : 0.0)
         : (scrollOffset.value / (collapseExtent + lead)).clamp(0.0, 1.0);
     final largeHeight = expanded * (1 - collapse);
-    // The body keeps the expanded bar's inset while the large title collapses:
-    // content scrolls one for one beneath the title and accessory riding up
-    // over it. A shrinking inset moved content twice as fast as the finger.
+    // Retain the expanded inset so content follows scrolling one for one.
     var covered = EdgeInsets.only(
       top: topBar || accessoryHeight > 0
           ? top +
@@ -1677,7 +1674,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ? railRight + _railGap + (48 - width) / 2
         : railLeft - _railGap - 48 + (48 - width) / 2;
 
-    var railTop = actionsTop - minimizedExtent * minimization.value;
+    var railTop = actionsTop;
     if (rail && hasChild(_Slot.leading)) {
       final child = layoutChild(
         _Slot.leading,

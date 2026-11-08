@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/widgets.dart';
 
 import 'chrome_layout.dart';
@@ -148,7 +149,7 @@ class LiquidPrismToolbar extends StatefulWidget {
 class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
     with TickerProviderStateMixin {
   final _presence = <RetargetableGlassSpring>[];
-  bool _synced = false;
+  bool _synced = false, _regrouping = false;
 
   GlassToolbarStyle get _appearance =>
       (LiquidPrismTheme.of(context).toolbar ?? const GlassToolbarStyle()).merge(
@@ -171,11 +172,39 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
   @override
   void didUpdateWidget(LiquidPrismToolbar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _sync(animated: true);
+    _regrouping = _regroups(oldWidget.content);
+    _sync(animated: !_regrouping);
   }
 
   List<GlassToolbarContent> get _content =>
       glassToolbarSegments(widget.content);
+
+  bool _regroups(List<GlassToolbarContent> previous) {
+    final before = glassToolbarSegments(previous);
+    final after = _content;
+    if ([...before, ...after].any((entry) => entry is! GlassToolbarGroup)) {
+      return false;
+    }
+    final oldGroups = before.cast<GlassToolbarGroup>();
+    final newGroups = after.cast<GlassToolbarGroup>();
+    if ([...oldGroups, ...newGroups].any(
+      (group) => group.items.any(
+        (item) =>
+            item.key == null && (item.child != null || item.label.isEmpty),
+      ),
+    )) {
+      return false;
+    }
+    List<Key> identities(List<GlassToolbarGroup> groups) => [
+      for (final group in groups)
+        for (final item in group.items) item.key ?? ValueKey(item.label),
+    ];
+    return listEquals(identities(oldGroups), identities(newGroups)) &&
+        !listEquals(
+          [for (final group in oldGroups) (group.key, group.items.length)],
+          [for (final group in newGroups) (group.key, group.items.length)],
+        );
+  }
 
   void _sync({required bool animated}) {
     final content = _content;
@@ -266,9 +295,13 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
                   key: entry.key,
                   items: items,
                   size: widget.size,
-                  style: (widget.style ?? const GlassToolbarStyle()).merge(
-                    style,
-                  ),
+                  style: (widget.style ?? const GlassToolbarStyle())
+                      .merge(style)
+                      .copyWith(
+                        itemTransition: _regrouping
+                            ? GlassTransition.identity
+                            : null,
+                      ),
                   glass: widget.glass,
                   optics: widget.optics,
                   blur: widget.blur,
