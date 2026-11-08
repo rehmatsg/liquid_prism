@@ -4,7 +4,7 @@
 
 ## 0.7.1
 
-- Regroup existing toolbar actions without replaying entry/exit animations;
+- Regroup action-only toolbars without replaying entry/exit animations;
   genuinely added and removed actions retain their transitions.
 
 - Keep side-rail controls fixed when the navigation title minimizes, and retain

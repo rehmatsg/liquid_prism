@@ -550,10 +550,12 @@ Null callbacks disable individual actions; menu items use `enabled: false`.
 Items may come and go: an item added to `items` materializes in while the
 capsule widens, and a removed one leaves the same way. Items are matched by
 `key`, else by `label`. An empty list materializes the whole capsule away and
-draws nothing, so a list whose items all depend on state is fine. Regrouping the
-same ordered actions between capsules keeps them fully present and interactive;
+draws nothing, so a list whose items all depend on state is fine. In an action-only
+toolbar, regrouping the same ordered actions between capsules keeps them fully
+present and interactive;
 it does not replay item entry/exit transitions. Use keys or distinct labels to
-identify actions.
+identify actions. Toolbars containing custom content or spacers retain their
+normal transition behavior.
 `GlassToolbarStyle.itemTransition: GlassTransition.identity` swaps at once, as
 Reduce Motion does; `itemTransitionStyle` sets the springs.
 
