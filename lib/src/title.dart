@@ -10,8 +10,8 @@ import 'material.dart';
 import 'theme.dart';
 
 const titleCompositionSpring = GlassSpring(
-  response: Duration(milliseconds: 320),
-  bounce: .2,
+  response: Duration(milliseconds: 300),
+  bounce: .22,
 );
 
 /// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's
@@ -385,14 +385,22 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                       );
                       final rtl =
                           Directionality.of(context) == TextDirection.rtl;
-                      final inlineX = rtl
-                          ? constraints.maxWidth - around.start - dimension
-                          : around.start;
+                      final widthChange =
+                          resolved.resolvedLeadingSize +
+                          around.end +
+                          around.start -
+                          padding.left;
+                      // Keep the destination fixed while the capsule changes width.
+                      final inlineWidth =
+                          constraints.maxWidth + widthChange * (1 - inline);
+                      final inlineCenter =
+                          around.start +
+                          resolved.resolvedLeadingSize / 2 -
+                          inlineWidth / 2;
                       final x =
-                          (constraints.maxWidth - dimension) /
-                              2 *
-                              (1 - placement) +
-                          inlineX * placement;
+                          constraints.maxWidth / 2 +
+                          (rtl ? -inlineCenter : inlineCenter) * placement -
+                          dimension / 2;
                       // Interpolate in the title's coordinates, then remove the
                       // capsule's animated offset so it cannot bend the path.
                       final y =

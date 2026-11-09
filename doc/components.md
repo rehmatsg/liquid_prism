@@ -329,7 +329,7 @@ there ends at the content's edge, the rail's 12 points from its column.
 Changing `avatar` or `leading` animates between the above-avatar, inline-avatar,
 and title-only layouts with the shared spring. When moving between the above
 and inline positions, one avatar stays mounted and animates its position and
-size with one visible overshoot (320 ms spring response, 0.2 bounce).
+size with one visible overshoot (300 ms spring response, 0.22 bounce).
 The capsule and scaffold use the same timing, and the avatar scales from a
 fixed layout to keep its contents stable throughout the transition. It
 fades only when entering or leaving the title-only layout. The scaffold animates its title
@@ -846,3 +846,23 @@ top and side docks remain visible. Compact sizing remains the default.
 `GlassTabBarSizing.fill` fills a bounded main axis; under unbounded constraints it
 uses compact sizing. Vertical labels default to hidden but honor explicit
 `labelBehavior`.
+
+### Scaffold lab
+
+The showcase's Scaffold Lab keeps its common heading, scroll behavior, accessory,
+edge and action controls at the top. Expand the advanced sections to override:
+
+- All `GlassNavigationBarStyle` fields: alignment, minimization and restoration,
+  safe-area adjustment, geometry, four title/subtitle typography styles, reveal
+  and hide springs, fade timing/curve, and title-capsule styling.
+- All `GlassScaffoldStyle` fields: tab and bottom-bar alignment, margins and width.
+- All `GlassScrollEdgeStyle` fields, including material fade and edge motion.
+- Title compositions, custom/implicit leading, trailing content, toolbar regions,
+  tabs and dock placement, background, keyboard avoidance, RTL, body/sliver mode,
+  nested scroll notification depth, and standalone `LiquidPrismSliverAppBar`.
+
+Numeric overrides are disabled initially, preserving inherited/native values.
+Switch an override off to clear it, or use **Reset to native defaults**. The
+sheet button exercises the same page inside a sheet. Body mode owns its scroll
+view and safe-area padding; refresh and custom scrolling headers use sliver mode.
+The global showcase settings continue to control appearance and glass quality.

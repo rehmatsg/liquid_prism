@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Expand Scaffold Lab with navigation and scaffold style overrides, title compositions, dock placement, standalone app-bar and body previews, and reset controls.
 - Animate title avatar compositions and scaffold header height with spring motion, respecting Reduce Motion and interrupted transitions.
 - Let the Conversation showcase cycle through above-avatar, inline-avatar, and title-only layouts.
 

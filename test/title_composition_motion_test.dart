@@ -21,12 +21,12 @@ void main() {
     );
     // Public SwiftUI Spring samples from tool/title_motion_probe/main.swift.
     final samples = {
-      .05: .28316043,
-      .10: .66437368,
-      .15: .89454531,
-      .20: .98981438,
-      .25: 1.01419917,
-      .35: 1.00681626,
+      .05: .31406960,
+      .10: .71463901,
+      .15: .93397586,
+      .20: 1.00944991,
+      .25: 1.01951009,
+      .35: 1.00447578,
     };
     for (final sample in samples.entries) {
       expect(simulation.x(sample.key), closeTo(sample.value, 1e-7));

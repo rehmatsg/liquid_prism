@@ -5,7 +5,7 @@ import SwiftUI
 let candidates: [(String, Spring)] = [
     ("current", Spring(duration: 0.45, bounce: 0.3)),
     ("snappy-default", .snappy),
-    ("snappy-compact", .snappy(duration: 0.32, extraBounce: 0.05)),
+    ("snappy-compact", .snappy(duration: 0.30, extraBounce: 0.07)),
 ]
 for (name, spring) in candidates {
     print("\(name): mass=\(spring.mass) stiffness=\(spring.stiffness) damping=\(spring.damping)")
