@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.7.2
+
+- Add `LiquidPrismScaffold.contentInsetsOf` so external overlays can align with
+  the same safe area and side rail as scaffold titles and content.
+- Keep Scaffold Lab glass aligned while sheets cover or reveal the page, using
+  plain covered-page transforms with Cupertino drag and scroll coordination.
+
 ## 0.7.1
 
 - Suppress the outgoing header edge on initial downward scroll. Reveal the

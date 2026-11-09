@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
 import 'widgets.dart';
+import 'sheet_route.dart';
 
 enum _Heading { large, header, inline }
 
@@ -234,14 +235,16 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                 child: LiquidPrismButton(
                   key: const ValueKey('lab-open-sheet'),
                   label: 'Open the same page in a sheet',
-                  onPressed: () => showCupertinoSheet<void>(
-                    context: context,
-                    // The sheet's controller lets a pull at the top dismiss it.
-                    scrollableBuilder: (_, controller) => ScaffoldLabPage(
-                      sheet: true,
-                      scrollController: controller,
-                    ),
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context, rootNavigator: true).push(
+                        ShowcaseSheetRoute(
+                          // The sheet's controller lets a pull at the top dismiss it.
+                          scrollableBuilder: (_, controller) => ScaffoldLabPage(
+                            sheet: true,
+                            scrollController: controller,
+                          ),
+                        ),
+                      ),
                   child: const Text('Open in a Sheet'),
                 ),
               ),

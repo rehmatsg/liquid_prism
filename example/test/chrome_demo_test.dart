@@ -1,11 +1,187 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism_example/chrome_demo.dart';
+import 'package:liquid_prism_example/showcase/sheet_route.dart';
 
 void main() {
+  testWidgets(
+    'showcase sheets keep raster and layout aligned through stacking and dismissal',
+    (tester) async {
+      tester.view
+        ..devicePixelRatio = 3
+        ..physicalSize = const Size(1206, 2622)
+        ..padding = const FakeViewPadding(top: 186, bottom: 102)
+        ..viewPadding = const FakeViewPadding(top: 186, bottom: 102);
+      addTearDown(tester.view.reset);
+      final navigator = GlobalKey<NavigatorState>();
+      const home = Key('covered home');
+      const sheets = [Key('first sheet'), Key('second sheet')];
+      final routes = <ShowcaseSheetRoute>[];
+      final dismissed = <int>[];
+      void pushSheet(int number) {
+        final route = ShowcaseSheetRoute(
+          scrollableBuilder: (context, controller) => RepaintBoundary(
+            key: sheets[number - 1],
+            child: CupertinoPageScaffold(
+              child: ListView(
+                controller: controller,
+                children: [
+                  if (number == 1)
+                    CupertinoButton(
+                      onPressed: () => pushSheet(2),
+                      child: const Text('Stack sheet'),
+                    ),
+                  Text('Sheet $number'),
+                  const SizedBox(height: 1600),
+                ],
+              ),
+            ),
+          ),
+        );
+        routes.add(route);
+        unawaited(
+          navigator.currentState!
+              .push(route)
+              .then((_) => dismissed.add(number)),
+        );
+      }
+
+      await tester.pumpWidget(
+        CupertinoApp(
+          navigatorKey: navigator,
+          home: RepaintBoundary(
+            key: home,
+            child: CupertinoPageScaffold(
+              child: Center(
+                child: CupertinoButton(
+                  onPressed: () => pushSheet(1),
+                  child: const Text('Open sheet'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      Rect geometry(Key key) =>
+          tester.getRect(find.byKey(key, skipOffstage: false));
+      void matchesRaster(Key key) {
+        final box = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(key, skipOffstage: false),
+        );
+        final layer = box.debugLayer! as OffsetLayer;
+        final ancestry = <Layer>[layer];
+        for (
+          Layer? parent = layer.parent;
+          parent != null;
+          parent = parent.parent
+        ) {
+          ancestry.add(parent);
+        }
+        final composited = Matrix4.identity();
+        for (var index = ancestry.length - 1; index > 0; index--) {
+          (ancestry[index] as ContainerLayer).applyTransform(
+            ancestry[index - 1],
+            composited,
+          );
+        }
+        final bounds = Offset.zero & box.size;
+        for (final point in [
+          bounds.topLeft,
+          bounds.topRight,
+          bounds.bottomRight,
+        ]) {
+          final raster = MatrixUtils.transformPoint(
+            composited,
+            point + layer.offset,
+          );
+          final layout =
+              box.localToGlobal(point) * tester.view.devicePixelRatio;
+          expect((raster - layout).distance, lessThan(.01));
+        }
+      }
+
+      void nativeSheetContour(Key key) {
+        final box = tester.renderObject<RenderRepaintBoundary>(
+          find.byKey(key, skipOffstage: false),
+        );
+        var contours = 0;
+        for (
+          Layer? layer = box.debugLayer;
+          layer != null;
+          layer = layer.parent
+        ) {
+          if (layer case ClipRSuperellipseLayer(:final clipRSuperellipse?)) {
+            if (clipRSuperellipse.tlRadiusX == 0) continue;
+            contours++;
+            expect(clipRSuperellipse.tlRadiusX, closeTo(12, .01));
+            expect(clipRSuperellipse.trRadiusX, closeTo(12, .01));
+            expect(clipRSuperellipse.blRadiusX, 0);
+            expect(clipRSuperellipse.brRadiusX, 0);
+          }
+        }
+        expect(contours, greaterThan(0));
+      }
+
+      final homeRest = geometry(home);
+      matchesRaster(home);
+      await tester.tap(find.text('Open sheet'));
+      await tester.pump();
+      await tester.pump(routes.first.transitionDuration ~/ 4);
+      expect(geometry(home).width, lessThan(homeRest.width));
+      expect(geometry(home).top, greaterThan(homeRest.top));
+      matchesRaster(home);
+      await tester.pumpAndSettle();
+      expect(geometry(home).width, closeTo(homeRest.width * .9165, .01));
+      matchesRaster(home);
+      final firstRest = geometry(sheets.first);
+      nativeSheetContour(sheets.first);
+
+      await tester.tap(find.text('Stack sheet'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(routes.last.animation!.value, greaterThan(0));
+      expect(geometry(sheets.first).width, lessThan(firstRest.width));
+      nativeSheetContour(sheets.first);
+      matchesRaster(sheets.first);
+      await tester.pumpAndSettle();
+      expect(
+        geometry(sheets.first).width,
+        closeTo(firstRest.width * .9165, .01),
+      );
+      nativeSheetContour(sheets.first);
+      matchesRaster(sheets.first);
+
+      for (final key in sheets.reversed) {
+        final start = geometry(key);
+        final gesture = await tester.startGesture(start.center);
+        await gesture.moveBy(const Offset(0, 40));
+        await tester.pump();
+        await gesture.moveBy(const Offset(0, 420));
+        await tester.pump();
+        expect(geometry(key).top, greaterThan(start.top));
+        matchesRaster(key);
+        await gesture.up();
+        await tester.pumpAndSettle();
+        expect(find.byKey(key), findsNothing);
+        if (key == sheets.last) {
+          expect(dismissed, [2]);
+          expect(geometry(sheets.first), firstRest);
+          matchesRaster(sheets.first);
+        }
+      }
+      expect(dismissed, [2, 1]);
+      expect(geometry(home), homeRest);
+      matchesRaster(home);
+      expect(navigator.currentState!.canPop(), isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('search demo matches captured resting and keyboard geometry', (
     tester,
   ) async {

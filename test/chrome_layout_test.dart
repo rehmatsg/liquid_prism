@@ -499,8 +499,9 @@ void main() {
   group('iOS 27.1 system chrome', () {
     Future<void> report(
       WidgetTester tester,
-      Map<String, Object?> chrome,
-    ) async {
+      Map<String, Object?> chrome, {
+      void Function(void Function(Object?))? captureEvents,
+    }) async {
       final messenger = tester.binding.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(
         const MethodChannel('liquid_prism/menus'),
@@ -509,7 +510,10 @@ void main() {
       messenger.setMockStreamHandler(
         SystemChromeListener.channel,
         MockStreamHandler.inline(
-          onListen: (_, sink) => sink.success({'supported': true, ...chrome}),
+          onListen: (_, sink) {
+            captureEvents?.call(sink.success);
+            sink.success({'supported': true, ...chrome});
+          },
         ),
       );
       addTearDown(() {
@@ -523,6 +527,142 @@ void main() {
       });
       unawaited(SystemChromeListener.instance.reset());
     }
+
+    testWidgets('external overlays follow native rail and viewport changes', (
+      tester,
+    ) async {
+      window(tester, (
+        size: const Size(455.5, 669),
+        padding: const FakeViewPadding(bottom: 34),
+      ));
+      late void Function(Object?) emit;
+      await report(tester, {
+        'verticalBarEdge': 'left',
+      }, captureEvents: (send) => emit = send);
+      await tester.pumpWidget(const _ContentAlignmentApp());
+      await tester.pump();
+      void aligned() {
+        final content = tester.getRect(find.byKey(_contentArea));
+        final overlay = tester.getRect(find.byKey(_overlayArea));
+        expect(overlay.left, closeTo(content.left, .01));
+        expect(overlay.right, closeTo(content.right, .01));
+        expect(
+          tester.getCenter(find.byKey(_overlayHandle)).dx,
+          closeTo(tester.getCenter(find.byKey(_contentTitle)).dx, .01),
+        );
+      }
+
+      aligned();
+      final leftRailCenter = tester.getCenter(find.byKey(_overlayHandle)).dx;
+      emit({'supported': true, 'verticalBarEdge': 'right'});
+      await tester.pumpAndSettle();
+      aligned();
+      expect(
+        tester.getCenter(find.byKey(_overlayHandle)).dx,
+        lessThan(leftRailCenter),
+      );
+
+      tester.view
+        ..physicalSize = const Size(600, 669)
+        ..padding = const FakeViewPadding(left: 120, bottom: 34)
+        ..viewPadding = const FakeViewPadding(left: 120, bottom: 34);
+      emit({'supported': true, 'verticalBarEdge': 'left'});
+      await tester.pumpAndSettle();
+      aligned();
+      expect(tester.getRect(find.byKey(_overlayArea)).left, 120);
+      expect(tester.getRect(find.byKey(_overlayArea)).right, 600);
+      expect(tester.takeException(), isNull);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets(
+      'overlay placement overrides inherited chrome and native traits',
+      (tester) async {
+        window(tester, (
+          size: const Size(455.5, 669),
+          padding: const FakeViewPadding(bottom: 34),
+        ));
+        await report(tester, {'verticalBarEdge': 'right'});
+        for (final row in [
+          (
+            name: 'nearest scaffold wins over native right rail',
+            placement: GlassChromePlacement.leftRail,
+            scope: null,
+            explicit: null,
+          ),
+          (
+            name: 'explicit right wins over inherited left rail',
+            placement: GlassChromePlacement.rightRail,
+            scope: GlassChromePlacement.leftRail,
+            explicit: GlassChromePlacement.rightRail,
+          ),
+          (
+            name: 'explicit bottom wins over both rail sources',
+            placement: GlassChromePlacement.bottom,
+            scope: GlassChromePlacement.leftRail,
+            explicit: GlassChromePlacement.bottom,
+          ),
+        ]) {
+          await tester.pumpWidget(
+            _ContentAlignmentApp(
+              placement: row.placement,
+              overlayScope: row.scope,
+              overlayPlacement: row.explicit,
+              overlayInBody: true,
+            ),
+          );
+          await tester.pump();
+          final content = tester.getRect(find.byKey(_contentArea));
+          final overlay = tester.getRect(find.byKey(_overlayArea));
+          expect(overlay.left, closeTo(content.left, .01), reason: row.name);
+          expect(overlay.right, closeTo(content.right, .01), reason: row.name);
+          expect(
+            tester.getCenter(find.byKey(_overlayHandle)).dx,
+            closeTo(tester.getCenter(find.byKey(_contentTitle)).dx, .01),
+            reason: row.name,
+          );
+        }
+        expect(tester.takeException(), isNull);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
+
+    testWidgets(
+      'overlay insets use physical padding rather than body coverage',
+      (tester) async {
+        await report(tester, {'supported': false});
+        for (final device in [
+          (
+            size: duo.size,
+            padding: const FakeViewPadding(right: 60, bottom: 34),
+          ),
+          phone,
+        ]) {
+          window(tester, device);
+          tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+          await tester.pumpWidget(
+            const _ContentAlignmentApp(overlayInBody: true),
+          );
+          await tester.pump();
+          final overlay = tester.getRect(find.byKey(_overlayArea));
+          final content = tester.getRect(find.byKey(_contentArea));
+          final physical = MediaQuery.viewPaddingOf(
+            tester.element(find.byKey(_overlayHandle)),
+          );
+          expect(overlay.top, physical.top);
+          expect(overlay.bottom, device.size.height - physical.bottom);
+          expect(overlay.left, content.left);
+          expect(overlay.right, content.right);
+          expect(content.top, greaterThan(overlay.top));
+          expect(content.bottom, lessThan(overlay.bottom));
+          expect(
+            tester.getCenter(find.byKey(_overlayHandle)).dx,
+            closeTo(tester.getCenter(find.byKey(_contentTitle)).dx, .01),
+          );
+        }
+        expect(tester.takeException(), isNull);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
 
     testWidgets('device glass settings arrive even without the rail APIs', (
       tester,
@@ -1167,6 +1307,78 @@ class _App extends StatelessWidget {
             tabs: _tabs,
           ),
       body: const SizedBox.expand(key: _body),
+    ),
+  );
+}
+
+const _contentArea = Key('content area');
+const _contentTitle = Key('content title');
+const _overlayArea = Key('overlay area');
+const _overlayHandle = Key('overlay handle');
+
+class _ContentAlignmentApp extends StatelessWidget {
+  const _ContentAlignmentApp({
+    this.placement,
+    this.overlayScope,
+    this.overlayPlacement,
+    this.overlayInBody = false,
+  });
+
+  final GlassChromePlacement? placement;
+  final GlassChromePlacement? overlayScope;
+  final GlassChromePlacement? overlayPlacement;
+  final bool overlayInBody;
+
+  Widget _overlay() {
+    final overlay = Builder(
+      builder: (context) => Padding(
+        padding: LiquidPrismScaffold.contentInsetsOf(
+          context,
+          placement: overlayPlacement,
+        ),
+        child: const SizedBox.expand(
+          key: _overlayArea,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(key: _overlayHandle, width: 36, height: 5),
+          ),
+        ),
+      ),
+    );
+    return Positioned.fill(child: overlay);
+  }
+
+  @override
+  Widget build(BuildContext context) => CupertinoApp(
+    home: LiquidPrismSystemChrome(
+      child: Stack(
+        children: [
+          LiquidPrismScaffold(
+            placement: placement,
+            title: const Text('Content', key: _contentTitle),
+            body: Builder(
+              builder: (context) => Stack(
+                children: [
+                  Padding(
+                    padding: MediaQuery.paddingOf(context),
+                    child: const SizedBox.expand(key: _contentArea),
+                  ),
+                  if (overlayInBody && overlayScope == null) _overlay(),
+                ],
+              ),
+            ),
+          ),
+          if (overlayScope != null)
+            Positioned.fill(
+              child: LiquidPrismScaffold(
+                placement: overlayScope,
+                body: Stack(children: [_overlay()]),
+              ),
+            )
+          else if (!overlayInBody)
+            _overlay(),
+        ],
+      ),
     ),
   );
 }
