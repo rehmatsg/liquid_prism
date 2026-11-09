@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Ignore duplicate status-bar notifications during app touches so iPhone Duo title/action taps do not also scroll the page to the top. Genuine system taps keep working.
+
 - Improve light regular-glass rim contrast over bright backgrounds by matching the slightly darker native face while preserving white highlights.
 
 ## 0.7.3

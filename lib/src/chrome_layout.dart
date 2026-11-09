@@ -381,6 +381,18 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   late final _minimization = NavigationBarMinimization(vsync: this);
 
   final _statusBarKey = GlobalKey();
+  final _appPointers = <int>{};
+  bool _pointerEndedThisFrame = false;
+
+  void _endAppPointer(int pointer) {
+    _appPointers.remove(pointer);
+    if (_pointerEndedThisFrame) return;
+    _pointerEndedThisFrame = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pointerEndedThisFrame = false;
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
 
   /// The scroll edge effects' presence: 1 while [LiquidPrismScaffold.scrollEdge]
   /// holds, easing in and out when it changes.
@@ -418,6 +430,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   @override
   void handleStatusBarTap() {
+    // iOS 27.2 can report a status-bar tap during an ordinary app touch.
+    // Keep its duplicate notification from scrolling before the action fires.
+    if (_appPointers.isNotEmpty || _pointerEndedThisFrame) return;
     final controller =
         widget.scrollController ?? PrimaryScrollController.maybeOf(context);
     final box = _statusBarKey.currentContext?.findRenderObject();
@@ -1139,22 +1154,27 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 : child;
           }).toList(),
     );
-    Widget hosted = GlassGroupHost(
-      child: Stack(
-        children: [
-          Positioned.fill(child: layout),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: math.max(1, media.viewPadding.top),
-            child: MetaData(
-              key: _statusBarKey,
-              behavior: HitTestBehavior.translucent,
-              child: const SizedBox.expand(),
+    Widget hosted = Listener(
+      onPointerDown: (event) => _appPointers.add(event.pointer),
+      onPointerUp: (event) => _endAppPointer(event.pointer),
+      onPointerCancel: (event) => _endAppPointer(event.pointer),
+      child: GlassGroupHost(
+        child: Stack(
+          children: [
+            Positioned.fill(child: layout),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: math.max(1, media.viewPadding.top),
+              child: MetaData(
+                key: _statusBarKey,
+                behavior: HitTestBehavior.translucent,
+                child: const SizedBox.expand(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
     if (widget.tabBar != null) {
