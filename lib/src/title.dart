@@ -10,8 +10,8 @@ import 'material.dart';
 import 'theme.dart';
 
 const titleCompositionSpring = GlassSpring(
-  response: Duration(milliseconds: 450),
-  bounce: .3,
+  response: Duration(milliseconds: 320),
+  bounce: .2,
 );
 
 /// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's

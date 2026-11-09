@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/physics.dart';
+import 'package:liquid_prism/src/title.dart' show titleCompositionSpring;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
@@ -10,6 +12,27 @@ double paintedWidth(WidgetTester tester, Finder finder) {
 }
 
 void main() {
+  test('title spring matches sampled SwiftUI snappy motion', () {
+    final simulation = SpringSimulation(
+      titleCompositionSpring.description,
+      0,
+      1,
+      0,
+    );
+    // Public SwiftUI Spring samples from tool/title_motion_probe/main.swift.
+    final samples = {
+      .05: .28316043,
+      .10: .66437368,
+      .15: .89454531,
+      .20: .98981438,
+      .25: 1.01419917,
+      .35: 1.00681626,
+    };
+    for (final sample in samples.entries) {
+      expect(simulation.x(sample.key), closeTo(sample.value, 1e-7));
+    }
+  });
+
   for (final rtl in [false, true]) {
     testWidgets('title composition retargets and keeps one action, RTL=$rtl', (
       tester,
@@ -180,12 +203,12 @@ void main() {
         final overshoots = sizes
             .map((size) => targetInline ? target - size : size - target)
             .toList();
-        expect(overshoots.any((amount) => amount > 1), isTrue);
+        expect(overshoots.any((amount) => amount > .5), isTrue);
         var visibleBounces = 0;
         var pastTarget = false;
         for (final amount in overshoots) {
-          if (amount > .5 && !pastTarget) visibleBounces++;
-          pastTarget = amount > .5;
+          if (amount > .25 && !pastTarget) visibleBounces++;
+          pastTarget = amount > .25;
         }
         expect(visibleBounces, 1);
         expect(sizes.last, closeTo(target, .1));
