@@ -567,7 +567,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
               ignoring: !visible,
               child: GlassContentPresence(
                 presence: opacity,
-                blur: _titleBlur,
+                blur: large ? 0 : _titleBlur,
                 child: large || !swaps
                     ? child!
                     : Transform.translate(

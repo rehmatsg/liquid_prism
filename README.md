@@ -19,7 +19,7 @@ dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: v0.7.2
+      ref: v0.7.3
 ```
 
 Run `flutter pub get`. For breaking API changes, see the [0.7 migration guide](doc/releases/0.7.md).
@@ -270,8 +270,9 @@ flutter pub get
 Explore the components, customize them in Studio, or find examples in Library.
 See the [showcase guide](example/README.md).
 
-For contributors: [CONTRIBUTING.md](CONTRIBUTING.md). For coding agents:
-[AGENTS.md](AGENTS.md) and the [implementation guides](doc/agents/README.md).
+For apps using coding agents: install the [Liquid Prism integration skill](doc/agent_integration.md).
+For package contributors: [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md)
+and the [implementation guides](doc/agents/README.md).
 
 ## Credits and license
 

@@ -1,5 +1,8 @@
 # Agent documentation
 
+Building an app with Liquid Prism? Use the [consumer integration skill](../agent_integration.md).
+The guides below are for maintaining the package itself.
+
 Start with the repository's [AGENTS.md](../../AGENTS.md). This directory explains
 implementation decisions and workflows; the [README](../../README.md) is for people
 choosing and using the package.

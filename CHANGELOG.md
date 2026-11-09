@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.7.3
+
+- Add a portable consumer agent skill and integration guide for adaptive scaffolds, scroll edges, component defaults and verification.
+
+- Match native large-title exit behavior: fade without the compact title’s blur, in both scaffold and sliver app bars.
+
+- Expand Scaffold Lab with navigation and scaffold style overrides, title compositions, dock placement, standalone app-bar and body previews, and reset controls.
+- Animate title avatar compositions and scaffold header height with spring motion, respecting Reduce Motion and interrupted transitions.
+- Let the Conversation showcase cycle through above-avatar, inline-avatar, and title-only layouts.
+
 ## 0.7.2
 
 - Add `LiquidPrismScaffold.contentInsetsOf` so external overlays can align with

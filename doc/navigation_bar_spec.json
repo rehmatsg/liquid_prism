@@ -69,6 +69,23 @@
       "automaticRestoration": "scroll reversal restores chrome away from the content edge",
       "atScrollEdgeRestoration": "reversal away from the top keeps chrome hidden; pulling through the top gradually restores it",
       "progress": "scroll-driven; no constant animation duration was measured"
+    },
+    "titleFilters": {
+      "capture": "NavigationTests/testTitleTiming, iOS 27.0 iPhone 17 Pro simulator; label and ancestor presentation-layer filters during partial opacity",
+      "largeTitle": {
+        "fontSize": 34,
+        "partialOpacitySamples": 63,
+        "filters": []
+      },
+      "inlineTitle": {
+        "fontSize": 17,
+        "partialOpacitySamples": 188,
+        "filters": [
+          "gaussianBlur",
+          "gaussianBlur"
+        ]
+      },
+      "interpretation": "Large-title replacement fades without a per-title blur. Compact titles have blur filters. This records filter presence, not a recovered radius or algorithm."
     }
   },
   "rendererFits": {

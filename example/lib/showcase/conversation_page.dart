@@ -1,11 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-/// A conversation with a [LiquidPrismTitle]. A one-to-one chat shows a header
-/// avatar above a tappable glass name with a call action; tapping the name
-/// switches to a group chat with an inline avatar in the capsule beside a
-/// glass Invite text button. On iPhone Duo the icon toolbar move to the rail
-/// while Invite stays in the top bar.
+/// A conversation cycling through an above-avatar, inline-avatar and plain
+/// glass title. Repeated taps retarget the transition without resetting the conversation.
 class ConversationPage extends StatefulWidget {
   const ConversationPage({super.key});
 
@@ -14,7 +11,7 @@ class ConversationPage extends StatefulWidget {
 }
 
 class _ConversationPageState extends State<ConversationPage> {
-  var _direct = true;
+  var _layout = 0;
 
   static const _directMessages = [
     (false, 'Are we still on for coffee on Saturday?'),
@@ -24,57 +21,35 @@ class _ConversationPageState extends State<ConversationPage> {
     (false, 'See you then.'),
   ];
 
-  static const _groupMessages = [
-    (false, 'This month’s pick is in the shared folder.'),
-    (true, 'Thanks! Three chapters in and enjoying it.'),
-    (false, 'Should we ask Sam to join us next time?'),
-    (true, 'Good idea, I will send an invite.'),
-    (false, 'Same time next month, then.'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final colors = GlassColors.of(context);
     final dark = colors.brightness == Brightness.dark;
-    final messages = _direct ? _directMessages : _groupMessages;
+    const messages = _directMessages;
     return LiquidPrismScaffold(
       backgroundColor: dark ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
       title: LiquidPrismTitle(
         key: const ValueKey('conversation-title'),
-        avatar: _direct ? _Avatar(color: colors.teal, initial: 'M') : null,
-        leading: _direct
-            ? null
-            : _Avatar(color: colors.indigo, icon: CupertinoIcons.book_fill),
-        onPressed: () => setState(() => _direct = !_direct),
-        child: Text(_direct ? 'Maya' : 'Book Club'),
+        avatar: _layout == 0 ? _Avatar(color: colors.teal, initial: 'M') : null,
+        leading: _layout == 1
+            ? _Avatar(color: colors.teal, initial: 'M')
+            : null,
+        onPressed: () => setState(() => _layout = (_layout + 1) % 3),
+        child: const Text('Maya'),
       ),
-      trailing: _direct
-          ? null
-          : LiquidPrismButton(
-              key: const ValueKey('conversation-invite'),
-              label: 'Invite',
-              onPressed: () {},
-              child: const Text('Invite'),
-            ),
       toolbar: [
-        _direct
-            ? GlassToolbarItem(
-                icon: const Icon(CupertinoIcons.phone),
-                label: 'Call',
-                onPressed: () {},
-              )
-            : GlassToolbarItem(
-                icon: const Icon(CupertinoIcons.ellipsis),
-                label: 'More',
-                onPressed: () {},
-              ),
+        GlassToolbarItem(
+          icon: const Icon(CupertinoIcons.phone),
+          label: 'Call',
+          onPressed: () {},
+        ),
       ],
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 12),
             child: Text(
-              'Tap the name to switch the title layout',
+              'Tap the name: avatar above → inline avatar → title only',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: colors.secondaryLabel),
             ),
@@ -120,12 +95,11 @@ class _ConversationPageState extends State<ConversationPage> {
   }
 }
 
-/// A round avatar filling its square, with an initial or an icon.
+/// A round avatar filling its square.
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.color, this.initial, this.icon});
+  const _Avatar({required this.color, required this.initial});
   final Color color;
-  final String? initial;
-  final IconData? icon;
+  final String initial;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -137,16 +111,14 @@ class _Avatar extends StatelessWidget {
         child: SizedBox.square(
           dimension: size,
           child: Center(
-            child: initial != null
-                ? Text(
-                    initial!,
-                    style: TextStyle(
-                      fontSize: size * .45,
-                      fontWeight: FontWeight.w600,
-                      color: white,
-                    ),
-                  )
-                : Icon(icon, size: size * .55, color: white),
+            child: Text(
+              initial,
+              style: TextStyle(
+                fontSize: size * .45,
+                fontWeight: FontWeight.w600,
+                color: white,
+              ),
+            ),
           ),
         ),
       );

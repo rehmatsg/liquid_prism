@@ -141,7 +141,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 90));
     expect(opacityOf('Large'), inExclusiveRange(0, 1));
     expect(opacityOf('Inline'), inExclusiveRange(0, 1));
-    // Both titles focus through a blur as they fade.
+    // Native large titles fade without the compact title's blur.
     for (final title in ['Large', 'Inline']) {
       expect(
         tester
@@ -152,7 +152,7 @@ void main() {
               ),
             )
             .enabled,
-        isTrue,
+        title == 'Inline',
         reason: title,
       );
     }

@@ -2,11 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import 'motion.dart';
 import 'pressable.dart';
 import 'recipe.dart';
 import 'glass.dart';
 import 'material.dart';
 import 'theme.dart';
+
+const titleCompositionSpring = GlassSpring(
+  response: Duration(milliseconds: 300),
+  bounce: .22,
+);
 
 /// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's
 /// `GlassNavigationBarStyle.titleCapsule`, then to the defaults, measured on
@@ -132,7 +138,7 @@ final class GlassTitleStyle {
 /// (open a contact card, say); without it the capsule is static. The avatar
 /// and leading widgets are laid out in squares of the style's sizes, so the
 /// bar's height is known before layout.
-class LiquidPrismTitle extends StatelessWidget {
+class LiquidPrismTitle extends StatefulWidget {
   const LiquidPrismTitle({
     super.key,
     required this.child,
@@ -200,47 +206,136 @@ class LiquidPrismTitle extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
-    final resolved = resolve(context);
+  State<LiquidPrismTitle> createState() => _LiquidPrismTitleState();
+}
+
+class _LiquidPrismTitleState extends State<LiquidPrismTitle>
+    with TickerProviderStateMixin {
+  late final _above = RetargetableGlassSpring(vsync: this)
+    ..value = widget.avatar == null ? 0 : 1;
+  late final _inline = RetargetableGlassSpring(vsync: this)
+    ..value = widget.leading == null ? 0 : 1;
+  late final _placement = RetargetableGlassSpring(vsync: this)
+    ..value = widget.avatar == null ? 1 : 0;
+  Widget? _avatar;
+  bool _immediate = false;
+
+  void _sync() {
+    _avatar = widget.avatar ?? widget.leading ?? _avatar;
+    if (widget.avatar != null || widget.leading != null) {
+      springGlass(
+        _placement,
+        widget.avatar == null ? 1 : 0,
+        titleCompositionSpring.description,
+        immediate: _immediate,
+      );
+    }
+    springGlass(
+      _above,
+      widget.avatar == null ? 0 : 1,
+      titleCompositionSpring.description,
+      immediate: _immediate,
+    );
+    springGlass(
+      _inline,
+      widget.leading == null ? 0 : 1,
+      titleCompositionSpring.description,
+      immediate: _immediate,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _avatar ??= widget.avatar ?? widget.leading;
+    final immediate = MediaQuery.disableAnimationsOf(context);
+    if (_immediate != immediate) {
+      _immediate = immediate;
+      _sync();
+    }
+  }
+
+  @override
+  void didUpdateWidget(LiquidPrismTitle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((oldWidget.avatar == null) != (widget.avatar == null) ||
+        (oldWidget.leading == null) != (widget.leading == null)) {
+      _sync();
+    }
+    _avatar = widget.avatar ?? widget.leading ?? _avatar;
+  }
+
+  @override
+  void dispose() {
+    _above.dispose();
+    _inline.dispose();
+    _placement.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: Listenable.merge([_above, _inline, _placement]),
+    builder: (context, _) => _build(context),
+  );
+
+  Widget _build(BuildContext context) {
+    final resolved = widget.resolve(context);
     final padding = resolved.resolvedPadding;
-    final leading = this.leading;
+    final inline = _inline.value.clamp(0.0, 1.0);
     final text = DefaultTextStyle.of(context).style;
     final line =
         MediaQuery.textScalerOf(context).scale(text.fontSize ?? 17) *
         (text.height ?? 1.2);
-    final height = _capsuleHeight(this, resolved, line);
+    final plainHeight = math.max(
+      resolved.resolvedMinHeight,
+      line + padding.vertical,
+    );
+    final inlineHeight = math.max(
+      plainHeight,
+      resolved.resolvedLeadingSize + resolved.resolvedLeadingPadding.vertical,
+    );
+    final height = plainHeight + (inlineHeight - plainHeight) * inline;
     final around = resolved.resolvedLeadingPadding;
-    final EdgeInsetsGeometry inset = leading == null
-        ? padding
-        : EdgeInsetsDirectional.only(start: around.start, end: padding.right);
+    final inset = EdgeInsetsGeometry.lerp(
+      padding,
+      EdgeInsetsDirectional.only(start: around.start, end: padding.right),
+      inline,
+    )!;
     final content = SizedBox(
       height: math.max(0, height - inset.vertical),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (leading != null) ...[
-            SizedBox.square(
-              dimension: resolved.resolvedLeadingSize,
-              child: leading,
-            ),
-            SizedBox(width: around.end),
-          ],
-          Flexible(child: child),
+          SizedBox(
+            width: (resolved.resolvedLeadingSize + around.end) * inline,
+            height: resolved.resolvedLeadingSize,
+            child: widget.avatar != null && widget.leading != null
+                ? Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: SizedBox.square(
+                      dimension: resolved.resolvedLeadingSize,
+                      child: widget.leading,
+                    ),
+                  )
+                : null,
+          ),
+          Flexible(child: widget.child),
         ],
       ),
     );
     final glass = resolved.glass ?? Glass.regular;
-    final Widget capsule = onPressed == null
+    final Widget capsule = widget.onPressed == null
         ? LiquidPrism(
             glass: glass,
             shape: GlassShape.capsule,
             child: Padding(padding: inset, child: content),
           )
         : LiquidPrismPressable.glass(
-            onPressed: onPressed,
+            onPressed: widget.onPressed,
             label:
-                semanticLabel ??
-                switch (child) {
+                widget.semanticLabel ??
+                switch (widget.child) {
                   Text(:final data?) => data,
                   _ => '',
                 },
@@ -260,24 +355,102 @@ class LiquidPrismTitle extends StatelessWidget {
               ),
             ),
           );
-    final avatar = this.avatar;
-    if (avatar == null) return GlassGroupMembers(child: capsule);
+    final avatar = _avatar;
+    final above = math.max(0.0, _above.value);
     final size = resolved.resolvedAvatarSize;
     final overlap = math.min(resolved.resolvedAvatarOverlap, size);
     return GlassGroupMembers(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: size - overlap),
+          SizedBox(height: (size - overlap) * above),
           Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.topCenter,
             children: [
               capsule,
-              Positioned(
-                top: overlap - size,
-                child: SizedBox.square(dimension: size, child: avatar),
-              ),
+              if (avatar != null)
+                Positioned.fill(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final placement = _placement.value;
+                      final presence = (_above.value + _inline.value).clamp(
+                        0.0,
+                        1.0,
+                      );
+                      final dimension = math.max(
+                        0.0,
+                        size +
+                            (resolved.resolvedLeadingSize - size) * placement,
+                      );
+                      final rtl =
+                          Directionality.of(context) == TextDirection.rtl;
+                      final widthChange =
+                          resolved.resolvedLeadingSize +
+                          around.end +
+                          around.start -
+                          padding.left;
+                      // Keep the destination fixed while the capsule changes width.
+                      final inlineWidth =
+                          constraints.maxWidth + widthChange * (1 - inline);
+                      final inlineCenter =
+                          around.start +
+                          resolved.resolvedLeadingSize / 2 -
+                          inlineWidth / 2;
+                      final x =
+                          constraints.maxWidth / 2 +
+                          (rtl ? -inlineCenter : inlineCenter) * placement -
+                          dimension / 2;
+                      // Interpolate in the title's coordinates, then remove the
+                      // capsule's animated offset so it cannot bend the path.
+                      final y =
+                          size / 2 * (1 - placement) +
+                          inlineHeight / 2 * placement -
+                          dimension / 2 -
+                          (size - overlap) * above;
+                      final hidden =
+                          widget.avatar == null && widget.leading == null;
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            left: x,
+                            top: y,
+                            width: dimension,
+                            height: dimension,
+                            child: IgnorePointer(
+                              ignoring:
+                                  hidden ||
+                                  (widget.avatar == null &&
+                                      widget.onPressed != null),
+                              child: ExcludeSemantics(
+                                excluding: hidden,
+                                child: ExcludeFocus(
+                                  excluding: hidden,
+                                  child: Opacity(
+                                    opacity: presence,
+                                    child: Transform.scale(
+                                      scale: .8 + .2 * presence,
+                                      child: FittedBox(
+                                        child: SizedBox.square(
+                                          dimension: math.max(
+                                            size,
+                                            resolved.resolvedLeadingSize,
+                                          ),
+                                          child: avatar,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ],

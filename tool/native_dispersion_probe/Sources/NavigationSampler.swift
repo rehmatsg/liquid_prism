@@ -68,8 +68,10 @@ final class NavigationSamplingView: UIView {
         let layer = label.layer.presentation() ?? label.layer
         let frame = layer.convert(layer.bounds, to: window.layer.presentation() ?? window.layer)
         var animations: [[String: Any]] = []
+        var filters: [String] = []
         var ancestor: CALayer? = label.layer
         while let current = ancestor, current !== window.layer {
+          filters += (current.presentation() ?? current).filters?.map { String(describing: $0) } ?? []
           for key in current.animationKeys() ?? [] {
             if let value = current.animation(forKey: key) {
               var data = animation(value)
@@ -97,7 +99,7 @@ final class NavigationSamplingView: UIView {
           "fontSize": label.font.pointSize, "fontName": label.font.fontName,
           "modelFrame": rect(label.convert(label.bounds, to: window)), "frame": rect(frame),
           "alpha": label.alpha, "opacity": layer.opacity, "hidden": label.isHidden,
-          "animations": animations,
+          "animations": animations, "filters": filters,
         ])
       }
       if let scroller = view as? UIScrollView, scroller.contentSize.height > 2000 {

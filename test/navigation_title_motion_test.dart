@@ -86,6 +86,19 @@ void main() {
             );
           }
           if (ms == 100) {
+            for (final title in ['Large', 'Inline']) {
+              final filter = tester.widget<ImageFiltered>(
+                find.ancestor(
+                  of: find.text(title),
+                  matching: find.byType(ImageFiltered),
+                ),
+              );
+              expect(
+                filter.enabled,
+                title == 'Inline',
+                reason: '$direction $title blur',
+              );
+            }
             expect(opacityOf(tester, 'Large'), closeTo(.5, .003));
           }
           if (ms >= 200) {

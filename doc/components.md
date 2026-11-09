@@ -326,6 +326,18 @@ there ends at the content's edge, the rail's 12 points from its column.
 
 ### Glass titles and avatars
 
+Changing `avatar` or `leading` animates between the above-avatar, inline-avatar,
+and title-only layouts with the shared spring. When moving between the above
+and inline positions, one avatar stays mounted and animates its position and
+size with one visible overshoot (300 ms spring response, 0.22 bounce).
+The capsule and scaffold use the same timing, and the avatar scales from a
+fixed layout to keep its contents stable throughout the transition. It
+fades only when entering or leaving the title-only layout. The scaffold animates its title
+height with the composition, including accessory and body placement. Keep the
+same title widget identity to preserve the transition; rapid changes retarget the
+spring, and Reduce Motion snaps to the new layout. The Conversation showcase
+cycles through all three by tapping its title.
+
 `LiquidPrismTitle` puts the title in a glass capsule, as SwiftUI chat and
 contact screens do. `child` is the title (usually `Text`, or any widget),
 `leading` sits inside the capsule before it (a small avatar), and `avatar` sits
@@ -834,3 +846,30 @@ top and side docks remain visible. Compact sizing remains the default.
 `GlassTabBarSizing.fill` fills a bounded main axis; under unbounded constraints it
 uses compact sizing. Vertical labels default to hidden but honor explicit
 `labelBehavior`.
+
+### Scaffold lab
+
+The showcase's Scaffold Lab keeps its common heading, scroll behavior, accessory,
+edge and action controls at the top. Expand the advanced sections to override:
+
+- All `GlassNavigationBarStyle` fields: alignment, minimization and restoration,
+  safe-area adjustment, geometry, four title/subtitle typography styles, reveal
+  and hide springs, fade timing/curve, and title-capsule styling.
+- All `GlassScaffoldStyle` fields: tab and bottom-bar alignment, margins and width.
+- All `GlassScrollEdgeStyle` fields, including material fade and edge motion.
+- Title compositions, custom/implicit leading, trailing content, toolbar regions,
+  tabs and dock placement, background, keyboard avoidance, RTL, body/sliver mode,
+  nested scroll notification depth, and standalone `LiquidPrismSliverAppBar`.
+
+Numeric overrides are disabled initially, preserving inherited/native values.
+Switch an override off to clear it, or use **Reset to native defaults**. The
+sheet button exercises the same page inside a sheet. Body mode owns its scroll
+view and safe-area padding; refresh and custom scrolling headers use sliver mode.
+The global showcase settings continue to control appearance and glass quality.
+
+Large navigation titles scroll with the content and fade out over 200 ms with
+ease-in-out when replaced. They do not receive the compact title’s blur or
+15-point translation. The compact title uses its separate reveal/hide motion.
+A custom `header` is ordinary scrolling content and has no added exit animation;
+its disappearance triggers the compact title. See `doc/navigation_bar_spec.json`
+for native capture details.
