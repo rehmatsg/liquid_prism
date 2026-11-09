@@ -221,12 +221,21 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
     ..value = widget.avatar == null ? 0 : 1;
   late final _inline = RetargetableGlassSpring(vsync: this)
     ..value = widget.leading == null ? 0 : 1;
-  Widget? _avatar, _leading;
+  late final _placement = RetargetableGlassSpring(vsync: this)
+    ..value = widget.avatar == null ? 1 : 0;
+  Widget? _avatar;
   bool _immediate = false;
 
   void _sync() {
-    _avatar = widget.avatar ?? (_avatar?.key is GlobalKey ? null : _avatar);
-    _leading = widget.leading ?? (_leading?.key is GlobalKey ? null : _leading);
+    _avatar = widget.avatar ?? widget.leading ?? _avatar;
+    if (widget.avatar != null || widget.leading != null) {
+      springGlass(
+        _placement,
+        widget.avatar == null ? 1 : 0,
+        titleCompositionSpring.description,
+        immediate: _immediate,
+      );
+    }
     springGlass(
       _above,
       widget.avatar == null ? 0 : 1,
@@ -255,27 +264,26 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
         (oldWidget.leading == null) != (widget.leading == null)) {
       _sync();
     }
-    _avatar = widget.avatar ?? (_avatar?.key is GlobalKey ? null : _avatar);
-    _leading = widget.leading ?? (_leading?.key is GlobalKey ? null : _leading);
+    _avatar = widget.avatar ?? widget.leading ?? _avatar;
   }
 
   @override
   void dispose() {
     _above.dispose();
     _inline.dispose();
+    _placement.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: Listenable.merge([_above, _inline]),
+    animation: Listenable.merge([_above, _inline, _placement]),
     builder: (context, _) => _build(context),
   );
 
   Widget _build(BuildContext context) {
     final resolved = widget.resolve(context);
     final padding = resolved.resolvedPadding;
-    final leading = _leading;
     final inline = _inline.value.clamp(0.0, 1.0);
     final text = DefaultTextStyle.of(context).style;
     final line =
@@ -305,31 +313,19 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (leading != null && inline > 0) ...[
-            SizedBox(
-              width: resolved.resolvedLeadingSize * inline,
-              height: resolved.resolvedLeadingSize,
-              child: ExcludeSemantics(
-                excluding: widget.leading == null,
-                child: IgnorePointer(
-                  ignoring: widget.leading == null,
-                  child: Opacity(
-                    opacity: inline,
-                    child: FittedBox(
-                      child: SizedBox.square(
-                        dimension: resolved.resolvedLeadingSize,
-                        child: ExcludeFocus(
-                          excluding: widget.leading == null,
-                          child: leading,
-                        ),
-                      ),
+          SizedBox(
+            width: (resolved.resolvedLeadingSize + around.end) * inline,
+            height: resolved.resolvedLeadingSize,
+            child: widget.avatar != null && widget.leading != null
+                ? Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: SizedBox.square(
+                      dimension: resolved.resolvedLeadingSize,
+                      child: widget.leading,
                     ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: around.end * inline),
-          ],
+                  )
+                : null,
+          ),
           Flexible(child: widget.child),
         ],
       ),
@@ -385,27 +381,64 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
             alignment: Alignment.topCenter,
             children: [
               capsule,
-              if (avatar != null && above > 0)
-                Positioned(
-                  top: (overlap - size) * above,
-                  child: ExcludeSemantics(
-                    excluding: widget.avatar == null,
-                    child: IgnorePointer(
-                      ignoring: widget.avatar == null,
-                      child: Opacity(
-                        opacity: above.clamp(0.0, 1.0),
-                        child: Transform.scale(
-                          scale: .8 + .2 * above,
-                          child: SizedBox.square(
-                            dimension: size,
-                            child: ExcludeFocus(
-                              excluding: widget.avatar == null,
-                              child: avatar,
+              if (avatar != null)
+                Positioned.fill(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final placement = _placement.value.clamp(0.0, 1.0);
+                      final presence = (_above.value + _inline.value).clamp(
+                        0.0,
+                        1.0,
+                      );
+                      final dimension =
+                          size +
+                          (resolved.resolvedLeadingSize - size) * placement;
+                      final rtl =
+                          Directionality.of(context) == TextDirection.rtl;
+                      final inlineX = rtl
+                          ? constraints.maxWidth - around.start - dimension
+                          : around.start;
+                      final x =
+                          (constraints.maxWidth - dimension) /
+                              2 *
+                              (1 - placement) +
+                          inlineX * placement;
+                      final y =
+                          (overlap - size) * above * (1 - placement) +
+                          (constraints.maxHeight - dimension) / 2 * placement;
+                      final hidden =
+                          widget.avatar == null && widget.leading == null;
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            left: x,
+                            top: y,
+                            width: dimension,
+                            height: dimension,
+                            child: IgnorePointer(
+                              ignoring:
+                                  hidden ||
+                                  (widget.avatar == null &&
+                                      widget.onPressed != null),
+                              child: ExcludeSemantics(
+                                excluding: hidden,
+                                child: ExcludeFocus(
+                                  excluding: hidden,
+                                  child: Opacity(
+                                    opacity: presence,
+                                    child: Transform.scale(
+                                      scale: .8 + .2 * presence,
+                                      child: avatar,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
+                        ],
+                      );
+                    },
                   ),
                 ),
             ],

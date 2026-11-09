@@ -107,11 +107,19 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    final element = key.currentContext;
+    final expandedSize = tester.getSize(find.byKey(key));
     for (final value in [true, false, true]) {
       update(() => inline = value);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 80));
       expect(find.byKey(key), findsOneWidget);
+      expect(key.currentContext, same(element));
+      expect(
+        tester.getSize(find.byKey(key)).width,
+        lessThan(expandedSize.width),
+      );
+      expect(tester.getSize(find.byKey(key)).width, greaterThan(22));
       expect(tester.takeException(), isNull);
     }
     await tester.pumpAndSettle();
