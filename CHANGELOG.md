@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Improve light regular-glass rim contrast over bright backgrounds by matching the slightly darker native face while preserving white highlights.
+
 ## 0.7.3
 
 - Add a portable consumer agent skill and integration guide for adaptive scaffolds, scroll edges, component defaults and verification.

@@ -101,11 +101,21 @@ that no capture supports. Changes:
 - Clear glass's line uses the measured −0.3 colour bias as regular's does
   (0.46 before, which darkened its ends by 120 levels against native's 76).
 
-Remaining differences on white: the native face is 2–5 levels greyer inside
-the band (its ring dip reaches 248, ours 251, and its button centres sit at
-249–250 where ours stay at 253–255). No measured input explains that level,
-so it is unchanged. The line on dark and colourful backdrops keeps the black
-coverage band: no capture separates an additive −0.3 bias from it there.
+The remaining bright-face mismatch was rechecked against fresh iOS 27.0
+(24A434), iPhone 17 Pro simulator captures at 402 × 874 points, 3x, in light
+appearance, with matched white and grouped backgrounds and tint 0, .5 and 1.
+The light regular face now subtracts `0.008 * smoothstep(.75, 1, luma)` before
+its captured white fill and before rim lighting. This is a fitted highlight-end
+correction, not an extracted native constant. Values at or below .75 luma,
+Clear, dark appearance and explicit custom optical materials retain their paths.
+
+Across nine top-centre samples (0–12 points inside the 150 × 48 regular capsule),
+mean absolute RGB error fell from 1.469 to 0.654 eight-bit levels, maximum from 3
+to 2. The edge sample remains pure white. The grouped face sample at tint .5
+changed from (249,249,254) to (247,247,252), against native (248,247,252).
+This improves rim/face separation without drawing an additional white border.
+These measurements cover the stated fixtures, not pixel equivalence on all
+backgrounds or OS versions. Reproduce with `tool/rim_contrast/README.md`.
 
 Angles are radians. Clear glass's shadow opacity/radius and all ring-shadow
 inputs are zero in the captured fixtures. It retains its optical edge lighting.

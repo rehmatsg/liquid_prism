@@ -268,6 +268,8 @@ the white strip above it.
 Over (242, 242, 247) regular glass draws (250, 249, 254). The package fits the
 regular face before the white fill as `0.4 + v (0.7239 − 0.129 v)` for luma
 `v`, which gives these values within half a level at the default fill of 0.2.
+The current fit also applies the small bright-end correction documented in
+[native shadows](native_shadows.md#the-rim-over-white-on-ios-272) before the fill.
 Clear glass's `mix(0.125, 1.08, v)` matches its row exactly. On an iPhone Duo
 with iOS 27.2, native toolbar glass measured about 2 levels lower: 247 over
 (242, 241, 246) and 252–253 over white.
