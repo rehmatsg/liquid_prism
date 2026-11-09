@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.7.4
+
+- Remove the default grey fill behind held toolbar actions; retain glass press motion and explicit `pressedColor` overrides.
+
+- Ignore duplicate status-bar notifications during app touches so iPhone Duo title/action taps do not also scroll the page to the top. Genuine system taps keep working.
+
+- Improve light regular-glass rim contrast over bright backgrounds by matching the slightly darker native face while preserving white highlights.
+
 ## 0.7.3
 
 - Add a portable consumer agent skill and integration guide for adaptive scaffolds, scroll edges, component defaults and verification.

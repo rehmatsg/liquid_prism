@@ -134,7 +134,10 @@ vec3 gradeFace(vec3 color) {
             (dark ? 1.2999999523162842 : 1.2000000476837158);
         float tone = mix(black,white,value);
         // Fitted light-regular face curve; see doc/native_adaptive_layout.md.
-        if (!clear && !dark) tone = .4 + value*(.7239-.129*value);
+        if (!clear && !dark) {
+            tone = .4 + value*(.7239-.129*value);
+            tone -= .008 * smoothstep(.75, 1., value);
+        }
         // Fitted SDR tone rolloff; the limit and gray fill are measured inputs.
         if (!clear && dark) tone = .125 + value*(.97+(u_face.z-.97)*value);
         color = (color-vec3(value))*saturation + tone;

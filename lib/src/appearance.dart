@@ -706,6 +706,8 @@ class GlassToolbarStyle {
   /// measured system red and 12-point medium white.
   final Color? badgeColor;
   final TextStyle? badgeTextStyle;
+
+  /// Optional action press fill. Null inherits the theme, then draws no fill.
   final Color? pressedColor;
   final GlassShape? shape;
   final GlassShape? itemShape;
