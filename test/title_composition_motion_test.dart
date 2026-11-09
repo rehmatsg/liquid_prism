@@ -125,6 +125,58 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets(
+    'avatar overshoots once visibly before settling in either position',
+    (tester) async {
+      var inline = false;
+      late StateSetter update;
+      const avatar = SizedBox(key: Key('spring-avatar'));
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return LiquidPrismScaffold(
+                title: LiquidPrismTitle(
+                  avatar: inline ? null : avatar,
+                  leading: inline ? avatar : null,
+                  child: const Text('Title'),
+                ),
+                body: const SizedBox.expand(),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final targetInline in [true, false]) {
+        update(() => inline = targetInline);
+        await tester.pump();
+        final sizes = <double>[];
+        for (var frame = 0; frame < 60; frame++) {
+          await tester.pump(const Duration(milliseconds: 16));
+          sizes.add(
+            tester.getSize(find.byKey(const Key('spring-avatar'))).width,
+          );
+        }
+        final target = targetInline ? 22.0 : 64.0;
+        final overshoots = sizes
+            .map((size) => targetInline ? target - size : size - target)
+            .toList();
+        expect(overshoots.any((amount) => amount > 1), isTrue);
+        var visibleBounces = 0;
+        var pastTarget = false;
+        for (final amount in overshoots) {
+          if (amount > .5 && !pastTarget) visibleBounces++;
+          pastTarget = amount > .5;
+        }
+        expect(visibleBounces, 1);
+        expect(sizes.last, closeTo(target, .1));
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
   testWidgets('Reduce Motion snaps compositions including a running spring', (
     tester,
   ) async {

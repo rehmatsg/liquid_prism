@@ -329,7 +329,8 @@ there ends at the content's edge, the rail's 12 points from its column.
 Changing `avatar` or `leading` animates between the above-avatar, inline-avatar,
 and title-only layouts with the shared spring. When moving between the above
 and inline positions, one avatar stays mounted and animates its position and
-size; it fades only when entering or leaving the title-only layout. The scaffold animates its title
+size with one visible overshoot (450 ms spring response, 0.3 bounce); it
+fades only when entering or leaving the title-only layout. The scaffold animates its title
 height with the composition, including accessory and body placement. Keep the
 same title widget identity to preserve the transition; rapid changes retarget the
 spring, and Reduce Motion snaps to the new layout. The Conversation showcase

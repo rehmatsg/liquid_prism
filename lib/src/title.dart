@@ -11,6 +11,10 @@ import 'material.dart';
 import 'theme.dart';
 
 const titleCompositionSpring = GlassSpring();
+const _avatarSpring = GlassSpring(
+  response: Duration(milliseconds: 450),
+  bounce: .3,
+);
 
 class _TitleCompositionCurve extends Curve {
   const _TitleCompositionCurve();
@@ -232,7 +236,7 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
       springGlass(
         _placement,
         widget.avatar == null ? 1 : 0,
-        titleCompositionSpring.description,
+        _avatarSpring.description,
         immediate: _immediate,
       );
     }
@@ -385,14 +389,16 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                 Positioned.fill(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final placement = _placement.value.clamp(0.0, 1.0);
+                      final placement = _placement.value;
                       final presence = (_above.value + _inline.value).clamp(
                         0.0,
                         1.0,
                       );
-                      final dimension =
-                          size +
-                          (resolved.resolvedLeadingSize - size) * placement;
+                      final dimension = math.max(
+                        0.0,
+                        size +
+                            (resolved.resolvedLeadingSize - size) * placement,
+                      );
                       final rtl =
                           Directionality.of(context) == TextDirection.rtl;
                       final inlineX = rtl
