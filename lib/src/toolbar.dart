@@ -926,28 +926,23 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                         alignment: Alignment.center,
                         clipBehavior: Clip.none,
                         children: [
-                          Padding(
-                            padding: vertical
-                                ? EdgeInsets.symmetric(horizontal: inset)
-                                : EdgeInsets.symmetric(vertical: inset),
-                            child: ClipPath(
-                              clipper: GlassShapeClipper(
-                                appearance.itemShape ?? GlassShape.capsule,
-                              ),
-                              child: ColoredBox(
-                                color:
-                                    (appearance.pressedColor ??
-                                            colors.label.withValues(alpha: .12))
-                                        .withValues(
-                                          alpha:
-                                              (appearance.pressedColor?.a ??
-                                                  .12) *
-                                              press,
-                                        ),
-                                child: const SizedBox.expand(),
+                          if (appearance.pressedColor case final pressedColor?)
+                            Padding(
+                              padding: vertical
+                                  ? EdgeInsets.symmetric(horizontal: inset)
+                                  : EdgeInsets.symmetric(vertical: inset),
+                              child: ClipPath(
+                                clipper: GlassShapeClipper(
+                                  appearance.itemShape ?? GlassShape.capsule,
+                                ),
+                                child: ColoredBox(
+                                  color: pressedColor.withValues(
+                                    alpha: pressedColor.a * press,
+                                  ),
+                                  child: const SizedBox.expand(),
+                                ),
                               ),
                             ),
-                          ),
                           IconTheme.merge(
                             data: IconThemeData(
                               color: color,

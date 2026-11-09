@@ -122,7 +122,7 @@ and glyph refraction are separate effects. Tab motion is the widget/theme's
 | `size` | Bottom unless explicitly navigation |
 | `height`, `inset`, `spacing` | 44 / 4 / 16; bottom: 48 / 5 / 14 |
 | `iconSize` | 25.5 |
-| `foregroundColor`, `pressedColor` | Calibrated accent / 12% semantic label |
+| `foregroundColor`, `pressedColor` | Calibrated accent / no press fill (explicit color opts in) |
 | `shape`, `itemShape` | Capsule / capsule |
 | `glass`, `optics`, `blur`, `motion` | Component overrides of material/theme settings |
 | `backIcon`, `closeIcon` | Back chevron / close mark of `LiquidPrismBackButton` |
