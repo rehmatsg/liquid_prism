@@ -1,12 +1,24 @@
 import 'dart:math' as math;
 
+import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 
+import 'motion.dart';
 import 'pressable.dart';
 import 'recipe.dart';
 import 'glass.dart';
 import 'material.dart';
 import 'theme.dart';
+
+const titleCompositionSpring = GlassSpring();
+
+class _TitleCompositionCurve extends Curve {
+  const _TitleCompositionCurve();
+
+  @override
+  double transformInternal(double t) =>
+      SpringSimulation(titleCompositionSpring.description, 0, 1, 0).x(t * .5);
+}
 
 /// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's
 /// `GlassNavigationBarStyle.titleCapsule`, then to the defaults, measured on
@@ -132,7 +144,7 @@ final class GlassTitleStyle {
 /// (open a contact card, say); without it the capsule is static. The avatar
 /// and leading widgets are laid out in squares of the style's sizes, so the
 /// bar's height is known before layout.
-class LiquidPrismTitle extends StatelessWidget {
+class LiquidPrismTitle extends StatefulWidget {
   const LiquidPrismTitle({
     super.key,
     required this.child,
@@ -200,47 +212,146 @@ class LiquidPrismTitle extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
-    final resolved = resolve(context);
+  State<LiquidPrismTitle> createState() => _LiquidPrismTitleState();
+}
+
+class _LiquidPrismTitleState extends State<LiquidPrismTitle>
+    with TickerProviderStateMixin {
+  late final _above = RetargetableGlassSpring(vsync: this)
+    ..value = widget.avatar == null ? 0 : 1;
+  late final _inline = RetargetableGlassSpring(vsync: this)
+    ..value = widget.leading == null ? 0 : 1;
+  Widget? _avatar, _leading;
+  bool _immediate = false;
+
+  void _sync() {
+    _avatar = widget.avatar ?? (_avatar?.key is GlobalKey ? null : _avatar);
+    _leading = widget.leading ?? (_leading?.key is GlobalKey ? null : _leading);
+    springGlass(
+      _above,
+      widget.avatar == null ? 0 : 1,
+      titleCompositionSpring.description,
+      immediate: _immediate,
+    );
+    springGlass(
+      _inline,
+      widget.leading == null ? 0 : 1,
+      titleCompositionSpring.description,
+      immediate: _immediate,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _immediate = MediaQuery.disableAnimationsOf(context);
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(LiquidPrismTitle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((oldWidget.avatar == null) != (widget.avatar == null) ||
+        (oldWidget.leading == null) != (widget.leading == null)) {
+      _sync();
+    }
+    _avatar = widget.avatar ?? (_avatar?.key is GlobalKey ? null : _avatar);
+    _leading = widget.leading ?? (_leading?.key is GlobalKey ? null : _leading);
+  }
+
+  @override
+  void dispose() {
+    _above.dispose();
+    _inline.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: Listenable.merge([_above, _inline]),
+    builder: (context, _) => _build(context),
+  );
+
+  Widget _build(BuildContext context) {
+    final resolved = widget.resolve(context);
     final padding = resolved.resolvedPadding;
-    final leading = this.leading;
+    final leading = _leading;
+    final inline = _inline.value.clamp(0.0, 1.0);
     final text = DefaultTextStyle.of(context).style;
     final line =
         MediaQuery.textScalerOf(context).scale(text.fontSize ?? 17) *
         (text.height ?? 1.2);
-    final height = _capsuleHeight(this, resolved, line);
+    final plainHeight = math.max(
+      resolved.resolvedMinHeight,
+      line + padding.vertical,
+    );
+    final height =
+        plainHeight +
+        (math.max(
+                  plainHeight,
+                  resolved.resolvedLeadingSize +
+                      resolved.resolvedLeadingPadding.vertical,
+                ) -
+                plainHeight) *
+            inline;
     final around = resolved.resolvedLeadingPadding;
-    final EdgeInsetsGeometry inset = leading == null
-        ? padding
-        : EdgeInsetsDirectional.only(start: around.start, end: padding.right);
+    final inset = EdgeInsetsGeometry.lerp(
+      padding,
+      EdgeInsetsDirectional.only(start: around.start, end: padding.right),
+      inline,
+    )!;
     final content = SizedBox(
       height: math.max(0, height - inset.vertical),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (leading != null) ...[
-            SizedBox.square(
-              dimension: resolved.resolvedLeadingSize,
-              child: leading,
+          if (leading != null && inline > 0) ...[
+            SizedBox(
+              width: resolved.resolvedLeadingSize * inline,
+              height: resolved.resolvedLeadingSize,
+              child: ExcludeSemantics(
+                excluding: widget.leading == null,
+                child: IgnorePointer(
+                  ignoring: widget.leading == null,
+                  child: Opacity(
+                    opacity: inline,
+                    child: FittedBox(
+                      child: SizedBox.square(
+                        dimension: resolved.resolvedLeadingSize,
+                        child: ExcludeFocus(
+                          excluding: widget.leading == null,
+                          child: leading,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            SizedBox(width: around.end),
+            SizedBox(width: around.end * inline),
           ],
-          Flexible(child: child),
+          Flexible(child: widget.child),
         ],
       ),
     );
     final glass = resolved.glass ?? Glass.regular;
-    final Widget capsule = onPressed == null
+    final animatedContent = AnimatedSize(
+      duration: _immediate ? Duration.zero : const Duration(milliseconds: 500),
+      curve: const _TitleCompositionCurve(),
+      alignment: Alignment.center,
+      child: content,
+    );
+    final Widget capsule = widget.onPressed == null
         ? LiquidPrism(
             glass: glass,
             shape: GlassShape.capsule,
-            child: Padding(padding: inset, child: content),
+            child: Padding(padding: inset, child: animatedContent),
           )
         : LiquidPrismPressable.glass(
-            onPressed: onPressed,
+            onPressed: widget.onPressed,
             label:
-                semanticLabel ??
-                switch (child) {
+                widget.semanticLabel ??
+                switch (widget.child) {
                   Text(:final data?) => data,
                   _ => '',
                 },
@@ -255,29 +366,48 @@ class LiquidPrismTitle extends StatelessWidget {
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
                   ),
-                  child: content,
+                  child: animatedContent,
                 ),
               ),
             ),
           );
-    final avatar = this.avatar;
-    if (avatar == null) return GlassGroupMembers(child: capsule);
+    final avatar = _avatar;
+    final above = math.max(0.0, _above.value);
     final size = resolved.resolvedAvatarSize;
     final overlap = math.min(resolved.resolvedAvatarOverlap, size);
     return GlassGroupMembers(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: size - overlap),
+          SizedBox(height: (size - overlap) * above),
           Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.topCenter,
             children: [
               capsule,
-              Positioned(
-                top: overlap - size,
-                child: SizedBox.square(dimension: size, child: avatar),
-              ),
+              if (avatar != null && above > 0)
+                Positioned(
+                  top: (overlap - size) * above,
+                  child: ExcludeSemantics(
+                    excluding: widget.avatar == null,
+                    child: IgnorePointer(
+                      ignoring: widget.avatar == null,
+                      child: Opacity(
+                        opacity: above.clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: .8 + .2 * above,
+                          child: SizedBox.square(
+                            dimension: size,
+                            child: ExcludeFocus(
+                              excluding: widget.avatar == null,
+                              child: avatar,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ],

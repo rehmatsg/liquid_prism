@@ -348,6 +348,28 @@ class LiquidPrismScaffold extends StatefulWidget {
 class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   bool _sidebarHidden = false;
+  late final _titleHeight = RetargetableGlassSpring(vsync: this)
+    ..addListener(() {
+      if (mounted && !_configuringTitleHeight) setState(() {});
+    });
+  double? _titleHeightTarget;
+  bool _configuringTitleHeight = false;
+
+  double _animateTitleHeight(double target, {required bool immediate}) {
+    if (_titleHeightTarget != target ||
+        (immediate && _titleHeight.isAnimating)) {
+      _configuringTitleHeight = true;
+      springGlass(
+        _titleHeight,
+        target,
+        titleCompositionSpring.description,
+        immediate: immediate || _titleHeightTarget == null,
+      );
+      _titleHeightTarget = target;
+      _configuringTitleHeight = false;
+    }
+    return math.max(0, _titleHeight.value);
+  }
 
   /// The [LiquidPrismScaffold.header]'s laid-out height: the scroll at which
   /// the title swaps in.
@@ -487,6 +509,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   @override
   void dispose() {
+    _titleHeight.dispose();
     _edgeStrength.dispose();
     _edgePresence.dispose();
     _reveal.dispose();
@@ -687,7 +710,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final controlRowHeight = inlineTitle == null
         ? barHeight
         : math.max(barHeight, titleLine + 8);
-    final titleRowHeight = switch (inlineTitle) {
+    final targetTitleRowHeight = switch (inlineTitle) {
       final LiquidPrismTitle title => math.max(
         controlRowHeight,
         LiquidPrismTitle.extentOf(
@@ -700,6 +723,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       ),
       _ => controlRowHeight,
     };
+    final titleRowHeight = math.max(
+      controlRowHeight,
+      _animateTitleHeight(
+        targetTitleRowHeight,
+        immediate: media.disableAnimations || inlineTitle is! LiquidPrismTitle,
+      ),
+    );
     final expandedHeight = widget.largeTitle == null
         ? 0.0
         : navigation.largeTitleExtent ??

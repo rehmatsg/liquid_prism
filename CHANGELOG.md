@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Animate title avatar compositions and scaffold header height with spring motion, respecting Reduce Motion and interrupted transitions.
+- Let the Conversation showcase cycle through above-avatar, inline-avatar, and title-only layouts.
+
 ## 0.7.2
 
 - Add `LiquidPrismScaffold.contentInsetsOf` so external overlays can align with

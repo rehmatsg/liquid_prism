@@ -326,6 +326,13 @@ there ends at the content's edge, the rail's 12 points from its column.
 
 ### Glass titles and avatars
 
+Changing `avatar` or `leading` animates between the above-avatar, inline-avatar,
+and title-only layouts with the shared spring. The scaffold animates its title
+height with the composition, including accessory and body placement. Keep the
+same title widget identity to preserve the transition; rapid changes retarget the
+spring, and Reduce Motion snaps to the new layout. The Conversation showcase
+cycles through all three by tapping its title.
+
 `LiquidPrismTitle` puts the title in a glass capsule, as SwiftUI chat and
 contact screens do. `child` is the title (usually `Text`, or any widget),
 `leading` sits inside the capsule before it (a small avatar), and `avatar` sits
