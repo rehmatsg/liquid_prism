@@ -60,6 +60,17 @@ enum GlassChromePlacement {
   }
 }
 
+GlassChromePlacement _systemPlacement(
+  EdgeInsets padding,
+  GlassSystemChrome? system,
+) => switch (system) {
+  null => GlassChromePlacement.resolve(padding),
+  GlassSystemChrome(hasVerticalBar: false) => GlassChromePlacement.bottom,
+  GlassSystemChrome(verticalBarEdge: AxisDirection.left) =>
+    GlassChromePlacement.leftRail,
+  _ => GlassChromePlacement.rightRail,
+};
+
 /// Placement and bar axis published below a [LiquidPrismScaffold].
 @immutable
 class LiquidPrismChrome extends InheritedWidget {
@@ -285,6 +296,25 @@ class LiquidPrismScaffold extends StatefulWidget {
   static GlassChromePlacement? placementOf(BuildContext context) =>
       LiquidPrismChrome.maybeOf(context)?.placement;
 
+  /// Safe insets for content aligned with the scaffold, including a side rail.
+  ///
+  /// Use this for overlays outside the body, such as a sheet's drag handle.
+  /// The body already receives these insets plus measured bar coverage through
+  /// [MediaQuery.paddingOf]. [placement] overrides the nearest scaffold or the
+  /// system's placement when the overlay belongs to a differently placed bar.
+  static EdgeInsets contentInsetsOf(
+    BuildContext context, {
+    GlassChromePlacement? placement,
+  }) {
+    final padding = MediaQuery.viewPaddingOf(context);
+    return _ChromeLayout.withRail(
+      padding,
+      placement ??
+          placementOf(context) ??
+          _systemPlacement(padding, LiquidPrismSystemChrome.of(context)),
+    );
+  }
+
   /// The top bar's measured height: 44 pt navigation capsules.
   static const double topBarHeight = 44;
 
@@ -490,15 +520,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   }) {
     final media = MediaQuery.of(context);
     final resolved =
-        widget.placement ??
-        switch (system) {
-          null => GlassChromePlacement.resolve(media.viewPadding),
-          GlassSystemChrome(hasVerticalBar: false) =>
-            GlassChromePlacement.bottom,
-          GlassSystemChrome(verticalBarEdge: AxisDirection.left) =>
-            GlassChromePlacement.leftRail,
-          _ => GlassChromePlacement.rightRail,
-        };
+        widget.placement ?? _systemPlacement(media.viewPadding, system);
     final rail = resolved.isRail;
     final explicitDock = switch (widget.tabBarPlacement) {
       GlassTabBarPlacement.bottom ||

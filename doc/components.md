@@ -442,6 +442,12 @@ covers plus 16 points below the top bar's capsules, so scroll views keep
 content clear while it still shows through the glass. When the device is partly folded, the fold reaches the body as a
 `MediaQuery.displayFeatures` entry; `DisplayFeatureSubScreen` keeps content out
 of it. Read `LiquidPrismScaffold.placementOf(context)` to adapt your own layout.
+For overlays outside the body, such as a sheet's drag handle, use
+`LiquidPrismScaffold.contentInsetsOf(context)` to align with its content area.
+This includes physical safe insets and the rail's minimum width, but not measured
+top/bottom bar coverage. The body's `MediaQuery.padding` already includes both;
+do not add these insets again there. An explicit `placement` argument overrides
+the nearest scaffold or system placement.
 
 When the rail is too short for both the actions and the tab bar, the actions
 collapse into one "More" item whose native menu lists them, as native bars do

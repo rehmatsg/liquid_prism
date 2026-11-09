@@ -58,6 +58,11 @@ its contour, rim and refraction away from the content, by as much as the
 transform moves the page, and the error shrinks back to zero as the transform
 returns to identity. Debug builds print a warning the first time this happens.
 
+Flutter's Cupertino sheet transition uses a filtered scale for the covered page.
+The showcase's `ShowcaseSheetRoute` keeps Cupertino's drag/scroll coordination
+and primary transition, and uses plain transforms for covered pages and sheets.
+Consumer sheet routes need the same composition constraint.
+
 ```dart
 // Keeps glass aligned: a plain transform layer.
 Transform.scale(scale: scale, alignment: Alignment.topCenter, child: page)
