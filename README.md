@@ -270,8 +270,9 @@ flutter pub get
 Explore the components, customize them in Studio, or find examples in Library.
 See the [showcase guide](example/README.md).
 
-For contributors: [CONTRIBUTING.md](CONTRIBUTING.md). For coding agents:
-[AGENTS.md](AGENTS.md) and the [implementation guides](doc/agents/README.md).
+For apps using coding agents: install the [Liquid Prism integration skill](doc/agent_integration.md).
+For package contributors: [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md)
+and the [implementation guides](doc/agents/README.md).
 
 ## Credits and license
 
