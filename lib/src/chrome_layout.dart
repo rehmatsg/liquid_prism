@@ -812,7 +812,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ignoring: !visible,
                 child: GlassContentPresence(
                   presence: opacity,
-                  blur: titleBlur,
+                  blur: large ? 0 : titleBlur,
                   child: large || !swaps
                       ? child!
                       : Transform.translate(

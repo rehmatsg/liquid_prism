@@ -866,3 +866,10 @@ Switch an override off to clear it, or use **Reset to native defaults**. The
 sheet button exercises the same page inside a sheet. Body mode owns its scroll
 view and safe-area padding; refresh and custom scrolling headers use sliver mode.
 The global showcase settings continue to control appearance and glass quality.
+
+Large navigation titles scroll with the content and fade out over 200 ms with
+ease-in-out when replaced. They do not receive the compact title’s blur or
+15-point translation. The compact title uses its separate reveal/hide motion.
+A custom `header` is ordinary scrolling content and has no added exit animation;
+its disappearance triggers the compact title. See `doc/navigation_bar_spec.json`
+for native capture details.

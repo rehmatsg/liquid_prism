@@ -258,6 +258,17 @@ void main() {
     controller.jumpTo(60);
     await tester.pumpAndSettle();
     expect(inline(), 0, reason: 'the header still shows');
+    expect(rectOf(tester, 'header').top, closeTo(header.top - 60, .01));
+    expect(
+      find.ancestor(
+        of: find.text('Heading'),
+        matching: find.byType(ImageFiltered),
+      ),
+      findsNothing,
+    );
+    final heldHeader = rectOf(tester, 'header');
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(rectOf(tester, 'header'), heldHeader);
     controller.jumpTo(121);
     await tester.pumpAndSettle();
     expect(inline(), 1);
