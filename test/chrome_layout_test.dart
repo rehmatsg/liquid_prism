@@ -220,7 +220,12 @@ void main() {
           ),
         ),
       );
-      expect(tester.getSize(find.byKey(inline)), const Size(22, 22));
+      final faceBox = tester.renderObject<RenderBox>(find.byKey(inline));
+      final face = Rect.fromPoints(
+        faceBox.localToGlobal(Offset.zero),
+        faceBox.localToGlobal(faceBox.size.bottomRight(Offset.zero)),
+      );
+      expect(face.size, const Size(22, 22));
       final capsule = tester.getRect(find.byType(LiquidPrismTitle));
       expect(
         capsule.height,
@@ -229,7 +234,6 @@ void main() {
       );
       // Native: the avatar 12 pt from the capsule's start, nearly as far as
       // from its top and bottom.
-      final face = tester.getRect(find.byKey(inline));
       expect(face.left - capsule.left, 12);
       expect(face.top - capsule.top, 11);
       // Unlike a plain title, the capsule stays centred beside Invite.

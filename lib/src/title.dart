@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 
 import 'motion.dart';
@@ -10,19 +9,10 @@ import 'glass.dart';
 import 'material.dart';
 import 'theme.dart';
 
-const titleCompositionSpring = GlassSpring();
-const _avatarSpring = GlassSpring(
+const titleCompositionSpring = GlassSpring(
   response: Duration(milliseconds: 450),
   bounce: .3,
 );
-
-class _TitleCompositionCurve extends Curve {
-  const _TitleCompositionCurve();
-
-  @override
-  double transformInternal(double t) =>
-      SpringSimulation(titleCompositionSpring.description, 0, 1, 0).x(t * .5);
-}
 
 /// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's
 /// `GlassNavigationBarStyle.titleCapsule`, then to the defaults, measured on
@@ -236,7 +226,7 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
       springGlass(
         _placement,
         widget.avatar == null ? 1 : 0,
-        _avatarSpring.description,
+        titleCompositionSpring.description,
         immediate: _immediate,
       );
     }
@@ -257,8 +247,12 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _immediate = MediaQuery.disableAnimationsOf(context);
-    _sync();
+    _avatar ??= widget.avatar ?? widget.leading;
+    final immediate = MediaQuery.disableAnimationsOf(context);
+    if (_immediate != immediate) {
+      _immediate = immediate;
+      _sync();
+    }
   }
 
   @override
@@ -297,15 +291,11 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
       resolved.resolvedMinHeight,
       line + padding.vertical,
     );
-    final height =
-        plainHeight +
-        (math.max(
-                  plainHeight,
-                  resolved.resolvedLeadingSize +
-                      resolved.resolvedLeadingPadding.vertical,
-                ) -
-                plainHeight) *
-            inline;
+    final inlineHeight = math.max(
+      plainHeight,
+      resolved.resolvedLeadingSize + resolved.resolvedLeadingPadding.vertical,
+    );
+    final height = plainHeight + (inlineHeight - plainHeight) * inline;
     final around = resolved.resolvedLeadingPadding;
     final inset = EdgeInsetsGeometry.lerp(
       padding,
@@ -335,17 +325,11 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
       ),
     );
     final glass = resolved.glass ?? Glass.regular;
-    final animatedContent = AnimatedSize(
-      duration: _immediate ? Duration.zero : const Duration(milliseconds: 500),
-      curve: const _TitleCompositionCurve(),
-      alignment: Alignment.center,
-      child: content,
-    );
     final Widget capsule = widget.onPressed == null
         ? LiquidPrism(
             glass: glass,
             shape: GlassShape.capsule,
-            child: Padding(padding: inset, child: animatedContent),
+            child: Padding(padding: inset, child: content),
           )
         : LiquidPrismPressable.glass(
             onPressed: widget.onPressed,
@@ -366,7 +350,7 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                     fontSize: 17,
                     fontWeight: FontWeight.w400,
                   ),
-                  child: animatedContent,
+                  child: content,
                 ),
               ),
             ),
@@ -409,9 +393,13 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                               2 *
                               (1 - placement) +
                           inlineX * placement;
+                      // Interpolate in the title's coordinates, then remove the
+                      // capsule's animated offset so it cannot bend the path.
                       final y =
-                          (overlap - size) * above * (1 - placement) +
-                          (constraints.maxHeight - dimension) / 2 * placement;
+                          size / 2 * (1 - placement) +
+                          inlineHeight / 2 * placement -
+                          dimension / 2 -
+                          (size - overlap) * above;
                       final hidden =
                           widget.avatar == null && widget.leading == null;
                       return Stack(
@@ -435,7 +423,15 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                                     opacity: presence,
                                     child: Transform.scale(
                                       scale: .8 + .2 * presence,
-                                      child: avatar,
+                                      child: FittedBox(
+                                        child: SizedBox.square(
+                                          dimension: math.max(
+                                            size,
+                                            resolved.resolvedLeadingSize,
+                                          ),
+                                          child: avatar,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

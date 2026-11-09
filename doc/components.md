@@ -329,7 +329,9 @@ there ends at the content's edge, the rail's 12 points from its column.
 Changing `avatar` or `leading` animates between the above-avatar, inline-avatar,
 and title-only layouts with the shared spring. When moving between the above
 and inline positions, one avatar stays mounted and animates its position and
-size with one visible overshoot (450 ms spring response, 0.3 bounce); it
+size with one visible overshoot (450 ms spring response, 0.3 bounce).
+The capsule and scaffold use the same timing, and the avatar scales from a
+fixed layout to keep its contents stable throughout the transition. It
 fades only when entering or leaving the title-only layout. The scaffold animates its title
 height with the composition, including accessory and body placement. Keep the
 same title widget identity to preserve the transition; rapid changes retarget the

@@ -2,6 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
+double paintedWidth(WidgetTester tester, Finder finder) {
+  final box = tester.renderObject<RenderBox>(finder);
+  return (box.localToGlobal(Offset(box.size.width, 0)) -
+          box.localToGlobal(Offset.zero))
+      .distance;
+}
+
 void main() {
   for (final rtl in [false, true]) {
     testWidgets('title composition retargets and keeps one action, RTL=$rtl', (
@@ -115,11 +122,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
       expect(find.byKey(key), findsOneWidget);
       expect(key.currentContext, same(element));
+      expect(tester.getSize(find.byKey(key)), expandedSize);
       expect(
-        tester.getSize(find.byKey(key)).width,
+        paintedWidth(tester, find.byKey(key)),
         lessThan(expandedSize.width),
       );
-      expect(tester.getSize(find.byKey(key)).width, greaterThan(22));
+      expect(paintedWidth(tester, find.byKey(key)), greaterThan(22));
       expect(tester.takeException(), isNull);
     }
     await tester.pumpAndSettle();
@@ -156,8 +164,17 @@ void main() {
         for (var frame = 0; frame < 60; frame++) {
           await tester.pump(const Duration(milliseconds: 16));
           sizes.add(
-            tester.getSize(find.byKey(const Key('spring-avatar'))).width,
+            paintedWidth(tester, find.byKey(const Key('spring-avatar'))),
           );
+          final avatarBox = tester.renderObject<RenderBox>(
+            find.byKey(const Key('spring-avatar')),
+          );
+          final center = avatarBox.localToGlobal(
+            avatarBox.size.center(Offset.zero),
+          );
+          final titleTop = tester.getTopLeft(find.byType(LiquidPrismTitle)).dy;
+          final progress = (64 - sizes.last) / (64 - 22);
+          expect(center.dy - titleTop, closeTo(32 + (22 - 32) * progress, .1));
         }
         final target = targetInline ? 22.0 : 64.0;
         final overshoots = sizes
