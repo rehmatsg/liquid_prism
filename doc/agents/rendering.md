@@ -81,31 +81,77 @@ The ring is evaluated in `ringShadow()` under the key/fill highlight. Its band
 mask (`facing`, `gain`) is a fit documented in [native shadows](../native_shadows.md#the-rim-over-white-on-ios-272).
 
 A surface's frost is a list of `FrostPass`es (`lib/src/recipe.dart`), resolved
-from the tint amount for the material's own frost and plain otherwise. Each
-pass is a `BackdropFilterLayer` under the `_FrostLayer` (blur, faded by a
-colour-matrix alpha, composited with the pass's blend mode). An unshared
-surface's passes share the layer's own `BackdropKey`, so the backdrop is
-captured once and each pass blurs the same pixels; hoisted members' passes use
-`frostKey`. Each pass gets a distinct sigma offset (1e-4) so Impeller never
-treats two as equal filters on one key. `style.frost` handed to the optical
-pass is `FrostPass.effectiveSigma`: zero while sharp detail shows through. A
-batch composes one plain frost, so only members whose frost is a single
-covering pass batch; the rest share captures. Regular material uses a fitted
-Gaussian at every device tint amount, while Clear can use two passes. The
-calibration and limits are in [native defaults](../native_defaults.md).
+from the tint amount for the material's own frost and plain otherwise. Passes
+are of two kinds:
+
+- A blur that replaces the backdrop (`_RenderGlass.blurPass`): explicit blur,
+  clear glass's base, and regular's size-dependent base (`depthFade`, nothing
+  up to 64 points, then one blur at `_baseTaper` of the deep radius). It is one
+  `BackdropFilterLayer` under the `_FrostLayer`, clipped to the contour.
+- Blur fills (`FrostPass.fill`): regular's fill at the captured directional
+  (`lighten`/`darken`) and normal opacities, and clear glass's fill. These have
+  no backdrop layer of their own. The optical pass blends them itself
+  (`fillGlass` in `glass_core.glsl`) from `u_frost`, and dark regular glass
+  takes its bleed from the same fill, read at four points
+  `NativeGlassDepth.bleedRadius` apart to stand in for the wider native blur
+  (`bleedGlass`).
+
+The fill reaches the optical pass through the framebuffer's alpha.
+`shaders/frost_fill.frag` over a blur is one `ImageFilter` instance per sigma
+(`LiquidPrism._fillFilter`), drawn with `BlendMode.modulate`: its colour is
+white, so the sharp backdrop is untouched, and its alpha holds the blur in
+columns of marker, red, green, blue. `readFill` rebuilds the colour from four
+neighbouring pixels a few pixels inside the contour, displaced with the
+backdrop so a lens refracts the fill too, and falls back to no fill when it
+finds no marker (a transparent backdrop inside a saveLayer). `completeFill`
+writes opaque pixels wherever the fill was stored, so no stored alpha
+survives the optical pass.
+
+Two engine behaviours make this cheap (`impeller/display_list/canvas.cc`,
+`SaveLayer`): backdrop layers on one `BackdropKey` share one capture, and when
+every filter on the key is equal the filter is rendered once per frame over
+the whole capture, each layer then being a plain textured draw in the current
+pass with the layer's blend mode. That path needs at least two layers on the
+key, so every fill is drawn as two halves (`_FrostLayer.addFill`, added at composition so no retained clip keeps a
+stale key). Only
+pipeline blend modes work there; `lighten`/`darken` do not, which is why the
+blend lives in the shader. Fills fade in by opacity (`FrostPass.scaled`): a
+per-surface sigma would make the filters unequal.
+
+`_FillShare` picks the key at composition, in paint order. A surface joins
+the previous surface's key only if nothing but glass was added to the scene
+between them, neither sits inside a saveLayer the other is outside of, their
+fills have one sigma, and it does not overlap glass painted since the key's
+capture; otherwise it starts the next key. A group's hoisted members join the
+first hoisted member. Free-standing rows of controls therefore share one
+capture and one blur without a `LiquidPrismGroup`. The test compares the
+surfaces' own rectangles, not the blur's reach, so a later surface's fill does
+not hold its neighbours' shadows or faces; under a 16-point blur that is not
+visible. Each key costs a capture and a blur of the whole pass (the engine
+gives the shared render no coverage hint), so many surfaces separated by
+painted content cost more than adjacent ones.
+
+`style.frost` handed to the optical pass is `FrostPass.effectiveSigma`: zero
+while sharp detail shows through. A batch composes one plain frost, so only
+members whose frost is a single covering pass batch; the rest share captures.
+`mirrorSurroundings` in `glass_core.glsl` mixes the backdrop from the native
+backdrop margin (a quarter of the shortest side, at least 16 points) into the outermost point of a regular
+face. Sigmas carry `FrostPass.engineSigmaScale` because Impeller's blur is a
+Gaussian cut off at sqrt(3) sigma. The calibration and limits are in
+[native defaults](../native_defaults.md).
 
 ## Shared captures
 
 Each `BackdropFilterLayer` makes Impeller end the render pass, store the full
 screen and redraw it into a new pass; this pass break, not fragment arithmetic,
-dominates the cost of many surfaces at once. An unbatched surface normally costs
-two breaks: its clipped frost pass and its optical pass. In a group, members in
+dominates the cost of many surfaces at once. An unbatched surface costs
+one break for its optical pass, one more when it has a blur that replaces the
+backdrop, and a share of its fill key's capture. In a group, members in
 `_GlassGroupData.shared` are hoisted: the first shared member to add itself to
 the scene (`_GlassShadowLayer.addToScene`) paints every shared member's exterior
-shadow picture and frost `BackdropFilterLayer` (clipped to that member's contour,
-keyed by `frostKey`), and every shared optical pass uses `sharedKey`. Hoisted
-frost sigmas are offset by `index * 1e-4` so Impeller does not treat them as one
-equal filter and blur the whole capture once. Members' own `_FrostLayer` and
+shadow picture and frost (clipped to that member's contour; blurs keyed by
+`frostKey`, fills by the group's `_FillShare` key), and every shared optical
+pass uses `sharedKey`. Members' own `_FrostLayer` and
 `_GlassShadowLayer` skip themselves while hoisted. Transforms are taken relative
 to the host (`inverse(host.getTransformTo(null)) * member.glassTransform()`),
 so members under offset or plain transform layers stay aligned.
@@ -253,7 +299,9 @@ rebuild on unchanged values).
 
 Compact and accessory-only scaffold headers use an independent circle below
 chrome instead of the attached-drop shader. Layout publishes the full header
-boundary, including accessories and docks, for the painter. The presentation is
+boundary, including accessories and docks, for the painter. The boundary also
+records the lowest occupied header edge, so the resting circle has 24-point
+clearance above and below without counting the normal body inset twice. The presentation is
 latched when a pull starts (also for controller refreshes). Only the extra gap
 not already supplied by scroll overscroll is translated into the body; this
 holds space during refreshing and supports clamping physics without double

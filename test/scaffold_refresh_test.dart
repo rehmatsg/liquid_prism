@@ -31,17 +31,34 @@ Future<void> finish(WidgetTester tester) async {
 }
 
 void main() {
-  for (final mode in ['compact', 'accessory', 'large', 'custom', 'none']) {
+  for (final mode in [
+    'compact',
+    'accessory',
+    'large',
+    'custom',
+    'none',
+    'actions',
+    'rail',
+  ]) {
     testWidgets('refresh presentation for $mode header', (tester) async {
       phone(tester);
+      if (mode == 'rail') {
+        tester.view
+          ..physicalSize = const Size(466, 678)
+          ..padding = const FakeViewPadding(right: 84, bottom: 34)
+          ..viewPadding = const FakeViewPadding(right: 84, bottom: 34);
+      }
       final pending = Completer<void>();
       await tester.pumpWidget(
         CupertinoApp(
           home: LiquidPrismScaffold(
-            title: mode == 'accessory' || mode == 'none'
+            title: mode == 'accessory' || mode == 'none' || mode == 'actions'
                 ? null
                 : const Text('Feed'),
             largeTitle: mode == 'large' ? const Text('Feed') : null,
+            trailing: mode == 'actions'
+                ? const SizedBox(width: 88, height: 44)
+                : null,
             header: mode == 'custom' ? const SizedBox(height: 100) : null,
             accessory: mode == 'accessory'
                 ? const PreferredSize(
@@ -77,14 +94,15 @@ void main() {
       }
 
       final calls = record();
-      final compact = mode == 'compact' || mode == 'accessory';
+      final compact =
+          mode == 'compact' || mode == 'accessory' || mode == 'rail';
       expect(calls.any((c) => c.memberName == #scale), compact);
       if (compact) {
         final layer = calls.firstWhere((c) => c.memberName == #saveLayer);
         final bounds = layer.positionalArguments[0] as Rect;
         final opacity = (layer.positionalArguments[1] as Paint).color.a;
         expect(opacity, inExclusiveRange(0, 1));
-        expect(bounds.center.dy, greaterThan(rowStart));
+        expect(bounds.center.dy, greaterThan(0));
         expect(
           bounds.center.dy,
           lessThan(tester.getTopLeft(find.text('Row 0')).dy),
@@ -99,9 +117,23 @@ void main() {
       }
       if (compact) {
         // Keep room below the pinned header after the scroll bounce finishes.
+        final layer = record().firstWhere((c) => c.memberName == #saveLayer);
+        final center = (layer.positionalArguments[0] as Rect).center;
+        final headerBottom = tester
+            .getBottomLeft(
+              find.text(mode == 'accessory' ? 'Search and filters' : 'Feed'),
+            )
+            .dy;
+        final expectedHeaderBottom = mode == 'accessory'
+            ? tester.getBottomLeft(find.byType(PreferredSize)).dy
+            : headerBottom;
         expect(
-          tester.getTopLeft(find.text('Row 0')).dy - rowStart,
-          closeTo(GlassRefreshLayerState.trigger, 1),
+          center.dy - 18 - expectedHeaderBottom,
+          closeTo(GlassRefreshLayerState.compactSpacing, 1),
+        );
+        expect(
+          tester.getTopLeft(find.text('Row 0')).dy - center.dy - 18,
+          closeTo(GlassRefreshLayerState.compactSpacing, 1),
         );
       }
       pending.complete();

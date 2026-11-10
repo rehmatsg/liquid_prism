@@ -53,6 +53,11 @@ the example build when the asset predates an include, then rebuild. Check logs
 for shader, layout and range errors. Exercise light/dark,
 narrow layout, large text, held/slow/fast drag, release and repeated interaction.
 
+Measure GPU cost on the Mac with `tool/gpu_bench/run.py` (optionally
+`--compare <ref>`); it renders fixed scenarios offscreen with the GPU saturated,
+so it needs no device and is unaffected by vsync or heat. See
+[its README](../../tool/gpu_bench/README.md).
+
 The driver fixture supports deterministic interaction and capture:
 
 ```sh

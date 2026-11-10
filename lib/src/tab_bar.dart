@@ -20,6 +20,7 @@ import 'pressable.dart';
 import 'recipe.dart';
 import 'style.dart';
 import 'selection.dart';
+import 'system_chrome.dart';
 import 'tab_bar_style.dart';
 import 'tab_reselection.dart';
 import 'theme.dart';
@@ -1231,10 +1232,16 @@ class _LensHalo extends CustomPainter {
       housingScale != old.housingScale;
 }
 
-/// The selection's own blur. Native adds a 2-point blur under the pill, which
-/// a housing frosted at 3 points or more already exceeds: the extra pass would
-/// widen a 3.3-point kernel to 3.9 and cost a full backdrop capture per frame,
-/// so it only runs when the housing is clear or lightly frosted.
+/// Native blurs the backdrop under the selected pill with a 2-point Gaussian
+/// blur filter of its own, on top of the bar's frost. That filter's radius is
+/// its sigma (unlike the glass filter's inputs), scaled for the engine's blur.
+const _nativeSelectionBlur = 2 * FrostPass.engineSigmaScale;
+
+/// The selection's own blur. A housing whose frost already covers its face at
+/// 3 points or more exceeds the pill's blur: the extra pass would barely widen
+/// that kernel and cost a full backdrop capture per frame. Regular glass keeps
+/// the backdrop sharp under its blur fill until the Liquid Glass setting is at
+/// its maximum, so its pill is blurred like the native one.
 double _selectionBlur(
   BuildContext context, {
   required double? blur,
@@ -1242,14 +1249,25 @@ double _selectionBlur(
   required Glass? glass,
 }) {
   final theme = LiquidPrismTheme.of(context);
-  final frost =
-      blur ??
-      (optics != null ? optics.frost : theme.blur) ??
-      GlassRecipe.resolve(
-        glass ?? theme.glass ?? Glass.regular,
-        LiquidPrismTheme.materialBrightnessOf(context),
-        GlassRole.tabBar,
-        customOptics: false,
-      ).optics(0).frost;
-  return frost >= 3 ? 0 : 2;
+  final explicit = blur ?? (optics != null ? optics.frost : theme.blur);
+  if (explicit != null) return explicit >= 3 ? 0 : _nativeSelectionBlur;
+  final recipe = GlassRecipe.resolve(
+    glass ?? theme.glass ?? Glass.regular,
+    LiquidPrismTheme.materialBrightnessOf(context),
+    GlassRole.tabBar,
+    customOptics: false,
+  );
+  final covering = FrostPass.effectiveSigma(
+    FrostPass.resolve(
+      kind: recipe.kind,
+      dark: recipe.dark,
+      frost: recipe.optics(0).frost,
+      fillFrost: GlassRecipe.blurFillFrost,
+      tint: GlassTint.resolve(
+        theme.glassTint,
+        LiquidPrismSystemChrome.deviceGlassTintAmount.value,
+      ),
+    ),
+  );
+  return covering >= 3 ? 0 : _nativeSelectionBlur;
 }

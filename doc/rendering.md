@@ -32,12 +32,21 @@ Default regular glass also draws an inner ring shadow and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
 mapping and its measured limits are described in [native shadows](native_shadows.md).
 
-Regular and clear frost follows the device's Liquid Glass setting (see
-[customization](customization.md)). Below iOS's default the frost becomes a
-blur fill: the blurred backdrop composited over the sharp one with normal and
-lighten (dark: darken) blends, one backdrop filter layer per blend sharing one
-capture; clear glass above the default adds a fading blur fill. At the default
-and above, regular frost stays one plain blur pass, so it costs what it did.
+Regular frost follows the device Liquid Glass setting as native does (see
+[native defaults](native_defaults.md)): the backdrop stays sharp under a wide
+blur fill that is blended twice, lighten (darken in dark appearance) and then
+normally, the normal share growing with the setting until the fill covers the
+face. Surfaces taller than 64 points add a size-scaled base blur, and in dark
+appearance a bleed that lightens the finished face. Clear frost keeps its own
+curve: no pass at zero, one light blur through the middle settings, and a
+12-point fill fading in above the middle.
+
+The wide fill is blurred once per frame for all the glass that shares a
+backdrop, not once per surface, and each surface's own pass blends it in.
+Glass painted one after another, such as a row of buttons, shares that blur
+automatically. Content painted between two surfaces, a saveLayer (`Opacity`,
+a filter) around one of them, or glass on top of other glass starts a new one,
+so each surface always blurs what is actually behind it.
 
 ## Ancestor transforms
 
@@ -161,11 +170,10 @@ paint, share backdrop captures while keeping their own filters. The first such
 member to reach the scene paints every shared member's exterior shadow and frost
 pass, each frost still clipped to its own contour, and the shared members' optical
 passes then read one capture that already holds all of that frost. A group of
-frosted controls therefore costs two backdrop captures instead of two per member.
-Each capture ends the render pass and copies the whole screen on a tile-based
-GPU, so this removes most of the pass breaks without resampling any output. The
-hoisted frost passes receive distinct sub-visible sigmas on purpose: equal filters
-on one capture are rendered once over the entire capture, not per contour.
+controls therefore costs a few backdrop captures in total instead of some per
+member. Each capture ends the render pass and copies the whole screen on a
+tile-based GPU, so this removes most of the pass breaks without resampling any
+output.
 
 `LiquidPrismScaffold` hosts a group around its floating chrome (leading control,
 actions and tab bar) automatically; the body paints first and is not a member.

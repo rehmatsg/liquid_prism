@@ -2,18 +2,25 @@
 
 ## Unreleased
 
-## 0.10.0
+## 0.11.0
+
+0.10.0 was never tagged; its changes ship in this release.
+
+- Match regular glass to native Liquid Glass measured on device at every Liquid Glass setting: a sharp backdrop under a lighten/darken-blended blur fill, size-dependent base blur and dark bleed on surfaces taller than 64 points, the native white rim highlight and dark edge line, and rims that mirror nearby content. Plain regular surfaces shorter than 64 points fade their default rim lens out, to none at 48 points, as measured; bars, buttons and fields keep their lens, and an explicit `refraction` is used as given. The selected tab pill keeps its 2-point blur over regular bars. Explicit blur and optics still override the device curve.
+
+- Cut the GPU cost of regular and clear glass. The wide blur fill is now blurred once per frame for all the glass that shares a backdrop and blended inside each surface's own pass, replacing three or four backdrop layers per surface; dark glass takes its bleed from the same blur. Glass painted one after another shares that blur without a `LiquidPrismGroup`. Measured on an M5 Mac, seven free-standing regular surfaces cost about 1.6 ms of GPU time per frame, down from 6.2 ms, and scaffold chrome 1.3 ms, down from 2.8 ms. Off-screen glass skips its backdrop passes. Glass now fades in by the fill's opacity where its blur radius grew before.
 
 - Let Studio use device-derived regular glass until optics are explicitly adjusted; material selector controls inherit the app material.
 
-- Show refresh below compact and accessory-only headers: the circle scales and fades into the opened gap, which stays clear while refreshing. Expanded headings retain the island/top-edge effect.
+- Show refresh below compact and accessory-only headers: the circle scales and fades into the opened gap, which stays clear while refreshing. Keep balanced clearance above and below the resting circle, independent of the pull threshold. Expanded headings and action-only chrome retain the island/top-edge effect.
 
 - Let automatic inline titles use the leading edge when trailing controls crowd the centered position, in both scaffold and sliver bars. Preserve explicit alignment, RTL and centered glass title capsules.
-- Document regular versus clear glass behavior and verify live device tint updates without changing the calibrated regular defaults.
 
 - Draw the detached refresh drop with native circle antialiasing and add a thin translucent white contour around the emerging drop and detached circle in dark appearance.
 - Preserve the full blended contour during early pulls from the top edge on devices without a Dynamic Island.
 - Add a light release haptic when an armed pull starts refreshing, routed through `GlassHaptics` as `refreshReleased`. Programmatic refreshes do not emit it. Exhaustive `GlassHapticKind` switches must handle the new event.
+
+- Add `tool/gpu_bench/`, a GPU benchmark that runs on a Mac without a device.
 
 ## 0.9.0
 

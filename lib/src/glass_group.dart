@@ -358,24 +358,38 @@ class _GlassGroupData {
       _sharedShadows = recorder.endRecording();
     }
     builder.addPicture(Offset.zero, _sharedShadows!);
-    var index = 0;
+    var joined = false;
     for (final entry in transforms.entries) {
       final member = entry.key;
+      final frost = member._frostLayer.layer;
+      final blur = member.blurPass;
+      final sigma = member.fillSigma;
+      if (frost == null || (blur == null && sigma == null)) continue;
       final contour = member.shape
           .path(member.size)
           .transform(entry.value.storage);
-      final frost = member._frostLayer.layer;
-      final passes = member.frost;
-      if (frost == null || passes.isEmpty) continue;
       final memberClips = clips[member]!;
       for (final clip in memberClips) {
         builder.pushClipPath(clip);
       }
       builder.pushClipPath(contour);
-      final count = math.min(passes.length, frost._filters.length);
-      for (var i = 0; i < count; i++) {
-        frost.configure(i, passes[i], frostKey, offset: index++ * 1e-4);
-        frost.pass(i).addToScene(builder);
+      if (blur != null) {
+        frost.configureBlur(blur, frostKey);
+        frost.blur.addToScene(builder);
+      }
+      if (sigma != null) {
+        // Members see the same backdrop, so they share the first one's key.
+        frost.configureFill(
+          sigma,
+          _FillShare.keyFor(
+            member,
+            host._shadowLayer.layer!,
+            sigma,
+            join: joined,
+          ),
+        );
+        joined = true;
+        frost.addFill(builder, contour.getBounds());
       }
       builder.pop();
       for (final _ in memberClips) {

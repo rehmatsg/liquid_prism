@@ -14,9 +14,10 @@ LiquidPrism(
 ```
 
 `Glass.regular` is the standard material; `Glass.clear` is more transparent.
-The device's clearest setting does not switch regular surfaces to the clear
-variant: native regular glass retains some frosting. Leave bars on regular for
-the system's standard treatment; choose clear explicitly for a different material.
+Both follow the device Liquid Glass setting: regular keeps the backdrop sharp
+under a blended blur fill as native does, and clear has no frost at the
+clearest setting. Regular retains its own face grading, highlights and shadows. Leave bars on
+regular for the standard treatment; choose clear explicitly for a different material.
 `Glass.identity` draws only the child. `.tint(color)` changes material color;
 `.tint(null)` explicitly removes inherited material tint. `.interactive()` adds
 spring touch feedback to a surface, without inventing an action. Use
@@ -33,7 +34,7 @@ Appearance > Liquid Glass) by default: lower settings show more of the
 backdrop, higher ones frost and whiten the glass, and glass updates as soon as
 the setting changes. `LiquidPrismThemeData(glassTint: .5)` fixes the amount
 (0–1) for an app or subtree; null follows the device, then iOS's default 0.5,
-where the materials look as they always have. It changes the material's own
+the fallback setting. It changes the material's own
 frost and white face fill only: an explicit `blur` or `optics` keeps a plain
 frost, and held control lenses keep their optics. Other platforms and earlier
 iOS versions report no setting, so glass renders at 0.5.

@@ -1236,7 +1236,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             key: _refreshKey,
             onRefresh: widget.onRefresh,
             controller: widget.refreshController,
-            belowHeader: !swaps && (topBar || widget.accessory != null),
+            belowHeader:
+                !swaps && (inlineTitle != null || widget.accessory != null),
             headerBoundary: _refreshBoundary,
             contentDisplacement: _refreshDisplacement,
             sideInsets: EdgeInsets.only(
@@ -1676,6 +1677,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           : top,
     );
     var topDockHeight = 0.0;
+    var refreshHeaderBottom = naturalTop;
     final dockMargin = style.tabBarMargin?.resolve(textDirection);
     final dockAlignment = (style.tabBarAlignment ?? Alignment.center).resolve(
       textDirection,
@@ -1738,6 +1740,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                     minimization.value,
           ),
         );
+        refreshHeaderBottom = dockTop + margin.top + bar.height;
         topDockHeight = bar.height + margin.vertical;
         covered = covered.copyWith(top: covered.top + topDockHeight);
       }
@@ -1787,6 +1790,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       positionChild(_Slot.scrollEdge, Offset(contentLeft, 0));
     }
     if (hasChild(_Slot.accessory)) {
+      refreshHeaderBottom = math.max(
+        refreshHeaderBottom,
+        math.max(naturalTop, top + barRow + largeHeight) + accessoryHeight,
+      );
       layoutChild(
         _Slot.accessory,
         BoxConstraints.tightFor(
@@ -1871,6 +1878,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         } else {
           trailingStart = x;
         }
+        refreshHeaderBottom = math.max(
+          refreshHeaderBottom,
+          top + math.max(0, (controlRow - actions.height) / 2) + actions.height,
+        );
         actionsInBar = true;
         positionChild(
           _Slot.actions,
@@ -1892,6 +1903,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         trailingStart = x;
       }
       actionsInBar = true;
+      refreshHeaderBottom = math.max(
+        refreshHeaderBottom,
+        centred(child) + child.height,
+      );
       positionChild(_Slot.trailing, Offset(x, centred(child)));
     }
 
@@ -1912,6 +1927,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       } else {
         leadingEnd = barLeft + leadingOffset + child.width;
       }
+      refreshHeaderBottom = math.max(
+        refreshHeaderBottom,
+        centred(child) + child.height,
+      );
       positionChild(
         _Slot.leading,
         Offset(
@@ -1969,6 +1988,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           : (alignment == GlassTitleAlignment.trailing) != rtl
           ? right - title.width
           : left;
+      refreshHeaderBottom = math.max(
+        refreshHeaderBottom,
+        top + (barRow + title.height) / 2,
+      );
       positionChild(_Slot.title, Offset(x, top + (barRow - title.height) / 2));
     }
     if (hasChild(_Slot.largeTitle)) {
@@ -2095,7 +2118,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     );
     refreshBoundary.value = Rect.fromLTRB(
       contentLeft,
-      covered.top,
+      math.min(refreshHeaderBottom, covered.top),
       contentRight,
       covered.top,
     );

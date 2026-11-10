@@ -91,6 +91,9 @@ class GlassRefreshLayer extends StatefulWidget {
 
   /// Compact chrome uses a separate circle in the gap below the whole header.
   final bool belowHeader;
+
+  /// Horizontal content bounds; top is the occupied header bottom and bottom
+  /// is the unshifted body start, including its normal chrome clearance.
   final ValueListenable<Rect>? headerBoundary;
   final ValueNotifier<double>? contentDisplacement;
 
@@ -108,6 +111,10 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     with TickerProviderStateMixin {
   /// Overscroll, in logical pixels, at which a release starts a refresh.
   static const trigger = 84.0;
+
+  /// Space held below compact chrome, independent of the arming distance.
+  static const compactSpacing = 24.0;
+  static const compactExtent = compactSpacing * 2 + _DropGeometry.radius * 2;
 
   /// How far below the trigger a pull must fall back to stop being armed, so
   /// a pull held at the trigger doesn't chatter.
@@ -242,13 +249,16 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     super.dispose();
   }
 
+  double get _compactHoldExtent =>
+      math.max(0.0, compactExtent - (widget.headerBoundary?.value.height ?? 0));
+
   void _updateDisplacement() {
     // Bouncing scrolls already open a gap. Hold only the missing portion while
     // refreshing; clamping scrolls need the whole synthetic pull displacement.
     widget.contentDisplacement?.value = _belowHeader
         ? math.max(
             0.0,
-            math.max(_pull.value, _hold.value) -
+            math.max(_pull.value, _hold.value * _compactHoldExtent / trigger) -
                 math.max(0.0, _pull.value - _clampPull),
           )
         : 0;
@@ -822,7 +832,7 @@ class _DropPainter extends CustomPainter {
     final boundary = state.widget.headerBoundary?.value ?? Rect.zero;
     final center = Offset(
       boundary.width > 0 ? boundary.center.dx : size.width / 2,
-      boundary.top + math.min(extension, trigger) / 2,
+      boundary.top + progress * GlassRefreshLayerState.compactExtent / 2,
     );
     final swell = state._swell.value.clamp(0.0, 1.4);
     final radius = _DropGeometry.radius + 2 * swell;

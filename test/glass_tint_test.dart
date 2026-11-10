@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -74,22 +75,102 @@ void main() {
   });
 
   group('frost passes', () {
-    test('regular frost follows the fitted light and dark setting sweep', () {
-      const light = [5.2, 6.76, 8.32, 10.11, 12.0];
-      const dark = [2.98, 5.07, 7.12, 9.62, 12.0];
-      for (var i = 0; i < GlassTint.amounts.length; i++) {
-        for (final isDark in [false, true]) {
-          final pass = _frost(
-            Glass.regular,
-            GlassTint.amounts[i],
-            dark: isDark,
-          ).single;
-          expect(pass.sigma, closeTo((isDark ? dark : light)[i], 1e-12));
-          expect(pass.covers, isTrue);
-          expect(pass.blendMode, BlendMode.srcOver);
+    test('regular blends a blur fill over a sharp, depth-faded base', () {
+      final measured =
+          (jsonDecode(File('doc/native_defaults_spec.json').readAsStringSync())
+                  as Map)['measured']
+              as Map;
+      for (final dark in [false, true]) {
+        for (final row in measured[dark ? 'dark' : 'light'] as List) {
+          final tint = (row['tint'] as num).toDouble();
+          final inputs = row['materials'][0]['inputs'] as Map;
+          final passes = _frost(Glass.regular, tint, dark: dark);
+          // Native radii are half the Gaussian sigma, which the engine's
+          // truncated blur needs scaled.
+          const scale = 2 * FrostPass.engineSigmaScale;
+          final base = scale * (inputs['inputBlurRadius'] as num);
+          final fill = scale * (inputs['inputBlurFillBlurRadius'] as num);
+          final normal = (inputs['inputBlurFillNormalOpacity'] as num)
+              .toDouble();
+          final directional =
+              inputs[dark
+                      ? 'inputBlurFillDarkenOpacity'
+                      : 'inputBlurFillLightenOpacity']
+                  as num;
+          if (tint == 1) {
+            expect(passes, [FrostPass.fill(fill.toDouble())]);
+            continue;
+          }
+          expect(passes, [
+            FrostPass(base.toDouble(), 1, BlendMode.srcOver, true),
+            FrostPass.fill(
+              fill.toDouble(),
+              directional.toDouble(),
+              dark ? BlendMode.darken : BlendMode.lighten,
+            ),
+            if (normal > 0) FrostPass.fill(fill.toDouble(), normal),
+          ]);
+          expect(passes.first.scaled(.5).depthFade, isTrue);
+          expect(passes.first.scaled(.5).sigma, base / 2);
+          // Every surface shares one fill blur, so a fill fades by opacity.
+          expect(
+            passes[1].scaled(.5),
+            FrostPass.fill(
+              fill.toDouble(),
+              directional / 2,
+              dark ? BlendMode.darken : BlendMode.lighten,
+            ),
+          );
         }
       }
-      expect(_frost(Glass.regular, .375).single.sigma, closeTo(7.54, 1e-12));
+      final between = _frost(Glass.regular, .125);
+      expect(between[1].opacity, closeTo(.73125, 1e-6));
+      expect(between[2].opacity, .125);
+      expect(_frost(Glass.regular, -1), _frost(Glass.regular, 0));
+      expect(_frost(Glass.regular, 2), _frost(Glass.regular, 1));
+    });
+
+    test('depth terms start past 64 points and stop growing at 150', () {
+      expect(NativeGlassDepth.amount(48), 0);
+      expect(NativeGlassDepth.amount(64), 0);
+      // inputBlurOpacity0 captured at 80, 104, 130 and 170 points.
+      expect(NativeGlassDepth.amount(80), closeTo(.1333, 1e-4));
+      expect(NativeGlassDepth.amount(104), closeTo(.3333, 1e-4));
+      expect(NativeGlassDepth.amount(130), closeTo(.55, 1e-4));
+      expect(NativeGlassDepth.amount(170), closeTo(.7167, 1e-4));
+      // A plain surface bends its backdrop from 64 points, not at 48.
+      expect(NativeGlassDepth.lens(40), 0);
+      expect(NativeGlassDepth.lens(48), 0);
+      expect(NativeGlassDepth.lens(56), .5);
+      expect(NativeGlassDepth.lens(64), 1);
+      expect(NativeGlassDepth.lens(170), 1);
+      // inputBleedBlurRadius 28 / 52.5 at 80 / 170 points.
+      expect(
+        NativeGlassDepth.bleedSigma(80) /
+            NativeGlassDepth.bleedSigmaPerRadius /
+            FrostPass.engineSigmaScale,
+        closeTo(28, 1e-9),
+      );
+      expect(
+        NativeGlassDepth.bleedSigma(170) /
+            NativeGlassDepth.bleedSigmaPerRadius /
+            FrostPass.engineSigmaScale,
+        closeTo(52.5, 1e-9),
+      );
+      // The optical pass widens the fill to the bleed's blur with reads a
+      // ring apart: none once the fill is as wide as the bleed.
+      final bleed = NativeGlassDepth.bleedSigma(170);
+      expect(NativeGlassDepth.bleedRadius(170, bleed), 0);
+      expect(NativeGlassDepth.bleedRadius(170, 2 * bleed), 0);
+      final radius = NativeGlassDepth.bleedRadius(
+        170,
+        FrostPass.regularFillSigma,
+      );
+      expect(
+        radius * radius / 2 +
+            FrostPass.regularFillSigma * FrostPass.regularFillSigma,
+        closeTo(bleed * bleed, 1e-9),
+      );
     });
 
     test('clear glass scales its blur and fades in a blur fill to tint 1', () {
@@ -98,10 +179,10 @@ void main() {
       expect(_frost(Glass.clear, .5), [const FrostPass(1.8)]);
       expect(_frost(Glass.clear, .75), [
         const FrostPass(1.8),
-        const FrostPass(GlassRecipe.blurFillFrost, .5),
+        const FrostPass.fill(GlassRecipe.blurFillFrost, .5),
       ]);
       expect(_frost(Glass.clear, 1), [
-        const FrostPass(GlassRecipe.blurFillFrost),
+        const FrostPass.fill(GlassRecipe.blurFillFrost),
       ]);
     });
 
@@ -127,8 +208,13 @@ void main() {
     });
 
     test('the optical pass assumes only a blur that covers the face', () {
-      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .5)), 8.32);
-      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .25)), 6.76);
+      // Sharp detail shows through regular glass until the fill covers it.
+      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .5)), 0);
+      expect(FrostPass.effectiveSigma(_frost(Glass.regular, 0)), 0);
+      expect(
+        FrostPass.effectiveSigma(_frost(Glass.regular, 1)),
+        FrostPass.regularFillSigma,
+      );
       expect(FrostPass.effectiveSigma(_frost(Glass.clear, .75)), 1.8);
       expect(FrostPass.effectiveSigma(const []), 0);
     });
@@ -137,7 +223,12 @@ void main() {
   group('face packet', () {
     test('the white fill follows the tint; the ring keeps its strength', () {
       final button = _recipe(Glass.regular, role: GlassRole.button);
-      expect(button.faceUniforms, [.2, NativeGlassShadow.ringOpacity, .94, 1]);
+      expect(button.faceUniforms, [.2, NativeGlassShadow.ringOpacity, 1, 1]);
+      // Larger light surfaces gain face contrast with the native depth amount.
+      expect(
+        button.faceUniformsFor(170)[2],
+        closeTo(1 + NativeGlassDepth.lightGain * .7167, 1e-4),
+      );
       expect(button.withTint(0).faceUniforms.first, 0);
       expect(button.withTint(.25).faceUniforms.first, closeTo(.1, 1e-12));
       expect(button.withTint(1).faceUniforms.first, .5);
@@ -186,9 +277,12 @@ void main() {
       final scalar = File('shaders/glass.frag').readAsStringSync();
       expect(floats(scalar), glassUniformCount);
       expect(
-        RegExp(r'uniform vec4 u_face;\s*uniform sampler2D').hasMatch(scalar),
+        RegExp(
+          r'uniform vec4 u_face;\s*(//.*\s*)*uniform vec4 u_frost;\s*'
+          r'uniform sampler2D',
+        ).hasMatch(scalar),
         isTrue,
-        reason: 'the face block closes the packet',
+        reason: 'the face and frost blocks close the packet',
       );
 
       final batch = File('shaders/glass_batch.frag').readAsStringSync();
@@ -206,7 +300,8 @@ void main() {
       expect(most * stride, lessThanOrEqualTo(lenses));
       expect(batch, contains('u_face = u_lenses[slot + 16];'));
 
-      // Each lens: device bounds, the scalar blocks, derived, then face.
+      // Each lens: device bounds, the scalar blocks, derived, then face. A
+      // batch composes its own frost, so the frost block stays behind.
       final packet = [for (var i = 0; i < glassUniformCount; i++) i * 1.0];
       final lens = batchLensUniforms(
         const Rect.fromLTRB(1, 2, 3, 4),
@@ -218,9 +313,13 @@ void main() {
       expect(lens.sublist(4, 48), packet.sublist(2, 46));
       expect(
         lens.sublist(48, 64),
-        packet.sublist(glassUniformCount - 20, glassUniformCount - 4),
+        packet.sublist(glassUniformCount - 24, glassUniformCount - 8),
       );
-      expect(lens.sublist(64), packet.sublist(glassUniformCount - 4));
+      expect(
+        lens.sublist(64),
+        packet.sublist(glassUniformCount - 8, glassUniformCount - 4),
+      );
+      expect(batch, contains('const vec4 u_frost = vec4(0.,0.,0.,-1.);'));
     });
   });
 
@@ -363,4 +462,67 @@ void main() {
       expect(resolvedTint(tester), 0);
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
   });
+  testWidgets(
+    'the selected tab pill is blurred until the bar frost covers its face',
+    (tester) async {
+      Future<double> pillBlur(
+        LiquidPrismThemeData theme, {
+        double? blur,
+      }) async {
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: MediaQuery(
+              data: const MediaQueryData(size: Size(400, 200)),
+              child: LiquidPrismTheme(
+                data: theme,
+                child: Center(
+                  child: LiquidPrismTabBar(
+                    blur: blur,
+                    selectedIndex: 0,
+                    onSelected: (_) {},
+                    tabs: const [
+                      LiquidPrismTab(label: 'A', icon: SizedBox.shrink()),
+                      LiquidPrismTab(label: 'B', icon: SizedBox.shrink()),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        return tester
+            .widget<LiquidPrismSelection>(
+              find.descendant(
+                of: find.byKey(const ValueKey('tab-selection')),
+                matching: find.byType(LiquidPrismSelection),
+              ),
+            )
+            .blur;
+      }
+
+      // Native 2-point pill blur, scaled for the engine's blur.
+      const native = 2 * FrostPass.engineSigmaScale;
+      // Regular glass leaves the backdrop sharp under its blur fill.
+      expect(
+        await pillBlur(const LiquidPrismThemeData(glassTint: .5)),
+        closeTo(native, 1e-9),
+      );
+      expect(
+        await pillBlur(const LiquidPrismThemeData(glassTint: 0)),
+        closeTo(native, 1e-9),
+      );
+      // At the maximum setting the fill covers the face and exceeds the pill.
+      expect(await pillBlur(const LiquidPrismThemeData(glassTint: 1)), 0);
+      // An explicit heavy bar blur also makes the pill's pass redundant.
+      expect(
+        await pillBlur(const LiquidPrismThemeData(glassTint: .5), blur: 6),
+        0,
+      );
+      expect(
+        await pillBlur(const LiquidPrismThemeData(glassTint: .5), blur: 0),
+        closeTo(native, 1e-9),
+      );
+    },
+  );
 }
