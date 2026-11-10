@@ -30,7 +30,11 @@ targets:
       - target: DispersionSpecs
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.prism.dispersionspec.tests
+        # Device runs without an Xcode account can only reuse an existing
+        # team profile: tool/glass_parity passes
+        # PARITY_TESTS_BUNDLE_ID=dev.prism.nativeShowcase.tests.
+        PARITY_TESTS_BUNDLE_ID: dev.prism.dispersionspec.tests
+        PRODUCT_BUNDLE_IDENTIFIER: $(PARITY_TESTS_BUNDLE_ID)
         GENERATE_INFOPLIST_FILE: YES
 schemes:
   DispersionSpecs:
