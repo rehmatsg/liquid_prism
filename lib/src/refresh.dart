@@ -109,6 +109,9 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
   /// Overscroll, in logical pixels, at which a release starts a refresh.
   static const trigger = 84.0;
 
+  /// Space held below compact chrome, independent of the arming distance.
+  static const compactExtent = 56.0;
+
   /// How far below the trigger a pull must fall back to stop being armed, so
   /// a pull held at the trigger doesn't chatter.
   static const _disarmSlack = 10.0;
@@ -248,7 +251,7 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     widget.contentDisplacement?.value = _belowHeader
         ? math.max(
             0.0,
-            math.max(_pull.value, _hold.value) -
+            math.max(_pull.value, _hold.value * compactExtent / trigger) -
                 math.max(0.0, _pull.value - _clampPull),
           )
         : 0;
@@ -822,7 +825,7 @@ class _DropPainter extends CustomPainter {
     final boundary = state.widget.headerBoundary?.value ?? Rect.zero;
     final center = Offset(
       boundary.width > 0 ? boundary.center.dx : size.width / 2,
-      boundary.top + math.min(extension, trigger) / 2,
+      boundary.top + progress * GlassRefreshLayerState.compactExtent / 2,
     );
     final swell = state._swell.value.clamp(0.0, 1.4);
     final radius = _DropGeometry.radius + 2 * swell;

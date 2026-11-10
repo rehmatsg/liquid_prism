@@ -101,7 +101,7 @@ void main() {
         // Keep room below the pinned header after the scroll bounce finishes.
         expect(
           tester.getTopLeft(find.text('Row 0')).dy - rowStart,
-          closeTo(GlassRefreshLayerState.trigger, 1),
+          closeTo(GlassRefreshLayerState.compactExtent, 1),
         );
       }
       pending.complete();
