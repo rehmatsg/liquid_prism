@@ -19,7 +19,7 @@ dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: v0.8.0
+      ref: v0.9.0
 ```
 
 Run `flutter pub get`. For breaking API changes, see the [0.7 migration guide](doc/releases/0.7.md).
@@ -224,7 +224,8 @@ LiquidPrismScaffold(
 
 Add `onRefresh: reload` for pull to refresh: a drop pulls out of the Dynamic
 Island (or the notch, or the top edge), pinches off into a circle when a
-release will refresh, and spins until your future completes.
+release will refresh, and spins until your future completes. A
+`LiquidPrismRefreshController` starts the same refresh from code.
 
 Position chrome with typed toolbar placements, title alignment and tab docks.
 See the [0.7 API and migration guide](doc/releases/0.7.md) and run

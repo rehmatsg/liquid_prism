@@ -174,6 +174,224 @@ void main() {
     expect(refreshed, 2);
   });
 
+  testWidgets('a controller starts a refresh and joins a running one', (
+    tester,
+  ) async {
+    phone(tester);
+    var refreshed = 0;
+    final pending = Completer<void>();
+    final controller = LiquidPrismRefreshController();
+    addTearDown(controller.dispose);
+    final states = <bool>[];
+    controller.addListener(() => states.add(controller.isRefreshing));
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Feed'),
+          refreshController: controller,
+          onRefresh: () {
+            refreshed++;
+            return pending.future;
+          },
+          slivers: rows(),
+        ),
+      ),
+    );
+    var finished = 0;
+    unawaited(controller.refresh().then((_) => finished++));
+    unawaited(controller.refresh().then((_) => finished++));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(refreshed, 1);
+    expect(controller.isRefreshing, isTrue);
+    expect(find.bySemanticsLabel('Refreshing'), findsOneWidget);
+    expect(finished, 0);
+
+    pending.complete();
+    await finish(tester);
+    expect(finished, 2);
+    expect(controller.isRefreshing, isFalse);
+    expect(states, [true, false]);
+  });
+
+  testWidgets('a controller does nothing without onRefresh', (tester) async {
+    phone(tester);
+    final controller = LiquidPrismRefreshController();
+    addTearDown(controller.dispose);
+    await controller.refresh();
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Feed'),
+          refreshController: controller,
+          slivers: rows(),
+        ),
+      ),
+    );
+    await controller.refresh();
+    await tester.pumpAndSettle();
+    expect(controller.isRefreshing, isFalse);
+  });
+
+  testWidgets(
+    'the haptics hook replaces native feedback; false skips the success',
+    (tester) async {
+      phone(tester);
+      final native = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') {
+            native.add(call.arguments as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      final events = <GlassHapticEvent>[];
+      var succeed = true;
+      final controller = LiquidPrismRefreshController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismTheme(
+            data: LiquidPrismThemeData(
+              haptics: GlassHaptics((context, event) => events.add(event)),
+            ),
+            child: LiquidPrismScaffold(
+              title: const Text('Feed'),
+              refreshController: controller,
+              onRefresh: () async => succeed,
+              slivers: rows(),
+            ),
+          ),
+        ),
+      );
+      await tester.timedDrag(
+        find.byType(CustomScrollView),
+        const Offset(0, 500),
+        const Duration(milliseconds: 600),
+      );
+      await finish(tester);
+      expect(
+        events.every((e) => e.component == GlassHapticComponent.refresh),
+        isTrue,
+      );
+      expect(events.map((e) => e.kind), [
+        GlassHapticKind.refreshPulled,
+        GlassHapticKind.refreshArmed,
+        GlassHapticKind.refreshSucceeded,
+      ]);
+
+      // A refresh from code that reports failure: armed, then failed.
+      events.clear();
+      succeed = false;
+      unawaited(controller.refresh());
+      await finish(tester);
+      expect(events.map((e) => e.kind), [
+        GlassHapticKind.refreshArmed,
+        GlassHapticKind.refreshFailed,
+      ]);
+      expect(native, isEmpty);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+
+  testWidgets('a failed refresh plays no success haptic by default', (
+    tester,
+  ) async {
+    phone(tester);
+    final native = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          native.add(call.arguments as String);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Feed'),
+          onRefresh: () async => false,
+          slivers: rows(),
+        ),
+      ),
+    );
+    await tester.timedDrag(
+      find.byType(CustomScrollView),
+      const Offset(0, 500),
+      const Duration(milliseconds: 600),
+    );
+    await finish(tester);
+    expect(native, hasLength(2));
+    expect(native.last, contains('mediumImpact'));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('switching onRefresh keeps the page state', (tester) async {
+    phone(tester);
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    var builds = 0;
+    Widget page({required bool refresh}) => CupertinoApp(
+      home: LiquidPrismScaffold(
+        // No bar and no bottom bar: nothing else needs the scroll listener.
+        onRefresh: refresh ? () async {} : null,
+        body: ListView(
+          controller: scroll,
+          children: [
+            StatefulBuilder(
+              builder: (context, setState) {
+                builds++;
+                return CupertinoTextField(focusNode: focus);
+              },
+            ),
+            for (var i = 0; i < 40; i++)
+              SizedBox(height: 50, child: Text('Row $i')),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpWidget(page(refresh: false));
+    focus.requestFocus();
+    await tester.pump();
+    scroll.jumpTo(20);
+    await tester.pump();
+    final state = tester.state(find.byType(Scrollable).first);
+    final field = tester.state(find.byType(CupertinoTextField));
+
+    for (final refresh in [true, false, true]) {
+      await tester.pumpWidget(page(refresh: refresh));
+      await tester.pump();
+      expect(tester.state(find.byType(Scrollable).first), same(state));
+      expect(tester.state(find.byType(CupertinoTextField)), same(field));
+      expect(scroll.offset, 20);
+      expect(focus.hasFocus, isTrue);
+    }
+    expect(builds, greaterThan(0));
+
+    // Disabled, a pull does nothing; enabled again, it refreshes.
+    await tester.pumpWidget(page(refresh: false));
+    scroll.jumpTo(0);
+    await tester.drag(find.byType(ListView), const Offset(0, 300));
+    await finish(tester);
+    expect(find.bySemanticsLabel('Refreshing'), findsNothing);
+  });
+
   testWidgets('the large title follows the pull', (tester) async {
     phone(tester);
     final controller = ScrollController();

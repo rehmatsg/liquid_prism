@@ -45,15 +45,25 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
   final _messages = [for (var i = 11; i >= 0; i--) i];
   var _unread = 0;
   var _slow = false;
+  var _fail = false;
+  final _controller = LiquidPrismRefreshController();
 
-  Future<void> _refresh() async {
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Completes with false when the refresh fails, which skips the check.
+  Future<bool> _refresh() async {
     await Future<void>.delayed(Duration(milliseconds: _slow ? 3500 : 1200));
-    if (!mounted) return;
+    if (!mounted || _fail) return false;
     setState(() {
       final next = _messages.first + 1;
       _messages.insertAll(0, [next + 1, next]);
       _unread += 2;
     });
+    return true;
   }
 
   @override
@@ -63,7 +73,20 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
       backgroundColor: colors.groupedBackground,
       title: const Text('Inbox'),
       largeTitle: const Text('Inbox'),
+      refreshController: _controller,
       toolbar: [
+        GlassToolbarItem(
+          key: const ValueKey('refresh-now'),
+          icon: const Icon(CupertinoIcons.arrow_clockwise),
+          label: 'Refresh now',
+          onPressed: _controller.refresh,
+        ),
+        GlassToolbarItem(
+          key: const ValueKey('refresh-fail'),
+          icon: Icon(_fail ? CupertinoIcons.wifi_slash : CupertinoIcons.wifi),
+          label: _fail ? 'Let refreshes succeed' : 'Make refreshes fail',
+          onPressed: () => setState(() => _fail = !_fail),
+        ),
         GlassToolbarItem(
           key: const ValueKey('refresh-slow'),
           icon: Icon(

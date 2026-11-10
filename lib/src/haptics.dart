@@ -5,9 +5,27 @@ import 'package:flutter/widgets.dart';
 
 import 'theme.dart';
 
-enum GlassHapticComponent { tabBar, switchControl, slider }
+enum GlassHapticComponent { tabBar, switchControl, slider, refresh }
 
-enum GlassHapticKind { selectionChange, toggle, limitReached, longPress }
+enum GlassHapticKind {
+  selectionChange,
+  toggle,
+  limitReached,
+  longPress,
+
+  /// Pull to refresh: the drop starts to leave its anchor.
+  refreshPulled,
+
+  /// Pull to refresh: the drop pinches off, so a release will refresh; also
+  /// the start of a refresh begun from code.
+  refreshArmed,
+
+  /// Pull to refresh: the refresh completed.
+  refreshSucceeded,
+
+  /// Pull to refresh: the refresh reported a failure. Silent by default.
+  refreshFailed,
+}
 
 @immutable
 final class GlassHapticEvent {
@@ -30,9 +48,19 @@ void dispatchGlassHaptic(BuildContext context, GlassHapticEvent event) {
     hook.onFeedback(context, event);
     return;
   }
-  if (event.kind == GlassHapticKind.selectionChange) {
-    unawaited(HapticFeedback.selectionClick());
-  } else {
-    unawaited(HapticFeedback.lightImpact());
+  switch (event.kind) {
+    case GlassHapticKind.selectionChange:
+      unawaited(HapticFeedback.selectionClick());
+    case GlassHapticKind.refreshArmed:
+      unawaited(HapticFeedback.mediumImpact());
+    case GlassHapticKind.refreshSucceeded:
+      unawaited(HapticFeedback.successNotification());
+    case GlassHapticKind.refreshFailed:
+      break;
+    case GlassHapticKind.toggle ||
+        GlassHapticKind.limitReached ||
+        GlassHapticKind.longPress ||
+        GlassHapticKind.refreshPulled:
+      unawaited(HapticFeedback.lightImpact());
   }
 }

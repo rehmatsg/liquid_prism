@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.9.0
+
+- Add `LiquidPrismRefreshController` and `LiquidPrismScaffold.refreshController`: `refresh()` starts the scaffold's refresh from code with the same indicator as a released pull, joins one that is already running, and `isRefreshing` reports it.
+
+- Route pull-to-refresh haptics through the theme's `GlassHaptics` hook, as `GlassHapticComponent.refresh` events of kind `refreshPulled`, `refreshArmed`, `refreshSucceeded` and `refreshFailed`. An app can now silence or reroute them. These are new enum values: an exhaustive `switch` over either enum needs the new cases.
+
+- Let a refresh report failure: an `onRefresh` future that completes with `false`, or throws, now ends without the check and success haptic. A callback that returns a `Future<bool>` meaning something else should stop returning it.
+
+- Keep the page's state when `onRefresh` switches between null and a callback. The scaffold now always builds its scroll listeners and refresh layer, so scroll position, focus and the bar survive the change.
+
 ## 0.8.0
 
 - Replace the scaffold's stock refresh control with a Liquid Prism one. `onRefresh` now draws a black drop out of the Dynamic Island, out of the notch on iPhones that have one, or out of the top edge elsewhere. It holds a ring that fills from the top, pinches off into a circle once a release will refresh, spins level with the bar's controls, and merges back after a check. Haptics mark the drop leaving, the pinch-off and the completion.
