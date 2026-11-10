@@ -166,11 +166,27 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
     ).merge(navigation.largeSubtitleStyle);
     final rowHeight =
         navigation.controlRowHeight ?? LiquidPrismScaffold.topBarHeight;
+    final titleLine =
+        scaler.scale(titleStyle.fontSize ?? 17) * (titleStyle.height ?? 1.2);
+    final capsuleHeight = inlineTitle is LiquidPrismTitle
+        ? LiquidPrismTitle.extentOf(
+            inlineTitle,
+            (navigation.titleCapsule ?? const GlassTitleStyle()).merge(
+              inlineTitle.style,
+            ),
+            titleLine,
+            subtitleHeight: subtitle == null
+                ? 0
+                : scaler.scale(subtitleStyle.fontSize ?? 12) *
+                          (subtitleStyle.height ?? 1.2) +
+                      2,
+          )
+        : 0.0;
     final barRow =
         (inlineTitle == null
             ? rowHeight
             : math.max(
-                rowHeight,
+                math.max(rowHeight, capsuleHeight),
                 scaler.scale(titleStyle.fontSize ?? 17) *
                         (titleStyle.height ?? 1.2) +
                     8,
@@ -435,7 +451,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
 
   /// The shared glass content blur, so titles focus in like glass content.
   double get _titleBlur =>
-      LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
+      LiquidPrismTheme.of(context).transition?.contentBlur ?? 4;
 
   /// The edge effect's presence, easing in and out as `scrollEdge` changes.
   late final _edgePresence =
@@ -560,23 +576,29 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
             (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
             (1 - _d.minimization.value) *
             (eligible ? 1 : 0);
+        final moved = large || !swaps
+            ? child!
+            : Transform.translate(
+                offset: Offset(0, 15 * (1 - inline)),
+                child: child,
+              );
+        final presentation = !large && _d.inlineTitle is LiquidPrismTitle
+            ? LiquidPrismPresence(
+                progress: AlwaysStoppedAnimation(opacity),
+                contentBlur: _titleBlur,
+                materialize: !MediaQuery.disableAnimationsOf(context),
+                child: moved,
+              )
+            : GlassContentPresence(
+                presence: opacity,
+                blur: large ? 0 : _titleBlur,
+                child: moved,
+              );
         return ExcludeSemantics(
           excluding: !visible,
           child: ExcludeFocus(
             excluding: !visible,
-            child: IgnorePointer(
-              ignoring: !visible,
-              child: GlassContentPresence(
-                presence: opacity,
-                blur: large ? 0 : _titleBlur,
-                child: large || !swaps
-                    ? child!
-                    : Transform.translate(
-                        offset: Offset(0, 15 * (1 - inline)),
-                        child: child,
-                      ),
-              ),
-            ),
+            child: IgnorePointer(ignoring: !visible, child: presentation),
           ),
         );
       },
@@ -643,7 +665,9 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         ),
         children:
             [
-              if (bar.scrollEdge || !_edgePresence.isDismissed)
+              if ((bar.scrollEdge || !_edgePresence.isDismissed) &&
+                  (_d.inlineTitle != null || bar.largeTitle != null) &&
+                  _d.inlineTitle is! LiquidPrismTitle)
                 LayoutId(
                   id: _Slot.edge,
                   child: IgnorePointer(

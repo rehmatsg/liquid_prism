@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart' show internal;
 
 import 'motion.dart';
 import 'pressable.dart';
 import 'recipe.dart';
 import 'glass.dart';
+import 'glass_transition.dart';
 import 'material.dart';
 import 'theme.dart';
 
@@ -13,6 +15,24 @@ const titleCompositionSpring = GlassSpring(
   response: Duration(milliseconds: 300),
   bounce: .22,
 );
+
+/// The scaffold's subtitle, composed inside a glass title's capsule.
+@internal
+class GlassTitleSubtitle extends InheritedWidget {
+  const GlassTitleSubtitle({
+    super.key,
+    required this.subtitle,
+    required this.style,
+    required super.child,
+  });
+  final Widget subtitle;
+  final TextStyle style;
+  static GlassTitleSubtitle? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GlassTitleSubtitle>();
+  @override
+  bool updateShouldNotify(GlassTitleSubtitle oldWidget) =>
+      subtitle != oldWidget.subtitle || style != oldWidget.style;
+}
 
 /// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's
 /// `GlassNavigationBarStyle.titleCapsule`, then to the defaults, measured on
@@ -179,9 +199,10 @@ class LiquidPrismTitle extends StatefulWidget {
   static double extentOf(
     LiquidPrismTitle title,
     GlassTitleStyle style,
-    double lineHeight,
-  ) {
-    return _capsuleHeight(title, style, lineHeight) +
+    double lineHeight, {
+    double subtitleHeight = 0,
+  }) {
+    return _capsuleHeight(title, style, lineHeight + subtitleHeight) +
         (title.avatar == null
             ? 0
             : math.max(
@@ -282,14 +303,21 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
   Widget _build(BuildContext context) {
     final resolved = widget.resolve(context);
     final padding = resolved.resolvedPadding;
+    final subtitle = GlassTitleSubtitle.maybeOf(context);
     final inline = _inline.value.clamp(0.0, 1.0);
     final text = DefaultTextStyle.of(context).style;
     final line =
         MediaQuery.textScalerOf(context).scale(text.fontSize ?? 17) *
         (text.height ?? 1.2);
+    final subtitleHeight = subtitle == null
+        ? 0.0
+        : MediaQuery.textScalerOf(context)
+                      .scale(subtitle.style.fontSize ?? 12) *
+                  (subtitle.style.height ?? 1.2) +
+              2;
     final plainHeight = math.max(
       resolved.resolvedMinHeight,
-      line + padding.vertical,
+      line + subtitleHeight + padding.vertical,
     );
     final inlineHeight = math.max(
       plainHeight,
@@ -320,7 +348,24 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                   )
                 : null,
           ),
-          Flexible(child: widget.child),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                widget.child,
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  DefaultTextStyle(
+                    style: subtitle.style,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    child: subtitle.subtitle,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -328,6 +373,7 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
     final Widget capsule = widget.onPressed == null
         ? LiquidPrism(
             glass: glass,
+            role: GlassRole.toolbar,
             shape: GlassShape.capsule,
             child: Padding(padding: inset, child: content),
           )
@@ -427,8 +473,14 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                                 excluding: hidden,
                                 child: ExcludeFocus(
                                   excluding: hidden,
-                                  child: Opacity(
-                                    opacity: presence,
+                                  child: GlassContentPresence(
+                                    presence:
+                                        presence *
+                                        LiquidPrismPresence.of(context),
+                                    blur:
+                                        LiquidPrismPresence.maybeData(context)
+                                            ?.contentBlur ??
+                                        0,
                                     child: Transform.scale(
                                       scale: .8 + .2 * presence,
                                       child: FittedBox(

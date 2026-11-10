@@ -33,6 +33,126 @@ Widget _page({
 
 void main() {
   for (final sliver in [false, true]) {
+    testWidgets(
+      'subtitle stays inside inline avatar glass at large text, sliver $sliver',
+      (tester) async {
+        phone(tester);
+        await tester.pumpWidget(
+          CupertinoApp(
+            home: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+              child: sliver
+                  ? CustomScrollView(
+                      slivers: [
+                        const LiquidPrismSliverAppBar(
+                          title: LiquidPrismTitle(
+                            style: GlassTitleStyle(leadingSize: 32),
+                            leading: SizedBox(key: Key('logo')),
+                            child: Text('Engineer'),
+                          ),
+                          subtitle: Text('SpaceX'),
+                        ),
+                        ...rows(),
+                      ],
+                    )
+                  : LiquidPrismScaffold(
+                      title: const LiquidPrismTitle(
+                        style: GlassTitleStyle(leadingSize: 32),
+                        leading: SizedBox(key: Key('logo')),
+                        child: Text('Engineer'),
+                      ),
+                      subtitle: const Text('SpaceX'),
+                      slivers: rows(),
+                    ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final glass = find.descendant(
+          of: find.byType(LiquidPrismTitle),
+          matching: find.byType(LiquidPrism),
+        );
+        final subtitle = find.text('SpaceX');
+        expect(
+          find.ancestor(of: subtitle, matching: find.byType(LiquidPrism)),
+          findsOneWidget,
+        );
+        final capsule = tester.getRect(glass);
+        expect(capsule.contains(tester.getBottomRight(subtitle)), isTrue);
+        expect(
+          tester.getCenter(find.byKey(const Key('logo'))).dx,
+          lessThan(tester.getTopLeft(find.text('Engineer')).dx),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+    testWidgets(
+      'glass title retains its backdrop while revealing, sliver $sliver',
+      (tester) async {
+        phone(tester);
+        final scroll = ScrollController();
+        addTearDown(scroll.dispose);
+        await tester.pumpWidget(
+          _page(
+            sliver: sliver,
+            scroll: scroll,
+            title: const LiquidPrismTitle(
+              leading: SizedBox(key: Key('revealed logo')),
+              child: Text('Workspace'),
+            ),
+            largeTitle: const Text('Large'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        scroll.jumpTo(150);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 80));
+        final glass = find.descendant(
+          of: find.byType(LiquidPrismTitle),
+          matching: find.byType(LiquidPrism),
+        );
+        expect(glass, findsOneWidget);
+        final scopes = tester.widgetList<Opacity>(
+          find.ancestor(of: glass, matching: find.byType(Opacity)),
+        );
+        expect(
+          scopes.where((scope) => scope.opacity > 0 && scope.opacity < 1),
+          isEmpty,
+          reason:
+              'an ancestor opacity isolates the live backdrop during reveal',
+        );
+        final filters = tester.widgetList<ImageFiltered>(
+          find.ancestor(of: glass, matching: find.byType(ImageFiltered)),
+        );
+        expect(
+          filters.where((filter) => filter.enabled),
+          isEmpty,
+          reason: 'an ancestor image filter isolates the backdrop',
+        );
+        expect(
+          LiquidPrismPresence.of(tester.element(glass)),
+          inExclusiveRange(0, 1),
+        );
+        final logoOpacity = tester
+            .widget<Opacity>(
+              find
+                  .ancestor(
+                    of: find.byKey(const Key('revealed logo')),
+                    matching: find.byType(Opacity),
+                  )
+                  .first,
+            )
+            .opacity;
+        expect(
+          logoOpacity,
+          closeTo(LiquidPrismPresence.of(tester.element(glass)), .001),
+        );
+        await tester.pumpAndSettle();
+        expect(LiquidPrismPresence.of(tester.element(glass)), 1);
+      },
+    );
+  }
+  for (final sliver in [false, true]) {
     for (final rtl in [false, true]) {
       testWidgets(
         'visible title widgets keep their own input, sliver $sliver RTL $rtl',

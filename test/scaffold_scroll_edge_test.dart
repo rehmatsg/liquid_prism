@@ -17,6 +17,7 @@ void main() {
 
   Widget app({
     bool scrollEdge = true,
+    bool withTitle = true,
     Widget? leading,
     List<GlassToolbarItem> toolbar = const [],
     Color? background = const Color(0xFF101010),
@@ -24,6 +25,7 @@ void main() {
   }) => CupertinoApp(
     debugShowCheckedModeBanner: false,
     home: LiquidPrismScaffold(
+      title: withTitle ? const Text('Page') : null,
       scrollEdge: scrollEdge,
       backgroundColor: background,
       leading: leading,
@@ -38,6 +40,49 @@ void main() {
     ),
   );
 
+  testWidgets('top edge is reserved for ordinary text titles', (tester) async {
+    phone(tester);
+    for (final title in <Widget?>[
+      null,
+      const Text('Page'),
+      const LiquidPrismTitle(child: Text('Company')),
+    ]) {
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: title,
+            toolbar: [
+              GlassToolbarItem(
+                label: 'More',
+                icon: const Icon(CupertinoIcons.ellipsis),
+                onPressed: () {},
+              ),
+            ],
+            slivers: const [SliverToBoxAdapter(child: SizedBox(height: 2000))],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(LiquidPrismScrollEdge),
+        title is Text ? findsOneWidget : findsNothing,
+      );
+    }
+  });
+  testWidgets('a plain large-title-only page retains its top edge', (
+    tester,
+  ) async {
+    phone(tester);
+    await tester.pumpWidget(
+      const CupertinoApp(
+        home: LiquidPrismScaffold(
+          largeTitle: Text('Applications'),
+          slivers: [SliverToBoxAdapter(child: SizedBox(height: 2000))],
+        ),
+      ),
+    );
+    expect(find.byType(LiquidPrismScrollEdge), findsOneWidget);
+  });
   testWidgets(
     'the scaffold draws the effect under its top bar while scrolled',
     (tester) async {
@@ -123,7 +168,7 @@ void main() {
     phone(tester);
     final controller = ScrollController();
     addTearDown(controller.dispose);
-    await tester.pumpWidget(app(controller: controller));
+    await tester.pumpWidget(app(controller: controller, withTitle: false));
     expect(find.byType(LiquidPrismScrollEdge), findsNothing);
 
     await tester.pumpWidget(
@@ -184,6 +229,7 @@ void accessoryTests() {
     await tester.pumpWidget(
       CupertinoApp(
         home: LiquidPrismScaffold(
+          title: const Text('Page'),
           backgroundColor: const Color(0xFF101010),
           scrollEdgeStyle: const GlassScrollEdgeStyle(
             variant: GlassScrollEdgeVariant.hard,

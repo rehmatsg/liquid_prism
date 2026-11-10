@@ -10,8 +10,7 @@ import 'theme.dart';
 /// cap one, e.g. `99+`. Accessibility announces the full count.
 @immutable
 final class GlassBadge {
-  /// An empty badge: the capsule with no text, as a native space badge or
-  /// toolbar indicator draws it.
+  /// A compact activity dot, centered on the same anchor as a counted badge.
   const GlassBadge.dot({this.semanticLabel = 'New activity'})
     : count = null,
       overflow = null,
@@ -77,7 +76,7 @@ class GlassBadgeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = badge.text;
     final scale = MediaQuery.textScalerOf(context).scale(1);
-    final size = height * (text == null ? 1 : scale.clamp(1.0, 2.0));
+    final size = text == null ? height * 5 / 9 : height * scale.clamp(1.0, 2.0);
     return IgnorePointer(
       child: ExcludeSemantics(
         child: Container(
@@ -135,12 +134,18 @@ class GlassBadgedIcon extends StatelessWidget {
       children: [
         child,
         PositionedDirectional(
-          top: size / 2 - 24.5,
-          start: size - 5,
-          child: GlassBadgeView(
-            badge: badge,
-            color: color,
-            textStyle: textStyle,
+          top: size / 2 - 24.5 + 18.33 / 2,
+          start: size - 5 + 18.33 / 2,
+          child: FractionalTranslation(
+            translation: Offset(
+              Directionality.of(context) == TextDirection.rtl ? .5 : -.5,
+              -.5,
+            ),
+            child: GlassBadgeView(
+              badge: badge,
+              color: color,
+              textStyle: textStyle,
+            ),
           ),
         ),
       ],

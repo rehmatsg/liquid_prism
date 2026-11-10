@@ -299,6 +299,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// Turning it on after the page appears, as a page might once its entering
   /// transition settles, fades the effects in, blur and fade together, over
   /// [scrollEdgeFadeDuration]; turning it off fades them out.
+  /// Top edges apply to ordinary text titles. Actions-only and glass-title
+  /// bars keep the backdrop clear; bottom edges remain independent.
   final bool scrollEdge;
 
   /// How long the scroll edge effects take to fade in or out when
@@ -763,6 +765,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             title.style,
           ),
           titleLine,
+          subtitleHeight: widget.subtitle == null
+              ? 0
+              : scaler.scale(subtitleStyle.fontSize ?? 12) *
+                        (subtitleStyle.height ?? 1.2) +
+                    2,
         ),
       ),
       _ => controlRowHeight,
@@ -816,7 +823,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _collapsed = false;
       _largeFade.value = _inlineFade.value = 0;
     }
-    final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 8;
+    final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 4;
     Widget header(Widget child, TextStyle style, {required bool large}) {
       Widget text = Semantics(
         header: true,
@@ -848,23 +855,29 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
               (1 - _minimization.progress.value) *
               (eligible ? 1 : 0);
+          final moved = large || !swaps
+              ? child!
+              : Transform.translate(
+                  offset: Offset(0, 15 * (1 - inline)),
+                  child: child,
+                );
+          final presentation = !large && inlineTitle is LiquidPrismTitle
+              ? LiquidPrismPresence(
+                  progress: AlwaysStoppedAnimation(opacity),
+                  contentBlur: titleBlur,
+                  materialize: !media.disableAnimations,
+                  child: moved,
+                )
+              : GlassContentPresence(
+                  presence: opacity,
+                  blur: large ? 0 : titleBlur,
+                  child: moved,
+                );
           return ExcludeSemantics(
             excluding: !visible,
             child: ExcludeFocus(
               excluding: !visible,
-              child: IgnorePointer(
-                ignoring: !visible,
-                child: GlassContentPresence(
-                  presence: opacity,
-                  blur: large ? 0 : titleBlur,
-                  child: large || !swaps
-                      ? child!
-                      : Transform.translate(
-                          offset: Offset(0, 15 * (1 - inline)),
-                          child: child,
-                        ),
-                ),
-              ),
+              child: IgnorePointer(ignoring: !visible, child: presentation),
             ),
           );
         },
@@ -913,7 +926,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                         GlassTitleAlignment.automatic) &&
                 inlineTitle is LiquidPrismTitle
             ? GlassTitleAlignment.center
-            : navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+            : navigation.titleAlignment == null ||
+                  navigation.titleAlignment == GlassTitleAlignment.automatic
+            ? (rail
+                  ? GlassTitleAlignment.leading
+                  : GlassTitleAlignment.automatic)
+            : navigation.titleAlignment!,
         contentPadding: (navigation.contentPadding ?? EdgeInsets.zero).resolve(
           Directionality.of(context),
         ),
@@ -983,7 +1001,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ),
               ),
             ),
-            if (edges && (topBar || widget.accessory != null))
+            if (edges &&
+                (inlineTitle != null || widget.largeTitle != null) &&
+                inlineTitle is! LiquidPrismTitle)
               LayoutId(
                 id: _Slot.scrollEdge,
                 child: GlassGroupMembers(
