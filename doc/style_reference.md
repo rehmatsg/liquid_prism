@@ -104,7 +104,7 @@ and artwork can override ambient styling themselves.
 | `minimumTabWidth`, `labelPadding` | 86 / 32; spacing uses the widest measured label |
 | `labelBehavior` | Always; selected/never hide visual labels, not semantic names |
 | `selectedColor`, `unselectedColor` | Calibrated accent / semantic label |
-| `selectionColor`, `selectionBlur` | Native resting pill recipe / 2 extra blur, 0–12 |
+| `selectionColor`, `selectionBlur` | Native resting pill recipe / the native pill's 2-point extra blur (2.32 for the engine), 0–12 |
 | `shape`, `selectionShape`, `lens` | Capsule housing / capsule pill / shared-lens override |
 | `haptics` | True for user selection feedback |
 | `refractContent`, `contentRefraction`, `contentDepth` | True / 14 / 11.2; lifted glyph displacement and rim depth |

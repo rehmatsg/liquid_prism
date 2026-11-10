@@ -90,9 +90,27 @@ captured once and each pass blurs the same pixels; hoisted members' passes use
 treats two as equal filters on one key. `style.frost` handed to the optical
 pass is `FrostPass.effectiveSigma`: zero while sharp detail shows through. A
 batch composes one plain frost, so only members whose frost is a single
-covering pass batch; the rest share captures. Regular and Clear share the device frost curve, including the two-pass blur
-fill at intermediate high settings. The
-calibration and limits are in [native defaults](../native_defaults.md).
+covering pass batch; the rest share captures.
+
+Regular's own frost (`FrostPass.resolve`, kind 1) is the native composition: a
+`depthFade` base pass, a fill pass with `BlendMode.lighten`/`darken` at the
+captured directional opacity, and the same fill at the captured normal opacity.
+Advanced blend modes on backdrop layers render correctly on Impeller iOS
+(checked on device). The `depthFade` pass is expanded per surface in
+`_RenderGlass.activeFrost` from `NativeGlassDepth`: nothing up to 64 points on
+the shortest side, otherwise the rim radius everywhere plus the deep radius
+faded in by `shaders/frost_depth.frag`. Dark regular surfaces past 64 points
+also push a `_BleedLayer` after the optical pass: a wide blur of the original
+capture, graded and lighten-blended, masked to the contour by the same shader.
+A shared capture is cropped to the clip of its first reader, so an invisible
+first reader clipped to the native backdrop margin
+(`NativeGlassDepth.outerReach`) precedes the frost; frost and bleed then read
+that far outside the contour, as native does. `mirrorSurroundings` in
+`glass_core.glsl` mixes the backdrop from that distance into the outermost
+point of a regular face. Sigmas
+carry `FrostPass.engineSigmaScale` because Impeller's blur is a Gaussian cut
+off at sqrt(3) sigma. The calibration and limits are in
+[native defaults](../native_defaults.md).
 
 ## Shared captures
 

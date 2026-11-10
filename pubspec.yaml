@@ -30,6 +30,7 @@ flutter:
       ios:
         pluginClass: LiquidPrismPlugin
   shaders:
+    - shaders/frost_depth.frag
     - shaders/edge_blur.frag
     - shaders/glass.frag
     - shaders/glass_batch.frag

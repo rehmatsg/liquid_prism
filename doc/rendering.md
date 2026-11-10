@@ -32,11 +32,14 @@ Default regular glass also draws an inner ring shadow and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
 mapping and its measured limits are described in [native shadows](native_shadows.md).
 
-Regular and clear frost follow the same device Liquid Glass setting curve (see
-[customization](customization.md)). At zero there is no frost pass. Through the
-middle settings they use one light Gaussian blur; above the middle an additional
-12-point blur fades in over the same captured backdrop. At the maximum this fill
-fully replaces the base pass. Regular retains its separate face grading and rim.
+Regular frost follows the device Liquid Glass setting as native does (see
+[native defaults](native_defaults.md)): the backdrop stays sharp under a wide
+blur fill that is blended twice over one capture, lighten (darken in dark
+appearance) and then normally, the normal share growing with the setting until
+the fill covers the face. Surfaces taller than 64 points add a size-scaled base
+blur, and in dark appearance a wide bleed that lightens the finished face.
+Clear frost keeps its own curve: no pass at zero, one light blur through the
+middle settings, and a 12-point fill fading in above the middle.
 
 ## Ancestor transforms
 

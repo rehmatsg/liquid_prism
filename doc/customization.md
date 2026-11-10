@@ -14,8 +14,9 @@ LiquidPrism(
 ```
 
 `Glass.regular` is the standard material; `Glass.clear` is more transparent.
-Both use the same device frost curve, with no frost at the clearest setting.
-Regular retains its own face grading, highlights and shadows. Leave bars on
+Both follow the device Liquid Glass setting: regular keeps the backdrop sharp
+under a blended blur fill as native does, and clear has no frost at the
+clearest setting. Regular retains its own face grading, highlights and shadows. Leave bars on
 regular for the standard treatment; choose clear explicitly for a different material.
 `Glass.identity` draws only the child. `.tint(color)` changes material color;
 `.tint(null)` explicitly removes inherited material tint. `.interactive()` adds

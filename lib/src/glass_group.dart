@@ -365,7 +365,7 @@ class _GlassGroupData {
           .path(member.size)
           .transform(entry.value.storage);
       final frost = member._frostLayer.layer;
-      final passes = member.frost;
+      final passes = member.activeFrost;
       if (frost == null || passes.isEmpty) continue;
       final memberClips = clips[member]!;
       for (final clip in memberClips) {

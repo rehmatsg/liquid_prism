@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Match regular glass to native Liquid Glass measured on device at every Liquid Glass setting: a sharp backdrop under a lighten/darken-blended blur fill, size-dependent base blur and dark bleed on surfaces taller than 64 points, the native white rim highlight and dark edge line, and rims that mirror nearby content. Plain regular surfaces no longer displace their face by default (`refraction` 0, as measured); bars, buttons and fields keep their lens, and an explicit `refraction` restores it on surfaces. The selected tab pill keeps its 2-point blur over regular bars. Explicit blur and optics still override the device curve.
+
 ## 0.10.0
 
 - Let Studio use device-derived regular glass until optics are explicitly adjusted; material selector controls inherit the app material.

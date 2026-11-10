@@ -93,6 +93,7 @@ class LiquidPrism extends StatefulWidget {
   static ui.FragmentProgram? _program;
   static ui.FragmentProgram? _batchProgram;
   static ui.FragmentProgram? _edgeProgram;
+  static ui.FragmentProgram? _depthProgram;
   static ui.Image? _linearSampler;
   static Future<void>? _loading;
 
@@ -116,6 +117,9 @@ class LiquidPrism extends StatefulWidget {
       } finally {
         picture.dispose();
       }
+      _depthProgram = await ui.FragmentProgram.fromAsset(
+        'packages/liquid_prism/shaders/frost_depth.frag',
+      );
       _program = await ui.FragmentProgram.fromAsset(
         'packages/liquid_prism/shaders/glass.frag',
       );
@@ -329,16 +333,22 @@ class _LiquidPrismState extends State<LiquidPrism> {
       themeBlur: theme.blur,
       themeRefraction: theme.refraction,
     );
+    final followsTint =
+        widget.blur == null &&
+        theme.blur == null &&
+        (optics == null || widget.materialOptics);
     var frost = resolveSurfaceFrost(
       recipe,
       style.frost,
       tint: tint,
-      followsTint:
-          widget.blur == null &&
-          theme.blur == null &&
-          (optics == null || widget.materialOptics),
+      followsTint: followsTint,
       fillFrost: GlassRecipe.blurFillFrost,
     );
+    // Dark regular glass lightens toward a wide blur of its backdrop.
+    final bleed =
+        followsTint && recipe.kind == 1 && recipe.dark && frost.isNotEmpty
+        ? presence
+        : 0.0;
     if (presence < 1) {
       // Frost is its own backdrop pass, which the output fade cannot reach,
       // so it always follows presence. Materializing also grows the lens on
@@ -350,7 +360,10 @@ class _LiquidPrismState extends State<LiquidPrism> {
         dispersion: materialize ? style.dispersion * presence : null,
       );
     }
-    style = style.copyWith(frost: FrostPass.effectiveSigma(frost));
+    // The optical pass only assumes a blur within the public frost range.
+    style = style.copyWith(
+      frost: math.min(FrostPass.effectiveSigma(frost), 12),
+    );
     final shader = _shader;
     final press = LiquidPrismPressFeedback.of(context);
     final pressScale = LiquidPrismPressFeedback.scaleOf(context);
@@ -385,6 +398,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
               shape: shape,
               recipe: recipe,
               frost: frost,
+              bleed: bleed,
               press: press,
               scale: pressScale,
               group: _GlassGroupScope.of(context),
@@ -658,6 +672,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
     required this.shape,
     required this.recipe,
     required this.frost,
+    required this.bleed,
     required this.press,
     required this.scale,
     required this.group,
@@ -669,6 +684,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
   final GlassShape shape;
   final GlassRecipe recipe;
   final List<FrostPass> frost;
+  final double bleed;
   final double press;
   final double scale;
   final _GlassGroupData? group;
@@ -680,6 +696,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
     shape,
     recipe,
     frost,
+    bleed,
     press,
     scale,
     pixelRatio,
@@ -693,6 +710,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
       ..shape = shape
       ..recipe = recipe
       ..frost = frost
+      ..bleed = bleed
       ..press = press
       ..scale = scale
       ..group = group
@@ -707,6 +725,7 @@ class _RenderGlass extends RenderProxyBox {
     this._shape,
     this._recipe,
     this._frost,
+    this._bleed,
     this.press,
     this._scale,
     this.pixelRatio,
@@ -741,7 +760,47 @@ class _RenderGlass extends RenderProxyBox {
 
   /// A single pass that replaces the backdrop, which a batch can compose.
   bool get plainFrost =>
-      _frost.isEmpty || (_frost.length == 1 && _frost.single.covers);
+      (_frost.isEmpty || (_frost.length == 1 && _frost.single.covers)) &&
+      bleedOpacity <= 0;
+
+  /// Shortest side of the surface, which sizes the native depth terms.
+  double get _depthExtent => hasSize ? shape.rect(size).shortestSide : 0;
+
+  /// [frost] with the size-dependent base blur resolved for this surface.
+  ///
+  /// Native scales the base blur's radius with the surface (none up to 64
+  /// points) and halves it from the deep face to the rim. Two passes
+  /// reproduce that: the rim radius everywhere, then the deep radius faded in
+  /// with depth.
+  List<FrostPass> get activeFrost {
+    if (!_frost.any((pass) => pass.depthFade)) return _frost;
+    final amount = NativeGlassDepth.amount(_depthExtent);
+    return [
+      for (final pass in _frost)
+        if (!pass.depthFade)
+          pass
+        else if (amount > 0) ...[
+          FrostPass(pass.sigma * amount * NativeGlassDepth.rimRatio),
+          FrostPass(pass.sigma * amount, pass.opacity, pass.blendMode, true),
+        ],
+    ];
+  }
+
+  /// Presence of the dark regular bleed: 0 unless the material's own frost
+  /// follows the Liquid Glass setting.
+  double _bleed;
+  double get bleed => _bleed;
+  set bleed(double value) {
+    if (value == _bleed) return;
+    _bleed = value;
+    markNeedsPaint();
+  }
+
+  /// Opacity at which the face lightens toward the wide bleed blur.
+  double get bleedOpacity =>
+      _bleed *
+      NativeGlassDepth.bleedBlend *
+      NativeGlassDepth.amount(_depthExtent);
 
   GlassShape _shape;
   GlassShape get shape => _shape;
@@ -800,6 +859,21 @@ class _RenderGlass extends RenderProxyBox {
   final _clipLayer = LayerHandle<ClipRectLayer>();
   final _contentLayer = LayerHandle<TransformLayer>();
   final _frostClip = LayerHandle<ClipPathLayer>();
+  final _bleedClip = LayerHandle<ClipRectLayer>();
+  final _captureClip = LayerHandle<ClipRectLayer>();
+  final _captureFilter = LayerHandle<BackdropFilterLayer>();
+
+  /// The surface's bounds grown by the reach of the bleed's blur.
+  /// The surface's bounds grown by the native backdrop margin: frost and
+  /// bleed read the shared capture this far outside the contour. One point
+  /// less keeps the clamped border pixel inside the margin.
+  Rect get _captureBounds => MatrixUtils.transformRect(
+    _scaleTransform ?? Matrix4.identity(),
+    Offset.zero & size,
+  ).inflate(NativeGlassDepth.outerReach(_depthExtent) - 1);
+
+  final _bleedLayer = LayerHandle<_BleedLayer>();
+  final _bleedFilter = LayerHandle<BackdropFilterLayer>();
   final _frostLayer = LayerHandle<_FrostLayer>();
   @override
   bool get alwaysNeedsCompositing => true;
@@ -837,6 +911,23 @@ class _RenderGlass extends RenderProxyBox {
     values[42] = press;
     values[43] = shape.isSmooth && shape.radius > .001 ? 1 : 0;
     return values;
+  }
+
+  /// Uniforms of shaders/frost_depth.frag: [opacity] at [depth] points inside
+  /// the contour and deeper, fading to nothing at the contour and beyond.
+  List<double> depthUniforms(double opacity, {double? depth, double gain = 1}) {
+    final transform = glassTransform();
+    final m = transform.storage;
+    final rect = shape.rect(size);
+    final origin = MatrixUtils.transformPoint(transform, rect.topLeft);
+    return [
+      0, 0, // The engine supplies the bound texture size.
+      origin.dx * pixelRatio, origin.dy * pixelRatio, rect.width, rect.height,
+      m[0], m[4], m[1], m[5],
+      shape.effectiveRadius(rect.size), pixelRatio,
+      depth ?? NativeGlassDepth.depth(rect.shortestSide), gain,
+      opacity, 0,
+    ];
   }
 
   /// Per-surface optical terms (u_derived); layout in shaders/glass.frag.
@@ -940,7 +1031,35 @@ class _RenderGlass extends RenderProxyBox {
     // Frost runs as its own backdrop pass clipped to the contour. Composed under
     // the optical shader it would be rendered without a coverage limit: Impeller
     // blurs the whole captured backdrop for every surface, every frame.
-    if (_frost.isNotEmpty) {
+    final passes = activeFrost;
+    // A shared backdrop capture is cropped to the clip of its first reader.
+    // The bleed reads far past the contour, so an invisible first reader
+    // covers its reach before the contour-clipped frost passes.
+    final group = _group;
+    if ((bleedOpacity > 0 || passes.length > 1) &&
+        passes.isNotEmpty &&
+        !(group != null && group.shared.contains(this))) {
+      final frost = _frostLayer.layer ??= _FrostLayer();
+      final capture = _captureFilter.layer ??= BackdropFilterLayer(
+        filter: const ColorFilter.matrix(<double>[
+          1, 0, 0, 0, 0, //
+          0, 1, 0, 0, 0,
+          0, 0, 1, 0, 0,
+          0, 0, 0, 0, 0,
+        ]),
+      );
+      capture.backdropKey = frost.key;
+      _captureClip.layer = context.pushClipRect(
+        needsCompositing,
+        offset,
+        _captureBounds,
+        (context, offset) => context.pushLayer(capture, (_, _) {}, offset),
+        oldLayer: _captureClip.layer,
+      );
+    } else {
+      _captureClip.layer = null;
+    }
+    if (passes.isNotEmpty) {
       final frost = _frostLayer.layer ??= _FrostLayer();
       frost.glass = this;
       final local = _scaleTransform;
@@ -953,7 +1072,7 @@ class _RenderGlass extends RenderProxyBox {
         contour.getBounds(),
         contour,
         (context, offset) => context.pushLayer(frost, (context, offset) {
-          for (final pass in frost.passes(_frost.length)) {
+          for (final pass in frost.passes(passes.length)) {
             context.pushLayer(pass, (_, _) {}, offset);
           }
         }, offset),
@@ -980,6 +1099,28 @@ class _RenderGlass extends RenderProxyBox {
       ),
       oldLayer: _clipLayer.layer,
     );
+    // The bleed lightens the finished face, under the content.
+    if (bleedOpacity > 0) {
+      final bleed = _bleedLayer.layer ??= _BleedLayer();
+      bleed.glass = this;
+      bleed.filter = _bleedFilter.layer ??= BackdropFilterLayer();
+      // The engine crops a backdrop blur's input to the layer's clip, so the
+      // clip covers the blur's reach and the filter masks to the contour.
+      _bleedClip.layer = context.pushClipRect(
+        needsCompositing,
+        offset,
+        _captureBounds,
+        (context, offset) => context.pushLayer(
+          bleed,
+          (context, offset) =>
+              context.pushLayer(bleed.filter!, (_, _) {}, offset),
+          offset,
+        ),
+        oldLayer: _bleedClip.layer,
+      );
+    } else {
+      _bleedClip.layer = null;
+    }
     final local = _scaleTransform;
     if (local == null) {
       _contentLayer.layer = null;
@@ -1009,6 +1150,12 @@ class _RenderGlass extends RenderProxyBox {
     _frostLayer.layer?.glass = null;
     _frostClip.layer = null;
     _frostLayer.layer = null;
+    _bleedLayer.layer?.glass = null;
+    _bleedClip.layer = null;
+    _bleedLayer.layer = null;
+    _bleedFilter.layer = null;
+    _captureClip.layer = null;
+    _captureFilter.layer = null;
     _shadowLayer.layer = null;
     _glassLayer.layer = null;
     _filterLayer.layer = null;
@@ -1055,6 +1202,85 @@ class _GlassLayer extends ContainerLayer {
   }
 }
 
+/// The dark regular bleed: a wide blur of the surface's original backdrop,
+/// graded by the native bleed matrix and lighten-blended over the face.
+class _BleedLayer extends ContainerLayer {
+  _RenderGlass? glass;
+  BackdropFilterLayer? filter;
+  ui.FragmentShader? _shader;
+  (double, double, List<double>)? _configured;
+
+  /// Depth over which the bleed fades out toward the contour, in points.
+  static const _feather = 1.5;
+
+  @override
+  void dispose() {
+    _shader?.dispose();
+    super.dispose();
+  }
+
+  @override
+  bool get alwaysNeedsAddToScene => true;
+  @override
+  void addToScene(ui.SceneBuilder builder) {
+    final owner = glass;
+    final program = LiquidPrism._depthProgram;
+    if (owner == null || !owner.attached || program == null) return;
+    final opacity = owner.bleedOpacity;
+    if (opacity <= 0) return;
+    final sigma = NativeGlassDepth.bleedSigma(owner._depthExtent);
+    final mask = owner.depthUniforms(
+      1,
+      depth: _feather,
+      gain: NativeGlassDepth.bleedGain,
+    );
+    final backdrop = filter!;
+    final previous = _configured;
+    if (previous == null ||
+        previous.$1 != opacity ||
+        previous.$2 != sigma ||
+        !listEquals(previous.$3, mask)) {
+      _configured = (opacity, sigma, mask);
+      final shader = _shader ??= program.fragmentShader()
+        ..setImageSampler(
+          0,
+          LiquidPrism._linearSampler!,
+          filterQuality: ui.FilterQuality.low,
+        );
+      for (var i = 0; i < mask.length; i++) {
+        shader.setFloat(i, mask[i]);
+      }
+      const scale = NativeGlassDepth.bleedWhite - NativeGlassDepth.bleedBlack;
+      const bias = NativeGlassDepth.bleedBlack * 255;
+      backdrop
+        ..filter = ui.ImageFilter.compose(
+          outer: ColorFilter.matrix(<double>[
+            scale, 0, 0, 0, bias, //
+            0, scale, 0, 0, bias,
+            0, 0, scale, 0, bias,
+            0, 0, 0, opacity, 0,
+          ]),
+          inner: ui.ImageFilter.compose(
+            outer: ui.ImageFilter.shader(shader),
+            inner: ui.ImageFilter.blur(
+              sigmaX: sigma,
+              sigmaY: sigma,
+              tileMode: ui.TileMode.clamp,
+            ),
+          ),
+        )
+        ..blendMode = BlendMode.lighten;
+    }
+    final group = owner._group;
+    backdrop
+      ..backdropKey = group != null && group.shared.contains(owner)
+          ? group.frostKey
+          : owner._frostLayer.layer?.key
+      ..markNeedsAddToScene();
+    addChildrenToScene(builder);
+  }
+}
+
 /// Frost for one unbatched surface, clipped to its contour by the parent.
 /// Batched members skip it: their batch filter composes its own frost.
 /// Like [_GlassLayer], it configures its child filter layers at composition,
@@ -1067,7 +1293,8 @@ class _FrostLayer extends ContainerLayer {
   _RenderGlass? glass;
   // The handles keep the children alive while detached between repaints.
   final _filters = <LayerHandle<BackdropFilterLayer>>[];
-  final _configured = <(FrostPass, double)?>[];
+  final _configured = <(FrostPass, double, List<double>?)?>[];
+  final _shaders = <ui.FragmentShader?>[];
   final key = BackdropKey();
 
   /// The first [count] pass layers, created as needed.
@@ -1075,10 +1302,12 @@ class _FrostLayer extends ContainerLayer {
     while (_filters.length < count) {
       _filters.add(LayerHandle(BackdropFilterLayer()));
       _configured.add(null);
+      _shaders.add(null);
     }
     while (_filters.length > count) {
       _filters.removeLast().layer = null;
       _configured.removeLast();
+      _shaders.removeLast()?.dispose();
     }
     return [for (final handle in _filters) handle.layer!];
   }
@@ -1092,6 +1321,10 @@ class _FrostLayer extends ContainerLayer {
     }
     _filters.clear();
     _configured.clear();
+    for (final shader in _shaders) {
+      shader?.dispose();
+    }
+    _shaders.clear();
     super.dispose();
   }
 
@@ -1106,12 +1339,13 @@ class _FrostLayer extends ContainerLayer {
         (group.prepared[owner] != null || group.shared.contains(owner))) {
       return;
     }
-    final frost = owner.frost;
+    final frost = owner.activeFrost;
     final count = math.min(frost.length, _filters.length);
+    final shared = count > 1 || owner.bleedOpacity > 0;
     for (var i = 0; i < count; i++) {
       // Distinct sigmas keep Impeller from rendering equal filters on one
       // capture once over the whole screen.
-      configure(i, frost[i], count > 1 ? key : null, offset: i * 1e-4);
+      configure(i, frost[i], shared ? key : null, offset: i * 1e-4);
     }
     addChildrenToScene(builder);
   }
@@ -1128,11 +1362,44 @@ class _FrostLayer extends ContainerLayer {
   }) {
     final layer = pass(index);
     final sigma = frost.sigma + offset;
-    if (_configured[index] != (frost, sigma)) {
-      _configured[index] = (frost, sigma);
-      layer
-        ..filter = frostFilter(frost, sigma)
-        ..blendMode = frost.blendMode;
+    final owner = glass!;
+    final depth = frost.depthFade && LiquidPrism._depthProgram != null
+        ? owner.depthUniforms(frost.opacity)
+        : null;
+    final previous = _configured[index];
+    if (previous == null ||
+        previous.$1 != frost ||
+        previous.$2 != sigma ||
+        !listEquals(previous.$3, depth)) {
+      _configured[index] = (frost, sigma, depth);
+      if (depth != null) {
+        final shader = _shaders[index] ??=
+            LiquidPrism._depthProgram!.fragmentShader()..setImageSampler(
+              0,
+              LiquidPrism._linearSampler!,
+              filterQuality: ui.FilterQuality.low,
+            );
+        for (var i = 0; i < depth.length; i++) {
+          shader.setFloat(i, depth[i]);
+        }
+        layer.filter = ui.ImageFilter.compose(
+          outer: ui.ImageFilter.shader(shader),
+          inner: ui.ImageFilter.blur(
+            sigmaX: sigma,
+            sigmaY: sigma,
+            tileMode: ui.TileMode.clamp,
+          ),
+        );
+      } else if (frost.depthFade) {
+        // Without the depth shader the deep radius keeps half its weight.
+        layer.filter = frostFilter(
+          FrostPass(frost.sigma, frost.opacity * .5),
+          sigma,
+        );
+      } else {
+        layer.filter = frostFilter(frost, sigma);
+      }
+      layer.blendMode = frost.blendMode;
     }
     layer
       ..backdropKey = key

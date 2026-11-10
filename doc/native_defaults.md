@@ -15,18 +15,63 @@ showcase pages are paired separately. Captures are evidence, not package assets.
 
 ## Material defaults
 
-Regular glass now shares Clear's device-dependent frost curve in both appearances:
+Regular glass was re-measured in November 2026 on an iPhone 16 Pro (iOS 27.0.1)
+with native `glassEffect(.regular)` laid over the same Flutter backdrop as
+Liquid Prism's glass, at 21 device amounts and with the real Settings slider.
+Native filter inputs were identical for the launch argument and the slider, and
+did not change with backdrop content. The inputs, by device amount `t`:
 
-| Device amount | 0 | .25 | .5 | .75 | 1 |
-| --- | --- | --- | --- | --- | --- |
-| Base Gaussian sigma (logical pixels) | 0 | .9 | 1.8 | 1.8 | — |
-| 12-point blur-fill opacity | 0 | 0 | 0 | .5 | 1 |
+| Input | Value |
+| --- | --- |
+| Base / fill blur radius | 5 / 8 |
+| Lighten (light) or darken (dark) opacity | .675 + .45 t up to .5, then .9 |
+| Normal fill opacity | t |
+| Light face fill | white at .4 t up to .5, then .2 + .6 (t − .5) |
+| Base blur share (`inputBlurOpacity0`) | (side − 64) / 120 for a shortest side of 64–150 points |
+| Bleed blur radius | .35 × side, none up to 64 points |
 
-This is the requested material mapping, not a new measurement of native Regular.
-It replaces the previous opaque Gaussian approximation (5.2–12 in light and
-2.98–12 in dark), which blurred fine detail even at device amount zero.
-Explicit app blur/optics still bypass the device-setting curve. Regular retains
-its own face fill, grading, highlights and shadows.
+Direct measurements of how native composes them, which the renderer follows:
+
+- The backdrop stays sharp under the fill. The fill is lighten-blended (darken
+  in dark appearance) at the directional opacity, then mixed normally.
+- A blur radius is half the Gaussian sigma: the fill is sigma 16.
+- The base blur's radius, not its opacity, scales with the base share and
+  halves toward the rim. Surfaces up to 64 points have none.
+
+Fitted renderer behaviour, not recovered Apple algorithms:
+
+- Impeller's blur needs 1.16× the sigma to match a true Gaussian.
+- Dark bleed: sigma .9 × the bleed radius, gain 1.6 saturating at white,
+  graded from .125 to .365 and lighten-blended at .716 of the base share.
+- Light face tone `.4 + v (.627 − .035 v)`, measured on surfaces without depth
+  terms, with a contrast gain about the black point of 1 + .087 × base share.
+- Regular rim: an additive highlight of .18 at the contour over 1.31 points
+  under the existing diffuse lobe; exterior line at .6 alpha in dark
+  appearance (.75 and slightly wider on large surfaces), and the backdrop
+  lowered by .3 on the sides in light appearance.
+
+Explicit app blur/optics still bypass the device-setting curve. Clear glass
+keeps its previous curve.
+
+Surroundings, measured with white content at set distances outside the
+surface:
+
+- Native reads its backdrop up to `inputOuterRefractionAmount` outside the
+  contour (16 points, or a quarter of the shortest side up to 37.5) and
+  nothing farther. The frost and bleed share one capture clipped to that
+  margin.
+- The outermost point of the face mirrors the surroundings from about that
+  distance outside, at .6 opacity on the contour falling to nothing one point
+  in, graded like a small surface. This is why rims brighten next to other
+  glass or bright content.
+- The face of a plain glass surface is not displaced: content keeps its place
+  up to that rim band, so a regular surface's default refraction is zero. Tab
+  bars, toolbars, buttons and search fields were not measured here and keep
+  their previous lens. An explicit `refraction` still bends the face as before.
+
+Known differences: native renders saturated colours beyond sRGB and limits
+bright primaries differently in dark appearance; native has an EDR rendition
+of light glass (face white 1.03) where this renderer follows the SDR one.
 
 Dark regular glass also needs its native gray face fill and SDR luma limit. Small
 capsules report a .6 limit. The 150 × 96 surface reports .48/.44/.4 at amounts
