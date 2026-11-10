@@ -226,6 +226,14 @@ class LiquidPrismSystemChrome extends StatelessWidget {
   static SystemChromeScope? scopeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<SystemChromeScope>();
 
+  /// The Dynamic Island's frame in the Flutter view, or null where the view
+  /// has none centred along its top edge: other devices, landscape, a window
+  /// that doesn't cover the screen, other platforms. Read through private
+  /// UIKit API where it exists and estimated from the safe area otherwise.
+  /// `LiquidPrismScaffold.onRefresh` draws its drop out of it.
+  static ValueListenable<Rect?> get dynamicIsland =>
+      SystemChromeListener.instance.island;
+
   /// Asks iOS to keep bars horizontal, or to decide again. Returns whether it
   /// applied: it needs iOS 27.1 and `LiquidPrismViewController` as the
   /// Flutter view controller. Apple asks that this stay a stable choice, not
@@ -292,6 +300,8 @@ class SystemChromeListener {
   final _value = ValueNotifier<GlassSystemChrome?>(null);
   final _glassTintAmount = ValueNotifier<double?>(null);
   final _reduceTransparency = ValueNotifier<bool>(false);
+  final _island = ValueNotifier<Rect?>(null);
+  final _notch = ValueNotifier<Rect?>(null);
   StreamSubscription<Object?>? _subscription;
   bool _started = false;
 
@@ -317,6 +327,29 @@ class SystemChromeListener {
     return _reduceTransparency;
   }
 
+  /// The Dynamic Island in the Flutter view, on every iOS version.
+  ValueListenable<Rect?> get island {
+    value; // Subscribes on first use.
+    return _island;
+  }
+
+  /// A notch in the Flutter view: a sensor housing joined to the top edge.
+  /// Null with a Dynamic Island, which [island] reports instead.
+  ValueListenable<Rect?> get notch {
+    value; // Subscribes on first use.
+    return _notch;
+  }
+
+  static Rect? _rect(Object? value) => switch (value) {
+    [final num x, final num y, final num w, final num h] => Rect.fromLTWH(
+      x.toDouble(),
+      y.toDouble(),
+      w.toDouble(),
+      h.toDouble(),
+    ),
+    _ => null,
+  };
+
   Future<void> _listen() async {
     // An unregistered event channel reports its failure as a Flutter error, so
     // confirm the plugin is present with a call whose failure can be caught.
@@ -332,6 +365,8 @@ class SystemChromeListener {
       _value.value = GlassSystemChrome.fromMap(event);
       _glassTintAmount.value = (event['glassTintAmount'] as num?)?.toDouble();
       _reduceTransparency.value = event['reduceTransparency'] == true;
+      _island.value = _rect(event['island']);
+      _notch.value = _rect(event['notch']);
     }, onError: (Object _) {});
   }
 
@@ -344,6 +379,8 @@ class SystemChromeListener {
     _value.value = null;
     _glassTintAmount.value = null;
     _reduceTransparency.value = false;
+    _island.value = null;
+    _notch.value = null;
     await subscription?.cancel();
   }
 }

@@ -9,6 +9,7 @@ import 'sliver_bar_page.dart';
 import 'conversation_page.dart';
 import 'header_page.dart';
 import 'scaffold_lab_page.dart';
+import 'refresh_page.dart';
 
 class LensPlayground extends StatefulWidget {
   const LensPlayground({
@@ -603,6 +604,18 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                       'Scaffold Lab',
                       'Switch every page option live',
                       const ScaffoldLabPage(),
+                    ),
+                    (
+                      'open-refresh-feed',
+                      'Pull to Refresh',
+                      'A drop from the Dynamic Island, a notch or the top edge',
+                      const RefreshFeedPage(),
+                    ),
+                    (
+                      'open-refresh-gallery',
+                      'Refresh a Body',
+                      'The same pull on your own scroll view, over dark content',
+                      const RefreshGalleryPage(),
                     ),
                     (
                       'open-header-page',

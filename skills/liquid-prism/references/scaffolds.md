@@ -1,7 +1,8 @@
 # Scaffolds and scroll edges
 
 Check these contracts against the app's resolved package source. This guide
-covers the 0.7 scaffold API; newer title behavior may require a newer release.
+covers the 0.7 scaffold API; newer title behavior may require a newer release,
+and the pull to refresh described below needs 0.8.
 
 ## Select the composition
 
@@ -13,8 +14,8 @@ covers the 0.7 scaffold API; newer title behavior may require a newer release.
 | A permanent row below the title | `accessory: PreferredSize(...)` participates in scaffold chrome geometry and its shared scroll edge. Its height must describe the row. |
 | Content that scrolls and then pins | A pinned sliver in managed `slivers`. Its content lifecycle differs from an accessory; any custom background effect needs explicit coordination. |
 
-Supply exactly one of `body` and `slivers`. `header` and `onRefresh` require
-managed slivers. A custom `header` and `largeTitle` are alternatives.
+Supply exactly one of `body` and `slivers`. `header` requires managed slivers.
+A custom `header` and `largeTitle` are alternatives.
 
 A minimal managed page (inside a Flutter app):
 
@@ -41,6 +42,27 @@ Do not apply the same insets through both `SafeArea` and scroll padding.
 vertical list inside a page view. Verify the actual notification depth rather
 than increasing it until a title happens to animate. Preserve the appropriate
 primary/controller relationship for scroll-to-top and tab reselection.
+
+## Pull to refresh
+
+From 0.8, `onRefresh: () => reload()` on the scaffold is the whole integration,
+for `slivers` and for `body`. The scaffold draws a black drop out of the Dynamic
+Island, a notch or the top edge, arms it at a fixed pull, and holds a spinner
+until the returned future completes. Before 0.8 `onRefresh` required `slivers`
+and showed the stock Cupertino control; check the resolved version.
+
+- Return the future of the real reload. The indicator spins until it completes,
+  and for at least a moment so a fast reload still reads. Do not add your own
+  delay, loading flag or spinner for the same reload.
+- Do not add `RefreshIndicator`, `CupertinoSliverRefreshControl` or another
+  refresh package inside a scaffold that has `onRefresh`; two indicators would
+  answer the same pull.
+- The drop follows the scrollable at `scrollDepth`. With `body`, a list shorter
+  than the window needs `AlwaysScrollableScrollPhysics` to be pulled at all.
+- The content is not held down while refreshing, so do not reserve space for
+  the indicator. There is no style to configure: it is always black and its
+  anchor comes from the device.
+- A scaffold in a sheet draws the drop from the sheet's own top edge.
 
 ## Adaptive safe areas
 

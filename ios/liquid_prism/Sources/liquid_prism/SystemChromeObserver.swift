@@ -44,6 +44,11 @@ public struct SystemChrome: Equatable, Sendable {
   public var glassTintAmount: Double? = DeviceGlass.tintAmount
   /// Accessibility's Reduce Transparency, public on every iOS version.
   public var reduceTransparency: Bool = UIAccessibility.isReduceTransparencyEnabled
+  /// The Dynamic Island in the view's space, or nil where the view has none
+  /// centred along its top edge. Read on every iOS version.
+  public var island: CGRect?
+  /// A notch in the view's space: a sensor housing joined to the top edge.
+  public var notch: CGRect?
 
   public static let unsupported = SystemChrome(
     supported: false, verticalBarEdge: nil, occlusions: [], divisions: [])
@@ -51,6 +56,11 @@ public struct SystemChrome: Equatable, Sendable {
   @MainActor
   public init(view: UIView, verticalBarDisabled: Bool = false) {
     self.verticalBarDisabled = verticalBarDisabled
+    switch SensorHousing.current(in: view) {
+    case .island(let frame): island = frame
+    case .notch(let frame): notch = frame
+    case nil: break
+    }
     horizontalSizeClass = view.traitCollection.horizontalSizeClass
     verticalSizeClass = view.traitCollection.verticalSizeClass
     #if canImport(UIKit, _version: 9127.0.85)
@@ -95,6 +105,11 @@ public struct SystemChrome: Equatable, Sendable {
     self.divisions = divisions
   }
 
+  private static func encode(_ rect: CGRect?) -> Any {
+    guard let rect else { return NSNull() }
+    return [Double(rect.minX), Double(rect.minY), Double(rect.width), Double(rect.height)]
+  }
+
   private static func name(_ sizeClass: UIUserInterfaceSizeClass) -> Any {
     switch sizeClass {
     case .compact: "compact"
@@ -128,6 +143,8 @@ public struct SystemChrome: Equatable, Sendable {
       "divisions": divisions.map(encode),
       "glassTintAmount": glassTintAmount.map { $0 as Any } ?? NSNull(),
       "reduceTransparency": reduceTransparency,
+      "island": Self.encode(island),
+      "notch": Self.encode(notch),
     ]
   }
 }

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.8.0
+
+- Replace the scaffold's stock refresh control with a Liquid Prism one. `onRefresh` now draws a black drop out of the Dynamic Island, out of the notch on iPhones that have one, or out of the top edge elsewhere. It holds a ring that fills from the top, pinches off into a circle once a release will refresh, spins level with the bar's controls, and merges back after a check. Haptics mark the drop leaving, the pinch-off and the completion.
+
+- `onRefresh` now works with `body` as well as `slivers`, and no longer holds the content down while refreshing.
+
+- Move the scaffold's large title down with the content when the page is pulled past its top, as a native large title does.
+
+- Add `LiquidPrismSystemChrome.dynamicIsland`, the island's frame in the Flutter view (private UIKit API where available, estimated from the safe area otherwise).
+
+- Add pull to refresh to the consumer agent skill and the component guide.
+
 ## 0.7.4
 
 - Remove the default grey fill behind held toolbar actions; retain glass press motion and explicit `pressedColor` overrides.

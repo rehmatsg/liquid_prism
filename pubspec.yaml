@@ -1,6 +1,6 @@
 name: liquid_prism
 description: Liquid glass components and native iOS popup menus, with customizable Flutter shaders and spring-driven controls.
-version: 0.7.4
+version: 0.8.0
 repository: https://github.com/rehmatsg/liquid_prism
 issue_tracker: https://github.com/rehmatsg/liquid_prism/issues
 topics:
@@ -33,4 +33,5 @@ flutter:
     - shaders/edge_blur.frag
     - shaders/glass.frag
     - shaders/glass_batch.frag
+    - shaders/refresh.frag
     - shaders/tab_content.frag

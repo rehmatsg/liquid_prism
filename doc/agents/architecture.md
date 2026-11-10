@@ -21,6 +21,7 @@ under `lib/src/` are not a consumer contract.
 | `tab_bar.dart`, `tab_content_lens.dart` | Compact navigation layout, independent tab motion and foreground filter |
 | `toolbar.dart`, `chrome_material.dart`, `search_field.dart` | Grouped action layout with animated item diffing, multi-group toolbars, and owned/borrowed search resources |
 | `chrome_layout.dart`, `sidebar.dart` | Scaffold placement (bottom bar, side rail or sidebar), chrome axis scope and body padding |
+| `refresh.dart`, `shaders/refresh.frag`, `ios/.../SensorHousing.swift` | Scaffold pull to refresh: scroll-driven state, the island, notch or top-edge anchor, and the drop's signed-distance shader with a path fallback |
 | `system_chrome.dart`, `ios/.../SystemChromeObserver.swift` | iOS 27.1 vertical bar edge and reserved regions, streamed on `liquid_prism/system_chrome` |
 | `menu/`, `ios/Classes/` | Menu models, platform interface, fallback and UIKit presentation |
 | `shaders/` | Impeller glass, batched surfaces, tab glyph refraction, the progressive edge blur and its haze mask |
