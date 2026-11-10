@@ -552,7 +552,7 @@ void main() {
         expect(overlay.right, closeTo(content.right, .01));
         expect(
           tester.getCenter(find.byKey(_overlayHandle)).dx,
-          closeTo(tester.getCenter(find.byKey(_contentTitle)).dx, .01),
+          closeTo(content.center.dx, .01),
         );
       }
 
@@ -621,7 +621,7 @@ void main() {
           expect(overlay.right, closeTo(content.right, .01), reason: row.name);
           expect(
             tester.getCenter(find.byKey(_overlayHandle)).dx,
-            closeTo(tester.getCenter(find.byKey(_contentTitle)).dx, .01),
+            closeTo(content.center.dx, .01),
             reason: row.name,
           );
         }
@@ -660,7 +660,7 @@ void main() {
           expect(content.bottom, lessThan(overlay.bottom));
           expect(
             tester.getCenter(find.byKey(_overlayHandle)).dx,
-            closeTo(tester.getCenter(find.byKey(_contentTitle)).dx, .01),
+            closeTo(content.center.dx, .01),
           );
         }
         expect(tester.takeException(), isNull);
@@ -1316,7 +1316,6 @@ class _App extends StatelessWidget {
 }
 
 const _contentArea = Key('content area');
-const _contentTitle = Key('content title');
 const _overlayArea = Key('overlay area');
 const _overlayHandle = Key('overlay handle');
 
@@ -1359,7 +1358,7 @@ class _ContentAlignmentApp extends StatelessWidget {
         children: [
           LiquidPrismScaffold(
             placement: placement,
-            title: const Text('Content', key: _contentTitle),
+            title: const Text('Content'),
             body: Builder(
               builder: (context) => Stack(
                 children: [

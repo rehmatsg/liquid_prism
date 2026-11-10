@@ -393,7 +393,7 @@ On initial downward departure, the outgoing header does not introduce an edge
 blur/fade band. Reveal-on-scroll-up makes the compact title and its edge eligible
 when scrolling actually restores the bar. With at-scroll-edge restoration, an
 expanded title or `header` has no compact-title subtree. A sole inline title still
-appears at the top. Accessories retain their edge protection in all modes.
+appears at the top. Accessories beneath ordinary text titles retain their edge protection in all minimization modes.
 These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
 
 Use `largeTitle` plus `title` for large-to-inline collapse under pinned controls.

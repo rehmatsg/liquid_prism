@@ -351,7 +351,9 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
           Flexible(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: widget.leading == null
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
               children: [
                 widget.child,
                 if (subtitle != null) ...[
