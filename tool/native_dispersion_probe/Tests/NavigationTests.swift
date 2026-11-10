@@ -1,6 +1,25 @@
 import XCTest
 
 final class NavigationTests: XCTestCase {
+  func testTitleOverscroll() throws {
+    let app = XCUIApplication()
+    for mode in ["inline", "inlineLarge", "large"] {
+      app.launchArguments = [
+        "--scene", "navigation", "--light", "--title-mode", mode,
+        "--no-leading", "--trailing-count", "2",
+      ]
+      app.launch()
+      let scroll = app.scrollViews["navigation-scroll"]
+      XCTAssertTrue(scroll.waitForExistence(timeout: 10))
+      Thread.sleep(forTimeInterval: 0.5)
+      let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35))
+      let end = start.withOffset(CGVector(dx: 0, dy: 250))
+      start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.7)
+      Thread.sleep(forTimeInterval: 1)
+      app.terminate()
+    }
+  }
+
   func testRestorationAtEdge() throws {
     let app = XCUIApplication()
     app.launchArguments = [

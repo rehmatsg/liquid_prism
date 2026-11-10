@@ -17,6 +17,8 @@ uniform vec4 u_anchor;
 uniform vec4 u_tongue;
 // Neck radius, union blend radius.
 uniform vec2 u_shape;
+// Inward white outline: width in logical pixels and opacity (zero in light).
+uniform vec2 u_outline;
 
 out vec4 frag_color;
 
@@ -69,6 +71,11 @@ float shape(vec2 p) {
 void main() {
   vec2 p = FlutterFragCoord().xy;
   float pixel = u_frame.x;
-  float alpha = (1.0 - smoothstep(-pixel, pixel, shape(p))) * u_frame.y;
-  frag_color = vec4(0.0, 0.0, 0.0, alpha);
+  float distance = shape(p);
+  float alpha = (1.0 - smoothstep(-pixel, pixel, distance)) * u_frame.y;
+  float rim = smoothstep(-u_outline.x - pixel, -u_outline.x + pixel, distance);
+  // Outline only the newly exposed contour, fading where it joins the sensor
+  // housing. The existing island/notch must not gain a white border.
+  rim *= smoothstep(0.0, 2.0, anchor(p)) * u_outline.y;
+  frag_color = vec4(vec3(rim * alpha), alpha);
 }

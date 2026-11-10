@@ -106,7 +106,7 @@ void main() {
     expect(refreshed, 2);
   });
 
-  testWidgets('haptics mark the drop leaving, the trigger and the completion', (
+  testWidgets('haptics mark emergence, arming, release and completion', (
     tester,
   ) async {
     phone(tester);
@@ -142,10 +142,65 @@ void main() {
       const Duration(milliseconds: 600),
     );
     await finish(tester);
-    expect(haptics, hasLength(3));
+    expect(haptics, hasLength(4));
     expect(haptics[0], contains('lightImpact'));
     expect(haptics[1], contains('mediumImpact'));
-    expect(haptics[2], contains('success'));
+    expect(haptics[2], contains('lightImpact'));
+    expect(haptics[3], contains('success'));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('release feedback waits for an armed release and fires once', (
+    tester,
+  ) async {
+    phone(tester);
+    final events = <GlassHapticKind>[];
+    final pending = Completer<void>();
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismTheme(
+          data: LiquidPrismThemeData(
+            haptics: GlassHaptics((_, event) => events.add(event.kind)),
+          ),
+          child: LiquidPrismScaffold(
+            onRefresh: () => pending.future,
+            slivers: rows(),
+          ),
+        ),
+      ),
+    );
+    var gesture = await tester.startGesture(const Offset(200, 300));
+    await gesture.moveBy(const Offset(0, 40));
+    await tester.pump();
+    expect(events, isNot(contains(GlassHapticKind.refreshArmed)));
+    expect(events, isNot(contains(GlassHapticKind.refreshReleased)));
+    // Releasing below the threshold must stay silent.
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(events, isNot(contains(GlassHapticKind.refreshReleased)));
+
+    gesture = await tester.startGesture(const Offset(200, 300));
+    await gesture.moveBy(const Offset(0, 20));
+    await tester.pump(const Duration(milliseconds: 16));
+    await gesture.moveBy(const Offset(0, 300));
+    await tester.pump();
+    expect(events, contains(GlassHapticKind.refreshArmed));
+    expect(events, isNot(contains(GlassHapticKind.refreshReleased)));
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      events.where((e) => e == GlassHapticKind.refreshReleased),
+      hasLength(1),
+    );
+    // A pull during the in-flight refresh cannot commit it a second time.
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      events.where((e) => e == GlassHapticKind.refreshReleased),
+      hasLength(1),
+    );
+    pending.complete();
+    await finish(tester);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('a pull over the completed mark refreshes again', (tester) async {
@@ -284,6 +339,7 @@ void main() {
       expect(events.map((e) => e.kind), [
         GlassHapticKind.refreshPulled,
         GlassHapticKind.refreshArmed,
+        GlassHapticKind.refreshReleased,
         GlassHapticKind.refreshSucceeded,
       ]);
 
@@ -336,8 +392,9 @@ void main() {
       const Duration(milliseconds: 600),
     );
     await finish(tester);
-    expect(native, hasLength(2));
-    expect(native.last, contains('mediumImpact'));
+    expect(native, hasLength(3));
+    expect(native.last, contains('lightImpact'));
+    expect(native.any((event) => event.contains('success')), isFalse);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('switching onRefresh keeps the page state', (tester) async {

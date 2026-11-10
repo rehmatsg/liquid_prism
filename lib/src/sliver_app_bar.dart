@@ -11,6 +11,7 @@ import 'navigation_title_motion.dart';
 import 'navigation_bar_minimization.dart';
 import 'scroll_edge.dart';
 import 'theme.dart';
+import 'title.dart';
 import 'toolbar.dart';
 
 /// A pinned navigation bar for a [CustomScrollView], laid out as
@@ -609,7 +610,12 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
           largeTitleAlignment:
               _d.navigation.largeTitleAlignment ?? GlassTitleAlignment.leading,
           titleAlignment:
-              _d.navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+              (_d.navigation.titleAlignment == null ||
+                      _d.navigation.titleAlignment ==
+                          GlassTitleAlignment.automatic) &&
+                  _d.inlineTitle is LiquidPrismTitle
+              ? GlassTitleAlignment.center
+              : _d.navigation.titleAlignment ?? GlassTitleAlignment.automatic,
           insets: _d.insets,
           top:
               _d.top -
@@ -867,34 +873,32 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         size.width - rightInset - gutter,
         trailingStart - (trailingStart < size.width ? gap : 0),
       );
-      final alignment = titleAlignment == GlassTitleAlignment.automatic
-          ? GlassTitleAlignment.center
-          : titleAlignment;
-      if (alignment != GlassTitleAlignment.center) {
-        final title = layoutChild(
-          _Slot.title,
-          BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
-        );
-        positionChild(
-          _Slot.title,
-          Offset(
-            (alignment == GlassTitleAlignment.trailing) != rtl
-                ? right - title.width
-                : left,
-            centred(title),
+      final centeredWidth = math.max(
+        0.0,
+        2.0 * math.min(centre - left, right - centre),
+      );
+      final title = layoutChild(
+        _Slot.title,
+        BoxConstraints.loose(
+          Size(
+            titleAlignment == GlassTitleAlignment.center
+                ? centeredWidth
+                : math.max(0.0, right - left),
+            barRow,
           ),
-        );
-      } else {
-        final half = math.max(0.0, math.min(centre - left, right - centre));
-        final title = layoutChild(
-          _Slot.title,
-          BoxConstraints.loose(Size(2 * half, barRow)),
-        );
-        positionChild(
-          _Slot.title,
-          Offset(centre - title.width / 2, centred(title)),
-        );
-      }
+        ),
+      );
+      final alignment = glassResolvedTitleAlignment(
+        titleAlignment,
+        title.width,
+        centeredWidth,
+      );
+      final x = alignment == GlassTitleAlignment.center
+          ? centre - title.width / 2
+          : (alignment == GlassTitleAlignment.trailing) != rtl
+          ? right - title.width
+          : left;
+      positionChild(_Slot.title, Offset(x, centred(title)));
     }
     if (hasChild(_Slot.largeTitle)) {
       final child = layoutChild(

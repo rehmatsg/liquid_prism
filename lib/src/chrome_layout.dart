@@ -903,7 +903,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ? 16
                 : LiquidPrismScaffold.topBarClearance),
         titleAlignment:
-            navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+            (navigation.titleAlignment == null ||
+                    navigation.titleAlignment ==
+                        GlassTitleAlignment.automatic) &&
+                inlineTitle is LiquidPrismTitle
+            ? GlassTitleAlignment.center
+            : navigation.titleAlignment ?? GlassTitleAlignment.automatic,
         contentPadding: (navigation.contentPadding ?? EdgeInsets.zero).resolve(
           Directionality.of(context),
         ),
@@ -1919,39 +1924,38 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      final alignment = titleAlignment == GlassTitleAlignment.automatic
-          ? GlassTitleAlignment.center
-          : titleAlignment;
-      if (alignment != GlassTitleAlignment.center) {
-        final title = layoutChild(
-          _Slot.title,
-          BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
-        );
-        positionChild(
-          _Slot.title,
-          Offset(
-            (alignment == GlassTitleAlignment.trailing) != rtl
-                ? right - title.width
-                : left,
-            top + (barRow - title.height) / 2,
+      final centeredWidth = math.max(
+        0.0,
+        2.0 * math.min(centre - left, right - centre),
+      );
+      final availableWidth = math.max(0.0, right - left);
+      // Automatic measures the full gap first, rather than truncating to the
+      // symmetric gap and then mistaking that constrained width for a fit.
+      // Explicit centering retains its bounded, usable interactive-title box.
+      final title = layoutChild(
+        _Slot.title,
+        BoxConstraints.loose(
+          Size(
+            titleAlignment == GlassTitleAlignment.center && centeredWidth >= 44
+                ? centeredWidth
+                : availableWidth,
+            barRow,
           ),
-        );
-      } else {
-        final half = math.min(centre - left, right - centre);
-        // Keep an interactive title usable when controls cross the center.
-        final width = math.max(0.0, 2 * half >= 44 ? 2 * half : right - left);
-        final title = layoutChild(
-          _Slot.title,
-          BoxConstraints.loose(Size(width, barRow)),
-        );
-        final x = (centre - title.width / 2)
-            .clamp(left, math.max(left, right - title.width))
-            .toDouble();
-        positionChild(
-          _Slot.title,
-          Offset(x, top + (barRow - title.height) / 2),
-        );
-      }
+        ),
+      );
+      final alignment = glassResolvedTitleAlignment(
+        titleAlignment,
+        title.width,
+        centeredWidth,
+      );
+      final x = alignment == GlassTitleAlignment.center
+          ? (centre - title.width / 2)
+                .clamp(left, math.max(left, right - title.width))
+                .toDouble()
+          : (alignment == GlassTitleAlignment.trailing) != rtl
+          ? right - title.width
+          : left;
+      positionChild(_Slot.title, Offset(x, top + (barRow - title.height) / 2));
     }
     if (hasChild(_Slot.largeTitle)) {
       layoutChild(

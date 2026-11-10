@@ -14,6 +14,9 @@ LiquidPrism(
 ```
 
 `Glass.regular` is the standard material; `Glass.clear` is more transparent.
+The device's clearest setting does not switch regular surfaces to the clear
+variant: native regular glass retains some frosting. Leave bars on regular for
+the system's standard treatment; choose clear explicitly for a different material.
 `Glass.identity` draws only the child. `.tint(color)` changes material color;
 `.tint(null)` explicitly removes inherited material tint. `.interactive()` adds
 spring touch feedback to a surface, without inventing an action. Use
