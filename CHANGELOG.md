@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.11.0
+
 - Cut the GPU cost of regular and clear glass. The wide blur fill is now blurred once per frame for all the glass that shares a backdrop and blended inside each surface's own pass, replacing three or four backdrop layers per surface; dark glass takes its bleed from the same blur. Glass painted one after another shares that blur without a `LiquidPrismGroup`. Measured on an M5 Mac, seven free-standing regular surfaces cost about 1.6 ms of GPU time per frame, down from 6.2 ms, and scaffold chrome 1.3 ms, down from 2.8 ms. Off-screen glass skips its backdrop passes. Glass now fades in by the fill's opacity where its blur radius grew before.
 
 - Add `tool/gpu_bench/`, a GPU benchmark that runs on a Mac without a device.
