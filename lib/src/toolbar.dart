@@ -883,14 +883,19 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                       end:
                           (vertical ? inset - 3 : -3) +
                           (badge.text == null ? 4 : 0),
-                      child: GlassContentPresence(
-                        presence: progress,
-                        blur: contentBlur,
-                        child: GlassBadgeView(
-                          badge: badge,
-                          height: 18,
-                          color: appearance.badgeColor,
-                          textStyle: appearance.badgeTextStyle,
+                      child: Builder(
+                        builder: (context) => GlassContentPresence(
+                          presence: progress * LiquidPrismPresence.of(context),
+                          blur:
+                              LiquidPrismPresence.maybeData(context)
+                                  ?.contentBlur ??
+                              contentBlur,
+                          child: GlassBadgeView(
+                            badge: badge,
+                            height: 18,
+                            color: appearance.badgeColor,
+                            textStyle: appearance.badgeTextStyle,
+                          ),
                         ),
                       ),
                     ),

@@ -7,6 +7,51 @@ import 'package:liquid_prism/src/pressable.dart';
 import 'package:liquid_prism/src/tab_content_lens.dart';
 
 void main() {
+  testWidgets('toolbar badges materialize with their whole group', (
+    tester,
+  ) async {
+    for (final managed in [false, true]) {
+      Widget app(bool visible) {
+        final items = visible
+            ? [
+                GlassToolbarItem(
+                  label: 'Inbox',
+                  icon: const Icon(Icons.mail),
+                  badge: const GlassBadge.dot(),
+                  onPressed: () {},
+                ),
+              ]
+            : <GlassToolbarItem>[];
+        return MaterialApp(
+          home: Center(
+            child: managed
+                ? LiquidPrismToolbar(content: [GlassToolbarGroup(items: items)])
+                : LiquidPrismToolbarGroup(items: items),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(app(false));
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(app(true));
+      await tester.pump(const Duration(milliseconds: 80));
+      final glass = find.byType(LiquidPrism);
+      final progress = LiquidPrismPresence.of(tester.element(glass));
+      expect(progress, inExclusiveRange(0, 1));
+      final badge = find.byType(GlassBadgeView);
+      final opacity = tester
+          .widget<Opacity>(
+            find.ancestor(of: badge, matching: find.byType(Opacity)).first,
+          )
+          .opacity;
+      expect(
+        opacity,
+        closeTo(progress, .001),
+        reason: 'a badge outside the glass child must follow the same materialization progress',
+      );
+      await tester.pumpAndSettle();
+    }
+  });
   testWidgets('toolbar counts grow inward at the trailing safe edge', (
     tester,
   ) async {
