@@ -253,7 +253,9 @@ rebuild on unchanged values).
 
 Compact and accessory-only scaffold headers use an independent circle below
 chrome instead of the attached-drop shader. Layout publishes the full header
-boundary, including accessories and docks, for the painter. The presentation is
+boundary, including accessories and docks, for the painter. The boundary also
+records the lowest occupied header edge, so the resting circle has 24-point
+clearance above and below without counting the normal body inset twice. The presentation is
 latched when a pull starts (also for controller refreshes). Only the extra gap
 not already supplied by scroll overscroll is translated into the body; this
 holds space during refreshing and supports clamping physics without double

@@ -6,7 +6,7 @@
 
 - Let Studio use device-derived regular glass until optics are explicitly adjusted; material selector controls inherit the app material.
 
-- Show refresh below compact and accessory-only headers: the circle scales and fades into the opened gap, which stays clear while refreshing. Keep the display gap independent of the pull threshold. Expanded headings and action-only chrome retain the island/top-edge effect.
+- Show refresh below compact and accessory-only headers: the circle scales and fades into the opened gap, which stays clear while refreshing. Keep balanced clearance above and below the resting circle, independent of the pull threshold. Expanded headings and action-only chrome retain the island/top-edge effect.
 
 - Let automatic inline titles use the leading edge when trailing controls crowd the centered position, in both scaffold and sliver bars. Preserve explicit alignment, RTL and centered glass title capsules.
 - Document regular versus clear glass behavior and verify live device tint updates without changing the calibrated regular defaults.
