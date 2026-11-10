@@ -1236,7 +1236,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             key: _refreshKey,
             onRefresh: widget.onRefresh,
             controller: widget.refreshController,
-            belowHeader: !swaps && (topBar || widget.accessory != null),
+            belowHeader:
+                !swaps && (inlineTitle != null || widget.accessory != null),
             headerBoundary: _refreshBoundary,
             contentDisplacement: _refreshDisplacement,
             sideInsets: EdgeInsets.only(

@@ -31,17 +31,27 @@ Future<void> finish(WidgetTester tester) async {
 }
 
 void main() {
-  for (final mode in ['compact', 'accessory', 'large', 'custom', 'none']) {
+  for (final mode in [
+    'compact',
+    'accessory',
+    'large',
+    'custom',
+    'none',
+    'actions',
+  ]) {
     testWidgets('refresh presentation for $mode header', (tester) async {
       phone(tester);
       final pending = Completer<void>();
       await tester.pumpWidget(
         CupertinoApp(
           home: LiquidPrismScaffold(
-            title: mode == 'accessory' || mode == 'none'
+            title: mode == 'accessory' || mode == 'none' || mode == 'actions'
                 ? null
                 : const Text('Feed'),
             largeTitle: mode == 'large' ? const Text('Feed') : null,
+            trailing: mode == 'actions'
+                ? const SizedBox(width: 88, height: 44)
+                : null,
             header: mode == 'custom' ? const SizedBox(height: 100) : null,
             accessory: mode == 'accessory'
                 ? const PreferredSize(
