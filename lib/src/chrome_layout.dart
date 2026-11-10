@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui' show DisplayFeature;
 
-import 'package:flutter/cupertino.dart' show CupertinoSliverRefreshControl;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -24,6 +23,7 @@ import 'theme.dart';
 import 'navigation_bar_style.dart';
 import 'navigation_title_motion.dart';
 import 'navigation_bar_minimization.dart';
+import 'refresh.dart';
 import 'scaffold_style.dart';
 
 /// Where [LiquidPrismScaffold] floats its tab bar and actions.
@@ -146,10 +146,6 @@ class LiquidPrismScaffold extends StatefulWidget {
          'Pass either body or slivers.',
        ),
        assert(
-         onRefresh == null || slivers != null,
-         'onRefresh needs slivers; a body adds its own refresh control.',
-       ),
-       assert(
          header == null || slivers != null,
          'header needs slivers; it scrolls with them.',
        ),
@@ -177,8 +173,16 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// tab bar's reselection or a status bar tap scrolls to the top.
   final ScrollController? scrollController;
 
-  /// Pull to refresh for [slivers]: a native refresh control that appears
-  /// below the bar as the content is pulled down.
+  /// Pull to refresh. Pulling the content down draws a black drop out of the
+  /// Dynamic Island or a notch, or out of the top edge where the window has
+  /// neither (iPhone Duo, a sheet, other platforms). Its ring fills as the
+  /// pull grows; once whole, the drop pinches off into a circle, and a
+  /// release then spins it until the returned future completes.
+  ///
+  /// It follows the scroll view that drives the bar (see [scrollDepth]) and
+  /// floats over the content without moving it. [slivers] can always be
+  /// pulled; a [body] scroll view shorter than the window needs
+  /// [AlwaysScrollableScrollPhysics].
   final Future<void> Function()? onRefresh;
 
   /// A bar pinned to the bottom of the page, above the home indicator and
@@ -381,6 +385,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   late final _minimization = NavigationBarMinimization(vsync: this);
 
   final _statusBarKey = GlobalKey();
+  final _refreshKey = GlobalKey<GlassRefreshLayerState>();
   final _appPointers = <int>{};
   bool _pointerEndedThisFrame = false;
 
@@ -454,6 +459,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// How far the body's outermost scroll view is scrolled past its start.
   final _scrollOffset = ValueNotifier<double>(0);
 
+  /// How far that scroll view is pulled past its start: the large title
+  /// follows the content down, as a native one does.
+  final _overscroll = ValueNotifier<double>(0);
+
   /// How much of that scroll view's content lies beyond its end, under a
   /// [LiquidPrismScaffold.bottomBar].
   final _scrollRemaining = ValueNotifier<double>(0);
@@ -471,6 +480,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         0,
         metrics.pixels - metrics.minScrollExtent,
       );
+      _overscroll.value = math.max(0, metrics.minScrollExtent - metrics.pixels);
       _layoutOffset.value = math.min(_scrollOffset.value, _layoutCap);
       _scrollRemaining.value = math.max(
         0,
@@ -531,6 +541,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _largeFade.dispose();
     _inlineFade.dispose();
     _scrollOffset.dispose();
+    _overscroll.dispose();
     _layoutOffset.dispose();
     _minimization.dispose();
     _scrollRemaining.dispose();
@@ -925,15 +936,18 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   child:
                       ((edges || swaps || minimizes) &&
                               (topBar || widget.accessory != null)) ||
-                          bottomBar != null
+                          bottomBar != null ||
+                          widget.onRefresh != null
                       ? NotificationListener<ScrollMetricsNotification>(
                           onNotification: (n) =>
                               n.depth == widget.scrollDepth &&
                               _onScroll(n.metrics, dimensionsChanged: true),
                           child: NotificationListener<ScrollNotification>(
-                            onNotification: (n) =>
-                                n.depth == widget.scrollDepth &&
-                                _onScroll(n.metrics),
+                            onNotification: (n) {
+                              if (n.depth != widget.scrollDepth) return false;
+                              _refreshKey.currentState?.handleScroll(n);
+                              return _onScroll(n.metrics);
+                            },
                             child: _content(),
                           ),
                         )
@@ -1026,27 +1040,34 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             if (widget.largeTitle case final title?)
               LayoutId(
                 id: _Slot.largeTitle,
-                child: Align(
-                  alignment: glassTitleBoxAlignment(
-                    navigation.largeTitleAlignment ??
-                        GlassTitleAlignment.leading,
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _overscroll,
+                  builder: (context, overscroll, child) => Transform.translate(
+                    offset: Offset(0, overscroll),
+                    child: child,
                   ),
-                  child: header(
-                    glassTitled(
-                      title,
-                      widget.subtitle,
-                      largeSubtitleStyle,
-                      large: true,
-                      alignment:
-                          navigation.largeTitleAlignment ??
+                  child: Align(
+                    alignment: glassTitleBoxAlignment(
+                      navigation.largeTitleAlignment ??
                           GlassTitleAlignment.leading,
-                      subtitleOffset:
-                          scaler.scale(largeTitleStyle.fontSize ?? 34) *
-                          38.33 /
-                          34,
                     ),
-                    largeTitleStyle,
-                    large: true,
+                    child: header(
+                      glassTitled(
+                        title,
+                        widget.subtitle,
+                        largeSubtitleStyle,
+                        large: true,
+                        alignment:
+                            navigation.largeTitleAlignment ??
+                            GlassTitleAlignment.leading,
+                        subtitleOffset:
+                            scaler.scale(largeTitleStyle.fontSize ?? 34) *
+                            38.33 /
+                            34,
+                      ),
+                      largeTitleStyle,
+                      large: true,
+                    ),
                   ),
                 ),
               ),
@@ -1177,6 +1198,33 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ),
       ),
     );
+    if (widget.onRefresh case final onRefresh?) {
+      // Above the glass group: its hoisted edge blur would soften the drop.
+      hosted = Stack(
+        children: [
+          Positioned.fill(child: hosted),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: GlassRefreshLayer.extent,
+            child: GlassRefreshLayer(
+              key: _refreshKey,
+              onRefresh: onRefresh,
+              sideInsets: EdgeInsets.only(
+                left: padding.left,
+                right: padding.right,
+              ),
+              // Level with the bar's controls, where they form a top row.
+              barCenter: rail || corner != null
+                  ? null
+                  : top + controlRowHeight / 2,
+              sensorHousing: !widget.sheet,
+            ),
+          ),
+        ],
+      );
+    }
     if (widget.tabBar != null) {
       hosted = LiquidPrismTabReselection.scope(
         reselection: _reselection,
@@ -1208,7 +1256,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       slivers: widget.slivers!,
       header: widget.header,
       controller: widget.scrollController,
-      onRefresh: widget.onRefresh,
       onHeaderExtent: (extent) {
         if (extent == _headerExtent || !mounted) return;
         setState(() => _headerExtent = extent);
@@ -2056,20 +2103,17 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 }
 
 /// The scroll view [LiquidPrismScaffold.slivers] builds: the chrome's insets
-/// as slivers, the header, pull to refresh and a return to the top on a tab
-/// reselection.
+/// as slivers, the header and a return to the top on a tab reselection.
 class _SliverPage extends StatefulWidget {
   const _SliverPage({
     required this.slivers,
     required this.header,
     required this.controller,
-    required this.onRefresh,
     required this.onHeaderExtent,
   });
   final List<Widget> slivers;
   final Widget? header;
   final ScrollController? controller;
-  final Future<void> Function()? onRefresh;
   final ValueChanged<double> onHeaderExtent;
 
   @override
@@ -2116,7 +2160,6 @@ class _SliverPageState extends State<_SliverPage> {
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final onRefresh = widget.onRefresh;
     final header = widget.header;
     return CustomScrollView(
       controller: widget.controller,
@@ -2124,27 +2167,6 @@ class _SliverPageState extends State<_SliverPage> {
       physics: const AlwaysScrollableScrollPhysics(),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
-        if (onRefresh != null)
-          CupertinoSliverRefreshControl(
-            onRefresh: onRefresh,
-            builder:
-                (
-                  context,
-                  mode,
-                  pulledExtent,
-                  triggerDistance,
-                  indicatorExtent,
-                ) => Transform.translate(
-                  offset: Offset(0, padding.top),
-                  child: CupertinoSliverRefreshControl.buildRefreshIndicator(
-                    context,
-                    mode,
-                    pulledExtent,
-                    triggerDistance,
-                    indicatorExtent,
-                  ),
-                ),
-          ),
         SliverPersistentHeader(pinned: true, delegate: _TopInset(padding.top)),
         SliverPadding(
           padding: EdgeInsets.only(left: padding.left, right: padding.right),

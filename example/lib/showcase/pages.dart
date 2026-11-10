@@ -3,6 +3,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import 'model.dart';
 import 'previews.dart';
+import 'refresh_page.dart';
 import 'widgets.dart';
 
 class ExplorePage extends StatelessWidget {
@@ -75,6 +76,16 @@ class ExplorePage extends StatelessWidget {
         children: [
           for (final info in [components[0], components[5], components[7]])
             ComponentRow(info: info, onPressed: () => open(info)),
+          ListRow(
+            key: const ValueKey('open-refresh'),
+            title: 'Pull to refresh',
+            subtitle: 'Pull this page down, or open an inbox',
+            icon: CupertinoIcons.arrow_down_circle_fill,
+            iconColor: GlassColors.of(context).indigo,
+            onPressed: () => Navigator.of(context).push<void>(
+              CupertinoPageRoute(builder: (_) => const RefreshFeedPage()),
+            ),
+          ),
         ],
       ),
     ],

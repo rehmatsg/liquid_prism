@@ -221,7 +221,7 @@ const components = [
       ('LiquidPrismScaffold.slivers', 'The scaffold builds the scroll view'),
       ('header', 'Your own heading, scrolling away under the bar'),
       ('bottomBar', 'Pinned above the home indicator or keyboard'),
-      ('onRefresh', 'Native pull to refresh below the bar'),
+      ('onRefresh', 'Pull to refresh, out of the Dynamic Island'),
       ('LiquidPrismSliverAppBar', 'The same bar inside your own scroll view'),
     ],
   ),

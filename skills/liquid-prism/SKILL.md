@@ -1,6 +1,6 @@
 ---
 name: liquid-prism
-description: Integrate, customize, migrate, or diagnose Liquid Prism components in Flutter apps, including adaptive scaffolds, app bars, pinned rows, scroll edges, glass controls, and native menus.
+description: Integrate, customize, migrate, or diagnose Liquid Prism components in Flutter apps, including adaptive scaffolds, app bars, pull to refresh, pinned rows, scroll edges, glass controls, and native menus.
 ---
 
 # Liquid Prism integration
@@ -22,7 +22,7 @@ menu-only use. Internal source can explain behavior but is not an app API.
 
 ## Choose ownership before styling
 
-For screen layout, app bars, tabs, safe areas or scroll seams, read
+For screen layout, app bars, tabs, safe areas, pull to refresh or scroll seams, read
 [Scaffolds and scroll edges](references/scaffolds.md). Identify which widget
 owns scrolling, content insets, chrome and its background effect before adding
 padding or another blur. Prefer managed scaffold slivers for ordinary scrolling

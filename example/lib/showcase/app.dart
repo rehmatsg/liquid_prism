@@ -130,6 +130,8 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
         ? GlassTabBarPlacement.sidebar
         : GlassTabBarPlacement.automatic,
     toolbar: appearanceActions(model),
+    // Every tab pulls to refresh; the showcase has nothing to reload.
+    onRefresh: () => Future<void>.delayed(const Duration(milliseconds: 1400)),
     tabBar: LiquidPrismTabBar(
       key: const ValueKey('showcase-navigation'),
       selectedIndex: tab.index,

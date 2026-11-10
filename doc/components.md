@@ -262,9 +262,8 @@ LiquidPrismScaffold(
 
 It pads the content below the bar, large title and accessory and above the tab
 bar, `bottomBar` and keyboard; follows the scroll for the edge effects and the
-large title; dismisses the keyboard on drag; and, with `onRefresh`, adds native
-pull to refresh below the bar. `scrollController` hands the page its
-controller. Pinned `SliverPersistentHeader`s pin below the bar, and
+large title; and dismisses the keyboard on drag. `scrollController` hands the
+page its controller. Pinned `SliverPersistentHeader`s pin below the bar, and
 `SliverFillRemaining` fills the space between the insets, for empty and error
 states. `bottomBar` pins a bar above the home indicator, tab bar or keyboard;
 content under it takes a bottom scroll edge effect in the same glass group as
@@ -274,6 +273,41 @@ fills its constraints would cover the page, so wrap one in
 `Column(mainAxisSize: MainAxisSize.min)`. A `body` still works for content that builds its own scrollable:
 the insets arrive as `MediaQuery.padding`. When that body's lists sit one level
 down, as in a tab view, pass `scrollDepth: 1`.
+
+### Pull to refresh
+
+`onRefresh` is the whole API, for `slivers` and for a `body`:
+
+```dart
+LiquidPrismScaffold(
+  title: const Text('Inbox'),
+  onRefresh: () => inbox.reload(),
+  slivers: [SliverList.builder(...)],
+)
+```
+
+Pulling the content down draws a black drop out of the Dynamic Island, or out
+of the notch on iPhones that have one. Where the window has neither (iPhone
+Duo, a sheet, landscape, other platforms) it comes out of the top edge.
+
+1. The drop holds a ring that fills clockwise from the top as the pull grows.
+2. Once the ring is whole the drop pinches off into a circle that swells and
+   breathes while it is held: a release will now refresh. Pulling back merges
+   it into its anchor again.
+3. Released, the circle rests level with the bar's controls and spins until
+   the future completes.
+4. The ring closes into a white disc with a check, then the circle merges back.
+
+Haptics mark three moments on iOS and Android: the drop starting to leave its
+anchor, the pinch-off, and the completion. The drop floats over the chrome and
+never moves the content, and it ignores a refresh that is already running.
+
+It follows the scroll view that drives the bar (`scrollDepth`). `slivers` can
+always be pulled; a `body` scroll view shorter than the window needs
+`AlwaysScrollableScrollPhysics`. There is nothing to style or dispose: the
+drop is always black, and its position comes from the device.
+`LiquidPrismSystemChrome.dynamicIsland` reports the island's frame, or null,
+for your own island-anchored effects.
 
 `header:` puts your own heading at the top of the slivers, such as a detail
 page's icon and title; it scrolls away under the bar and the inline `title`

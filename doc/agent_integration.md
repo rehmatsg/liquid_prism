@@ -39,7 +39,7 @@ You can also explicitly request `$liquid-prism` in agents supporting named skill
 
 ## What it covers
 
-- [Scaffold composition, inset ownership and continuous scroll edges](../skills/liquid-prism/references/scaffolds.md)
+- [Scaffold composition, inset ownership, pull to refresh and continuous scroll edges](../skills/liquid-prism/references/scaffolds.md)
 - [Component defaults, control ownership and title motion](../skills/liquid-prism/references/components.md)
 - [Layout and renderer verification](../skills/liquid-prism/references/verification.md)
 
