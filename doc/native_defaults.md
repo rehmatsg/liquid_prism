@@ -43,6 +43,10 @@ Fitted renderer behaviour, not recovered Apple algorithms:
 - Impeller's blur needs 1.16× the sigma to match a true Gaussian.
 - Dark bleed: sigma .9 × the bleed radius, gain 1.6 saturating at white,
   graded from .125 to .365 and lighten-blended at .716 of the base share.
+  The renderer has no blur that wide: it averages the fill (sigma 16) at four
+  points a ring apart, kept inside the face. Beside bright content a
+  170-point dark surface is up to about 4 levels (of 255) further from native
+  than a true wide blur was.
 - Light face tone `.4 + v (.627 − .035 v)`, measured on surfaces without depth
   terms, with a contrast gain about the black point of 1 + .087 × base share.
 - Regular rim: an additive highlight of .18 at the contour over 1.31 points
@@ -58,16 +62,19 @@ surface:
 
 - Native reads its backdrop up to `inputOuterRefractionAmount` outside the
   contour (16 points, or a quarter of the shortest side up to 37.5) and
-  nothing farther. The frost and bleed share one capture clipped to that
-  margin.
+  nothing farther. The renderer's fill blur is not clipped to that margin.
 - The outermost point of the face mirrors the surroundings from about that
   distance outside, at .6 opacity on the contour falling to nothing one point
   in, graded like a small surface. This is why rims brighten next to other
   glass or bright content.
-- The face of a plain glass surface is not displaced: content keeps its place
-  up to that rim band, so a regular surface's default refraction is zero. Tab
-  bars, toolbars, buttons and search fields were not measured here and keep
-  their previous lens. An explicit `refraction` still bends the face as before.
+- A plain surface bends its backdrop at the rim from 64 points on its
+  shortest side and not at 48 (compared over the whole face, rim included, on
+  a ladder of heights: at 64 points the default lens lowers the mean error
+  from 6.4 to 3.7 levels, at 48 it raises it from 5.0 to 9.3). The renderer
+  fades the surface lens in between the two (`NativeGlassDepth.lens`). Tab
+  bars, toolbars, buttons and search fields were not measured and keep their
+  lens at every size; an explicit `refraction` is used as given. Native's band
+  is still wider than the renderer's.
 
 Known differences: native renders saturated colours beyond sRGB and limits
 bright primaries differently in dark appearance; native has an EDR rendition

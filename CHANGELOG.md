@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- Match regular glass to native Liquid Glass measured on device at every Liquid Glass setting: a sharp backdrop under a lighten/darken-blended blur fill, size-dependent base blur and dark bleed on surfaces taller than 64 points, the native white rim highlight and dark edge line, and rims that mirror nearby content. Plain regular surfaces no longer displace their face by default (`refraction` 0, as measured); bars, buttons and fields keep their lens, and an explicit `refraction` restores it on surfaces. The selected tab pill keeps its 2-point blur over regular bars. Explicit blur and optics still override the device curve.
+- Cut the GPU cost of regular and clear glass. The wide blur fill is now blurred once per frame for all the glass that shares a backdrop and blended inside each surface's own pass, replacing three or four backdrop layers per surface; dark glass takes its bleed from the same blur. Glass painted one after another shares that blur without a `LiquidPrismGroup`. Measured on an M5 Mac, seven free-standing regular surfaces cost about 1.6 ms of GPU time per frame, down from 6.2 ms, and scaffold chrome 1.3 ms, down from 2.8 ms. Off-screen glass skips its backdrop passes. Glass now fades in by the fill's opacity where its blur radius grew before.
+
+- Add `tool/gpu_bench/`, a GPU benchmark that runs on a Mac without a device.
+
+- Match regular glass to native Liquid Glass measured on device at every Liquid Glass setting: a sharp backdrop under a lighten/darken-blended blur fill, size-dependent base blur and dark bleed on surfaces taller than 64 points, the native white rim highlight and dark edge line, and rims that mirror nearby content. Plain regular surfaces shorter than 64 points fade their default rim lens out, to none at 48 points, as measured; bars, buttons and fields keep their lens, and an explicit `refraction` is used as given. The selected tab pill keeps its 2-point blur over regular bars. Explicit blur and optics still override the device curve.
 
 ## 0.10.0
 

@@ -25,6 +25,7 @@ const vec4 u_shapeD = vec4(0.);
 vec4 u_curve[65];
 vec4 u_derived[4];
 vec4 u_face;
+const vec4 u_frost = vec4(0.,0.,0.,-1.);
 #include "glass_core.glsl"
 void main() {
     vec2 p = FlutterFragCoord().xy;

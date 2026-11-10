@@ -84,7 +84,17 @@ final class FrostPass {
     this.opacity = 1,
     this.blendMode = BlendMode.srcOver,
     this.depthFade = false,
-  ]);
+  ]) : fill = false;
+
+  /// A blur fill: blended over the sharp backdrop inside the optical pass,
+  /// which reads the blur from the backdrop's alpha
+  /// (shaders/frost_fill.frag) rather than from a backdrop layer of its own.
+  const FrostPass.fill(
+    this.sigma, [
+    this.opacity = 1,
+    this.blendMode = BlendMode.srcOver,
+  ]) : depthFade = false,
+       fill = true;
   final double sigma;
   final double opacity;
   final BlendMode blendMode;
@@ -93,13 +103,17 @@ final class FrostPass {
   /// halves from the deep face to the rim ([NativeGlassDepth]). [sigma] is the
   /// radius at full depth amount.
   final bool depthFade;
+  final bool fill;
 
   /// Replaces the backdrop under the glass outright, as a plain frost does.
   bool get covers =>
       opacity >= 1 && blendMode == BlendMode.srcOver && !depthFade;
 
-  FrostPass scaled(double factor) =>
-      FrostPass(sigma * factor, opacity, blendMode, depthFade);
+  /// This pass at [factor] of its strength. Every surface shares one fill
+  /// blur, so a fill fades in by opacity and other passes by radius.
+  FrostPass scaled(double factor) => fill
+      ? FrostPass.fill(sigma, opacity * factor, blendMode)
+      : FrostPass(sigma * factor, opacity, blendMode, depthFade);
 
   @override
   bool operator ==(Object other) =>
@@ -107,14 +121,16 @@ final class FrostPass {
       other.sigma == sigma &&
       other.opacity == opacity &&
       other.blendMode == blendMode &&
-      other.depthFade == depthFade;
+      other.depthFade == depthFade &&
+      other.fill == fill;
 
   @override
-  int get hashCode => Object.hash(sigma, opacity, blendMode, depthFade);
+  int get hashCode => Object.hash(sigma, opacity, blendMode, depthFade, fill);
 
   @override
   String toString() =>
-      'FrostPass($sigma, $opacity, ${blendMode.name}${depthFade ? ', depth' : ''})';
+      'FrostPass${fill ? '.fill' : ''}($sigma, $opacity, ${blendMode.name}'
+      '${depthFade ? ', depth' : ''})';
 
   /// Impeller's blur is a Gaussian cut off at sqrt(3) sigma. Fitted on device,
   /// it matches a true Gaussian of sigma s when given this multiple of s.
@@ -145,15 +161,15 @@ final class FrostPass {
       if (frost <= .05) return const [];
       final fill = frost * regularFillSigma / regularBaseSigma;
       final normal = GlassTint.sample(GlassTint.regularNormal, tint);
-      if (normal >= 1) return [FrostPass(fill)];
+      if (normal >= 1) return [FrostPass.fill(fill)];
       return [
         FrostPass(frost, 1, BlendMode.srcOver, true),
-        FrostPass(
+        FrostPass.fill(
           fill,
           GlassTint.sample(GlassTint.regularLighten, tint),
           dark ? BlendMode.darken : BlendMode.lighten,
         ),
-        if (normal > 0) FrostPass(fill, normal),
+        if (normal > 0) FrostPass.fill(fill, normal),
       ];
     }
     final radius = GlassTint.sample(GlassTint.clearBlurRadius, tint);
@@ -162,10 +178,10 @@ final class FrostPass {
         radius /
         GlassTint.sample(GlassTint.clearBlurRadius, GlassTint.standard);
     final fill = GlassTint.sample(GlassTint.clearFillNormal, tint);
-    if (fill >= 1 && fillFrost > 0.05) return [FrostPass(fillFrost)];
+    if (fill >= 1 && fillFrost > 0.05) return [FrostPass.fill(fillFrost)];
     return [
       if (base > 0.05) FrostPass(base),
-      if (fill > 0 && fillFrost > 0.05) FrostPass(fillFrost, fill),
+      if (fill > 0 && fillFrost > 0.05) FrostPass.fill(fillFrost, fill),
     ];
   }
 
@@ -350,11 +366,8 @@ final class GlassRecipe {
           saturation: 1,
         )
       : LiquidPrismStyle(
-          // A plain native glass surface does not displace its face:
-          // measured on device, content keeps its place up to the one-point
-          // rim band that mirrors the surroundings. Bars, buttons and fields
-          // were not part of that measurement and keep their lens.
-          refraction: role == GlassRole.surface ? 0 : 48,
+          refraction: 48,
+          dispersion: 0.2,
           frost: regularFrost,
           brightness: 0,
           tint: const Color(0x00000000),
@@ -401,14 +414,6 @@ abstract final class NativeGlassDepth {
   static double amount(double extent) =>
       ((math.min(extent, 150) - 64) / 120).clamp(0.0, 1.0);
 
-  /// Base blur radius at the rim relative to the deep face
-  /// (`inputBlurOpacity1 / inputBlurOpacity0`).
-  static const rimRatio = .5;
-
-  /// SDF depth at which the base blur reaches [amount]
-  /// (`-inputBlurDistance0`).
-  static double depth(double extent) => math.min(extent, 150) / 2;
-
   /// Native `inputBleedBlurRadius` is .35 of the extent; fitted Gaussian
   /// sigma per unit of that radius.
   static double bleedSigma(double extent) =>
@@ -418,23 +423,22 @@ abstract final class NativeGlassDepth {
       FrostPass.engineSigmaScale;
   static const bleedSigmaPerRadius = .9;
 
+  /// How far apart the optical pass reads a fill of [fillSigma] to widen it
+  /// to the bleed's blur: the radius of a ring with the missing variance.
+  static double bleedRadius(double extent, double fillSigma) {
+    final sigma = bleedSigma(extent);
+    return math.sqrt(2 * math.max(sigma * sigma - fillSigma * fillSigma, 0));
+  }
+
   /// Fitted share of [amount] at which dark glass lightens toward the bleed.
+  /// The bleed's gain (1.6) and colours (.125 to .365) are in `bleedGlass`,
+  /// shaders/glass_core.glsl.
   static const bleedBlend = .716;
 
-  /// Fitted gain on the bleed blur, which saturates at white.
-  static const bleedGain = 1.6;
-
-  /// Bleed colour of a black and a white backdrop in dark appearance:
-  /// `inputBleedColorMatrixBlack`, and the fitted display level that the
-  /// native white input (.5) reaches.
-  static const bleedBlack = .125;
-  static const bleedWhite = .365;
-
-  /// Native `inputOuterRefractionAmount`: how far outside the contour the
-  /// surface reads its backdrop (16 / 20 / 26 / 32.5 / 37.5 at 64 / 80 / 104 /
-  /// 130 / 150+ points). Measured on device, blurs see nothing farther out.
-  static double outerReach(double extent) =>
-      math.max(16, .25 * math.min(extent, 150));
+  /// Share of a plain surface's lens (rim refraction and dispersion) at this
+  /// shortest side. Measured on device against native: a 48-point surface
+  /// does not bend its backdrop, and surfaces from 64 points bend it fully.
+  static double lens(double extent) => ((extent - 48) / 16).clamp(0.0, 1.0);
 
   /// Fitted light-appearance face contrast gain per unit of [amount].
   static const lightGain = .087;

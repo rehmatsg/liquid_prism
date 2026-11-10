@@ -30,6 +30,10 @@ uniform vec4 u_curve[65];
 uniform vec4 u_derived[4];
 // Face: fill alpha, inner ring opacity, SDR luma limit, fill gray.
 uniform vec4 u_face;
+// Blur fill read from the backdrop's alpha: directional (lighten or darken)
+// opacity, normal opacity, dark bleed opacity, bleed radius in points
+// (negative without a stored fill).
+uniform vec4 u_frost;
 uniform sampler2D u_backdrop;
 out vec4 frag_color;
 
