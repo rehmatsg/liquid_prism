@@ -74,22 +74,26 @@ void main() {
   });
 
   group('frost passes', () {
-    test('regular frost follows the fitted light and dark setting sweep', () {
-      const light = [5.2, 6.76, 8.32, 10.11, 12.0];
-      const dark = [2.98, 5.07, 7.12, 9.62, 12.0];
-      for (var i = 0; i < GlassTint.amounts.length; i++) {
-        for (final isDark in [false, true]) {
-          final pass = _frost(
-            Glass.regular,
-            GlassTint.amounts[i],
-            dark: isDark,
-          ).single;
-          expect(pass.sigma, closeTo((isDark ? dark : light)[i], 1e-12));
-          expect(pass.covers, isTrue);
-          expect(pass.blendMode, BlendMode.srcOver);
+    test('regular shares clear frost across settings and appearances', () {
+      for (final tint in [
+        -1.0,
+        0.0,
+        .125,
+        .25,
+        .375,
+        .5,
+        .625,
+        .75,
+        1.0,
+        2.0,
+      ]) {
+        for (final dark in [false, true]) {
+          expect(
+            _frost(Glass.regular, tint, dark: dark),
+            _frost(Glass.clear, tint, dark: dark),
+          );
         }
       }
-      expect(_frost(Glass.regular, .375).single.sigma, closeTo(7.54, 1e-12));
     });
 
     test('clear glass scales its blur and fades in a blur fill to tint 1', () {
@@ -127,8 +131,8 @@ void main() {
     });
 
     test('the optical pass assumes only a blur that covers the face', () {
-      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .5)), 8.32);
-      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .25)), 6.76);
+      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .5)), 1.8);
+      expect(FrostPass.effectiveSigma(_frost(Glass.regular, .25)), .9);
       expect(FrostPass.effectiveSigma(_frost(Glass.clear, .75)), 1.8);
       expect(FrostPass.effectiveSigma(const []), 0);
     });

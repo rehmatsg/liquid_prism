@@ -15,19 +15,18 @@ showcase pages are paired separately. Captures are evidence, not package assets.
 
 ## Material defaults
 
-Regular glass uses fitted Gaussian frost equivalents in logical pixels:
+Regular glass now shares Clear's device-dependent frost curve in both appearances:
 
 | Device amount | 0 | .25 | .5 | .75 | 1 |
 | --- | --- | --- | --- | --- | --- |
-| Light | 5.20 | 6.76 | 8.32 | 10.11 | 12 |
-| Dark | 2.98 | 5.07 | 7.12 | 9.62 | 12 |
+| Base Gaussian sigma (logical pixels) | 0 | .9 | 1.8 | 1.8 | — |
+| 12-point blur-fill opacity | 0 | 0 | 0 | .5 | 1 |
 
-These replace the earlier 3.3-point frost and the unsupported `lighten`/`darken`
-backdrop blends. Impeller's backdrop layers require supported pipeline blend
-modes; the equivalents use an opaque `srcOver` blur. They approximate native's
-asymmetric blur-fill composition rather than reproduce its kernel. Explicit app
-blur/optics still bypass the device-setting fit. Clear glass keeps its light base
-blur; its additional blur fill reaches 12 points at the highest setting.
+This is the requested material mapping, not a new measurement of native Regular.
+It replaces the previous opaque Gaussian approximation (5.2–12 in light and
+2.98–12 in dark), which blurred fine detail even at device amount zero.
+Explicit app blur/optics still bypass the device-setting curve. Regular retains
+its own face fill, grading, highlights and shadows.
 
 Dark regular glass also needs its native gray face fill and SDR luma limit. Small
 capsules report a .6 limit. The 150 × 96 surface reports .48/.44/.4 at amounts

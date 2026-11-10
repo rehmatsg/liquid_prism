@@ -90,8 +90,8 @@ captured once and each pass blurs the same pixels; hoisted members' passes use
 treats two as equal filters on one key. `style.frost` handed to the optical
 pass is `FrostPass.effectiveSigma`: zero while sharp detail shows through. A
 batch composes one plain frost, so only members whose frost is a single
-covering pass batch; the rest share captures. Regular material uses a fitted
-Gaussian at every device tint amount, while Clear can use two passes. The
+covering pass batch; the rest share captures. Regular and Clear share the device frost curve, including the two-pass blur
+fill at intermediate high settings. The
 calibration and limits are in [native defaults](../native_defaults.md).
 
 ## Shared captures

@@ -55,11 +55,6 @@ abstract final class GlassTint {
   /// Clear: blur fill normal opacity (its radius is 8 only at tint 1).
   static const clearFillNormal = <double>[0, 0, 0, .5, 1];
 
-  // Gaussian equivalents fitted to native 32-point texture captures. Backdrop
-  // layers cannot use Impeller's unsupported lighten/darken pipeline blends.
-  static const regularFrostLight = <double>[5.2, 6.76, 8.32, 10.11, 12];
-  static const regularFrostDark = <double>[2.98, 5.07, 7.12, 9.62, 12];
-
   /// [values] at tint amount [t], linear between the measured amounts.
   static double sample(List<double> values, double t) {
     final x = t.clamp(0.0, 1.0);
@@ -112,7 +107,7 @@ final class FrostPass {
   @override
   String toString() => 'FrostPass($sigma, $opacity, ${blendMode.name})';
 
-  /// Fitted Gaussian frost for native materials; explicit optics stay literal.
+  /// Shared device frost curve for regular/clear; explicit optics stay literal.
   static List<FrostPass> resolve({
     required double kind,
     required bool dark,
@@ -122,16 +117,6 @@ final class FrostPass {
   }) {
     if (tint == null || (kind != 1 && kind != 2)) {
       return frost > 0.05 ? [FrostPass(frost)] : const [];
-    }
-    if (kind == 1) {
-      final sigma =
-          frost *
-          GlassTint.sample(
-            dark ? GlassTint.regularFrostDark : GlassTint.regularFrostLight,
-            tint,
-          ) /
-          GlassRecipe.regularFrost;
-      return sigma > 0.05 ? [FrostPass(sigma)] : const [];
     }
     final radius = GlassTint.sample(GlassTint.clearBlurRadius, tint);
     final base =
@@ -315,9 +300,8 @@ final class GlassRecipe {
     );
   }
 
-  /// The regular recipe's frost: the blur fill a clear surface fades in
-  /// towards tint 1, which native draws with the same captured radius.
-  static const regularFrost = 8.32;
+  /// Base frost at the standard device setting, shared with clear glass.
+  static const regularFrost = 1.8;
   static const blurFillFrost = 12.0;
 
   LiquidPrismStyle optics(double radius) => kind == 2
