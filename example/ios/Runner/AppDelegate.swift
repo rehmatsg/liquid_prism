@@ -21,13 +21,13 @@ import UIKit
 /// device glass tint amount through private UIKit API and dumps the native
 /// glass layers' filter inputs.
 enum ParityChannel {
-  private static var channel: FlutterMethodChannel?
-  private static var host: UIViewController?
+  private static var host: UIHostingController<AnyView>?
   private static var status: UIView?
   private static var observers: [NSObjectProtocol] = []
   private static let everyImage = UnsafeMutableRawPointer(bitPattern: -2)
 
-  /// `UIViewGlassGetTintAmount` returns an NSNumber (see TintSweep.swift).
+  /// `UIViewGlassGetTintAmount` returns an NSNumber (see
+  /// tool/native_dispersion_probe's TintSweep.swift).
   static var amount: NSNumber? {
     guard let pointer = dlsym(everyImage, "UIViewGlassGetTintAmount") else { return nil }
     let getter = unsafeBitCast(pointer, to: (@convention(c) () -> Unmanaged<AnyObject>?).self)
@@ -47,7 +47,6 @@ enum ParityChannel {
 
   static func register(_ messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(name: "liquid_prism/parity", binaryMessenger: messenger)
-    self.channel = channel
     for name in [changeName, UIApplication.didBecomeActiveNotification].compactMap({ $0 }) {
       observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { note in
         channel.invokeMethod("amountChanged", arguments: [
@@ -99,7 +98,7 @@ enum ParityChannel {
       content = AnyView(Color.clear)
     }
     let controller: UIHostingController<AnyView>
-    if let existing = host as? UIHostingController<AnyView> {
+    if let existing = host {
       controller = existing
       controller.rootView = content
     } else {
@@ -196,13 +195,12 @@ private struct ParityGlass: View {
       Color.clear
       ForEach(rects.indices, id: \.self) { i in
         let r = rects[i]
+        let face = Color.clear.frame(width: r[2], height: r[3])
         Group {
           if r[5] != 0 {
-            Color.clear.frame(width: r[2], height: r[3])
-              .glassEffect(.regular, in: Capsule(style: .continuous))
+            face.glassEffect(.regular, in: Capsule(style: .continuous))
           } else {
-            Color.clear.frame(width: r[2], height: r[3])
-              .glassEffect(.regular, in: RoundedRectangle(cornerRadius: r[4], style: .continuous))
+            face.glassEffect(.regular, in: RoundedRectangle(cornerRadius: r[4], style: .continuous))
           }
         }
         .offset(x: r[0], y: r[1])

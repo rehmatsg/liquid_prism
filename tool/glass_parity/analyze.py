@@ -8,8 +8,8 @@
 
 Every screenshot is decoded on its own through the code strip painted by
 example/lib/parity_main.dart; folders are searched recursively for *.png and
-for filters-*.json dumps. Writes cases.csv, report.json, report.html and
-crops/ to --out (default: <first input>/report).
+for filters-*.json dumps. Writes cases.csv, summary.csv, report.json,
+report.html and crops/ to --out (default: <first input>/report).
 """
 
 from __future__ import annotations
@@ -173,7 +173,7 @@ def fwhm(p, white):
     return float(peak), float(r - l)
 
 
-def measure(img, meta, path):
+def measure(img, meta):
     layout = LAYOUTS[meta["layout"]]
     dpr, col = meta["dpr"], meta["colPx"]
     pattern = meta["pattern"]
@@ -200,7 +200,7 @@ def measure(img, meta, path):
         cy, cx = H // 2, W // 2
         row = lambda A, b=band: luma(A[cy - b:cy + b, i0:i1]).mean(0)
         ref = lambda dx: luma(img[ref_y - band:ref_y + band, X + dx + i0:X + dx + i1, :3].astype(float)).mean(0)
-        if pattern == "vedge" or pattern == "hedge":
+        if pattern in ("vedge", "hedge"):
             if pattern == "vedge":
                 pn, pf = row(N), row(F)
             else:
@@ -256,11 +256,10 @@ def crop_sheet(img, meta, diff_gain=8):
         D = np.clip(128 + (F - N) * diff_gain, 0, 255)
         tiles.append([Image.fromarray(a.astype(np.uint8)).resize((w, h), Image.BOX) for a in (N, F, D)])
     gap = 4
-    width = 3 * max(t[0].width for t in tiles) + 2 * gap
-    height = sum(t[0].height for t in tiles) + gap * (len(tiles) - 1)
-    sheet = Image.new("RGB", (width, height), (90, 90, 90))
-    y = 0
     cw = max(t[0].width for t in tiles)
+    height = sum(t[0].height for t in tiles) + gap * (len(tiles) - 1)
+    sheet = Image.new("RGB", (3 * cw + 2 * gap, height), (90, 90, 90))
+    y = 0
     for row in tiles:
         for i, t in enumerate(row):
             sheet.paste(t, (i * (cw + gap), y))
@@ -356,8 +355,8 @@ def main():
         if meta is None or meta["layout"] not in LAYOUTS:
             undecoded.append(str(path))
             continue
-        source = next((q.name for q in path.parents if q.name not in ("shots",)), "")
-        shapes = measure(img, meta, path)
+        source = next((q.name for q in path.parents if q.name != "shots"), "")
+        shapes = measure(img, meta)
         weight = sum(s["pixels"] for s in shapes)
         case = {
             "id": f"c{i:04d}", "file": str(path), "source": source,
@@ -383,7 +382,7 @@ def main():
     def amount_key(c):
         return round(c["native"], 3) if c["native"] is not None else -1
 
-    # Summary: source x mode x appearance x amount.
+    # Summary: source x layout x mode x appearance x amount.
     groups = {}
     for c in cases:
         groups.setdefault((c["source"], c["layout"], c["mode"], c["appearance"], amount_key(c)), {})[c["pattern"]] = c
@@ -441,7 +440,6 @@ def main():
 
     filters = filter_rows(dumps)
 
-    # ---- CSV
     fields = ["source", "mode", "appearance", "native", "flutter", "pattern", "shape", "mean_abs", "max_abs",
               "p99_abs", "signed_r", "signed_g", "signed_b", "native_r", "native_g", "native_b", "flutter_r",
               "flutter_g", "flutter_b", "spread_native_px", "spread_flutter_px", "contrast_native",
@@ -524,7 +522,7 @@ img{image-rendering:pixelated;max-width:100%}small{color:var(--muted)}
 
     if report["arg_vs_slider"]:
         parts.append("<h2>Launch argument vs Settings slider</h2><p><small>Same amount, appearance and "
-                     "pattern; |Δ| over the three shape boxes.</small></p><table><tr><th>appear.</th>"
+                     "pattern; |Δ| over the shape boxes.</small></p><table><tr><th>appear.</th>"
                      "<th>amount</th><th class=l>pattern</th><th>native mean/max</th><th>native identical</th>"
                      "<th>Flutter mean/max</th><th>Flutter identical</th></tr>")
         for v in report["arg_vs_slider"]:

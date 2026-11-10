@@ -90,8 +90,9 @@ def capture_sim(args) -> Path:
     for appearance in args.appearances.split(",") if args.per_appearance else [args.appearances]:
         for amount in amounts(args):
             subprocess.run(["xcrun", "simctl", "terminate", udid, BUNDLE], capture_output=True)
+            docs = sim_container(udid)
             # A previous launch's handshake files would be read as this one's.
-            for stale in [*sim_container(udid).glob("ready-*"), *sim_container(udid).glob("ack-*")]:
+            for stale in [*docs.glob("ready-*"), *docs.glob("ack-*")]:
                 stale.unlink()
             launch = ["xcrun", "simctl", "launch", udid, BUNDLE, "--parity-ack",
                       "--parity-appearances", appearance, "--parity-patterns", args.patterns,
@@ -101,7 +102,6 @@ def capture_sim(args) -> Path:
                 launch += ["-UIViewGlassTintAmount", amount]
             run(launch, capture_output=True)
             time.sleep(1)
-            docs = sim_container(udid)
             seq, frames = 1, None
             while frames is None or seq <= frames:
                 ready = docs / f"ready-{seq}.json"

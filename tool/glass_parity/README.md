@@ -7,7 +7,7 @@ tooling: nothing here ships.
 
 - `example/lib/parity_main.dart`: the app. The screen is split into two
   columns of `floor(physical width / 2)` pixels; the right column's backdrop is
-  the left one translated by exactly one column. Left: three `LiquidPrism`
+  the left one translated by exactly one column. Left: the layout's `LiquidPrism`
   surfaces at package defaults (no glass, optics, blur or tint arguments, so
   they follow the device amount). Right: nothing from Flutter except the backdrop.
 - `ParityChannel` in `example/ios/Runner/AppDelegate.swift`: puts a
@@ -32,8 +32,9 @@ Patterns (index = strip byte): `grouped white black gray50 vedge hedge
 lines_white lines_black ramp grating8 grating32 grating64 patches photo`, then
 the kernel probes `out8 out24 out48 out8_inv out24_inv out48_inv in24 in24_inv
 dot dot_inv bar_h bar_h_inv bar_v bar_v_inv vedge_mid vedge_rg vedge_by vedge_rc
-gray25 gray75 red green blue`. `outN`/`inN` grow/shrink the union of the
-layout's exact outlines with a round-join stroke, without anti-aliasing.
+gray25 gray75 red green blue out2 out4 out12 out16 out20 out28 out32 out40`.
+`outN`/`inN` grow/shrink the union of the layout's exact outlines with a
+round-join stroke, without anti-aliasing.
 
 Each run writes `geometry.json` (DPR, column width, every layout's shapes in
 physical pixels with radius and kind, the input row, and each pattern's exact
@@ -108,8 +109,8 @@ uv run tool/glass_parity/capture_devicectl.py --udid <phone> --out <dir> \
 uv run tool/glass_parity/analyze.py artifacts/glass-parity/<run> [more runs or PNGs] [--out DIR]
 ```
 
-Writes `cases.csv` (per shape), `summary.csv` (per source × mode × appearance ×
-amount), `report.json` (with edge profiles and tone curves) and `report.html`
+Writes `cases.csv` (per shape), `summary.csv` (per source × layout × mode ×
+appearance × amount), `report.json` (with edge profiles and tone curves) and `report.html`
 (summary, launch-argument vs slider table, native filter inputs vs
 `doc/native_defaults_spec.json`, worst cases with native | Flutter | diff×8
 crops). Errors are 8-bit RGB, Flutter minus native, over the face interior:
@@ -118,7 +119,7 @@ the shape inset by 12 pt with its original corner radius (corner exclusion).
 - Edge spread: 10–90 % width (px) of the step along the row (vedge) or column
   (hedge) through the shape centre, inside the face, averaged over ±2 pt.
 - Grating contrast: least-squares sine amplitude at the known period on the
-  centre row, divided by the same fit on the unfiltered row y = 600.
+  centre row, divided by the same fit on the layout's unfiltered row.
 - Tone transfer (ramp): face centre row vs the unfiltered row at the same x,
   binned by input gray in 16 steps.
 - Launch argument vs slider: matching amount, appearance and pattern compared

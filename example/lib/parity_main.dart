@@ -38,8 +38,8 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 const _channel = MethodChannel('liquid_prism/parity');
 
-/// Shapes in a column's local points. The vertical step edge, the gratings and
-/// the lines are phased on [_centerX], which every shape is centred on.
+/// Column-local x (points) that every shape is centred on. The vertical step
+/// edges, the gratings and the lines are phased on it.
 const _centerX = 100.0;
 
 typedef _Shape = ({String name, Rect rect, double radius, bool capsule});
@@ -73,8 +73,7 @@ final _layouts = <String, _Layout>{
       ),
     ],
   ),
-  // Six 150-pt-wide rounded rects, radius min(28, h / 2), from y = 90 with
-  // 18-pt gaps: they end at y = 776, above the strip on an 874-pt screen.
+  // Ends at y = 776, above the strip on an 874-pt-tall screen.
   'ladder': (
     id: 2,
     refY: 60,
@@ -95,11 +94,14 @@ final _layouts = <String, _Layout>{
   ),
 };
 
+GlassShape _glassShape(_Shape s) =>
+    s.capsule ? GlassShape.capsule : GlassShape.rect(cornerRadius: s.radius);
+
 /// The exact outline both glasses use: Liquid Prism's continuous-corner path.
 Path _outline(_Shape s) =>
-    (s.capsule ? GlassShape.capsule : GlassShape.rect(cornerRadius: s.radius))
-        .path(s.rect.size)
-        .shift(s.rect.topLeft);
+    _glassShape(s).path(s.rect.size).shift(s.rect.topLeft);
+
+String _amountTag(double? amount) => amount?.toStringAsFixed(4) ?? 'nil';
 
 /// Code strip: 16 x 8 cells of 5 pt, 8 pt from the left and 40 pt above the
 /// bottom edge, two bytes per row, most significant bit first.
@@ -191,9 +193,10 @@ class _ParityAppState extends State<_ParityApp> {
   late final bool _settingsMode = _args.contains('--parity-settings');
   late final bool _ack = _args.contains('--parity-ack');
   late final bool _native = !_args.contains('--parity-no-native');
-  late final String _layoutName = _layouts.containsKey(_arg('--parity-layout'))
-      ? _arg('--parity-layout')!
-      : 'default';
+  late final String _layoutName = switch (_arg('--parity-layout')) {
+    final name? when _layouts.containsKey(name) => name,
+    _ => 'default',
+  };
   late final _Layout _layout = _layouts[_layoutName]!;
   List<_Shape> get _shapes => _layout.shapes;
   bool _geometryWritten = false;
@@ -217,19 +220,18 @@ class _ParityAppState extends State<_ParityApp> {
   int _frame = 0;
   int _seq = 0;
   int _epoch = 0;
-  int _generation = 0;
   bool _ready = false;
   bool _done = false;
   double? _nativeAmount;
   double? _epochAmount;
   ui.Image? _image;
   (bool, int)? _imageKey;
-  final _captured = <String>[];
+  final _captured = <String>{};
   final _dumped = <String>{};
   (bool, int)? _shownNative;
   Timer? _poll;
   int _token = 0;
-  Size? _layoutFor;
+  bool _started = false;
 
   bool get _dark => _frames[_frame].$1;
   int get _pattern => _frames[_frame].$2;
@@ -281,14 +283,13 @@ class _ParityAppState extends State<_ParityApp> {
     _epochAmount = amount;
     _nativeAmount = amount;
     _epoch++;
-    _generation++;
     _shownNative = null;
     _log({'event': 'amountChanged', 'amount': amount, 'epoch': _epoch});
     if (_settingsMode) {
       _frame = 0;
       _done = false;
     }
-    if (_layoutFor != null) unawaited(_show());
+    if (_started) unawaited(_show());
   }
 
   void _log(Map<String, Object?> entry) {
@@ -346,11 +347,11 @@ class _ParityAppState extends State<_ParityApp> {
       _imageKey = key;
     }
     var settle = const Duration(milliseconds: 500);
-    if (_native && _shownNative != (_dark, _generation)) {
-      _shownNative = (_dark, _generation);
+    if (_native && _shownNative != (_dark, _epoch)) {
+      _shownNative = (_dark, _epoch);
       await _channel.invokeMethod('show', {
         'dark': _dark,
-        'generation': _generation,
+        'generation': _epoch,
         'rects': [
           for (final s in _shapes)
             [
@@ -388,9 +389,7 @@ class _ParityAppState extends State<_ParityApp> {
     await Future<void>.delayed(const Duration(milliseconds: 250));
     if (!mounted || token != _token) return;
     final appearance = _dark ? 'dark' : 'light';
-    final amountTag = _nativeAmount == null
-        ? 'nil'
-        : _nativeAmount!.toStringAsFixed(4);
+    final amountTag = _amountTag(_nativeAmount);
     final mode = _live ? 'live' : (_settingsMode ? 'settings' : 'arg');
     final pattern = _patterns[_pattern];
     // Once per (amount, appearance, layout), and on the default layout also
@@ -409,7 +408,7 @@ class _ParityAppState extends State<_ParityApp> {
       'frame': _frame,
       'frames': _frames.length,
       'epoch': _epoch,
-      'pattern': _patterns[_pattern],
+      'pattern': pattern,
       'layout': _layoutName,
       'appearance': appearance,
       'nativeAmount': _nativeAmount,
@@ -424,15 +423,15 @@ class _ParityAppState extends State<_ParityApp> {
     _log({'event': 'ready', ...record});
     await _status(
       'ready $_seq ${_frame + 1}/${_frames.length} e$_epoch a$amountTag '
-      '$appearance ${_patterns[_pattern]}',
+      '$appearance $pattern',
     );
     _waitForAdvance(token);
   }
 
   void _waitForAdvance(int token) {
+    if (!_ack && _dwell == null) return;
     final started = DateTime.now();
     final seq = _seq;
-    if (!_ack && _dwell == null) return;
     _poll = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (token != _token) {
         timer.cancel();
@@ -452,18 +451,13 @@ class _ParityAppState extends State<_ParityApp> {
 
   void _advance() {
     if (!_ready || _done) return;
-    if (_frame + 1 < _frames.length) {
-      _frame++;
+    if (_live || _frame + 1 < _frames.length) {
+      _frame = (_frame + 1) % _frames.length;
       unawaited(_show());
       return;
     }
-    if (_live) {
-      _frame = 0;
-      unawaited(_show());
-      return;
-    }
-    final amount = _nativeAmount?.toStringAsFixed(4) ?? 'nil';
-    if (!_captured.contains(amount)) _captured.add(amount);
+    final amount = _amountTag(_nativeAmount);
+    _captured.add(amount);
     _log({'event': 'done', 'epoch': _epoch, 'amount': _nativeAmount});
     setState(() => _done = true);
     unawaited(_status('done $_seq e$_epoch a$amount'));
@@ -472,18 +466,15 @@ class _ParityAppState extends State<_ParityApp> {
   @override
   Widget build(BuildContext context) {
     final g = _geometry(context);
-    if (_layoutFor != g.size) {
-      final first = _layoutFor == null;
-      _layoutFor = g.size;
-      if (first) {
-        SchedulerBinding.instance.addPostFrameCallback((_) => _show());
-      }
+    if (!_started) {
+      _started = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) => _show());
     }
     final dark = _dark;
     final textColor = dark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final panel = dark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
-    final amount = _nativeAmount?.toStringAsFixed(4) ?? 'nil';
-    final flutter = _flutterAmount?.toStringAsFixed(4) ?? 'nil';
+    final amount = _amountTag(_nativeAmount);
+    final flutter = _amountTag(_flutterAmount);
     final lines = [
       'native $amount  flutter $flutter  ${dark ? 'dark' : 'light'}',
       '${_patterns[_pattern]}  frame ${_frame + 1}/${_frames.length}  '
@@ -511,11 +502,7 @@ class _ParityAppState extends State<_ParityApp> {
               for (final s in _shapes)
                 Positioned.fromRect(
                   rect: s.rect,
-                  child: LiquidPrism(
-                    shape: s.capsule
-                        ? GlassShape.capsule
-                        : GlassShape.rect(cornerRadius: s.radius),
-                  ),
+                  child: LiquidPrism(shape: _glassShape(s)),
                 ),
               Positioned(
                 left: _stripLeft,
@@ -554,9 +541,8 @@ class _ParityAppState extends State<_ParityApp> {
 
   /// Exact geometry of every layout for this screen, next to the shots.
   void _writeGeometry(double dpr, int colPx, int heightPx) {
-    List<double> px(Rect r) => [
-      for (final v in [r.left, r.top, r.width, r.height]) v * dpr,
-    ];
+    List<double> ltwh(Rect r) => [r.left, r.top, r.width, r.height];
+    double radius(_Shape s) => s.capsule ? s.rect.shortestSide / 2 : s.radius;
     final layouts = {
       for (final MapEntry(key: name, value: l) in _layouts.entries)
         name: {
@@ -569,17 +555,11 @@ class _ParityAppState extends State<_ParityApp> {
               {
                 'name': s.name,
                 'kind': s.capsule ? 'capsule' : 'rect',
-                'rectPt': [
-                  s.rect.left,
-                  s.rect.top,
-                  s.rect.width,
-                  s.rect.height,
-                ],
-                'rectPx': px(s.rect),
+                'rectPt': ltwh(s.rect),
+                'rectPx': [for (final v in ltwh(s.rect)) v * dpr],
                 'centerPx': [s.rect.center.dx * dpr, s.rect.center.dy * dpr],
-                'radiusPt': s.capsule ? s.rect.shortestSide / 2 : s.radius,
-                'radiusPx':
-                    (s.capsule ? s.rect.shortestSide / 2 : s.radius) * dpr,
+                'radiusPt': radius(s),
+                'radiusPx': radius(s) * dpr,
               },
           ],
         },
@@ -788,6 +768,13 @@ Uint8List _pixels(
   int h,
   double dpr,
 ) {
+  if (name == 'photo') {
+    if (_photoSize != (w, h)) {
+      _photoCache = _photo(w, h, dpr);
+      _photoSize = (w, h);
+    }
+    return _photoCache!;
+  }
   double x(int px) => (px + .5) / dpr;
   int g8(double v) => (v.clamp(0.0, 1.0) * 255).round();
   final out = Uint8List(w * h * 4);
@@ -831,7 +818,6 @@ Uint8List _pixels(
             g8(.5 + .4 * math.sin(2 * math.pi * (x(px) - _centerX) / period)),
       );
     case 'hedge':
-      // Bands whose boundaries cross each shape's centre.
       final edges = [for (final s in shapes) s.rect.center.dy];
       for (var py = 0; py < h; py++) {
         final y = (py + .5) / dpr;
@@ -898,12 +884,6 @@ Uint8List _pixels(
           out[i + 3] = 255;
         }
       }
-    case 'photo':
-      if (_photoSize != (w, h)) {
-        _photoCache = _photo(w, h, dpr);
-        _photoSize = (w, h);
-      }
-      return _photoCache!;
   }
   return out;
 }

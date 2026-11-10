@@ -65,7 +65,8 @@ def main() -> None:
         subprocess.run(launch, check=True, capture_output=True)
         seen: set[tuple] = set()
         idle = time.time()
-        first = None
+        # Without --parity-live the app stops on its last frame, so the run
+        # ends once no new frame has appeared for a while.
         while time.time() - idle < max(12.0, args.dwell * 4):
             meta = shot(args.udid, tmp)
             if not meta or not meta["ready"] or meta["native"] is None:
@@ -73,10 +74,6 @@ def main() -> None:
             if abs(meta["native"] - float(amount)) > 1e-3:
                 continue
             key = ("dark" if meta["dark"] else "light", meta["pattern"])
-            if first is None:
-                first = key
-            elif key == first and len(seen) > 1 and key in seen:
-                break  # wrapped around
             if key not in seen:
                 seen.add(key)
                 idle = time.time()
