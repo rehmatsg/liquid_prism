@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'motion.dart' show GlassSpring;
-import 'title.dart' show GlassTitleStyle;
+import 'title.dart' show GlassTitleStyle, GlassTitleSubtitle, LiquidPrismTitle;
 
 enum GlassTitleAlignment { automatic, leading, center, trailing }
 
@@ -73,6 +73,7 @@ class GlassNavigationBarStyle {
   /// Automatic centers the inline title when it fits between the controls.
   /// Otherwise it leads in the full available gap before truncating. Explicit
   /// center, leading and trailing keep their requested alignment.
+  /// Vertical-rail layouts lead ordinary automatic titles.
   /// LiquidPrismTitle capsules retain their centered automatic layout.
   final GlassTitleAlignment? titleAlignment;
 
@@ -246,6 +247,15 @@ Widget glassTitled(
   GlassTitleAlignment alignment = GlassTitleAlignment.center,
   double subtitleOffset = 0,
 }) {
+  if (!large && title is LiquidPrismTitle && subtitle != null) {
+    return _FitsRow(
+      child: GlassTitleSubtitle(
+        subtitle: subtitle,
+        style: subtitleStyle,
+        child: title,
+      ),
+    );
+  }
   if (!large) {
     return _FitsRow(child: _titled(title, subtitle, subtitleStyle, alignment));
   }

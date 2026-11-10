@@ -19,8 +19,8 @@ enum GlassTransition {
 
 /// Timing and content treatment for [LiquidPrismVisibility].
 ///
-/// Unspecified fields inherit the theme, then the fitted defaults: a 450 ms
-/// zero-bounce entry, a 300 ms exit and an 8-point content blur. These are
+/// Unspecified fields inherit the theme, then the fitted defaults: a 280 ms
+/// zero-bounce entry and exit, and a 4-point content blur. These are
 /// fitted by eye, not measured from native.
 @immutable
 class GlassTransitionStyle {
@@ -65,7 +65,7 @@ class LiquidPrismPresence extends StatefulWidget {
     super.key,
     required this.progress,
     required this.child,
-    this.contentBlur = 8,
+    this.contentBlur = 4,
     this.materialize = true,
   }) : assert(contentBlur >= 0);
 
@@ -218,11 +218,11 @@ class _LiquidPrismVisibilityState extends State<LiquidPrismVisibility>
           : widget.visible
           ? style.enterSpring?.description ??
                 SpringDescription.withDurationAndBounce(
-                  duration: const Duration(milliseconds: 450),
+                  duration: const Duration(milliseconds: 280),
                 )
           : style.exitSpring?.description ??
                 SpringDescription.withDurationAndBounce(
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 280),
                 ),
       precision: _precision(style),
     );
@@ -235,7 +235,7 @@ class _LiquidPrismVisibilityState extends State<LiquidPrismVisibility>
   double? _precision(GlassTransitionStyle style) {
     final box = context.findRenderObject();
     if (box is! RenderBox || !box.hasSize || box.size.isEmpty) return null;
-    final reach = math.max(style.contentBlur ?? 8, box.size.shortestSide * .55);
+    final reach = math.max(style.contentBlur ?? 4, box.size.shortestSide * .55);
     return GlassSettle.precision(
       alphaPerUnit: 1,
       pixelsPerUnit: reach * (MediaQuery.maybeDevicePixelRatioOf(context) ?? 1),
@@ -259,7 +259,7 @@ class _LiquidPrismVisibilityState extends State<LiquidPrismVisibility>
         excluding: !widget.visible,
         child: LiquidPrismPresence(
           progress: _presence,
-          contentBlur: _style.contentBlur ?? 8,
+          contentBlur: _style.contentBlur ?? 4,
           materialize: !_reduceMotion,
           child: widget.child,
         ),

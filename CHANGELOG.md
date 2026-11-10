@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.12.0
+
+- Compose scaffold and sliver subtitles inside glass title capsules, with inline avatar support through the existing leading slot and full text-scaled height.
+- Retain toolbar refraction on compact title pills. Keep title glass, borders, logos and text coordinated during reveals without isolating their live backdrop. Omit the top edge blur for glass titles and action-only bars; lead ordinary titles on vertical rails.
+- Materialize toolbar groups once with an unclipped contour while their layout extent changes, and use a restrained 280 ms entry/exit with a 4-point content blur.
+- Fade toolbar badges with their group and item materialization. Draw smaller activity dots with consistent corner placement across RTL and vertical toolbars. Keep long toolbar counts inside their trailing safe edge and tab/sidebar badge centers stable at larger text sizes.
+
 ## 0.11.0
 
 0.10.0 was never tagged; its changes ship in this release.

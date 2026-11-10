@@ -20,6 +20,136 @@ GlassToolbarItem item(String label, {VoidCallback? onPressed}) =>
     );
 
 void main() {
+  testWidgets(
+    'group-local materialization overrides toolbar transition defaults',
+    (tester) async {
+      for (final identity in [true, false]) {
+        Widget toolbar(bool visible) => harness(
+          LiquidPrismToolbar(
+            style: GlassToolbarStyle(
+              itemTransition: identity
+                  ? GlassTransition.materialize
+                  : GlassTransition.identity,
+            ),
+            content: [
+              GlassToolbarGroup(
+                style: GlassToolbarStyle(
+                  itemTransition: identity
+                      ? GlassTransition.identity
+                      : GlassTransition.materialize,
+                  itemTransitionStyle: const GlassTransitionStyle(
+                    enterSpring: GlassSpring(
+                      response: Duration(milliseconds: 600),
+                    ),
+                    contentBlur: 0,
+                  ),
+                ),
+                items: visible ? [item('Inbox')] : [],
+              ),
+            ],
+          ),
+        );
+        await tester.pumpWidget(toolbar(false));
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(toolbar(true));
+        await tester.pump(const Duration(milliseconds: 80));
+        final glass = find.byType(LiquidPrism);
+        final progress = LiquidPrismPresence.of(tester.element(glass));
+        expect(progress, identity ? 1 : inExclusiveRange(0, .5));
+        final contentFilters = tester.widgetList<ImageFiltered>(
+          find.descendant(of: glass, matching: find.byType(ImageFiltered)),
+        );
+        expect(
+          contentFilters.where((filter) => filter.enabled),
+          isEmpty,
+          reason: 'explicit zero blur must survive the parent-owned materialization',
+        );
+        await tester.pumpAndSettle();
+      }
+    },
+  );
+  testWidgets('a managed exiting group stops input and semantics immediately', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    var taps = 0;
+    Widget toolbar(bool visible) => harness(
+      LiquidPrismToolbar(
+        content: [
+          GlassToolbarGroup(
+            items: visible ? [item('Inbox', onPressed: () => taps++)] : [],
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(toolbar(true));
+    final point = tester.getCenter(find.bySemanticsLabel('Inbox'));
+    await tester.tapAt(point);
+    expect(taps, 1);
+    await tester.pumpWidget(toolbar(false));
+    expect(find.bySemanticsLabel('Inbox'), findsNothing);
+    await tester.tapAt(point);
+    expect(taps, 1);
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(find.byType(LiquidPrism), findsOneWidget);
+    expect(find.bySemanticsLabel('Inbox'), findsNothing);
+    await tester.pumpAndSettle();
+    expect(find.byType(LiquidPrism), findsNothing);
+    semantics.dispose();
+  });
+  testWidgets(
+    'an inserted group materializes once without clipping its housing',
+    (tester) async {
+      for (final axis in Axis.values) {
+        Widget toolbar(bool visible) => harness(
+          LiquidPrismToolbar(
+            axis: axis,
+            size: GlassToolbarSize.navigation,
+            content: [
+              GlassToolbarGroup(items: visible ? [item('Inbox')] : []),
+              GlassToolbarGroup(items: [item('Sort')]),
+            ],
+          ),
+        );
+        await tester.pumpWidget(toolbar(false));
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(toolbar(true));
+        await tester.pump(const Duration(milliseconds: 80));
+        final glass = find.byType(LiquidPrism).first;
+        final presences = find.ancestor(
+          of: glass,
+          matching: find.byType(LiquidPrismPresence),
+        );
+        expect(
+          presences,
+          findsOneWidget,
+          reason: 'the group must not multiply two independent materialization fades',
+        );
+        expect(
+          LiquidPrismPresence.of(tester.element(glass)),
+          inExclusiveRange(0, 1),
+          reason: 'a newly mounted group must materialize rather than appear opaque',
+        );
+        final rect = tester.getRect(glass).deflate(.01);
+        for (final clip
+            in find
+                .ancestor(of: glass, matching: find.byType(ClipRect))
+                .evaluate()) {
+          if ((clip.widget as ClipRect).clipBehavior == Clip.none) continue;
+          final clipRect = tester.getRect(
+            find.byElementPredicate((element) => identical(element, clip)),
+          );
+          expect(
+            clipRect.contains(rect.topLeft) &&
+                clipRect.contains(rect.bottomRight),
+            isTrue,
+            reason: 'materialization must retain the whole housing contour',
+          );
+        }
+        await tester.pumpAndSettle();
+      }
+    },
+  );
   testWidgets('an added item materializes in while the capsule widens', (
     tester,
   ) async {

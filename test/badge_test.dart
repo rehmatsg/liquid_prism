@@ -7,6 +7,186 @@ import 'package:liquid_prism/src/pressable.dart';
 import 'package:liquid_prism/src/tab_content_lens.dart';
 
 void main() {
+  testWidgets('toolbar badges materialize with their whole group', (
+    tester,
+  ) async {
+    for (final managed in [false, true]) {
+      Widget app(bool visible) {
+        final items = visible
+            ? [
+                GlassToolbarItem(
+                  label: 'Inbox',
+                  icon: const Icon(Icons.mail),
+                  badge: const GlassBadge.dot(),
+                  onPressed: () {},
+                ),
+              ]
+            : <GlassToolbarItem>[];
+        return MaterialApp(
+          home: Center(
+            child: managed
+                ? LiquidPrismToolbar(content: [GlassToolbarGroup(items: items)])
+                : LiquidPrismToolbarGroup(items: items),
+          ),
+        );
+      }
+
+      await tester.pumpWidget(app(false));
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(app(true));
+      await tester.pump(const Duration(milliseconds: 80));
+      final glass = find.byType(LiquidPrism);
+      final progress = LiquidPrismPresence.of(tester.element(glass));
+      expect(progress, inExclusiveRange(0, 1));
+      final badge = find.byType(GlassBadgeView);
+      final opacity = tester
+          .widget<Opacity>(
+            find.ancestor(of: badge, matching: find.byType(Opacity)).first,
+          )
+          .opacity;
+      expect(
+        opacity,
+        closeTo(progress, .001),
+        reason: 'a badge outside the glass child must follow the same materialization progress',
+      );
+      await tester.pumpAndSettle();
+    }
+  });
+  testWidgets('toolbar counts grow inward at the trailing safe edge', (
+    tester,
+  ) async {
+    for (final axis in Axis.values) {
+      for (final direction in TextDirection.values) {
+        double? edge;
+        for (final (count, scale) in [
+          (7, 1.0),
+          (1234567, 1.0),
+          (1234567, 2.0),
+        ]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: Directionality(
+                  textDirection: direction,
+                  child: Center(
+                    child: LiquidPrismToolbarGroup(
+                      axis: axis,
+                      items: [
+                        GlassToolbarItem(
+                          icon: const Icon(Icons.mail),
+                          label: 'Mail',
+                          badge: GlassBadge.count(count),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final badge = tester.getRect(find.byType(GlassBadgeView));
+          final trailing = direction == TextDirection.ltr
+              ? badge.right
+              : badge.left;
+          edge ??= trailing;
+          expect(
+            trailing,
+            closeTo(edge, .01),
+            reason: 'long counts must expand inward rather than beyond the rail safe edge',
+          );
+        }
+      }
+    }
+  });
+  testWidgets(
+    'tab and sidebar badge centers do not drift for dots or text scaling',
+    (tester) async {
+      for (final direction in TextDirection.values) {
+        Offset? anchor;
+        for (final (badge, scale) in [
+          (const GlassBadge.count(7), 1.0),
+          (const GlassBadge.dot(), 1.0),
+          (const GlassBadge.count(7), 2.0),
+        ]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: Directionality(
+                  textDirection: direction,
+                  child: Center(
+                    child: GlassBadgedIcon(
+                      badge: badge,
+                      child: const Icon(Icons.mail),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final center = tester.getCenter(find.byType(GlassBadgeView));
+          anchor ??= center;
+          expect((center - anchor).distance, lessThan(.01));
+        }
+      }
+    },
+  );
+  testWidgets('activity dots retain their corner across toolbar axes', (
+    tester,
+  ) async {
+    for (final direction in TextDirection.values) {
+      Offset? horizontalAnchor;
+      for (final axis in Axis.values) {
+        double? countWidth;
+        for (final badge in [
+          const GlassBadge.count(7),
+          const GlassBadge.dot(),
+        ]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Directionality(
+                textDirection: direction,
+                child: Center(
+                  child: LiquidPrismToolbarGroup(
+                    axis: axis,
+                    items: [
+                      GlassToolbarItem(
+                        icon: const Icon(Icons.mail),
+                        label: 'Mail',
+                        badge: badge,
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final rect = tester.getRect(find.byType(GlassBadgeView));
+          final group = tester.getRect(find.byType(LiquidPrismToolbarGroup));
+          if (badge.count != null) {
+            countWidth = rect.width;
+          } else {
+            expect(rect.width, lessThan(countWidth!));
+            final anchor = Offset(
+              direction == TextDirection.ltr
+                  ? group.right - rect.center.dx
+                  : rect.center.dx - group.left,
+              rect.center.dy - group.top,
+            );
+            horizontalAnchor ??= anchor;
+            expect((anchor - horizontalAnchor).distance, lessThan(.01));
+          }
+        }
+      }
+    }
+  });
+
   testWidgets(
     'badges show overflow but announce full count, dots announce activity',
     (tester) async {

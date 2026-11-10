@@ -3,6 +3,52 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
 void main() {
+  testWidgets(
+    'rail text titles lead by default and respect explicit centering',
+    (tester) async {
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = const Size(800, 600);
+      addTearDown(tester.view.reset);
+      for (final placement in [
+        GlassChromePlacement.leftRail,
+        GlassChromePlacement.rightRail,
+      ]) {
+        for (final centered in [false, true]) {
+          await tester.pumpWidget(
+            CupertinoApp(
+              home: LiquidPrismScaffold(
+                placement: placement,
+                title: const Text('Inbox'),
+                navigationBarStyle: centered
+                    ? const GlassNavigationBarStyle(
+                        titleAlignment: GlassTitleAlignment.center,
+                      )
+                    : null,
+                body: const SizedBox.expand(key: Key('rail body')),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final title = tester.getRect(find.text('Inbox'));
+          if (centered) {
+            expect(title.left, greaterThan(150));
+          } else {
+            expect(
+              title.left,
+              closeTo(
+                MediaQuery.paddingOf(
+                      tester.element(find.byKey(const Key('rail body'))),
+                    ).left +
+                    16,
+                .01,
+              ),
+            );
+          }
+        }
+      }
+    },
+  );
   for (final sliver in [false, true]) {
     for (final rtl in [false, true]) {
       testWidgets('automatic title uses remaining room before truncating '

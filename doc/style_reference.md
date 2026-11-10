@@ -157,8 +157,8 @@ Autocomplete hooks (`fieldBuilder`, `suffixBuilder`, `groupId`, `onTapOutside`,
 
 | Fields | Default / meaning |
 | --- | --- |
-| `enterSpring` / `exitSpring` | 450 ms / 300 ms, zero bounce |
-| `contentBlur` | 8; content blur at zero presence, 0 fades only |
+| `enterSpring` / `exitSpring` | 280 ms / 280 ms, zero bounce |
+| `contentBlur` | 4; content blur at zero presence, 0 fades only |
 
 Defaults are fitted by eye; native materialize timing has not been captured.
 Apply through `LiquidPrismVisibility.style` or theme `transition`.

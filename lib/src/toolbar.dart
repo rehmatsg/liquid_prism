@@ -146,6 +146,14 @@ class LiquidPrismToolbar extends StatefulWidget {
   State<LiquidPrismToolbar> createState() => _LiquidPrismToolbarState();
 }
 
+class _ToolbarGroupPresenceOwner extends InheritedWidget {
+  const _ToolbarGroupPresenceOwner({required this.group, required super.child});
+  final Widget group;
+  @override
+  bool updateShouldNotify(_ToolbarGroupPresenceOwner oldWidget) =>
+      group != oldWidget.group;
+}
+
 class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
     with TickerProviderStateMixin {
   final _presence = <RetargetableGlassSpring>[];
@@ -155,10 +163,6 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
       (LiquidPrismTheme.of(context).toolbar ?? const GlassToolbarStyle()).merge(
         widget.style,
       );
-
-  GlassTransitionStyle get _transition =>
-      (LiquidPrismTheme.of(context).transition ?? const GlassTransitionStyle())
-          .merge(_appearance.itemTransitionStyle);
 
   @override
   void didChangeDependencies() {
@@ -218,12 +222,19 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
     while (_presence.length > content.length) {
       _presence.removeLast().dispose();
     }
-    final immediate =
-        !animated ||
-        _appearance.itemTransition == GlassTransition.identity ||
-        MediaQuery.disableAnimationsOf(context);
-    final transition = _transition;
     for (var i = 0; i < content.length; i++) {
+      final entry = content[i];
+      final appearance = _appearance.merge(
+        entry is GlassToolbarGroup ? entry.style : null,
+      );
+      final immediate =
+          !animated ||
+          appearance.itemTransition == GlassTransition.identity ||
+          MediaQuery.disableAnimationsOf(context);
+      final transition =
+          (LiquidPrismTheme.of(context).transition ??
+                  const GlassTransitionStyle())
+              .merge(appearance.itemTransitionStyle);
       final target =
           (content[i] is GlassToolbarGroup &&
               (content[i] as GlassToolbarGroup).items.isEmpty)
@@ -237,11 +248,11 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
         target > 0
             ? transition.enterSpring?.description ??
                   SpringDescription.withDurationAndBounce(
-                    duration: const Duration(milliseconds: 450),
+                    duration: const Duration(milliseconds: 280),
                   )
             : transition.exitSpring?.description ??
                   SpringDescription.withDurationAndBounce(
-                    duration: const Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 280),
                   ),
         immediate: immediate,
       );
@@ -287,36 +298,46 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
             before = 0;
             continue;
           }
-          Widget group = LiquidPrismPresence(
-            progress: spring,
-            child: switch (entry) {
-              GlassToolbarGroup(:final items, :final style) =>
-                LiquidPrismToolbarGroup(
-                  key: entry.key,
-                  items: items,
-                  size: widget.size,
-                  style: (widget.style ?? const GlassToolbarStyle())
-                      .merge(style)
-                      .copyWith(
-                        itemTransition: _regrouping
-                            ? GlassTransition.identity
-                            : null,
-                      ),
-                  glass: widget.glass,
-                  optics: widget.optics,
-                  blur: widget.blur,
-                  motion: widget.motion,
-                  foregroundColor: widget.foregroundColor,
-                  axis: widget.axis,
-                ),
-              GlassToolbarItem(:final child, :final width) => SizedBox(
+          Widget group = switch (entry) {
+            GlassToolbarGroup(:final items, :final style) =>
+              LiquidPrismToolbarGroup(
                 key: entry.key,
-                width: vertical ? null : width,
-                height: vertical ? width : null,
-                child: child,
+                items: items,
+                size: widget.size,
+                style: (widget.style ?? const GlassToolbarStyle())
+                    .merge(style)
+                    .copyWith(
+                      itemTransition: _regrouping
+                          ? GlassTransition.identity
+                          : null,
+                    ),
+                glass: widget.glass,
+                optics: widget.optics,
+                blur: widget.blur,
+                motion: widget.motion,
+                foregroundColor: widget.foregroundColor,
+                axis: widget.axis,
               ),
-              GlassToolbarSpacer() => const SizedBox.shrink(),
-            },
+            GlassToolbarItem(:final child, :final width) => SizedBox(
+              key: entry.key,
+              width: vertical ? null : width,
+              height: vertical ? width : null,
+              child: child,
+            ),
+            GlassToolbarSpacer() => const SizedBox.shrink(),
+          };
+          final appearance = _appearance.merge(
+            entry is GlassToolbarGroup ? entry.style : null,
+          );
+          final transition =
+              (LiquidPrismTheme.of(context).transition ??
+                      const GlassTransitionStyle())
+                  .merge(appearance.itemTransitionStyle);
+          group = LiquidPrismPresence(
+            progress: spring,
+            contentBlur: transition.contentBlur ?? 4,
+            materialize: !MediaQuery.disableAnimationsOf(context),
+            child: _ToolbarGroupPresenceOwner(group: group, child: group),
           );
           group = Padding(
             padding: vertical
@@ -326,13 +347,11 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
           );
           if (presence < 1) {
             group = IgnorePointer(
-              child: ClipRect(
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  widthFactor: vertical ? 1 : presence,
-                  heightFactor: vertical ? presence : 1,
-                  child: group,
-                ),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                widthFactor: vertical ? 1 : presence,
+                heightFactor: vertical ? presence : 1,
+                child: group,
               ),
             );
           }
@@ -368,6 +387,7 @@ class _LiquidPrismToolbarState extends State<LiquidPrismToolbar>
             return flexible
                 ? layout
                 : SingleChildScrollView(
+                    clipBehavior: Clip.none,
                     scrollDirection: vertical ? Axis.vertical : Axis.horizontal,
                     child: layout,
                   );
@@ -559,12 +579,12 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     final enter =
         transition.enterSpring?.description ??
         SpringDescription.withDurationAndBounce(
-          duration: const Duration(milliseconds: 450),
+          duration: const Duration(milliseconds: 280),
         );
     final exit =
         transition.exitSpring?.description ??
         SpringDescription.withDurationAndBounce(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 280),
         );
     final used = <Key>{};
     final keys = [for (final item in items) _keyFor(item, used)];
@@ -660,7 +680,7 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
             (theme.transition ?? const GlassTransitionStyle())
                 .merge(appearance.itemTransitionStyle)
                 .contentBlur ??
-            8;
+            4;
         var width = 0.0;
         final cells = <Widget>[];
         final badges = <Widget>[];
@@ -691,6 +711,7 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                 vertical,
                 contentBlur,
                 anchor,
+                inset,
               ),
             );
           }
@@ -773,6 +794,18 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
         final body = widget.items.every((item) => !item._isEnabled)
             ? capsule
             : _withFeedback(capsule, width, appearance, theme);
+        final owner = context
+            .dependOnInheritedWidgetOfExactType<_ToolbarGroupPresenceOwner>();
+        if (identical(owner?.group, widget)) {
+          final hidden = widget.items.isEmpty;
+          return IgnorePointer(
+            ignoring: hidden,
+            child: ExcludeSemantics(
+              excluding: hidden,
+              child: ExcludeFocus(excluding: hidden, child: body),
+            ),
+          );
+        }
         return LiquidPrismVisibility(
           visible: widget.items.isNotEmpty,
           transition: appearance.itemTransition ?? GlassTransition.materialize,
@@ -821,6 +854,7 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
     bool vertical,
     double contentBlur,
     Alignment anchor,
+    double inset,
   ) {
     final badge = entry.item.badge;
     return SizedBox(
@@ -842,16 +876,26 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                   clipBehavior: Clip.none,
                   children: [
                     PositionedDirectional(
-                      top: -2.8,
-                      end: -3,
-                      child: GlassContentPresence(
-                        presence: progress,
-                        blur: contentBlur,
-                        child: GlassBadgeView(
-                          badge: badge,
-                          height: 18,
-                          color: appearance.badgeColor,
-                          textStyle: appearance.badgeTextStyle,
+                      top:
+                          -2.8 -
+                          (vertical ? left : 0) +
+                          (badge.text == null ? 4 : 0),
+                      end:
+                          (vertical ? inset - 3 : -3) +
+                          (badge.text == null ? 4 : 0),
+                      child: Builder(
+                        builder: (context) => GlassContentPresence(
+                          presence: progress * LiquidPrismPresence.of(context),
+                          blur:
+                              LiquidPrismPresence.maybeData(context)
+                                  ?.contentBlur ??
+                              contentBlur,
+                          child: GlassBadgeView(
+                            badge: badge,
+                            height: 18,
+                            color: appearance.badgeColor,
+                            textStyle: appearance.badgeTextStyle,
+                          ),
                         ),
                       ),
                     ),

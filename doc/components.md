@@ -393,7 +393,7 @@ On initial downward departure, the outgoing header does not introduce an edge
 blur/fade band. Reveal-on-scroll-up makes the compact title and its edge eligible
 when scrolling actually restores the bar. With at-scroll-edge restoration, an
 expanded title or `header` has no compact-title subtree. A sole inline title still
-appears at the top. Accessories retain their edge protection in all modes.
+appears at the top. Accessories beneath ordinary text titles retain their edge protection in all minimization modes.
 These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
 
 Use `largeTitle` plus `title` for large-to-inline collapse under pinned controls.
@@ -458,8 +458,26 @@ LiquidPrismScaffold(
 The avatar and leading are laid out in squares (64 and 22 points by default)
 so the bar knows its height: with an avatar it grows below the control row,
 which the leading control, actions and `trailing` keep, and the content starts
-below the capsule. Sizes, padding and glass come from `GlassTitleStyle`, on the
-title or app-wide in `GlassNavigationBarStyle.titleCapsule`.
+below the capsule. For an inline company avatar, use `leading` with
+`GlassTitleStyle(leadingSize: 32)`. A scaffold or sliver bar's `subtitle` belongs
+inside the glass capsule beneath the title text; its line participates in the
+bar's height, including at larger accessibility text sizes. Sizes, padding and
+glass come from `GlassTitleStyle`, on the title or app-wide in
+`GlassNavigationBarStyle.titleCapsule`.
+
+A static glass title uses toolbar optics, retaining refraction at compact heights.
+A glass title reveals through its optical material presence, with its logo and
+text following the same progress. It never passes through a whole-title opacity
+or image-filter layer, so the backdrop stays live throughout the reveal.
+Actions-only bars and glass-title bars omit the top scroll-edge blur/fade; plain
+text titles retain it. The bottom scroll edge is independent. On vertical-rail
+layouts, ordinary automatic titles lead; glass titles remain centered and
+explicit alignment wins.
+
+Toolbar groups materialize as complete, unclipped capsules while their reserved
+layout extent changes. The parent toolbar owns this transition for its groups;
+standalone groups own their own. Activity badges without a count are smaller dots,
+placed consistently in horizontal and vertical bars. Counted toolbar badges grow inward from their trailing edge; tab/sidebar badge centers stay fixed as text grows.
 
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
 iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`
