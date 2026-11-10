@@ -286,7 +286,14 @@ LiquidPrismScaffold(
 )
 ```
 
-Pulling the content down draws a black drop out of the Dynamic Island, or out
+With a compact title or accessory-only header, pulling scales and fades a circle
+into the gap below the entire header (including search, filters and tabs). The
+body holds that gap while refreshing and returns when the indicator disappears.
+The presentation is selected at the start of the pull; a collapsed large title
+does not change the page's presentation.
+
+With a large title, scrolling custom header, or no top chrome, pulling the content
+down draws a black drop out of the Dynamic Island, or out
 of the notch on iPhones that have one. Where the window has neither (iPhone
 Duo, a sheet, landscape, other platforms) it comes out of the top edge.
 In dark appearance, a thin translucent white outline separates the emerging

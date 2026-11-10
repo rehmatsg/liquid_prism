@@ -208,13 +208,6 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     label: 'Select surface $i',
                     selected: selectedSurface == i,
                     onPressed: () => setState(() => selectedSurface = i),
-                    glass: i == 0
-                        ? Glass.regular
-                        : i == 1
-                        ? Glass.clear
-                        : i == 2
-                        ? Glass.regular.tint(m.tint.withValues(alpha: .3))
-                        : Glass.identity,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(

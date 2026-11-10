@@ -105,7 +105,10 @@ Future<void> main() async {
         }
         if (screen == 'refresh') {
           navigator.push<void>(
-            CupertinoPageRoute(builder: (_) => const RefreshFeedPage()),
+            CupertinoPageRoute(
+              builder: (_) =>
+                  RefreshFeedPage(compact: request['compact'] != false),
+            ),
           );
         } else if (root < 0) {
           final info = state.components.firstWhere((c) => c.id == screen);

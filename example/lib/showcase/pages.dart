@@ -195,7 +195,10 @@ class StudioPage extends StatelessWidget {
       subtitle: 'Shape the glass. Every screen follows.',
       controller: controller,
       children: [
-        LensPlayground(model: model, expert: true),
+        LensPlayground(
+          model: model,
+          expert: model.previewOptics || model.globalOptics,
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
           child: Text(
@@ -302,8 +305,8 @@ class StudioPage extends StatelessWidget {
         InsetSection(
           header: 'Optics',
           footer:
-              'Frost and refraction apply to the canvas above, and to every '
-              'glass surface when Whole app is on.',
+              'Device settings apply by default. Adjusting these sliders customizes '
+              'the preview; Whole app applies those values throughout.',
           children: [
             SliderRow(
               title: 'Frost',
@@ -311,7 +314,10 @@ class StudioPage extends StatelessWidget {
               min: 0,
               max: 12,
               display: model.frost.toStringAsFixed(1),
-              onChanged: (v) => model.change(() => model.frost = v),
+              onChanged: (v) => model.change(() {
+                model.previewOptics = true;
+                model.frost = v;
+              }),
             ),
             SliderRow(
               title: 'Refraction',
@@ -319,7 +325,10 @@ class StudioPage extends StatelessWidget {
               min: 0,
               max: 64,
               display: '${model.refraction.round()}',
-              onChanged: (v) => model.change(() => model.refraction = v),
+              onChanged: (v) => model.change(() {
+                model.previewOptics = true;
+                model.refraction = v;
+              }),
             ),
             // The device's own Liquid Glass setting, as the package reads it.
             ListenableBuilder(

@@ -251,6 +251,14 @@ rebuild on unchanged values).
 
 ## Refresh contour
 
+Compact and accessory-only scaffold headers use an independent circle below
+chrome instead of the attached-drop shader. Layout publishes the full header
+boundary, including accessories and docks, for the painter. The presentation is
+latched when a pull starts (also for controller refreshes). Only the extra gap
+not already supplied by scroll overscroll is translated into the body; this
+holds space during refreshing and supports clamping physics without double
+movement. Large/custom scrolling headings and headerless pages keep the drop.
+
 The refresh shader handles the attached drop's smooth unions. Its 14-float
 packet ends with the inward outline width and alpha; the outline fades away at
 the original sensor-housing contour. Dark appearance uses a one-point white

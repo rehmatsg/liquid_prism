@@ -34,7 +34,8 @@ String _anchorLabel(Rect? island) => island == null
 /// Pull to refresh on [LiquidPrismScaffold.slivers]: one callback. Each
 /// refresh delivers new messages to the top of the inbox.
 class RefreshFeedPage extends StatefulWidget {
-  const RefreshFeedPage({super.key});
+  const RefreshFeedPage({super.key, this.compact = true});
+  final bool compact;
 
   @override
   State<RefreshFeedPage> createState() => _RefreshFeedPageState();
@@ -45,6 +46,7 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
   final _messages = [for (var i = 11; i >= 0; i--) i];
   var _unread = 0;
   var _slow = false;
+  late var _compact = widget.compact;
   var _fail = false;
   final _controller = LiquidPrismRefreshController();
 
@@ -72,9 +74,14 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
     return LiquidPrismScaffold(
       backgroundColor: colors.groupedBackground,
       title: const Text('Inbox'),
-      largeTitle: const Text('Inbox'),
+      largeTitle: _compact ? null : const Text('Inbox'),
       refreshController: _controller,
       toolbar: [
+        GlassToolbarItem(
+          icon: const Icon(CupertinoIcons.textformat_size),
+          label: _compact ? 'Use a large title' : 'Use a compact title',
+          onPressed: () => setState(() => _compact = !_compact),
+        ),
         GlassToolbarItem(
           key: const ValueKey('refresh-now'),
           icon: const Icon(CupertinoIcons.arrow_clockwise),
@@ -104,7 +111,7 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
             child: ValueListenableBuilder<Rect?>(
               valueListenable: LiquidPrismSystemChrome.dynamicIsland,
               builder: (context, island, _) => Text(
-                'Pull down to check for mail. ${_anchorLabel(island)} '
+                'Pull down to check for mail. ${_compact ? 'The indicator appears below this compact header.' : _anchorLabel(island)} '
                 '${_unread == 0 ? '' : '$_unread new since you arrived.'}',
                 key: const ValueKey('refresh-caption'),
                 style: TextStyle(
