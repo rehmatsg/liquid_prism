@@ -91,6 +91,7 @@ class GlassRefreshLayer extends StatefulWidget {
 
   /// Compact chrome uses a separate circle in the gap below the whole header.
   final bool belowHeader;
+
   /// Horizontal content bounds; top is the occupied header bottom and bottom
   /// is the unshifted body start, including its normal chrome clearance.
   final ValueListenable<Rect>? headerBoundary;
