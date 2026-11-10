@@ -420,9 +420,10 @@ Changing `avatar` or `leading` animates between the above-avatar, inline-avatar,
 and title-only layouts with the shared spring. When moving between the above
 and inline positions, one avatar stays mounted and animates its position and
 size with one visible overshoot (300 ms spring response, 0.22 bounce).
-The capsule and scaffold use the same timing, and the avatar scales from a
-fixed layout to keep its contents stable throughout the transition. It
-fades only when entering or leaving the title-only layout. The scaffold animates its title
+The capsule and scaffold use the same timing. The avatar child is laid out
+at its declared destination slot size, so its own corner geometry remains
+proportional; its painted size follows the transition while its state stays
+mounted. It fades only when entering or leaving the title-only layout. The scaffold animates its title
 height with the composition, including accessory and body placement. Keep the
 same title widget identity to preserve the transition; rapid changes retarget the
 spring, and Reduce Motion snaps to the new layout. The Conversation showcase
@@ -460,8 +461,11 @@ so the bar knows its height: with an avatar it grows below the control row,
 which the leading control, actions and `trailing` keep, and the content starts
 below the capsule. For an inline company avatar, use `leading` with
 `GlassTitleStyle(leadingSize: 32)`. A scaffold or sliver bar's `subtitle` belongs
-inside the glass capsule beneath the title text; its line participates in the
-bar's height, including at larger accessibility text sizes. Sizes, padding and
+inside the glass capsule beneath the title text. Inline capsules match the
+bar's icon-button height by default (44 points on top bars, 48 on rails), using
+adaptive vertical insets around logos and subtitle lines. Custom toolbar heights
+are respected. Explicit title padding/minimum heights and larger accessibility
+text can require a taller capsule. Sizes, padding and
 glass come from `GlassTitleStyle`, on the title or app-wide in
 `GlassNavigationBarStyle.titleCapsule`.
 

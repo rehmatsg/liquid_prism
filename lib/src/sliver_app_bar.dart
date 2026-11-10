@@ -175,6 +175,12 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
               inlineTitle.style,
             ),
             titleLine,
+            controlHeight:
+                glassToolbarStyleFor(
+                  context,
+                  GlassToolbarSize.navigation,
+                ).height ??
+                44,
             subtitleHeight: subtitle == null
                 ? 0
                 : scaler.scale(subtitleStyle.fontSize ?? 12) *
@@ -727,6 +733,12 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                       bar.subtitle,
                       _d.subtitleStyle,
                       large: false,
+                      controlHeight:
+                          glassToolbarStyleFor(
+                            context,
+                            GlassToolbarSize.navigation,
+                          ).height ??
+                          44,
                       alignment:
                           _d.navigation.titleAlignment == null ||
                               _d.navigation.titleAlignment ==

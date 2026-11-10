@@ -756,6 +756,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final controlRowHeight = inlineTitle == null
         ? barHeight
         : math.max(barHeight, titleLine + 8);
+    final titleControlHeight =
+        glassToolbarStyleFor(
+          context,
+          rail || corner != null
+              ? GlassToolbarSize.bottom
+              : GlassToolbarSize.navigation,
+        ).height ??
+        (rail || corner != null ? 48.0 : 44.0);
     final targetTitleRowHeight = switch (inlineTitle) {
       final LiquidPrismTitle title => math.max(
         controlRowHeight,
@@ -765,6 +773,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             title.style,
           ),
           titleLine,
+          controlHeight: titleControlHeight,
           subtitleHeight: widget.subtitle == null
               ? 0
               : scaler.scale(subtitleStyle.fontSize ?? 12) *
@@ -1074,6 +1083,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     widget.subtitle,
                     subtitleStyle,
                     large: false,
+                    controlHeight: titleControlHeight,
                     alignment:
                         navigation.titleAlignment == null ||
                             navigation.titleAlignment ==
