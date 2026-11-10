@@ -40,16 +40,22 @@ struct NavigationFixture: View {
       }
       .accessibilityIdentifier("navigation-scroll")
       .background(NavigationSampler())
-      .navigationTitle("Library")
+      .navigationTitle(value("--navigation-title", "Library"))
       .toolbarTitleDisplayMode(mode)
       .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Button("Back", systemImage: "chevron.left") { taps += 1 }
-            .accessibilityIdentifier("navigation-back")
+        if !flag("--no-leading") {
+          ToolbarItem(placement: .topBarLeading) {
+            Button("Back", systemImage: "chevron.left") { taps += 1 }
+              .accessibilityIdentifier("navigation-back")
+          }
         }
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("More", systemImage: "ellipsis") { taps += 1 }
-            .accessibilityIdentifier("navigation-more")
+        if !flag("--no-trailing") {
+          ToolbarItemGroup(placement: .topBarTrailing) {
+            ForEach(0..<(Int(value("--trailing-count", "1")) ?? 1), id: \.self) { index in
+              Button("More", systemImage: "ellipsis") { taps += 1 }
+                .accessibilityIdentifier(index == 0 ? "navigation-more" : "navigation-more-\(index)")
+            }
+          }
         }
       }
       .toolbarMinimizationBehavior(minimization, for: .navigationBar)

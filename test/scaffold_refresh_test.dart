@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/src/system_chrome.dart';
+import 'package:liquid_prism/src/refresh.dart';
 
 void phone(WidgetTester tester) {
   tester.view
@@ -30,6 +31,86 @@ Future<void> finish(WidgetTester tester) async {
 }
 
 void main() {
+  for (final mode in ['compact', 'accessory', 'large', 'custom', 'none']) {
+    testWidgets('refresh presentation for $mode header', (tester) async {
+      phone(tester);
+      final pending = Completer<void>();
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: mode == 'accessory' || mode == 'none'
+                ? null
+                : const Text('Feed'),
+            largeTitle: mode == 'large' ? const Text('Feed') : null,
+            header: mode == 'custom' ? const SizedBox(height: 100) : null,
+            accessory: mode == 'accessory'
+                ? const PreferredSize(
+                    preferredSize: Size.fromHeight(80),
+                    child: SizedBox(
+                      height: 80,
+                      child: Text('Search and filters'),
+                    ),
+                  )
+                : null,
+            onRefresh: () => pending.future,
+            slivers: rows(),
+          ),
+        ),
+      );
+      final rowStart = tester.getTopLeft(find.text('Row 0')).dy;
+      final gesture = await tester.startGesture(const Offset(200, 350));
+      await gesture.moveBy(const Offset(0, 20));
+      await tester.pump();
+      await gesture.moveBy(const Offset(0, 40));
+      await tester.pump();
+      final paintFinder = find.descendant(
+        of: find.byType(GlassRefreshLayer),
+        matching: find.byType(CustomPaint),
+      );
+      List<Invocation> record() {
+        final canvas = TestRecordingCanvas();
+        tester
+            .widget<CustomPaint>(paintFinder)
+            .painter!
+            .paint(canvas, tester.getSize(paintFinder));
+        return canvas.invocations.map((v) => v.invocation).toList();
+      }
+
+      final calls = record();
+      final compact = mode == 'compact' || mode == 'accessory';
+      expect(calls.any((c) => c.memberName == #scale), compact);
+      if (compact) {
+        final layer = calls.firstWhere((c) => c.memberName == #saveLayer);
+        final bounds = layer.positionalArguments[0] as Rect;
+        final opacity = (layer.positionalArguments[1] as Paint).color.a;
+        expect(opacity, inExclusiveRange(0, 1));
+        expect(bounds.center.dy, greaterThan(rowStart));
+        expect(
+          bounds.center.dy,
+          lessThan(tester.getTopLeft(find.text('Row 0')).dy),
+        );
+      }
+      await gesture.moveBy(const Offset(0, 200));
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+      for (var frame = 0; frame < 40; frame++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      if (compact) {
+        // Keep room below the pinned header after the scroll bounce finishes.
+        expect(
+          tester.getTopLeft(find.text('Row 0')).dy - rowStart,
+          closeTo(GlassRefreshLayerState.trigger, 1),
+        );
+      }
+      pending.complete();
+      await finish(tester);
+      expect(tester.getTopLeft(find.text('Row 0')).dy, closeTo(rowStart, 1));
+      expect(tester.takeException(), isNull);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+  }
+
   testWidgets('only a pull past the trigger refreshes', (tester) async {
     phone(tester);
     var refreshed = 0;
@@ -106,7 +187,7 @@ void main() {
     expect(refreshed, 2);
   });
 
-  testWidgets('haptics mark the drop leaving, the trigger and the completion', (
+  testWidgets('haptics mark emergence, arming, release and completion', (
     tester,
   ) async {
     phone(tester);
@@ -142,10 +223,65 @@ void main() {
       const Duration(milliseconds: 600),
     );
     await finish(tester);
-    expect(haptics, hasLength(3));
+    expect(haptics, hasLength(4));
     expect(haptics[0], contains('lightImpact'));
     expect(haptics[1], contains('mediumImpact'));
-    expect(haptics[2], contains('success'));
+    expect(haptics[2], contains('lightImpact'));
+    expect(haptics[3], contains('success'));
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  testWidgets('release feedback waits for an armed release and fires once', (
+    tester,
+  ) async {
+    phone(tester);
+    final events = <GlassHapticKind>[];
+    final pending = Completer<void>();
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismTheme(
+          data: LiquidPrismThemeData(
+            haptics: GlassHaptics((_, event) => events.add(event.kind)),
+          ),
+          child: LiquidPrismScaffold(
+            onRefresh: () => pending.future,
+            slivers: rows(),
+          ),
+        ),
+      ),
+    );
+    var gesture = await tester.startGesture(const Offset(200, 300));
+    await gesture.moveBy(const Offset(0, 40));
+    await tester.pump();
+    expect(events, isNot(contains(GlassHapticKind.refreshArmed)));
+    expect(events, isNot(contains(GlassHapticKind.refreshReleased)));
+    // Releasing below the threshold must stay silent.
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(events, isNot(contains(GlassHapticKind.refreshReleased)));
+
+    gesture = await tester.startGesture(const Offset(200, 300));
+    await gesture.moveBy(const Offset(0, 20));
+    await tester.pump(const Duration(milliseconds: 16));
+    await gesture.moveBy(const Offset(0, 300));
+    await tester.pump();
+    expect(events, contains(GlassHapticKind.refreshArmed));
+    expect(events, isNot(contains(GlassHapticKind.refreshReleased)));
+    await gesture.up();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      events.where((e) => e == GlassHapticKind.refreshReleased),
+      hasLength(1),
+    );
+    // A pull during the in-flight refresh cannot commit it a second time.
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(
+      events.where((e) => e == GlassHapticKind.refreshReleased),
+      hasLength(1),
+    );
+    pending.complete();
+    await finish(tester);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('a pull over the completed mark refreshes again', (tester) async {
@@ -284,6 +420,7 @@ void main() {
       expect(events.map((e) => e.kind), [
         GlassHapticKind.refreshPulled,
         GlassHapticKind.refreshArmed,
+        GlassHapticKind.refreshReleased,
         GlassHapticKind.refreshSucceeded,
       ]);
 
@@ -336,8 +473,9 @@ void main() {
       const Duration(milliseconds: 600),
     );
     await finish(tester);
-    expect(native, hasLength(2));
-    expect(native.last, contains('mediumImpact'));
+    expect(native, hasLength(3));
+    expect(native.last, contains('lightImpact'));
+    expect(native.any((event) => event.contains('success')), isFalse);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('switching onRefresh keeps the page state', (tester) async {

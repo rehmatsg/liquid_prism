@@ -174,14 +174,14 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// tab bar's reselection or a status bar tap scrolls to the top.
   final ScrollController? scrollController;
 
-  /// Pull to refresh. Pulling the content down draws a black drop out of the
-  /// Dynamic Island or a notch, or out of the top edge where the window has
-  /// neither (iPhone Duo, a sheet, other platforms). Its ring fills as the
-  /// pull grows; once whole, the drop pinches off into a circle, and a
-  /// release then spins it until the returned future completes.
+  /// Pull to refresh. Compact title and accessory-only headers show a circle
+  /// that scales and fades into the gap below the whole header. The gap stays
+  /// open while refreshing. Pages with [largeTitle], [header], or no top chrome
+  /// keep the drop emerging from the island, notch or window's top edge.
+  /// Its ring fills with the pull; releasing past the threshold starts refresh.
   ///
-  /// It follows the scroll view that drives the bar (see [scrollDepth]) and
-  /// floats over the content without moving it. [slivers] can always be
+  /// It follows the scroll view that drives the bar (see [scrollDepth]).
+  /// [slivers] can always be
   /// pulled; a [body] scroll view shorter than the window needs
   /// [AlwaysScrollableScrollPhysics].
   ///
@@ -400,6 +400,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   final _statusBarKey = GlobalKey();
   final _refreshKey = GlobalKey<GlassRefreshLayerState>();
+  final _refreshBoundary = ValueNotifier<Rect>(Rect.zero);
+  final _refreshDisplacement = ValueNotifier<double>(0);
   final _appPointers = <int>{};
   bool _pointerEndedThisFrame = false;
 
@@ -548,6 +550,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   @override
   void dispose() {
+    _refreshDisplacement.dispose();
+    _refreshBoundary.dispose();
     _titleHeight.dispose();
     _edgeStrength.dispose();
     _edgePresence.dispose();
@@ -881,6 +885,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     );
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
+        refreshBoundary: _refreshBoundary,
         placement: resolved,
         minimization: _minimization.progress,
         onMinimizationExtent: _minimization.setExtent,
@@ -903,7 +908,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ? 16
                 : LiquidPrismScaffold.topBarClearance),
         titleAlignment:
-            navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+            (navigation.titleAlignment == null ||
+                    navigation.titleAlignment ==
+                        GlassTitleAlignment.automatic) &&
+                inlineTitle is LiquidPrismTitle
+            ? GlassTitleAlignment.center
+            : navigation.titleAlignment ?? GlassTitleAlignment.automatic,
         contentPadding: (navigation.contentPadding ?? EdgeInsets.zero).resolve(
           Directionality.of(context),
         ),
@@ -959,7 +969,15 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                         _refreshKey.currentState?.handleScroll(n);
                         return _onScroll(n.metrics);
                       },
-                      child: _content(),
+                      child: ValueListenableBuilder<double>(
+                        valueListenable: _refreshDisplacement,
+                        builder: (context, displacement, child) =>
+                            Transform.translate(
+                              offset: Offset(0, displacement),
+                              child: child,
+                            ),
+                        child: _content(),
+                      ),
                     ),
                   ),
                 ),
@@ -1213,15 +1231,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     hosted = Stack(
       children: [
         Positioned.fill(child: hosted),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: GlassRefreshLayer.extent,
+        Positioned.fill(
           child: GlassRefreshLayer(
             key: _refreshKey,
             onRefresh: widget.onRefresh,
             controller: widget.refreshController,
+            belowHeader: !swaps && (topBar || widget.accessory != null),
+            headerBoundary: _refreshBoundary,
+            contentDisplacement: _refreshDisplacement,
             sideInsets: EdgeInsets.only(
               left: padding.left,
               right: padding.right,
@@ -1445,6 +1462,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.placement,
     required this.minimization,
     required this.onMinimizationExtent,
+    required this.refreshBoundary,
     required this.adjustsMinimizationInsets,
     required this.tabDock,
     required this.style,
@@ -1479,6 +1497,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final GlassTabBarPlacement? tabDock;
   final Animation<double> minimization;
   final ValueChanged<double> onMinimizationExtent;
+  final ValueNotifier<Rect> refreshBoundary;
   final bool adjustsMinimizationInsets;
   final GlassScaffoldStyle style;
   final double keyboard, actionsTop, railBottom;
@@ -1919,39 +1938,38 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      final alignment = titleAlignment == GlassTitleAlignment.automatic
-          ? GlassTitleAlignment.center
-          : titleAlignment;
-      if (alignment != GlassTitleAlignment.center) {
-        final title = layoutChild(
-          _Slot.title,
-          BoxConstraints.loose(Size(math.max(0, right - left), barRow)),
-        );
-        positionChild(
-          _Slot.title,
-          Offset(
-            (alignment == GlassTitleAlignment.trailing) != rtl
-                ? right - title.width
-                : left,
-            top + (barRow - title.height) / 2,
+      final centeredWidth = math.max(
+        0.0,
+        2.0 * math.min(centre - left, right - centre),
+      );
+      final availableWidth = math.max(0.0, right - left);
+      // Automatic measures the full gap first, rather than truncating to the
+      // symmetric gap and then mistaking that constrained width for a fit.
+      // Explicit centering retains its bounded, usable interactive-title box.
+      final title = layoutChild(
+        _Slot.title,
+        BoxConstraints.loose(
+          Size(
+            titleAlignment == GlassTitleAlignment.center && centeredWidth >= 44
+                ? centeredWidth
+                : availableWidth,
+            barRow,
           ),
-        );
-      } else {
-        final half = math.min(centre - left, right - centre);
-        // Keep an interactive title usable when controls cross the center.
-        final width = math.max(0.0, 2 * half >= 44 ? 2 * half : right - left);
-        final title = layoutChild(
-          _Slot.title,
-          BoxConstraints.loose(Size(width, barRow)),
-        );
-        final x = (centre - title.width / 2)
-            .clamp(left, math.max(left, right - title.width))
-            .toDouble();
-        positionChild(
-          _Slot.title,
-          Offset(x, top + (barRow - title.height) / 2),
-        );
-      }
+        ),
+      );
+      final alignment = glassResolvedTitleAlignment(
+        titleAlignment,
+        title.width,
+        centeredWidth,
+      );
+      final x = alignment == GlassTitleAlignment.center
+          ? (centre - title.width / 2)
+                .clamp(left, math.max(left, right - title.width))
+                .toDouble()
+          : (alignment == GlassTitleAlignment.trailing) != rtl
+          ? right - title.width
+          : left;
+      positionChild(_Slot.title, Offset(x, top + (barRow - title.height) / 2));
     }
     if (hasChild(_Slot.largeTitle)) {
       layoutChild(
@@ -2074,6 +2092,12 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       bottom: math.max(covered.bottom, keyboard),
       left: contentLeft,
       right: size.width - contentRight,
+    );
+    refreshBoundary.value = Rect.fromLTRB(
+      contentLeft,
+      covered.top,
+      contentRight,
+      covered.top,
     );
     layoutChild(_Slot.body, _BodyConstraints(size, covered));
     positionChild(_Slot.body, Offset.zero);

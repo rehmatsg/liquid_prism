@@ -13,6 +13,7 @@ class ShowcaseModel extends ChangeNotifier {
   /// Applies [frost] and [refraction] to every glass surface in the app,
   /// not just the Studio canvas.
   bool globalOptics = false;
+  bool previewOptics = false;
   bool enabled = true, favorite = false;
   double level = .62;
   int segment = 0, taps = 0;
@@ -46,6 +47,7 @@ class ShowcaseModel extends ChangeNotifier {
     frost = 4;
     refraction = 24;
     globalOptics = false;
+    previewOptics = false;
   });
 }
 

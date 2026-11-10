@@ -249,6 +249,31 @@ rebuild on unchanged values).
 
 `test/frame_budget_test.dart` covers these contracts.
 
+## Refresh contour
+
+Compact and accessory-only scaffold headers use an independent circle below
+chrome instead of the attached-drop shader. Layout publishes the full header
+boundary, including accessories and docks, for the painter. The presentation is
+latched when a pull starts (also for controller refreshes). Only the extra gap
+not already supplied by scroll overscroll is translated into the body; this
+holds space during refreshing and supports clamping physics without double
+movement. Large/custom scrolling headings and headerless pages keep the drop.
+
+The refresh shader handles the attached drop's smooth unions. Its 14-float
+packet ends with the inward outline width and alpha; the outline fades away at
+the original sensor-housing contour. Dark appearance uses a one-point white
+outline at 22% opacity. Once the neck and anchor no longer affect the circle,
+Canvas draws it with native antialiasing instead of sampling the shader's SDF.
+
+Paint bounds include both smooth unions' possible expansion (`k / 6` each),
+the anchor and the antialiasing margin. The tip can still be above the top edge
+while the union protrudes below it; using the tip's bounds alone clips that
+early bulge on devices without an island. Verify early pulls as well as attached,
+detached and refreshing states. With `test_driver/showcase.dart` running, use
+`DART_VM_SERVICE_URL=... dart test_driver/capture_refresh.dart <output-directory>`
+from `example/` to capture both appearances and the reported device tint. Captures
+are local evidence, not package assets.
+
 ## Fallback and lifecycle
 
 Shader preload is an optimization, not a requirement that removes fallback paths.

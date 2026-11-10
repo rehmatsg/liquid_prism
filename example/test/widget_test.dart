@@ -4,10 +4,34 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism_example/main.dart';
+import 'package:liquid_prism_example/showcase/app.dart' show ShowcaseHome;
 import 'package:liquid_prism_example/showcase/model.dart';
 import 'package:liquid_prism_example/showcase/pages.dart' show ExploreHero;
 
 void main() {
+  testWidgets(
+    'Studio preserves native optics until customized and after reset',
+    (tester) async {
+      phone(tester);
+      await tester.pumpWidget(const LiquidPrismExample());
+      await tab(tester, 'Studio');
+      final lens = find.byKey(const ValueKey('studio-lens'));
+      expect(tester.widget<LiquidPrism>(lens).optics, isNull);
+      final model = tester
+          .widget<ShowcaseHome>(find.byType(ShowcaseHome))
+          .model;
+      model.change(() {
+        model.previewOptics = true;
+        model.frost = 9;
+      });
+      await tester.pump();
+      expect(tester.widget<LiquidPrism>(lens).optics?.frost, 9);
+      model.reset();
+      await tester.pump();
+      expect(tester.widget<LiquidPrism>(lens).optics, isNull);
+    },
+  );
+
   testWidgets(
     'iOS navigation matches the native screen margin across bottom insets',
     (tester) async {

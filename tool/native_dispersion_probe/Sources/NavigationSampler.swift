@@ -64,7 +64,8 @@ final class NavigationSamplingView: UIView {
       if let bar = view as? UINavigationBar {
         bars.append(rect(bar.convert(bar.bounds, to: window)))
       }
-      if let label = view as? UILabel, label.text == "Library" {
+      if let label = view as? UILabel,
+        label.text == DispersionSpecs.value("--navigation-title", "Library") {
         let layer = label.layer.presentation() ?? label.layer
         let frame = layer.convert(layer.bounds, to: window.layer.presentation() ?? window.layer)
         var animations: [[String: Any]] = []

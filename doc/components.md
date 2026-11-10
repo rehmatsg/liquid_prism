@@ -286,9 +286,19 @@ LiquidPrismScaffold(
 )
 ```
 
-Pulling the content down draws a black drop out of the Dynamic Island, or out
+With a compact title or accessory-only header, pulling scales and fades a circle
+into the gap below the entire header (including search, filters and tabs). The
+body holds that gap while refreshing and returns when the indicator disappears.
+The presentation is selected at the start of the pull; a collapsed large title
+does not change the page's presentation.
+
+With a large title, scrolling custom header, or no top chrome, pulling the content
+down draws a black drop out of the Dynamic Island, or out
 of the notch on iPhones that have one. Where the window has neither (iPhone
 Duo, a sheet, landscape, other platforms) it comes out of the top edge.
+In dark appearance, a thin translucent white outline separates the emerging
+drop and detached circle from dark content. It does not outline the sensor
+housing itself.
 
 1. The drop holds a ring that fills clockwise from the top as the pull grows.
 2. Once the ring is whole the drop pinches off into a circle that swells and
@@ -327,12 +337,18 @@ Any other value, or none, is a success.
 the page's scroll position, focus and bar when it changes; the scaffold builds
 the same tree either way.
 
-**Haptics** mark three moments on iOS and Android: the drop starting to leave
-its anchor, the pinch-off, and a successful completion. They go through the
-theme's `GlassHaptics` hook when you set one, as `GlassHapticComponent.refresh`
-events of kind `refreshPulled`, `refreshArmed`, `refreshSucceeded` and
-`refreshFailed` (silent by default), so an app can route them through its own
-haptics setting or drop them:
+**Haptics** mark four moments on iOS and Android: the drop starting to leave
+its anchor, the pinch-off, releasing an armed pull, and a successful completion.
+They go through the theme's `GlassHaptics` hook when you set one, as
+`GlassHapticComponent.refresh` events of kind `refreshPulled`, `refreshArmed`,
+`refreshReleased`, `refreshSucceeded` and `refreshFailed` (silent by default),
+so an app can route them through its own
+haptics setting or drop them.
+
+`refreshReleased` plays a light impact by default. It fires once when an armed
+pull is released, not for a programmatic refresh or a pull released below the
+arming threshold. Consumers with exhaustive switches over `GlassHapticKind`
+must handle this event when updating.
 
 ```dart
 LiquidPrismThemeData(
@@ -353,7 +369,9 @@ fades in once it has, as after a large title. The large title fades over 200 ms
 with ease-in-out timing. The inline title fades and rises 15 points with separate
 native-fitted reveal/hide springs (`revealSpring` and `hideSpring`).
 
-Inline titles center by default, including beside actions. Set `titleAlignment`
+Automatic inline titles center when they fit between the controls, then align
+to the leading edge when crowded to use the available space before truncating.
+`LiquidPrismTitle` glass capsules retain their centered default. Set `titleAlignment`
 to `leading`, `center` or `trailing`; directional alignment mirrors in RTL.
 `largeTitleAlignment` independently controls the expanded title, leading by default.
 Title widgets keep their own pointer and keyboard input. Only the active title

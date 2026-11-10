@@ -282,3 +282,23 @@ Gaussian over its light base blur. Held control lenses keep their captured optic
 The current comparison includes textured native/Flutter pairs at all five
 settings in both appearances, plus genuine native held/released control states.
 See [the defaults calibration](native_defaults.md) for reproduction and limits.
+
+## Inline title placement and overscroll (November 2026)
+
+Direct SwiftUI probe on iOS 27.0, iPhone 17 Pro simulator, 402-point width:
+`inline` Library (56.33 pt) remains centered with one or two trailing actions,
+but starts at x=16 with three. Saved applications (149.67 pt) starts at x=16
+with two actions. A short X remains centered with three. With a leading back
+control and three trailing actions, Applications starts at x=72.
+
+The Flutter fit measures the title against the full remaining gap, centers it
+when the symmetric gap suffices and otherwise uses the leading edge. This is
+a layout fit to these cases, not a claim about UIKit's internal threshold.
+The separately captured centered glass title capsule remains centered.
+
+The navigation probe's `testTitleOverscroll` pulls each title mode by 250 points.
+At 114.67 points of content overscroll, inline Library stays at y=73.67 and
+inlineLarge stays at y=63.67; the expanded large title moves from y=119.67 to
+y=232.33. Thus pinning compact titles during pull-down is native behavior.
+Changing Vance's compact header to travel with content would be an intentional
+app design choice, rather than a correction to this native default.

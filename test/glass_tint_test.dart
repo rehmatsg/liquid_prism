@@ -347,6 +347,13 @@ void main() {
       expect(LiquidPrismSystemChrome.deviceGlassTintAmount.value, 1);
       expect(resolvedTint(tester), 1);
 
+      // Returning to the clearest device setting must not fall back to .5.
+      events.success({'supported': false, 'glassTintAmount': 0.0});
+      await tester.pump();
+      await tester.pump();
+      expect(LiquidPrismSystemChrome.deviceGlassTintAmount.value, 0);
+      expect(resolvedTint(tester), 0);
+
       await tester.pumpWidget(app(0));
       expect(resolvedTint(tester), 0, reason: 'the theme overrides the device');
       events.success({'supported': false, 'glassTintAmount': .5});

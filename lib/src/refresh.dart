@@ -9,6 +9,7 @@ import 'package:flutter/widgets.dart';
 import 'haptics.dart';
 import 'motion.dart';
 import 'system_chrome.dart';
+import 'theme.dart';
 
 /// Starts and observes a `LiquidPrismScaffold`'s refresh from code, such as a
 /// reload when its tab is tapped again. Pass it as the scaffold's
@@ -65,6 +66,9 @@ class GlassRefreshLayer extends StatefulWidget {
     this.sideInsets = EdgeInsets.zero,
     this.barCenter,
     this.sensorHousing = true,
+    this.belowHeader = false,
+    this.headerBoundary,
+    this.contentDisplacement,
   });
 
   /// The refresh. Null disables pulling; a future that completes with
@@ -84,6 +88,11 @@ class GlassRefreshLayer extends StatefulWidget {
   /// Whether the drop may anchor to the Dynamic Island or a notch. False for
   /// a layout that doesn't start at the screen's top edge, such as a sheet.
   final bool sensorHousing;
+
+  /// Compact chrome uses a separate circle in the gap below the whole header.
+  final bool belowHeader;
+  final ValueListenable<Rect>? headerBoundary;
+  final ValueNotifier<double>? contentDisplacement;
 
   /// The drop's height budget below the top edge.
   static const extent = 260.0;
@@ -170,6 +179,7 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
   double _clampPull = 0;
   _Phase _phase = _Phase.idle;
   _Anchor _anchor = const _Anchor.edge();
+  bool _belowHeader = false;
   Timer? _doneTimer;
 
   @override
@@ -179,6 +189,8 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     // Subscribes, so the island or notch is known before the first pull.
     SystemChromeListener.instance.island;
     _hold.addStatusListener(_onHoldStatus);
+    _hold.addListener(_updateDisplacement);
+    _pull.addListener(_updateDisplacement);
     if (_program == null) {
       _loading ??=
           ui.FragmentProgram.fromAsset(
@@ -230,6 +242,18 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     super.dispose();
   }
 
+  void _updateDisplacement() {
+    // Bouncing scrolls already open a gap. Hold only the missing portion while
+    // refreshing; clamping scrolls need the whole synthetic pull displacement.
+    widget.contentDisplacement?.value = _belowHeader
+        ? math.max(
+            0.0,
+            math.max(_pull.value, _hold.value) -
+                math.max(0.0, _pull.value - _clampPull),
+          )
+        : 0;
+  }
+
   bool get _immediate => MediaQuery.disableAnimationsOf(context);
 
   _DropGeometry _geometryFor(double width) => _DropGeometry(
@@ -239,8 +263,10 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     barCenter: widget.barCenter,
   );
 
-  double _extensionFor(double width) =>
-      math.max(_geometryFor(width).extensionFor(_pull.value), _hold.value);
+  double _extensionFor(double width) => math.max(
+    _belowHeader ? _pull.value : _geometryFor(width).extensionFor(_pull.value),
+    _hold.value,
+  );
 
   double get _width => context.size?.width ?? 0;
 
@@ -298,8 +324,7 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     _setArmed(over >= (_armed ? trigger - _disarmSlack : trigger));
   }
 
-  /// Feedback at three moments: the drop starting to leave its anchor, the
-  /// pinch-off that arms the refresh, and the refresh completing. It goes
+  /// Feedback at emergence, arming, the user's release and completion. It goes
   /// through the theme's `GlassHaptics` hook when there is one, so an app can
   /// route or silence it.
   void _haptic(GlassHapticKind kind) {
@@ -346,6 +371,7 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     if (_armed) {
       // The circle stays pinched off; only the held swell lets go.
       _armed = false;
+      _haptic(GlassHapticKind.refreshReleased);
       springGlass(_swell, 0, _swellSpring, immediate: _immediate);
       unawaited(_refresh(extension));
     } else if (clamped) {
@@ -358,7 +384,9 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
   /// starts at the screen's top edge and contains it, its own top edge if not.
   void _chooseAnchor() {
     if (_phase != _Phase.idle || _hold.value > 0.5) return;
+    _belowHeader = widget.belowHeader;
     _anchor = const _Anchor.edge();
+    if (_belowHeader) return;
     final box = context.findRenderObject();
     if (!widget.sensorHousing || box is! RenderBox || !box.hasSize) return;
     final origin = box.localToGlobal(Offset.zero);
@@ -409,7 +437,7 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     _hold.value = from;
     springGlass(
       _hold,
-      _geometryFor(_width).rest,
+      _belowHeader ? trigger : _geometryFor(_width).rest,
       _settle,
       immediate: _immediate,
     );
@@ -493,6 +521,8 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
           state: this,
           shader: _shader,
           pixel: 1 / MediaQuery.devicePixelRatioOf(context),
+          dark:
+              LiquidPrismTheme.materialBrightnessOf(context) == Brightness.dark,
           repaint: Listenable.merge([
             _pull,
             _hold,
@@ -501,6 +531,7 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
             _run,
             _done,
             _time,
+            if (widget.headerBoundary != null) widget.headerBoundary!,
           ]),
         ),
         child: const SizedBox.expand(),
@@ -648,22 +679,30 @@ class _DropPainter extends CustomPainter {
     required this.state,
     required this.shader,
     required this.pixel,
+    required this.dark,
     required super.repaint,
   });
 
   final GlassRefreshLayerState state;
   final ui.FragmentShader? shader;
   final double pixel;
+  final bool dark;
 
   static const _ring = 8.0;
   static const _stroke = 2.2;
   static const _white = Color(0xFFFFFFFF);
   static const _black = Color(0xFF000000);
+  static const _outlineWidth = 1.0;
+  static const _outlineAlpha = 0.22;
 
   @override
   void paint(Canvas canvas, Size size) {
     final extension = state._extensionFor(size.width);
     if (extension <= 0.01) return;
+    if (state._belowHeader) {
+      _paintBelowHeader(canvas, size, extension);
+      return;
+    }
     final geometry = state._geometryFor(size.width);
     final swell = state._swell.value.clamp(0.0, 1.4);
     final cx = geometry.centerX;
@@ -674,13 +713,35 @@ class _DropPainter extends CustomPainter {
     final blend = geometry.blend(extension, detach);
     final opacity = geometry.opacity(extension);
     final island = geometry.island;
-    final bounds = geometry.bounds(
-      size,
-      tipY + radius + 2,
-      radius + blend * 2 + 8,
-    );
+    final anchorBottom = island?.bottom ?? geometry.edgeY;
+    // Each cubic smooth union can extend its inputs by k / 6. Include both
+    // unions and the anchor: during an early top-edge pull the tip can still
+    // be above the edge while its blended silhouette already protrudes below.
+    final bottom =
+        math.max(anchorBottom, tipY + radius) + (14 + blend) / 6 + pixel;
+    final bounds = geometry.bounds(size, bottom, radius + blend * 2 + 8);
     if (bounds.isEmpty) return;
-    if (shader case final shader?) {
+    final detached = neck <= -14 && tipY - radius - anchorBottom >= blend;
+    if (detached) {
+      // Once the unions no longer affect the silhouette, use the rasterizer's
+      // analytic circle coverage. A sampled SDF edge can staircase on device
+      // GPUs; the detached drop needs neither the shader nor a repainted island.
+      canvas.drawCircle(
+        Offset(cx, tipY),
+        radius,
+        Paint()..color = _black.withValues(alpha: opacity),
+      );
+      if (dark) {
+        canvas.drawCircle(
+          Offset(cx, tipY),
+          radius - _outlineWidth / 2,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = _outlineWidth
+            ..color = _white.withValues(alpha: _outlineAlpha * opacity),
+        );
+      }
+    } else if (shader case final shader?) {
       shader
         ..setFloat(0, pixel * 0.75)
         ..setFloat(1, opacity)
@@ -693,35 +754,99 @@ class _DropPainter extends CustomPainter {
         ..setFloat(8, tipY)
         ..setFloat(9, radius)
         ..setFloat(10, neck)
-        ..setFloat(11, blend);
+        ..setFloat(11, blend)
+        ..setFloat(12, _outlineWidth)
+        ..setFloat(13, dark ? _outlineAlpha : 0);
       canvas.drawRect(bounds, Paint()..shader = shader);
     } else {
       // Without the shader: the same silhouette, unblended.
       final fill = Paint()..color = _black.withValues(alpha: opacity);
+      var path = Path();
       if (island != null) {
-        canvas.drawRRect(
+        path.addRRect(
           RRect.fromRectAndRadius(island, Radius.circular(island.height / 2)),
-          fill,
         );
       }
       if (neck > 0) {
-        canvas.drawRRect(
-          RRect.fromLTRBR(
-            cx - neck,
-            geometry.neckY - neck,
-            cx + neck,
-            tipY + neck,
-            Radius.circular(neck),
+        path = Path.combine(
+          PathOperation.union,
+          path,
+          Path()..addRRect(
+            RRect.fromLTRBR(
+              cx - neck,
+              geometry.neckY - neck,
+              cx + neck,
+              tipY + neck,
+              Radius.circular(neck),
+            ),
           ),
-          fill,
         );
       }
-      canvas.drawCircle(Offset(cx, tipY), radius, fill);
+      path = Path.combine(
+        PathOperation.union,
+        path,
+        Path()
+          ..addOval(Rect.fromCircle(center: Offset(cx, tipY), radius: radius)),
+      );
+      canvas.drawPath(path, fill);
+      if (dark) {
+        canvas.save();
+        canvas.clipRect(
+          Rect.fromLTRB(
+            bounds.left,
+            island?.bottom ?? geometry.edgeY,
+            bounds.right,
+            bounds.bottom,
+          ),
+        );
+        canvas.clipPath(path);
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = _outlineWidth * 2
+            ..color = _white.withValues(alpha: _outlineAlpha * opacity),
+        );
+        canvas.restore();
+      }
     }
     final emergence = geometry.emergence(extension);
     if (emergence > 0) {
       _paintIndicator(canvas, Offset(cx, tipY), emergence, swell);
     }
+  }
+
+  void _paintBelowHeader(Canvas canvas, Size size, double extension) {
+    const trigger = GlassRefreshLayerState.trigger;
+    final progress = (extension / trigger).clamp(0.0, 1.0);
+    final boundary = state.widget.headerBoundary?.value ?? Rect.zero;
+    final center = Offset(
+      boundary.width > 0 ? boundary.center.dx : size.width / 2,
+      boundary.top + math.min(extension, trigger) / 2,
+    );
+    final swell = state._swell.value.clamp(0.0, 1.4);
+    final radius = _DropGeometry.radius + 2 * swell;
+    // Scale within the opened gap, without a neck or connection to the header.
+    // One opacity layer also fades the completion mark consistently.
+    canvas.saveLayer(
+      Rect.fromCircle(center: center, radius: radius + 3),
+      Paint()..color = _white.withValues(alpha: progress),
+    );
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(progress);
+    canvas.drawCircle(Offset.zero, radius, Paint()..color = _black);
+    if (dark) {
+      canvas.drawCircle(
+        Offset.zero,
+        radius - _outlineWidth / 2,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _outlineWidth
+          ..color = _white.withValues(alpha: _outlineAlpha),
+      );
+    }
+    _paintIndicator(canvas, Offset.zero, 1, swell);
+    canvas.restore();
   }
 
   static double _interval(double t, double begin, double end) =>
@@ -826,5 +951,8 @@ class _DropPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DropPainter old) =>
-      old.shader != shader || old.pixel != pixel || old.state != state;
+      old.shader != shader ||
+      old.pixel != pixel ||
+      old.dark != dark ||
+      old.state != state;
 }

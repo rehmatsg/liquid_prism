@@ -12,6 +12,7 @@ import 'package:liquid_prism_example/showcase/component_page.dart' as detail;
 import 'package:liquid_prism_example/showcase/model.dart' as state;
 import 'package:liquid_prism_example/showcase/pages.dart' as pages;
 import 'package:liquid_prism_example/showcase/previews.dart' as previews;
+import 'package:liquid_prism_example/showcase/refresh_page.dart';
 import 'package:liquid_prism_example/showcase/widgets.dart' as design;
 
 Future<void> main() async {
@@ -39,6 +40,9 @@ Future<void> main() async {
       if (request['op'] == 'system-chrome') {
         final chrome = SystemChromeListener.instance.value.value;
         return jsonEncode({
+          'glassTint': LiquidPrismSystemChrome.deviceGlassTintAmount.value,
+          'reduceTransparency':
+              SystemChromeListener.instance.reduceTransparency.value,
           'edge': chrome?.verticalBarEdge?.name,
           'behavior': chrome?.verticalBarBehavior.name,
           'safeRight': () {
@@ -99,7 +103,14 @@ Future<void> main() async {
         for (final controller in scrolls.values) {
           if (controller.hasClients) controller.jumpTo(0);
         }
-        if (root < 0) {
+        if (screen == 'refresh') {
+          navigator.push<void>(
+            CupertinoPageRoute(
+              builder: (_) =>
+                  RefreshFeedPage(compact: request['compact'] != false),
+            ),
+          );
+        } else if (root < 0) {
           final info = state.components.firstWhere((c) => c.id == screen);
           navigator.push<void>(
             CupertinoPageRoute(

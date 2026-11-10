@@ -21,7 +21,8 @@ enum GlassToolbarMinimizationSafeAreaAdjustment { automatic, enabled, disabled }
 /// Navigation title typography, layout and collapse.
 ///
 /// Defaults are measured on iOS 27 (see doc/package_features_spec.md): a
-/// 17-point semibold inline title centred on the 44-point control row, a
+/// 17-point semibold inline title on the 44-point control row, centred when
+/// it fits between controls and leading-aligned otherwise; a
 /// 34-point bold large title in a 52-point row 16 points from the edge, which
 /// scrolls with the content and swaps to the inline title once the scroll
 /// passes its row.
@@ -68,6 +69,11 @@ class GlassNavigationBarStyle {
   /// Clearance below navigation chrome: 10 pt for standard top bars,
   /// 16 pt for rail/sidebar layouts.
   final double? contentSpacing;
+
+  /// Automatic centers the inline title when it fits between the controls.
+  /// Otherwise it leads in the full available gap before truncating. Explicit
+  /// center, leading and trailing keep their requested alignment.
+  /// LiquidPrismTitle capsules retain their centered automatic layout.
   final GlassTitleAlignment? titleAlignment;
 
   /// Expanded title alignment. Automatic retains the native leading edge.
@@ -288,6 +294,20 @@ Widget _titled(
     ],
   );
 }
+
+/// Adaptive layout policy fitted to native inline-title captures. Measure in
+/// the full available gap before resolving automatic; constrained center-only
+/// measurements hide whether the title could have fit at its leading edge.
+@internal
+GlassTitleAlignment glassResolvedTitleAlignment(
+  GlassTitleAlignment alignment,
+  double titleWidth,
+  double centeredWidth,
+) => alignment != GlassTitleAlignment.automatic
+    ? alignment
+    : titleWidth <= centeredWidth + 1e-6
+    ? GlassTitleAlignment.center
+    : GlassTitleAlignment.leading;
 
 AlignmentGeometry glassTitleBoxAlignment(GlassTitleAlignment alignment) =>
     switch (alignment) {

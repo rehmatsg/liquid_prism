@@ -25,6 +25,10 @@ enum GlassHapticKind {
 
   /// Pull to refresh: the refresh reported a failure. Silent by default.
   refreshFailed,
+
+  /// Pull to refresh: the user released an armed pull, starting the refresh.
+  /// Not emitted for programmatic refreshes or pulls released below threshold.
+  refreshReleased,
 }
 
 @immutable
@@ -60,7 +64,8 @@ void dispatchGlassHaptic(BuildContext context, GlassHapticEvent event) {
     case GlassHapticKind.toggle ||
         GlassHapticKind.limitReached ||
         GlassHapticKind.longPress ||
-        GlassHapticKind.refreshPulled:
+        GlassHapticKind.refreshPulled ||
+        GlassHapticKind.refreshReleased:
       unawaited(HapticFeedback.lightImpact());
   }
 }

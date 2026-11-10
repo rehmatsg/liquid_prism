@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.10.0
+
+- Let Studio use device-derived regular glass until optics are explicitly adjusted; material selector controls inherit the app material.
+
+- Show refresh below compact and accessory-only headers: the circle scales and fades into the opened gap, which stays clear while refreshing. Expanded headings retain the island/top-edge effect.
+
+- Let automatic inline titles use the leading edge when trailing controls crowd the centered position, in both scaffold and sliver bars. Preserve explicit alignment, RTL and centered glass title capsules.
+- Document regular versus clear glass behavior and verify live device tint updates without changing the calibrated regular defaults.
+
+- Draw the detached refresh drop with native circle antialiasing and add a thin translucent white contour around the emerging drop and detached circle in dark appearance.
+- Preserve the full blended contour during early pulls from the top edge on devices without a Dynamic Island.
+- Add a light release haptic when an armed pull starts refreshing, routed through `GlassHaptics` as `refreshReleased`. Programmatic refreshes do not emit it. Exhaustive `GlassHapticKind` switches must handle the new event.
+
 ## 0.9.0
 
 - Add `LiquidPrismRefreshController` and `LiquidPrismScaffold.refreshController`: `refresh()` starts the scaffold's refresh from code with the same indicator as a released pull, joins one that is already running, and `isRefreshing` reports it.
