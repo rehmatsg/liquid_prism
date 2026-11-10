@@ -4,11 +4,47 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'haptics.dart';
 import 'motion.dart';
 import 'system_chrome.dart';
+
+/// Starts and observes a `LiquidPrismScaffold`'s refresh from code, such as a
+/// reload when its tab is tapped again. Pass it as the scaffold's
+/// `refreshController`.
+///
+/// ```dart
+/// final refresh = LiquidPrismRefreshController();
+///
+/// LiquidPrismScaffold(
+///   onRefresh: reload,
+///   refreshController: refresh,
+///   slivers: [...],
+/// )
+///
+/// // Later, with the same indicator and haptics as a pull:
+/// await refresh.refresh();
+/// ```
+class LiquidPrismRefreshController extends ChangeNotifier {
+  GlassRefreshLayerState? _layer;
+  bool _refreshing = false;
+
+  /// Whether a refresh is running, however it started.
+  bool get isRefreshing => _refreshing;
+
+  /// Shows the indicator and calls the scaffold's `onRefresh`, as a released
+  /// pull does. Completes when that refresh has finished, without its error.
+  /// Joins a refresh that is already running, and does nothing while the
+  /// scaffold has no `onRefresh` or isn't mounted.
+  Future<void> refresh() => _layer?._refreshFromCode() ?? Future<void>.value();
+
+  void _setRefreshing(bool refreshing) {
+    if (_refreshing == refreshing) return;
+    _refreshing = refreshing;
+    notifyListeners();
+  }
+}
 
 /// Pull to refresh for `LiquidPrismScaffold`: a black drop that the pull draws
 /// out of the Dynamic Island, a notch, or the top edge where the view has
@@ -18,18 +54,23 @@ import 'system_chrome.dart';
 ///
 /// The scaffold forwards its scroll notifications to [GlassRefreshLayerState]
 /// and stacks this layer over its chrome; the layer never takes pointers and
-/// never moves the content.
+/// never moves the content. It is always built, idle while [onRefresh] is
+/// null, so enabling a refresh never rebuilds the page around it.
 @internal
 class GlassRefreshLayer extends StatefulWidget {
   const GlassRefreshLayer({
     super.key,
     required this.onRefresh,
+    this.controller,
     this.sideInsets = EdgeInsets.zero,
     this.barCenter,
     this.sensorHousing = true,
   });
 
-  final Future<void> Function() onRefresh;
+  /// The refresh. Null disables pulling; a future that completes with
+  /// `false` reports a failure, which skips the completed mark.
+  final Future<void> Function()? onRefresh;
+  final LiquidPrismRefreshController? controller;
 
   /// The content's horizontal insets, such as iPhone Duo's rail: a drop from
   /// the top edge is centred between them.
@@ -134,6 +175,7 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
   @override
   void initState() {
     super.initState();
+    widget.controller?._layer = this;
     // Subscribes, so the island or notch is known before the first pull.
     SystemChromeListener.instance.island;
     _hold.addStatusListener(_onHoldStatus);
@@ -154,7 +196,27 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
   }
 
   @override
+  void didUpdateWidget(GlassRefreshLayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previous = oldWidget.controller;
+    if (previous == widget.controller) return;
+    if (previous?._layer == this) {
+      previous!
+        .._layer = null
+        .._refreshing = false;
+    }
+    widget.controller
+      ?.._layer = this
+      .._refreshing = _phase == _Phase.refreshing;
+  }
+
+  @override
   void dispose() {
+    if (widget.controller?._layer == this) {
+      widget.controller!
+        .._layer = null
+        .._refreshing = false;
+    }
     _doneTimer?.cancel();
     _ticker.dispose();
     _hold.dispose();
@@ -186,6 +248,14 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
   void handleScroll(ScrollNotification notification) {
     final metrics = notification.metrics;
     if (metrics.axisDirection != AxisDirection.down) return;
+    if (widget.onRefresh == null) {
+      // Disabled: let go of a pull in progress; a running refresh finishes.
+      _dragging = _tracking = _emerged = false;
+      _clampPull = 0;
+      _pull.value = 0;
+      if (_phase == _Phase.idle) _setArmed(false, silent: true);
+      return;
+    }
     switch (notification) {
       case ScrollStartNotification(:final dragDetails):
         _setDragging(dragDetails != null);
@@ -223,20 +293,25 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     if (!_dragging || _phase != _Phase.idle) return;
     if (!_emerged && over >= _emergedPull) {
       _emerged = true;
-      _haptic(HapticFeedback.lightImpact);
+      _haptic(GlassHapticKind.refreshPulled);
     }
     _setArmed(over >= (_armed ? trigger - _disarmSlack : trigger));
   }
 
   /// Feedback at three moments: the drop starting to leave its anchor, the
-  /// pinch-off that arms the refresh, and the refresh completing.
-  void _haptic(Future<void> Function() feedback) {
+  /// pinch-off that arms the refresh, and the refresh completing. It goes
+  /// through the theme's `GlassHaptics` hook when there is one, so an app can
+  /// route or silence it.
+  void _haptic(GlassHapticKind kind) {
     if (kIsWeb) return;
     if (defaultTargetPlatform != TargetPlatform.iOS &&
         defaultTargetPlatform != TargetPlatform.android) {
       return;
     }
-    unawaited(feedback());
+    dispatchGlassHaptic(
+      context,
+      GlassHapticEvent(GlassHapticComponent.refresh, kind),
+    );
   }
 
   void _setDragging(bool dragging) {
@@ -244,13 +319,13 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     _dragging = dragging;
   }
 
-  void _setArmed(bool armed) {
+  void _setArmed(bool armed, {bool silent = false}) {
     if (armed == _armed) return;
     _armed = armed;
     springGlass(_detach, armed ? 1 : 0, _pinch, immediate: _immediate);
     springGlass(_swell, armed ? 1 : 0, _swellSpring, immediate: _immediate);
     if (armed) {
-      _haptic(HapticFeedback.mediumImpact);
+      if (!silent) _haptic(GlassHapticKind.refreshArmed);
       _restartClock();
     } else {
       _ticker.stop();
@@ -305,7 +380,31 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     }
   }
 
+  /// Starts a refresh without a pull: the drop leaves its anchor, pinches off
+  /// and spins. Joins a refresh that is already running.
+  Future<void> _refreshFromCode() {
+    if (widget.onRefresh == null) return Future<void>.value();
+    if (_phase == _Phase.refreshing) return _running!.future;
+    if (_phase == _Phase.done) {
+      _return();
+      _becomeIdle();
+    }
+    _chooseAnchor();
+    _armed = false;
+    springGlass(_detach, 1, _pinch, immediate: _immediate);
+    springGlass(_swell, 0, _swellSpring, immediate: _immediate);
+    _haptic(GlassHapticKind.refreshArmed);
+    final from = _extensionFor(_width);
+    unawaited(_refresh(from));
+    return _running!.future;
+  }
+
+  /// Completes when the running refresh has finished.
+  Completer<void>? _running;
+
   Future<void> _refresh(double from) async {
+    final running = _running = Completer<void>();
+    widget.controller?._setRefreshing(true);
     setState(() => _phase = _Phase.refreshing);
     _hold.value = from;
     springGlass(
@@ -317,18 +416,34 @@ class GlassRefreshLayerState extends State<GlassRefreshLayer>
     _restartClock();
     unawaited(_run.forward(from: 0));
     final minimum = Future<void>.delayed(_minimumRefresh);
+    // A refresh that throws, or completes with false, has failed.
+    var succeeded = false;
     try {
-      await widget.onRefresh();
+      // Typed void for plain callbacks; a `Future<bool>` still carries its
+      // value here.
+      final Future<Object?>? result = widget.onRefresh?.call();
+      succeeded = await result != false;
     } finally {
       await minimum;
-      if (mounted) _finish();
+      if (mounted) {
+        widget.controller?._setRefreshing(false);
+        _finish(succeeded);
+      }
+      running.complete();
     }
   }
 
-  void _finish() {
+  void _finish(bool succeeded) {
     setState(() => _phase = _Phase.done);
+    if (!succeeded) {
+      // No mark for a failure: the spinner just goes back.
+      _haptic(GlassHapticKind.refreshFailed);
+      _return();
+      if (_immediate) _reset();
+      return;
+    }
     unawaited(_done.forward(from: 0));
-    _haptic(HapticFeedback.successNotification);
+    _haptic(GlassHapticKind.refreshSucceeded);
     _doneTimer = Timer(_doneHold, () {
       if (!mounted) return;
       _return();

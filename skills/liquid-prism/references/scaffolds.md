@@ -2,7 +2,8 @@
 
 Check these contracts against the app's resolved package source. This guide
 covers the 0.7 scaffold API; newer title behavior may require a newer release,
-and the pull to refresh described below needs 0.8.
+and the pull to refresh described below needs 0.8 (0.9 for its controller,
+failure result and haptics hook).
 
 ## Select the composition
 
@@ -63,6 +64,22 @@ and showed the stock Cupertino control; check the resolved version.
   the indicator. There is no style to configure: it is always black and its
   anchor comes from the device.
 - A scaffold in a sheet draws the drop from the sheet's own top edge.
+
+From 0.9:
+
+- To refresh from code (a tab tapped again, a deep link), pass a
+  `LiquidPrismRefreshController` as `refreshController` and call `refresh()`.
+  Do not fake a pull by scrolling, and do not show a separate spinner.
+- A page that only sometimes allows refresh passes `onRefresh: allowed ?
+  reload : null`. This keeps scroll position and focus; do not pass a no-op
+  callback to work around a rebuild.
+- When the app records failures instead of throwing, return them: a future
+  that completes with `false` ends without the check or success haptic.
+- Refresh haptics go through the theme's `GlassHaptics` hook
+  (`GlassHapticComponent.refresh`). Route them through the app's own haptics
+  setting there rather than calling `HapticFeedback` beside the scaffold. An
+  exhaustive `switch` over `GlassHapticKind` or `GlassHapticComponent` in app
+  code needs the new cases.
 
 ## Adaptive safe areas
 

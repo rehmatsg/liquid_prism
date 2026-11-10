@@ -120,6 +120,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.slivers,
     this.scrollController,
     this.onRefresh,
+    this.refreshController,
     this.bottomBar,
     this.scrollDepth = 0,
     this.title,
@@ -183,7 +184,20 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// floats over the content without moving it. [slivers] can always be
   /// pulled; a [body] scroll view shorter than the window needs
   /// [AlwaysScrollableScrollPhysics].
+  ///
+  /// To report that the refresh failed, pass a callback whose future
+  /// completes with `false`, such as `() => feed.reload()` for a
+  /// `Future<bool> reload()`: the indicator then returns without its
+  /// completed mark or success haptic. A future that throws counts as failed
+  /// too. Any other value, or none, is a success.
+  ///
+  /// Null disables it. Switching between null and a callback keeps the page's
+  /// state: its scroll position, focus and bar.
   final Future<void> Function()? onRefresh;
+
+  /// Starts a refresh from code and reports whether one is running; see
+  /// [LiquidPrismRefreshController]. It needs [onRefresh].
+  final LiquidPrismRefreshController? refreshController;
 
   /// A bar pinned to the bottom of the page, above the home indicator and
   /// the keyboard, such as a primary action. The body is padded to clear it,
@@ -933,25 +947,21 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                             ...features,
                           ],
                         ),
-                  child:
-                      ((edges || swaps || minimizes) &&
-                              (topBar || widget.accessory != null)) ||
-                          bottomBar != null ||
-                          widget.onRefresh != null
-                      ? NotificationListener<ScrollMetricsNotification>(
-                          onNotification: (n) =>
-                              n.depth == widget.scrollDepth &&
-                              _onScroll(n.metrics, dimensionsChanged: true),
-                          child: NotificationListener<ScrollNotification>(
-                            onNotification: (n) {
-                              if (n.depth != widget.scrollDepth) return false;
-                              _refreshKey.currentState?.handleScroll(n);
-                              return _onScroll(n.metrics);
-                            },
-                            child: _content(),
-                          ),
-                        )
-                      : _content(),
+                  // Always listening: adding or removing a listener later
+                  // would rebuild the body and drop its state.
+                  child: NotificationListener<ScrollMetricsNotification>(
+                    onNotification: (n) =>
+                        n.depth == widget.scrollDepth &&
+                        _onScroll(n.metrics, dimensionsChanged: true),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (n) {
+                        if (n.depth != widget.scrollDepth) return false;
+                        _refreshKey.currentState?.handleScroll(n);
+                        return _onScroll(n.metrics);
+                      },
+                      child: _content(),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1198,33 +1208,33 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         ),
       ),
     );
-    if (widget.onRefresh case final onRefresh?) {
-      // Above the glass group: its hoisted edge blur would soften the drop.
-      hosted = Stack(
-        children: [
-          Positioned.fill(child: hosted),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: GlassRefreshLayer.extent,
-            child: GlassRefreshLayer(
-              key: _refreshKey,
-              onRefresh: onRefresh,
-              sideInsets: EdgeInsets.only(
-                left: padding.left,
-                right: padding.right,
-              ),
-              // Level with the bar's controls, where they form a top row.
-              barCenter: rail || corner != null
-                  ? null
-                  : top + controlRowHeight / 2,
-              sensorHousing: !widget.sheet,
+    // Above the glass group: its hoisted edge blur would soften the drop.
+    // Always built, so enabling a refresh never rebuilds the page under it.
+    hosted = Stack(
+      children: [
+        Positioned.fill(child: hosted),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: GlassRefreshLayer.extent,
+          child: GlassRefreshLayer(
+            key: _refreshKey,
+            onRefresh: widget.onRefresh,
+            controller: widget.refreshController,
+            sideInsets: EdgeInsets.only(
+              left: padding.left,
+              right: padding.right,
             ),
+            // Level with the bar's controls, where they form a top row.
+            barCenter: rail || corner != null
+                ? null
+                : top + controlRowHeight / 2,
+            sensorHousing: !widget.sheet,
           ),
-        ],
-      );
-    }
+        ),
+      ],
+    );
     if (widget.tabBar != null) {
       hosted = LiquidPrismTabReselection.scope(
         reselection: _reselection,

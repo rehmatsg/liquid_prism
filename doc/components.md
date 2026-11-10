@@ -298,9 +298,47 @@ Duo, a sheet, landscape, other platforms) it comes out of the top edge.
    the future completes.
 4. The ring closes into a white disc with a check, then the circle merges back.
 
-Haptics mark three moments on iOS and Android: the drop starting to leave its
-anchor, the pinch-off, and the completion. The drop floats over the chrome and
-never moves the content, and it ignores a refresh that is already running.
+The drop floats over the chrome and never moves the content, and it ignores a
+pull while a refresh is already running.
+
+**Start it from code.** Give the scaffold a `LiquidPrismRefreshController` to
+refresh without a pull, such as when a tab is tapped again. The drop leaves its
+anchor, pinches off and spins exactly as after a released pull:
+
+```dart
+final refresh = LiquidPrismRefreshController();
+
+LiquidPrismScaffold(
+  onRefresh: feed.reload,
+  refreshController: refresh,
+  slivers: [...],
+)
+
+await refresh.refresh();   // joins a refresh that is already running
+refresh.isRefreshing;      // and notifies listeners when it changes
+```
+
+**Report a failure.** A callback whose future completes with `false`, such as
+`() => feed.reload()` for a `Future<bool> reload()`, or one that throws, ends
+without the check and without the success haptic: the spinner just returns.
+Any other value, or none, is a success.
+
+**Turn it on and off freely.** `onRefresh: canRefresh ? reload : null` keeps
+the page's scroll position, focus and bar when it changes; the scaffold builds
+the same tree either way.
+
+**Haptics** mark three moments on iOS and Android: the drop starting to leave
+its anchor, the pinch-off, and a successful completion. They go through the
+theme's `GlassHaptics` hook when you set one, as `GlassHapticComponent.refresh`
+events of kind `refreshPulled`, `refreshArmed`, `refreshSucceeded` and
+`refreshFailed` (silent by default), so an app can route them through its own
+haptics setting or drop them:
+
+```dart
+LiquidPrismThemeData(
+  haptics: GlassHaptics((context, event) => appHaptics.play(event)),
+)
+```
 
 It follows the scroll view that drives the bar (`scrollDepth`). `slivers` can
 always be pulled; a `body` scroll view shorter than the window needs

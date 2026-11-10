@@ -94,3 +94,4 @@ export 'src/navigation_bar_style.dart'
         GlassToolbarMinimizationSafeAreaAdjustment;
 
 export 'src/scaffold_style.dart' show GlassScaffoldStyle;
+export 'src/refresh.dart' show LiquidPrismRefreshController;
