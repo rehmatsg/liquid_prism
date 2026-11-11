@@ -55,8 +55,8 @@ the SDR rendition of the dark clear glint were not measured. Custom optics and
 lifted lenses retain their existing lighting.
 
 Two recipe changes came from the same comparison. The native regular and clear
-recipes no longer draw the broad reflection lobe, which showed nearby labels as
-streaks native does not have. Plain clear surfaces cast no material shadow.
+recipes draw no reflection band, since nearby labels showed as streaks native
+does not have. Plain clear surfaces cast no material shadow.
 
 The HDR regular surface shadow uses the captured native size profile and
 8 pt drop, without the older synthetic contact/ambient additions. The

@@ -44,6 +44,10 @@ class LiquidPrismStyle {
     reflection: 0.45,
   );
 
+  /// [reflection] is the strength of the surroundings mirrored into the rim
+  /// band (at most 4 points, or a quarter of the short side, inside the
+  /// contour); the interior never reflects. [reflectionReach] sets how far
+  /// outside the contour that band reads, growing with depth into the rim.
   final double edgeWidth,
       refraction,
       frost,

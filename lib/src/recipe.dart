@@ -374,8 +374,7 @@ final class GlassRecipe {
           tint: const Color(0x00000000),
           brightness: 0,
           saturation: 1,
-          // Native clear glass shows no reflection of nearby content; the
-          // preset's broad lobe drew labels above a surface as streaks.
+          // Native clear glass shows no reflection of nearby content.
           reflection: 0,
         )
       : LiquidPrismStyle(
@@ -385,8 +384,8 @@ final class GlassRecipe {
           brightness: 0,
           tint: const Color(0x00000000),
           saturation: 1,
-          // No reflection lobe: native shows none of the nearby content, and
-          // the measured rim mirror is drawn by the shader separately.
+          // No rim reflection band: native shows none of the nearby content,
+          // and the measured rim mirror is drawn by the shader separately.
           reflection: 0,
           cornerRadius: radius,
         );

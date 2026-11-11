@@ -96,9 +96,10 @@ The optical shader skips reflection samples where their weight can no longer
 move a channel by two 8-bit steps, and skips the highlight and press color
 matrices at zero weight. Deeper than every inward band (lens, reflections,
 highlights, the tab lens's underlay) a fragment is one undisplaced read plus
-grading. The rim reflection reads a pair of taps along the normal and the broad
-lobe its two tangent taps; the former cross and far normal tap changed frosted
-content by less than two steps.
+grading. Reflection is confined to the rim: a band at most 4 points wide (a
+quarter of the short side on smaller surfaces) reads a pair of taps along the
+normal, and nothing inside it reflects. The former cross and far normal tap
+changed frosted content by less than two steps.
 The tab bar's selected pill adds its own 2-point blur pass only when the housing
 is clear or frosted below 3 points; a frosted housing already covers it, and the
 extra pass would cost a full backdrop capture per frame for a kernel 0.6 points

@@ -321,32 +321,24 @@ vec3 sampleGlass(vec2 samplePoint, vec2 dx, vec2 dy, vec2 direction,
     return color;
 }
 
+// Reflection lives on the rim only: the surroundings just outside the contour
+// mirrored into a band at most 4 points (and a quarter of the short side)
+// wide, so no surface reflects across its interior.
 vec3 reflectGlass(vec3 color, vec2 local, vec2 normal, float d, float depth) {
     if (depth < u_derived[3].x) {
-        float broadEnd = u_derived[2].x;
-        float rimEnd = u_derived[2].y;
+        float rimWidth = u_derived[2].x;
         mat2 toScene = mat2(u_transform.x,u_transform.z,u_transform.y,u_transform.w)*u_geometry.y;
         vec2 sceneBoundary = scenePoint(local-normal*d);
         vec2 sceneNormal = toScene*normal;
-        vec2 sceneTangent = toScene*vec2(-normal.y,normal.x);
         float reach = u_geometry.z;
-        if (depth < rimEnd) {
-            float edge = max(1.-depth/4.,0.);
-            float rim = edge*sqrt(edge);
-            vec2 tap = sceneBoundary+sceneNormal*(1.+depth*reach/12.);
-            vec2 s = sceneNormal*u_derived[2].z;
-            vec3 reflected = u_derived[2].z > 0.05
-                ? (readScene(tap+s) + readScene(tap-s)) * 0.5
-                : readScene(tap);
-            color = radiance(color,reflected,u_finish.z*rim);
-        }
-        if (depth < broadEnd) {
-            vec2 lobe = sceneBoundary+sceneNormal*(reach*0.5);
-            vec2 spread = sceneTangent*(reach*0.4);
-            vec3 diffuse = (readScene(lobe+spread) + readScene(lobe-spread))*0.5;
-            float fade = 1.-depth/24.;
-            color = radiance(color,diffuse,u_finish.z*fade*fade*0.32);
-        }
+        float edge = max(1.-depth/rimWidth,0.);
+        float rim = edge*sqrt(edge);
+        vec2 tap = sceneBoundary+sceneNormal*(1.+depth*reach/12.);
+        vec2 s = sceneNormal*u_derived[2].z;
+        vec3 reflected = u_derived[2].z > 0.05
+            ? (readScene(tap+s) + readScene(tap-s)) * 0.5
+            : readScene(tap);
+        color = radiance(color,reflected,u_finish.z*rim);
     }
     return color;
 }
