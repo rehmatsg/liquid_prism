@@ -332,21 +332,20 @@ class _LiquidPrismButtonState extends State<LiquidPrismButton> {
     );
     final content = _content(appearance);
     // The hidden content keeps the button's size while the indicator shows.
-    final shown = !loading
-        ? content
-        : Stack(
-            alignment: Alignment.center,
-            children: [
-              Opacity(opacity: 0, child: content),
-              widget.loadingIndicator ??
-                  appearance.loadingIndicator ??
-                  _GlassActivityIndicator(
-                    size: widget._iconOnly
-                        ? metrics.iconSize
-                        : metrics.fontSize,
-                  ),
-            ],
-          );
+    // One stable tree: the content keeps its place (and any state) while it
+    // turns invisible for the indicator, so only the indicator mounts.
+    final shown = Stack(
+      alignment: Alignment.center,
+      children: [
+        Opacity(opacity: loading ? 0 : 1, child: content),
+        if (loading)
+          widget.loadingIndicator ??
+              appearance.loadingIndicator ??
+              _GlassActivityIndicator(
+                size: widget._iconOnly ? metrics.iconSize : metrics.fontSize,
+              ),
+      ],
+    );
 
     Widget button([double? fillWidth]) => LiquidPrismPressable.glass(
       label: widget.semanticLabel ?? widget.label,

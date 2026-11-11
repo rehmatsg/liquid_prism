@@ -295,7 +295,7 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// follows the body's outermost scroll view and shares the chrome's backdrop
   /// captures, so the leading control and actions refract the unblurred
   /// content beneath them. A page without top chrome (no title, leading,
-  /// trailing, accessory or toolbar items) draws no top edge.
+  /// trailing, accessory or top toolbar items) draws no top edge.
   ///
   /// Turning it on after the page appears, as a page might once its entering
   /// transition settles, fades the effects in, blur and fade together, over
