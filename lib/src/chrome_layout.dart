@@ -937,9 +937,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             ? GlassTitleAlignment.center
             : navigation.titleAlignment == null ||
                   navigation.titleAlignment == GlassTitleAlignment.automatic
-            ? (rail
+            ? (!rail
+                  ? GlassTitleAlignment.automatic
+                  : widget.trailing != null ||
+                        glassToolbarHasContent(widget._trailingContent)
                   ? GlassTitleAlignment.leading
-                  : GlassTitleAlignment.automatic)
+                  : GlassTitleAlignment.center)
             : navigation.titleAlignment!,
         contentPadding: (navigation.contentPadding ?? EdgeInsets.zero).resolve(
           Directionality.of(context),

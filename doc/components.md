@@ -480,8 +480,9 @@ text following the same progress. It never passes through a whole-title opacity
 or image-filter layer, so the backdrop stays live throughout the reveal.
 Actions-only bars and glass-title bars omit the top scroll-edge blur/fade; plain
 text titles retain it. The bottom scroll edge is independent. On vertical-rail
-layouts, ordinary automatic titles lead; glass titles remain centered and
-explicit alignment wins.
+layouts, ordinary automatic titles lead when the page has trailing actions and
+center when it has none; glass titles remain centered and explicit alignment
+wins.
 
 Toolbar groups materialize as complete, unclipped capsules while their reserved
 layout extent changes. The parent toolbar owns this transition for its groups;

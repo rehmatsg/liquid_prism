@@ -73,7 +73,8 @@ class GlassNavigationBarStyle {
   /// Automatic centers the inline title when it fits between the controls.
   /// Otherwise it leads in the full available gap before truncating. Explicit
   /// center, leading and trailing keep their requested alignment.
-  /// Vertical-rail layouts lead ordinary automatic titles.
+  /// Vertical-rail layouts lead ordinary automatic titles when the page has
+  /// trailing actions and center them when it has none.
   /// LiquidPrismTitle capsules retain their centered automatic layout.
   final GlassTitleAlignment? titleAlignment;
 
