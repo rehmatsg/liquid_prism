@@ -138,11 +138,12 @@ void main() {
       expect(NativeGlassDepth.amount(104), closeTo(.3333, 1e-4));
       expect(NativeGlassDepth.amount(130), closeTo(.55, 1e-4));
       expect(NativeGlassDepth.amount(170), closeTo(.7167, 1e-4));
-      // A plain surface bends its backdrop from 64 points, not at 48.
-      expect(NativeGlassDepth.lens(40), 0);
-      expect(NativeGlassDepth.lens(48), 0);
-      expect(NativeGlassDepth.lens(56), .5);
-      expect(NativeGlassDepth.lens(64), 1);
+      // Only surfaces under 10 points lose their lens; 44 points bends fully.
+      expect(NativeGlassDepth.lens(8), 0);
+      expect(NativeGlassDepth.lens(10), 0);
+      expect(NativeGlassDepth.lens(13), .5);
+      expect(NativeGlassDepth.lens(16), 1);
+      expect(NativeGlassDepth.lens(44), 1);
       expect(NativeGlassDepth.lens(170), 1);
       // inputBleedBlurRadius 28 / 52.5 at 80 / 170 points.
       expect(
@@ -279,10 +280,10 @@ void main() {
       expect(
         RegExp(
           r'uniform vec4 u_face;\s*(//.*\s*)*uniform vec4 u_frost;\s*'
-          r'uniform sampler2D',
+          r'(//.*\s*)*uniform float u_headroom;\s*uniform sampler2D',
         ).hasMatch(scalar),
         isTrue,
-        reason: 'the face and frost blocks close the packet',
+        reason: 'face, frost and headroom close the scalar packet',
       );
 
       final batch = File('shaders/glass_batch.frag').readAsStringSync();
@@ -313,11 +314,11 @@ void main() {
       expect(lens.sublist(4, 48), packet.sublist(2, 46));
       expect(
         lens.sublist(48, 64),
-        packet.sublist(glassUniformCount - 24, glassUniformCount - 8),
+        packet.sublist(glassUniformCount - 25, glassUniformCount - 9),
       );
       expect(
         lens.sublist(64),
-        packet.sublist(glassUniformCount - 8, glassUniformCount - 4),
+        packet.sublist(glassUniformCount - 9, glassUniformCount - 5),
       );
       expect(batch, contains('const vec4 u_frost = vec4(0.,0.,0.,-1.);'));
     });

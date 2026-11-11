@@ -2,6 +2,7 @@
 precision highp float;
 uniform vec2 u_textureSize;
 uniform float u_count;
+uniform float u_headroom;
 // Seventeen vec4 per lens, at most fifteen lenses.
 uniform vec4 u_lenses[256];
 uniform sampler2D u_backdrop;

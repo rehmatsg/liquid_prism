@@ -28,6 +28,7 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
   /// Streams the system's bar placement for the Flutter view.
   private var systemChrome: SystemChromeStreamHandler?
+  private var display: GlassDisplayStreamHandler?
 
   /// The menuId currently bound to `presenter` callbacks. A stale dismissal
   /// from a replaced menu must not be reported as the new menu's.
@@ -42,6 +43,10 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     events.setStreamHandler(instance)
     let chrome = SystemChromeStreamHandler(registrar: registrar)
     instance.systemChrome = chrome
+    let display = GlassDisplayStreamHandler(registrar: registrar)
+    instance.display = display
+    FlutterEventChannel(name: "liquid_prism/display", binaryMessenger: registrar.messenger())
+      .setStreamHandler(display)
     FlutterEventChannel(name: "liquid_prism/system_chrome", binaryMessenger: registrar.messenger())
       .setStreamHandler(chrome)
     FlutterMethodChannel(name: "liquid_prism/system", binaryMessenger: registrar.messenger())
@@ -74,6 +79,7 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       presenter.dismiss()
       eventSink = nil
       methods = nil
+      display?.detach()
     }
   }
 
@@ -184,6 +190,55 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {
     eventSink = nil
     return nil
+  }
+}
+
+/// The listener's lifetime owns the EDR request. Cancellation restores the
+/// layer's previous request, including one made by the host app.
+final class GlassDisplayStreamHandler: NSObject, FlutterStreamHandler {
+  private weak var registrar: (any FlutterPluginRegistrar)?
+  private var sink: FlutterEventSink?
+  private var observer: GlassDisplayObserver?
+  private var generation = 0
+  private var enabled = true
+
+  init(registrar: any FlutterPluginRegistrar) { self.registrar = registrar }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    enabled = (arguments as? [String: Any])?["enabled"] as? Bool ?? true
+    sink = events
+    generation += 1
+    let token = generation
+    MainActor.assumeIsolated { attach(attempt: 0, token: token) }
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    MainActor.assumeIsolated { detach() }
+    return nil
+  }
+
+  @MainActor func detach() {
+    generation += 1
+    sink = nil
+    observer?.detach()
+    observer = nil
+  }
+
+  @MainActor private func attach(attempt: Int, token: Int) {
+    guard sink != nil, token == generation else { return }
+    guard let view = registrar?.viewController?.view else {
+      if attempt < 50 {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+          self?.attach(attempt: attempt + 1, token: token)
+        }
+      } else { sink?(1.0) }
+      return
+    }
+    let display = observer ?? GlassDisplayObserver()
+    display.onChange = { [weak self] value in self?.sink?(value) }
+    observer = display
+    display.attach(to: view, enabled: enabled)
   }
 }
 

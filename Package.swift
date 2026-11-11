@@ -35,7 +35,10 @@ let package = Package(
                 "MenuModels.swift",
                 "MenuOverlayHost.swift",
                 "MenuPresenter.swift",
-                "SystemChromeObserver.swift"
+                "SystemChromeObserver.swift",
+                "DeviceGlass.swift",
+                "SensorHousing.swift",
+                "GlassDisplayObserver.swift"
             ],
             resources: [
                 // Ships a privacy manifest declaring no data collection and no

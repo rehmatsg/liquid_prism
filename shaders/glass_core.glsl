@@ -153,6 +153,7 @@ float highlight(float direction, float depth, float width,
     float lobe = clamp((abs(direction)-spread)/(1.-spread),0.,1.) * band;
     return lobe / (1. + focus * (1.-lobe));
 }
+float faceWhite();
 vec3 vibrantHighlight(vec3 color, float strength) {
     vec3 r = vec3(2.6492,-1.1803,-0.1189);
     vec3 g = vec3(-0.3507,1.8199,-0.1192);
@@ -170,7 +171,7 @@ vec3 vibrantHighlight(vec3 color, float strength) {
         bias = 0.2;
     }
     vec3 transformed = vec3(dot(color,r),dot(color,g),dot(color,b)) + bias;
-    return mix(color,clamp(transformed,0.,1.),clamp(strength,0.,1.));
+    return mix(color,clamp(transformed,0.,faceWhite()),clamp(strength,0.,1.));
 }
 vec3 radiance(vec3 base, vec3 reflected, float weight) {
     float y = dot(base,vec3(0.2126,0.7152,0.0722));
@@ -188,6 +189,14 @@ vec3 gradeInput(vec3 color) {
     color = clamp(mix(vec3(luma),color,u_finish.x),0.,1.);
     return clamp(mix(color,u_tint.rgb,u_tint.a) + u_geometry.w,0.,1.);
 }
+float hdrAmount() { return clamp((u_headroom-1.)/.3,0.,1.); }
+// Light glass keeps its unclamped face white when the surface has headroom:
+// 1.03 encoded (about 1.07 linear) for regular and 1.08 (about 1.19) for
+// clear. Dark glass, lenses and custom optics stop at 1.
+float faceWhite() {
+    if (u_material.y > .5 || u_material.x < .5 || u_material.x > 2.5) return 1.;
+    return 1.+(u_material.x > 1.5 ? .08 : .03)*hdrAmount();
+}
 // [limit] is u_face.z: the dark SDR luma limit or the light contrast gain.
 vec3 gradeFaceAt(vec3 color, float limit) {
     if (u_material.x > .5 && u_material.x < 2.5) {
@@ -202,6 +211,10 @@ vec3 gradeFaceAt(vec3 color, float limit) {
         float tone = mix(black,white,value);
         // Light-regular face curve measured on surfaces without depth terms.
         if (!clear && !dark) tone = .4 + value*(.627-.035*value);
+        // With headroom the native face follows the linear matrix through
+        // white instead of the SDR rolloff (measured 1.07 linear over white).
+        if (!clear && !dark && u_headroom > 1.)
+            tone = mix(tone,.4+.63*value,hdrAmount());
         // Fitted SDR tone rolloff; the limit and gray fill are measured inputs.
         if (!clear && dark) tone = .125 + value*(.97+(limit-.97)*value);
         color = (color-vec3(value))*saturation + tone;
@@ -209,7 +222,7 @@ vec3 gradeFaceAt(vec3 color, float limit) {
         color = mix(color,vec3(u_face.w),fill);
         // Larger light surfaces gain face contrast about the black point.
         if (!clear && !dark) color = .4 + (color-.4)*limit;
-        color = clamp(color,0.,1.);
+        color = clamp(color,0.,faceWhite());
     }
     if (u_material.w > 0.) {
         vec4 inputColor = vec4(color,1.);
@@ -220,6 +233,10 @@ vec3 gradeFaceAt(vec3 color, float limit) {
     return color;
 }
 vec3 gradeFace(vec3 color) { return gradeFaceAt(color,u_face.z); }
+vec3 shadeInnerRing(vec3 color, float d, vec2 normal, float depth) {
+    float opacity = u_face.y;
+    return opacity > 0. ? color*(1.-opacity*ringShadow(d,normal,depth)) : color;
+}
 vec3 gradePressed(vec3 color) {
     if (u_state.x > 0.) {
         vec3 pressed = vec3(dot(color,vec3(1.1575,-0.1431,-0.0144)),
@@ -251,12 +268,17 @@ vec4 exteriorRim(float d, vec2 normal, float aa, float coverage, vec2 local) {
         float side = facing/(1.+0.5*(1.-facing));
         float size = clamp((min(u_extent.x,u_extent.y)-64.)/40.,0.,1.);
         float width = 0.46 + (dark ? 0.07*size : 0.);
+        float hdr = dark ? 0. : hdrAmount();
+        // Matched-device HDR fit: a slightly wider side band with a softer
+        // key/fill at the vertical poles. Preserve the SDR and dark recipes.
+        width += .04*hdr*abs(normal.x);
         float line = max(clamp(0.5-(d-width)/aa,0.,1.)-coverage,0.);
         if (dark) {
             return vec4(0.,0.,0.,
                 clamp(side*u_finish.y*(0.6+0.15*size),0.,1.)*line);
         }
         side = max(side, 0.13);
+        side *= mix(1.,mix(2./3.,1.,abs(normal.x)),hdr);
         vec3 lowered = max(readScene(scenePoint(local))
                            -0.3*side*u_finish.y,0.);
         return vec4(lowered*line,line);
@@ -366,7 +388,7 @@ vec3 lightGlass(vec3 color, vec2 normal, float depth, float aa, float lensRim) {
             light = highlight(dot(normal,vec2(-0.70710678,-0.70710678)),depth,1.,0.,0.,0.7,aa);
         }
         if (light*u_finish.y > 0.) color = vibrantHighlight(color,light*u_finish.y);
-        color = clamp(color+edge*u_finish.y,0.,1.);
+        color = clamp(color+edge*u_finish.y,0.,faceWhite());
     }
     if (u_material.x > 2.5 && u_material.x < 3.5) {
         float faceScale = u_extent.y/70.;
@@ -384,6 +406,45 @@ vec3 lightGlass(vec3 color, vec2 normal, float depth, float aa, float lensRim) {
         }
     }
     return color;
+}
+
+// Fit to the HDR reference, not an extracted Apple operator. Keep the existing
+// SDR face/lighting path, then add only the rim's linear-light radiance. Flutter's
+// XR output is nonlinear extended sRGB, so 1.3 linear white encodes as ~1.12.
+vec3 hdrRim(vec3 color, vec2 normal, float depth) {
+    if (u_headroom <= 1. || u_material.x < .5 || u_material.x > 2.5
+        || depth >= 1. || u_finish.y <= 0.) return color;
+    bool clear = u_material.x > 1.5;
+    bool dark = u_material.y > .5;
+    if (dark && !clear) return color;
+    // Rounded renderer parameters, checked against HDR angular/radial profiles;
+    // this is not a recovered Apple lighting operator.
+    float n2 = normal.y*normal.y;
+    float n4 = n2*n2;
+    float n8 = n4*n4;
+    float n32 = n8*n8*n8*n8;
+    // Confine emission to the rim. Treating the reference's broad pixel
+    // shoulder as additive light created an unwanted inner glow.
+    float band = 1.-smoothstep(.5,1.,depth);
+    float radiance;
+    if (dark) {
+        // Dark clear: a one-pixel glint at the poles and along flat edges.
+        radiance = .15*n32*(1.-smoothstep(.2,.6,depth));
+    } else if (clear) {
+        // Light clear: the lifted face carries the brightness; the rim adds
+        // only a faint glint toward the poles.
+        radiance = .025*n8*band;
+    } else {
+        // Light regular: broad cosine-squared light plus a narrow glint at
+        // the poles, added over the lifted face (about 1.3 linear in all).
+        radiance = (.01+.09*n2+.12*n32)*band;
+    }
+    radiance *= hdrAmount()*clamp(u_finish.y,0.,1.);
+    vec3 linear = mix(color/12.92, pow((color+.055)/1.055,vec3(2.4)),
+                      step(vec3(.04045),color));
+    linear = min(linear+radiance,vec3(u_headroom));
+    return mix(12.92*linear,1.055*pow(linear,vec3(1./2.4))-.055,
+               step(vec3(.0031308),linear));
 }
 
 void shadeGlass() {
@@ -442,7 +503,7 @@ void shadeGlass() {
     if (depth > interiorEnd + aa) {
         vec3 face = fillGlass(readScene(scenePoint(local)),local,vec2(0.),normal,d,aa);
         face = gradeFace(gradeInput(face));
-        if (u_face.y > 0.) face *= 1.-u_face.y*ringShadow(d,normal,depth);
+        if (u_face.y > 0.) face = shadeInnerRing(face,d,normal,depth);
         face = bleedGlass(face,local,d,aa);
         face = gradePressed(face);
         frag_color = completeFill(
@@ -465,11 +526,12 @@ void shadeGlass() {
     color = gradeInput(color);
     color = reflectGlass(color,local,normal,d,depth);
     color = gradeFace(color);
-    if (u_face.y > 0.) color *= 1.-u_face.y*ringShadow(d,normal,depth);
+    if (u_face.y > 0.) color = shadeInnerRing(color,d,normal,depth);
     color = mirrorSurroundings(color,local,normal,depth);
     color = lightGlass(color,normal,depth,aa,lensRim);
     color = bleedGlass(color,local,d,aa);
     color = gradePressed(color);
+    color = hdrRim(color,normal,depth);
     frag_color = completeFill(
         vec4(color*coverage+rim.rgb,coverage+rim.a)*presence, screen);
 }

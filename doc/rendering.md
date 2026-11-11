@@ -208,6 +208,14 @@ The example and regression tests are not a physical-device energy certification.
 
 ## Color and appearance
 
+Light regular glass can draw a rim brighter than page white on supported iOS
+HDR displays. The package enables EDR on Flutter's existing extended-range
+surface and adapts to available headroom. SDR displays retain the SDR path.
+To disable HDR rim lighting for the engine, call
+`await LiquidPrism.preload(enableHDR: false)` after initializing Flutter bindings.
+Later calls without the option preserve that choice. See
+[HDR measurements and limits](native_hdr_rim.md).
+
 Regular and clear glass use vertical key/fill highlights and a thin dark
 exterior rim, calibrated against iOS 27 references; regular glass uses the
 highlight matrix iOS 27.2 shows for it. Both follow the existing contour.

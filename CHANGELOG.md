@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.13.0
+
+- Add HDR lighting for light glass on supported iOS displays. `LiquidPrism.preload()` enables it automatically and `preload(enableHDR: false)` keeps the SDR path. Regular glass lifts its face to about 1.07× white with a rim reaching about 1.3× at the poles and along flat edges; clear glass lifts its face to about 1.19×. Measured against native Liquid Glass in the same HDR capture on device. The rim stays lit under Control Center, as native's does.
+- Add `shadow: false` to `LiquidPrism` and `LiquidPrismThemeData` to remove a surface's exterior and inset material shadows while keeping its rims.
+- Plain clear surfaces no longer cast a material shadow, matching native's captured inputs. Clear buttons and tab bars keep theirs.
+- Keep the rim lens on small plain regular surfaces. It now fades out only below 16 points, to none at 10, where 0.11.0 removed it at 48 points; native 44-point circles and capsules bend their backdrop.
+- Stop the native regular and clear recipes from drawing a broad reflection of nearby content, which showed labels above a surface as streaks.
 - Restore activity badges to the full native badge height while preserving their corner placement and materialization.
 
 - Lay out title logos at their declared slot size, preserving their corner geometry while moving between avatar and inline positions.

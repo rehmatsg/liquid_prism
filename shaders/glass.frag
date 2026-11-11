@@ -34,6 +34,8 @@ uniform vec4 u_face;
 // opacity, normal opacity, dark bleed opacity, bleed radius in points
 // (negative without a stored fill).
 uniform vec4 u_frost;
+// Available linear-light headroom, 1 for SDR, at most 1.3 for the fitted rim.
+uniform float u_headroom;
 uniform sampler2D u_backdrop;
 out vec4 frag_color;
 

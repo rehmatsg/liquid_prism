@@ -3,7 +3,18 @@
 Import `package:liquid_prism/liquid_prism.dart`. The entry point exposes the public
 widgets and configuration values; files under `lib/src/` are implementation details.
 
+Call `await LiquidPrism.preload()` after initializing Flutter bindings to load
+the shaders and enable adaptive HDR rim lighting on supported iOS displays.
+`await LiquidPrism.preload(enableHDR: false)` keeps SDR rim lighting for the
+engine. Subsequent calls without that option preserve the explicit choice.
+See [rendering requirements](rendering.md) for platform support.
+
 ## Materials and surfaces
+
+`LiquidPrism(shadow: false)` disables exterior and inset material shadows while
+retaining its optical rims and HDR lighting. Use
+`LiquidPrismThemeData(shadow: false)` for a subtree; an explicit widget value
+wins. Lifted control lenses use their separate `GlassLensStyle.shadow` setting.
 
 ```dart
 LiquidPrism(

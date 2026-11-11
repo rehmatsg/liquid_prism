@@ -8,10 +8,137 @@ import 'package:liquid_prism/liquid_prism.dart';
 import 'support/rendering.dart';
 
 import 'package:liquid_prism/src/recipe.dart';
+import 'package:liquid_prism/src/glass_display.dart';
 
 void main() {
+  testWidgets('grouped material shadows inherit and respect explicit false', (
+    tester,
+  ) async {
+    final key = GlobalKey();
+    Future<List<List<int>>> render({bool? local, bool? theme}) async {
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xffffffff),
+          builder: (context, _) => LiquidPrismTheme(
+            data: LiquidPrismThemeData(shadow: theme),
+            child: Center(
+              child: RepaintBoundary(
+                key: key,
+                child: SizedBox(
+                  width: 240,
+                  height: 160,
+                  child: Stack(
+                    children: [
+                      const Positioned.fill(
+                        child: ColoredBox(color: Color(0xffffffff)),
+                      ),
+                      Positioned(
+                        left: 40,
+                        top: 40,
+                        width: 150,
+                        height: 44,
+                        child: LiquidPrismGroup(
+                          child: LiquidPrism(shadow: local),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return pixelsAt(tester, key, const [Offset(36, 62), Offset(115, 90)]);
+    }
+
+    final baseline = await render();
+    expect(baseline[0][0], lessThan(255));
+    final off = await render(theme: false);
+    expect(off.map((pixel) => pixel[0]), [255, 255]);
+    expect(await render(theme: true, local: false), off);
+    expect(await render(theme: false, local: true), baseline);
+    expect(
+      const LiquidPrismThemeData(shadow: false)
+          .merge(const LiquidPrismThemeData())
+          .shadow,
+      isFalse,
+    );
+    expect(
+      const LiquidPrismThemeData(shadow: true).copyWith(shadow: false).shadow,
+      isFalse,
+    );
+  });
+
+  test(
+    'shadow opt-out survives recipe copies without changing optical inputs',
+    () {
+      final recipe = GlassRecipe.resolve(
+        Glass.regular,
+        Brightness.light,
+        GlassRole.surface,
+        customOptics: false,
+      );
+      final off = recipe.withShadow(false).withTint(.75).withPresence(.4);
+      final on = recipe.withTint(.75).withPresence(.4);
+      expect(off.uniforms, on.uniforms);
+      expect(off.shadowStrength, 0);
+      expect(off.faceUniforms[1], 0);
+      expect(on.faceUniforms[1], greaterThan(0));
+      expect(off.faceUniforms[0], on.faceUniforms[0]);
+      expect(off.faceUniforms.skip(2), on.faceUniforms.skip(2));
+    },
+  );
+  testWidgets('HDR surfaces remove extra contact shadows and restore SDR', (
+    tester,
+  ) async {
+    final key = GlobalKey();
+    addTearDown(() {
+      GlassDisplay.headroom.value = 1;
+    });
+    await tester.pumpWidget(
+      WidgetsApp(
+        color: const Color(0xffffffff),
+        builder: (context, _) => Center(
+          child: RepaintBoundary(
+            key: key,
+            child: SizedBox(
+              width: 240,
+              height: 160,
+              child: Stack(
+                children: const [
+                  Positioned.fill(child: ColoredBox(color: Color(0xffffffff))),
+                  Positioned(
+                    left: 40,
+                    top: 40,
+                    width: 150,
+                    height: 44,
+                    child: LiquidPrism(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    const points = [Offset(36, 62), Offset(115, 90)];
+    final before = await pixelsAt(tester, key, points);
+    GlassDisplay.headroom.value = 1.2;
+    await tester.pump();
+    final hdr = await pixelsAt(tester, key, points);
+    expect(hdr[0][0], greaterThan(before[0][0]));
+    expect(
+      hdr[1][0],
+      lessThan(255),
+      reason: 'the native drop shadow remains visible',
+    );
+    GlassDisplay.headroom.value = 1;
+    await tester.pump();
+    expect(await pixelsAt(tester, key, points), before);
+  });
   testWidgets(
-    'regular and clear surfaces keep native shadow strength at any blur',
+    'regular surfaces keep native shadow strength at any blur; clear casts none',
     (tester) async {
       final key = GlobalKey();
       Future<List<List<int>>> render(Glass glass, double blur) async {
@@ -63,9 +190,13 @@ void main() {
       expect(await render(Glass.regular, 8), baseline);
       final clear = await render(Glass.clear, 0);
       expect(await render(Glass.clear, 8), clear);
-      for (var i = 0; i < baseline.length; i++) {
-        expect(255 - baseline[i][0], closeTo(255 - clear[i][0], 1));
-      }
+      // Native clear surfaces report zero shadow opacity and radius.
+      expect(
+        clear[0][0],
+        255,
+        reason: 'Clear surfaces cast no exterior shadow',
+      );
+      expect(clear[2][0], 255);
       expect(await render(Glass.regular, 0), baseline);
     },
   );
