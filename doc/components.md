@@ -421,8 +421,8 @@ independent. Minimization follows scroll progress, without a separate fixed-time
 animation. An accessory row stays visible and interactive, moving up to the safe
 top edge as the bar leaves. Its scroll-edge effect and content clearance remain.
 On initial downward departure, the outgoing header does not introduce an edge
-blur/fade band. Reveal-on-scroll-up makes the compact title and its edge eligible
-when scrolling actually restores the bar. With at-scroll-edge restoration, an
+blur/fade band. Until scrolling actually restores the bar, its top edge is the compact
+status-bar edge; a reveal grows it back to the full edge as the bar returns. With at-scroll-edge restoration, an
 expanded title or `header` has no compact-title subtree. A sole inline title still
 appears at the top. Accessories beneath ordinary text titles retain their edge protection in all minimization modes.
 These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
@@ -504,8 +504,12 @@ A static glass title uses toolbar optics, retaining refraction at compact height
 A glass title reveals through its optical material presence, with its logo and
 text following the same progress. It never passes through a whole-title opacity
 or image-filter layer, so the backdrop stays live throughout the reveal.
-Actions-only bars and glass-title bars omit the top scroll-edge blur/fade; plain
-text titles retain it. The bottom scroll edge is independent. On vertical-rail
+Plain text titles take the full top scroll edge. Actions-only bars, glass-title
+bars and bars minimized on scroll down without a reveal take a compact edge
+over the status bar instead: it ends as far below the Dynamic Island as the
+island sits below the screen's top edge (the status bar's bottom without an
+island), so no page with top chrome is left without a top edge. Sheets have no
+status bar beneath them and keep only the full edge. The bottom scroll edge is independent. On vertical-rail
 layouts, ordinary automatic titles lead when the page has trailing actions and
 center when it has none; glass titles remain centered and explicit alignment
 wins.
