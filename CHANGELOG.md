@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.13.0
+
 - Add HDR lighting for light glass on supported iOS displays. `LiquidPrism.preload()` enables it automatically and `preload(enableHDR: false)` keeps the SDR path. Regular glass lifts its face to about 1.07× white with a rim reaching about 1.3× at the poles and along flat edges; clear glass lifts its face to about 1.19×. Measured against native Liquid Glass in the same HDR capture on device. The rim stays lit under Control Center, as native's does.
 - Add `shadow: false` to `LiquidPrism` and `LiquidPrismThemeData` to remove a surface's exterior and inset material shadows while keeping its rims.
 - Plain clear surfaces no longer cast a material shadow, matching native's captured inputs. Clear buttons and tab bars keep theirs.
