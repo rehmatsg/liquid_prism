@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restore activity badges to the full native badge height while preserving their corner placement and materialization.
+
 - Lay out title logos at their declared slot size, preserving their corner geometry while moving between avatar and inline positions.
 - Match inline glass-title capsules to bar icon-button heights, fitting default text/leading insets around subtitles and honoring custom control heights and larger text.
 

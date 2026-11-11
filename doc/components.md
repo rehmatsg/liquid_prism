@@ -480,8 +480,8 @@ explicit alignment wins.
 
 Toolbar groups materialize as complete, unclipped capsules while their reserved
 layout extent changes. The parent toolbar owns this transition for its groups;
-standalone groups own their own. Activity badges without a count are smaller dots,
-placed consistently in horizontal and vertical bars. Counted toolbar badges grow inward from their trailing edge; tab/sidebar badge centers stay fixed as text grows.
+standalone groups own their own. Activity badges without a count use the full native
+badge height, placed consistently in horizontal and vertical bars. Counted toolbar badges grow inward from their trailing edge; tab/sidebar badge centers stay fixed as text grows.
 
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
 iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`

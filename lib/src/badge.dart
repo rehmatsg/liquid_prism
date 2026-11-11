@@ -76,7 +76,7 @@ class GlassBadgeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = badge.text;
     final scale = MediaQuery.textScalerOf(context).scale(1);
-    final size = text == null ? height * 5 / 9 : height * scale.clamp(1.0, 2.0);
+    final size = height * (text == null ? 1 : scale.clamp(1.0, 2.0));
     return IgnorePointer(
       child: ExcludeSemantics(
         child: Container(
