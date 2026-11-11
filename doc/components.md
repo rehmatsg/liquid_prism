@@ -110,7 +110,7 @@ buttons default to white text and use a neutral material tint while disabled.
 Null callbacks and `enabled: false` disable every activation path.
 `isLoading`, or `autoLoading` while the future `onPressed` returns is pending,
 swaps the content for an activity indicator in the same space and ignores
-activation without drawing the disabled colors; `loadingIndicator` (or the
+activation while keeping its colors, focus and enabled semantics; `loadingIndicator` (or the
 style's) replaces the built-in indicator. Without either, async callbacks can
 overlap. `destructive` draws the system red as a regular button's foreground
 and a prominent button's tint; `tintColor` tints the glass directly. `icon`

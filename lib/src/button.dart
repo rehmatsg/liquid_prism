@@ -23,7 +23,8 @@ export 'appearance.dart' show GlassButtonVariant;
 /// A null callback or `enabled: false` disables every activation path and
 /// draws the disabled colors. While [isLoading], or while an [autoLoading]
 /// action's future runs, the content is replaced by an activity indicator in
-/// the same space and activation is ignored, without the disabled colors.
+/// the same space and activation is ignored; the button keeps its colors,
+/// focus and enabled semantics.
 /// [destructive] draws the system red: as the foreground of a regular button
 /// and as the tint of a prominent one.
 class LiquidPrismButton extends StatefulWidget {
@@ -231,6 +232,10 @@ class _LiquidPrismButtonState extends State<LiquidPrismButton> {
 
   bool get _loading => widget.isLoading || _pending > 0;
 
+  /// Activation while loading: accepted, so focus and semantics stay as they
+  /// are, and ignored.
+  static void _ignore() {}
+
   void _activate() {
     final result = widget.onPressed!();
     if (!widget.autoLoading || result is! Future<void>) return;
@@ -262,7 +267,7 @@ class _LiquidPrismButtonState extends State<LiquidPrismButton> {
     final enabled =
         widget.enabled && (menu != null || widget.onPressed != null);
     final loading = _loading;
-    final action = !enabled || loading
+    final activate = !enabled
         ? null
         : menu == null
         ? _activate
@@ -273,7 +278,10 @@ class _LiquidPrismButtonState extends State<LiquidPrismButton> {
             );
             if (context.mounted) widget.onMenuSelected?.call(result);
           };
-    final longPress = action == null || widget.onLongPress == null
+    // A loading button stays enabled, focusable and announced as a button;
+    // it only ignores activation until the work finishes.
+    final action = activate == null || !loading ? activate : _ignore;
+    final longPress = activate == null || loading || widget.onLongPress == null
         ? null
         : () {
             dispatchGlassHaptic(
