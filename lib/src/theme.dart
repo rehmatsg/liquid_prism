@@ -175,6 +175,7 @@ class LiquidPrismThemeData {
     this.blur,
     this.refraction,
     this.glassTint,
+    this.shadow,
     this.shape,
     this.motion,
     this.navigationBar,
@@ -229,6 +230,10 @@ class LiquidPrismThemeData {
   /// a widget's `blur` or explicit optics keep a plain frost; held control
   /// lenses keep their captured optics, which the setting does not change.
   final double? glassTint;
+
+  /// Paint material exterior and inset shadows. Null inherits, then defaults
+  /// true. Lifted control lenses use [GlassLensStyle.shadow] separately.
+  final bool? shadow;
   final GlassShape? shape;
   final GlassMotion? motion;
   final GlassNavigationBarStyle? navigationBar;
@@ -261,6 +266,7 @@ class LiquidPrismThemeData {
     double? blur,
     double? refraction,
     double? glassTint,
+    bool? shadow,
     GlassShape? shape,
     GlassMotion? motion,
     GlassNavigationBarStyle? navigationBar,
@@ -287,6 +293,7 @@ class LiquidPrismThemeData {
     blur: blur ?? this.blur,
     refraction: refraction ?? this.refraction,
     glassTint: glassTint ?? this.glassTint,
+    shadow: shadow ?? this.shadow,
     shape: shape ?? this.shape,
     motion: motion ?? this.motion,
     navigationBar: navigationBar ?? this.navigationBar,
@@ -316,6 +323,7 @@ class LiquidPrismThemeData {
         blur: other.blur ?? blur,
         refraction: other.refraction ?? refraction,
         glassTint: other.glassTint ?? glassTint,
+        shadow: other.shadow ?? shadow,
         shape: other.shape ?? shape,
         motion: other.motion ?? motion,
         navigationBar: (navigationBar ?? const GlassNavigationBarStyle()).merge(

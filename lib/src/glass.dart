@@ -15,9 +15,13 @@ import 'theme.dart';
 import 'recipe.dart';
 import 'pressable.dart';
 import 'system_chrome.dart';
+import 'glass_display.dart';
 
 part 'edge_blur.dart';
 part 'glass_group.dart';
+
+bool _hdrSurface(GlassRecipe recipe) =>
+    GlassDisplay.headroom.value > 1 && recipe.kind == 1 && !recipe.dark;
 
 /// A live backdrop lens. Foreground content stays sharp above the material.
 ///
@@ -35,6 +39,7 @@ class LiquidPrism extends StatefulWidget {
     this.blur,
     this.optics,
     this.shape,
+    this.shadow,
     this.child,
     this.role = GlassRole.surface,
     this.lensRim = 0,
@@ -57,6 +62,10 @@ class LiquidPrism extends StatefulWidget {
 
   /// Defaults to capsule, or the advanced style's corner radius when provided.
   final GlassShape? shape;
+
+  /// Paint exterior and inset material shadows. Null inherits the theme,
+  /// then defaults to true. Optical rims remain visible.
+  final bool? shadow;
   @internal
   final GlassRole role;
 
@@ -129,7 +138,12 @@ class LiquidPrism extends StatefulWidget {
 
   /// Whether the current renderer supports custom backdrop shaders.
   static bool get isShaderSupported => ui.ImageFilter.isShaderFilterSupported;
-  static Future<void> preload() async {
+
+  /// On supported iOS Impeller surfaces HDR rim lighting is enabled by default.
+  /// Pass `enableHDR: false` to keep SDR rim lighting for this engine. Omitting the
+  /// option preserves an earlier explicit choice, including during lazy loads.
+  static Future<void> preload({bool? enableHDR}) async {
+    if (isShaderSupported) await GlassDisplay.configure(enableHDR);
     if (_loading != null) return _loading!;
     if (!isShaderSupported || (_program != null && _linearSampler != null)) {
       return;
@@ -220,6 +234,11 @@ class _LiquidPrismState extends State<LiquidPrism> {
   void initState() {
     super.initState();
     _deviceTint.addListener(_deviceTintChanged);
+    GlassDisplay.headroom.addListener(_displayChanged);
+  }
+
+  void _displayChanged() {
+    if (mounted) setState(() {});
   }
 
   void _deviceTintChanged() {
@@ -292,6 +311,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
   @override
   void dispose() {
     _deviceTint.removeListener(_deviceTintChanged);
+    GlassDisplay.headroom.removeListener(_displayChanged);
     _shader?.dispose();
     super.dispose();
   }
@@ -307,6 +327,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
           glass: _material.interactive(false),
           optics: widget.optics,
           shape: widget.shape,
+          shadow: widget.shadow,
           blur: widget.blur,
           role: widget.role,
           lensRim: widget.lensRim,
@@ -354,7 +375,8 @@ class _LiquidPrismState extends State<LiquidPrism> {
             .withPresence(presence)
             .withLensRim(widget.lensRim)
             .withChromaticFringe(widget.chromaticSplit, widget.chromaticBand)
-            .withUnderlay(widget.underlay * (materialize ? presence : 1));
+            .withUnderlay(widget.underlay * (materialize ? presence : 1))
+            .withShadow(widget.shadow ?? theme.shadow ?? true);
     var style = resolveSurfaceOptics(
       optics ?? recipe.optics(shape.radius),
       cornerRadius: shape.radius,
@@ -419,6 +441,7 @@ class _LiquidPrismState extends State<LiquidPrism> {
               shape,
               strength: recipe.shadowStrength,
               nativeControl: recipe.usesNativeControlShadow,
+              hdrSurface: _hdrSurface(recipe),
             )
           : null,
       child: shader != null
@@ -527,7 +550,7 @@ LiquidPrismStyle resolveSurfaceOptics(
 /// Floats in the optical shader's packet (shaders/glass.frag), the engine's
 /// texture size included.
 @visibleForTesting
-const glassUniformCount = 46 + superellipseUniformCount + 16 + 4 + 4;
+const glassUniformCount = 46 + superellipseUniformCount + 16 + 4 + 4 + 1;
 
 /// A surface's frost passes. The material's own frost ([followsTint]: no
 /// explicit blur and no app optics) follows the tint amount through
@@ -570,18 +593,36 @@ class _ExteriorShadow extends CustomPainter {
     this.shape, {
     required this.strength,
     required this.nativeControl,
+    this.hdrSurface = false,
   });
   final GlassShape shape;
   final double strength;
   final bool nativeControl;
+  final bool hdrSurface;
 
-  static double _sigma(GlassShape shape, Size size, bool nativeControl) =>
-      nativeControl
+  static double _sigma(
+    GlassShape shape,
+    Size size,
+    bool nativeControl,
+    bool hdrSurface,
+  ) => nativeControl
       ? NativeGlassShadow.control.radius * (2 / 3)
+      : hdrSurface
+      ? NativeGlassShadow.resolve(
+              shape.rect(size).shortestSide,
+              dark: false,
+            ).radius *
+            (2 / 3)
       : math.min(shape.rect(size).shortestSide * 0.1, 20.0);
-  static double _drop(GlassShape shape, Size size, bool nativeControl) =>
-      nativeControl
-      ? NativeGlassShadow.offset
+  static double _drop(
+    GlassShape shape,
+    Size size,
+    bool nativeControl,
+    bool hdrSurface,
+  ) => nativeControl || hdrSurface
+      // Native's filter and Flutter's blurred mask have different footprints.
+      // A 1/3 pt HDR fit aligns the measured falloff; the native input stays 8.
+      ? NativeGlassShadow.offset - (hdrSurface ? 1 / 3 : 0)
       : math.min(shape.rect(size).shortestSide * 0.1, 9.0);
 
   /// How far outside the contour the shadow paints, in logical pixels.
@@ -589,20 +630,26 @@ class _ExteriorShadow extends CustomPainter {
     GlassShape shape,
     Size size, {
     required bool nativeControl,
+    bool hdrSurface = false,
   }) => math.max(
     48,
-    _drop(shape, size, nativeControl) + _sigma(shape, size, nativeControl) * 3,
+    _drop(shape, size, nativeControl, hdrSurface) +
+        _sigma(shape, size, nativeControl, hdrSurface) * 3,
   );
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (strength <= 0) return;
     final rect = Offset.zero & size;
     final outline = shape.path(size);
     final extent = shape.rect(size).shortestSide;
-    final sigma = _sigma(shape, size, nativeControl);
-    final drop = _drop(shape, size, nativeControl);
+    final sigma = _sigma(shape, size, nativeControl, hdrSurface);
+    final drop = _drop(shape, size, nativeControl, hdrSurface);
     final opacity = nativeControl
         ? NativeGlassShadow.control.opacity * NativeGlassShadow.colorAlpha
+        : hdrSurface
+        ? NativeGlassShadow.resolve(extent, dark: false).opacity *
+              NativeGlassShadow.colorAlpha
         : math.min(0.123 * math.pow(extent / 160, 2), 0.14);
     canvas.save();
     canvas.clipPath(
@@ -610,7 +657,12 @@ class _ExteriorShadow extends CustomPainter {
         ..fillType = PathFillType.evenOdd
         ..addRect(
           rect.inflate(
-            _ExteriorShadow.extent(shape, size, nativeControl: nativeControl),
+            _ExteriorShadow.extent(
+              shape,
+              size,
+              nativeControl: nativeControl,
+              hdrSurface: hdrSurface,
+            ),
           ),
         )
         ..addPath(outline, Offset.zero),
@@ -630,7 +682,7 @@ class _ExteriorShadow extends CustomPainter {
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, sigma),
       );
     }
-    if (!nativeControl) {
+    if (!nativeControl && !hdrSurface) {
       _drawOutline(
         canvas,
         rect,
@@ -678,7 +730,8 @@ class _ExteriorShadow extends CustomPainter {
   bool shouldRepaint(_ExteriorShadow oldDelegate) =>
       shape != oldDelegate.shape ||
       strength != oldDelegate.strength ||
-      nativeControl != oldDelegate.nativeControl;
+      nativeControl != oldDelegate.nativeControl ||
+      hdrSurface != oldDelegate.hdrSurface;
 }
 
 class _GlassRenderWidget extends SingleChildRenderObjectWidget {
@@ -728,6 +781,7 @@ class _GlassRenderWidget extends SingleChildRenderObjectWidget {
       ..style = style
       ..shape = shape
       ..recipe = recipe
+      ..hdrShadow = _hdrSurface(recipe)
       ..frost = frost
       ..bleed = bleed
       ..sizedLens = sizedLens
@@ -751,7 +805,17 @@ class _RenderGlass extends RenderProxyBox {
     this._scale,
     this.pixelRatio,
     this._group,
-  );
+  ) {
+    _hdrShadow = _hdrSurface(_recipe);
+  }
+  bool _hdrShadow = false;
+  bool get hdrShadow => _hdrShadow;
+  set hdrShadow(bool value) {
+    if (_hdrShadow == value) return;
+    _hdrShadow = value;
+    markNeedsPaint();
+  }
+
   ui.FragmentShader shader;
   LiquidPrismStyle style;
   GlassRecipe _recipe;
@@ -760,6 +824,7 @@ class _RenderGlass extends RenderProxyBox {
     final shadowChanged =
         value.kind != _recipe.kind ||
         value.role != _recipe.role ||
+        value.shadow != _recipe.shadow ||
         value.presence != _recipe.presence;
     _recipe = value;
     if (shadowChanged) markNeedsPaint();
@@ -963,6 +1028,7 @@ class _RenderGlass extends RenderProxyBox {
       ..._derivedUniforms(rect, m),
       ...recipe.faceUniformsFor(rect.shortestSide),
       ...fillUniforms,
+      GlassDisplay.headroom.value,
     ];
     assert(values.length == glassUniformCount);
     writeChromaticFringeUniforms(values, recipe, pixelRatio);
@@ -1068,6 +1134,7 @@ class _RenderGlass extends RenderProxyBox {
         shape,
         strength: recipe.shadowStrength,
         nativeControl: recipe.usesNativeControlShadow,
+        hdrSurface: hdrShadow,
       ).paint(canvas, size);
       canvas.restore();
     }, offset);

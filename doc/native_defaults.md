@@ -67,18 +67,21 @@ surface:
   distance outside, at .6 opacity on the contour falling to nothing one point
   in, graded like a small surface. This is why rims brighten next to other
   glass or bright content.
-- A plain surface bends its backdrop at the rim from 64 points on its
-  shortest side and not at 48 (compared over the whole face, rim included, on
-  a ladder of heights: at 64 points the default lens lowers the mean error
-  from 6.4 to 3.7 levels, at 48 it raises it from 5.0 to 9.3). The renderer
-  fades the surface lens in between the two (`NativeGlassDepth.lens`). Tab
-  bars, toolbars, buttons and search fields were not measured and keep their
-  lens at every size; an explicit `refraction` is used as given. Native's band
-  is still wider than the renderer's.
+- A plain surface keeps its lens down to small sizes: the renderer fades it
+  out only between 16 and 10 points on the shortest side
+  (`NativeGlassDepth.lens`). An earlier revision removed it at 48 points and
+  below. A same-capture comparison of 44 pt circles and capsules over checker,
+  stripe and text backdrops showed native bending its backdrop there; with
+  the lens on, the mean edge error over seven backdrops fell from 13.9 to 9.6
+  levels in light appearance and 18.2 to 13.0 in dark, while the face error
+  rose by 1.3 to 1.8. Tab bars, toolbars, buttons and search fields keep
+  their lens at every size; an explicit `refraction` is used as given.
+  Native's band is still wider than the renderer's.
 
 Known differences: native renders saturated colours beyond sRGB and limits
 bright primaries differently in dark appearance; native has an EDR rendition
-of light glass (face white 1.03) where this renderer follows the SDR one.
+of light glass (face white 1.03), which this renderer follows only when HDR is
+enabled and the display has headroom ([HDR measurements](native_hdr_rim.md)).
 
 Dark regular glass also needs its native gray face fill and SDR luma limit. Small
 capsules report a .6 limit. The 150 × 96 surface reports .48/.44/.4 at amounts

@@ -2,7 +2,7 @@
 
 For the optical code, start at `shadeGlass()` in `shaders/glass_core.glsl`:
 it maps coordinates and displacement, then calls `sampleGlass`, `gradeInput`,
-`reflectGlass`, `gradeFace`, `lightGlass` and `gradePressed` in paint order.
+`reflectGlass`, `gradeFace`, `lightGlass`, `gradePressed` and `hdrRim` in paint order.
 `glass.frag` declares the scalar packet; `glass_batch.frag` unpacks a member
 before entering the same routine. Dart packet assembly is in `_RenderGlass`.
 
@@ -67,7 +67,8 @@ resize, not only a settled pill.
 
 ## Face block and frost passes
 
-`u_face` closes the scalar packet (floats 338–341, `glassUniformCount` 342):
+`u_face` occupies floats 338–341, followed by `u_frost` at 342–345 and linear
+`u_headroom` at 346 (`glassUniformCount` 347):
 x is regular glass's face-fill alpha, y the inner ring shadow's opacity
 (`NativeGlassShadow.ringOpacity` × shadow strength, zero for custom optics and
 lenses), z the SDR luma limit and w the fill gray. The last two fields are used
@@ -76,6 +77,14 @@ shader carries it as
 each lens's seventeenth vec4 (`batchLensStride` 68 floats), so a batch holds
 at most `batchMaxLenses` 15 lenses in its 256 vec4. `test/glass_tint_test.dart`
 parses both shaders against these constants.
+
+The batch packet has one shared headroom float after `u_count`; per-lens
+stride/capacity stay unchanged. `glass_display.dart` listens to the iOS
+`liquid_prism/display` stream. `GlassDisplayObserver` requests EDR only for
+the engine's existing nonlinear extended-sRGB BGRA10_XR surface and restores
+the host's earlier request when the subscription ends. A headroom transition
+repaints surface shadows and invalidates both grouped shadow caches.
+See [HDR evidence and fitted lighting](../native_hdr_rim.md).
 
 The ring is evaluated in `ringShadow()` under the key/fill highlight. Its band
 mask (`facing`, `gain`) is a fit documented in [native shadows](../native_shadows.md#the-rim-over-white-on-ios-272).

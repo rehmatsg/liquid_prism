@@ -46,6 +46,11 @@ corners; `roundedRect` uses circular arcs. `circle` is inscribed in its bounds.
 `LiquidPrismGroup` shares backdrop captures among its members; see
 [rendering](rendering.md). `LiquidPrismScaffold` groups its own chrome.
 
+Set `LiquidPrism(shadow: false)` to suppress exterior and inset material
+shadows while retaining rim lighting, or set `LiquidPrismThemeData(shadow: false)`
+for a subtree. Widget values override the theme. Lifted control lens shadows
+have their separate `GlassLensStyle.shadow` setting.
+
 ### Enter and exit
 
 ```dart

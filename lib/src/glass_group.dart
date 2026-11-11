@@ -155,6 +155,7 @@ class _GlassGroupLayer extends ContainerLayer {
         member.size,
         member.recipe.shadowStrength,
         member.recipe.usesNativeControlShadow,
+        member.hdrShadow,
         ...matrix.storage,
       ]);
     }
@@ -170,6 +171,7 @@ class _GlassGroupLayer extends ContainerLayer {
         entry.key.shape,
         strength: entry.key.recipe.shadowStrength,
         nativeControl: entry.key.recipe.usesNativeControlShadow,
+        hdrSurface: entry.key.hdrShadow,
       ).paint(canvas, entry.key.size);
       canvas.restore();
     }
@@ -333,6 +335,7 @@ class _GlassGroupData {
         member.size,
         member.recipe.shadowStrength,
         member.recipe.usesNativeControlShadow,
+        member.hdrShadow,
         ...matrix.storage,
         for (final clip in clips[member]!) clip.getBounds(),
       ]);
@@ -352,6 +355,7 @@ class _GlassGroupData {
           entry.key.shape,
           strength: entry.key.recipe.shadowStrength,
           nativeControl: entry.key.recipe.usesNativeControlShadow,
+          hdrSurface: entry.key.hdrShadow,
         ).paint(canvas, entry.key.size);
         canvas.restore();
       }
@@ -539,7 +543,12 @@ class _GlassGroupData {
         if (chunk.length < 2) continue;
         if (used == _batches.length) _batches.add(_GlassBatch());
         final batch = _batches[used++];
-        final values = <double>[0, 0, chunk.length.toDouble()];
+        final values = <double>[
+          0,
+          0,
+          chunk.length.toDouble(),
+          GlassDisplay.headroom.value,
+        ];
         for (final member in chunk) {
           final rect = geometry[member]!.bounds;
           final dpr = member.pixelRatio;

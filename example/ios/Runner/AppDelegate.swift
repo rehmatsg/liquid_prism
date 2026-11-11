@@ -12,6 +12,35 @@ import UIKit
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "LiquidPrismParity") {
       ParityChannel.register(registrar.messenger())
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "LiquidPrismHDRProbe") {
+      HDRProbe.register(registrar)
+    }
+  }
+}
+
+/// Research only: inspects the engine-owned output surface without replacing it.
+enum HDRProbe {
+  static func register(_ registrar: FlutterPluginRegistrar) {
+    let channel = FlutterMethodChannel(name: "liquid_prism/hdr_probe", binaryMessenger: registrar.messenger())
+    channel.setMethodCallHandler { call, result in
+      guard let view = registrar.viewController?.view,
+            let layer = view.layer as? CAMetalLayer else { return result(nil) }
+      if #available(iOS 16.0, *) {
+        if call.method == "configure" {
+          layer.wantsExtendedDynamicRangeContent = (call.arguments as? [String: Any])?["enabled"] as? Bool ?? false
+        }
+        let screen = view.window?.screen
+        result([
+          "format": layer.pixelFormat.rawValue,
+          "colorSpace": layer.colorspace?.name as String? ?? "none",
+          "enabled": layer.wantsExtendedDynamicRangeContent,
+          "headroom": screen?.currentEDRHeadroom ?? 1,
+          "potentialHeadroom": screen?.potentialEDRHeadroom ?? 1,
+          "scale": screen?.scale ?? 1,
+          "os": UIDevice.current.systemVersion,
+        ])
+      } else { result(nil) }
+    }
   }
 }
 
@@ -22,6 +51,8 @@ import UIKit
 /// glass layers' filter inputs.
 enum ParityChannel {
   private static var host: UIHostingController<AnyView>?
+  private static var probeHosts: [String: UIHostingController<AnyView>] = [:]
+  private static var probeVariants: [String: String] = [:]
   private static var status: UIView?
   private static var observers: [NSObjectProtocol] = []
   private static let everyImage = UnsafeMutableRawPointer(bitPattern: -2)
@@ -69,13 +100,17 @@ enum ParityChannel {
         ])
       case "show":
         show(rects: args["rects"] as? [[Double]] ?? [], dark: args["dark"] as? Bool ?? false,
-             generation: args["generation"] as? Int ?? 0)
+             generation: args["generation"] as? Int ?? 0,
+             slot: args["slot"] as? String ?? "main", clear: args["clear"] as? Bool ?? false,
+             labels: args["labels"] as? [String] ?? [])
         result(nil)
+      case "shadowInfo":
+        result(["materials": probeVariants, "masked": probeHosts.mapValues { $0.view.layer.mask != nil }])
       case "status":
         setStatus(args["label"] as? String ?? "")
         result(nil)
       case "dump":
-        result(dump(name: args["name"] as? String ?? "filters"))
+        result(dump(name: args["name"] as? String ?? "filters", slot: args["slot"] as? String ?? "main"))
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -89,16 +124,17 @@ enum ParityChannel {
   }
 
   /// rects: [x, y, width, height, cornerRadius, capsule (0/1)] in the window's points.
-  private static func show(rects: [[Double]], dark: Bool, generation: Int) {
+  private static func show(rects: [[Double]], dark: Bool, generation: Int,
+                           slot: String = "main", clear: Bool = false, labels: [String] = []) {
     guard let window, let root = window.rootViewController else { return }
     let content: AnyView
     if #available(iOS 26.0, *) {
-      content = AnyView(ParityGlass(rects: rects).id(generation))
+      content = AnyView(ParityGlass(rects: rects, clear: clear, labels: labels).id(generation))
     } else {
       content = AnyView(Color.clear)
     }
     let controller: UIHostingController<AnyView>
-    if let existing = host {
+    if let existing = slot == "main" ? host : probeHosts[slot] {
       controller = existing
       controller.rootView = content
     } else {
@@ -111,11 +147,13 @@ enum ParityChannel {
       controller.view.isUserInteractionEnabled = false
       root.view.addSubview(controller.view)
       controller.didMove(toParent: root)
-      host = controller
+      if slot == "main" { host = controller } else { probeHosts[slot] = controller }
     }
     let style: UIUserInterfaceStyle = dark ? .dark : .light
     controller.overrideUserInterfaceStyle = style
     controller.view.overrideUserInterfaceStyle = style
+    controller.view.layer.mask = nil
+    probeVariants[slot] = clear ? "clear" : "regular"
   }
 
   /// A 2-pt accessibility element (outside the measured regions) that UI tests
@@ -137,8 +175,8 @@ enum ParityChannel {
 
   /// Writes every native glass layer's filters (inputs discovered from the
   /// filter's keyed archive, as tool/native_dispersion_probe's Extractor.m).
-  private static func dump(name: String) -> String? {
-    guard let view = host?.view, let window else { return nil }
+  private static func dump(name: String, slot: String = "main") -> String? {
+    guard let view = (slot == "main" ? host : probeHosts[slot])?.view, let window else { return nil }
     var layers: [[String: Any]] = []
     func encode(_ value: Any) -> Any {
       if let number = value as? NSNumber { return number.doubleValue.isFinite ? number : "nonfinite" }
@@ -189,18 +227,23 @@ enum ParityChannel {
 @available(iOS 26.0, *)
 private struct ParityGlass: View {
   let rects: [[Double]]
+  let clear: Bool
+  var labels: [String] = []
 
   var body: some View {
     ZStack(alignment: .topLeading) {
       Color.clear
       ForEach(rects.indices, id: \.self) { i in
         let r = rects[i]
-        let face = Color.clear.frame(width: r[2], height: r[3])
+        let face = Text(i < labels.count ? labels[i] : "")
+          .font(.system(size: 15, weight: .medium))
+          .foregroundStyle(.primary)
+          .frame(width: r[2], height: r[3])
         Group {
           if r[5] != 0 {
-            face.glassEffect(.regular, in: Capsule(style: .continuous))
+            face.glassEffect(clear ? .clear : .regular, in: Capsule(style: .continuous))
           } else {
-            face.glassEffect(.regular, in: RoundedRectangle(cornerRadius: r[4], style: .continuous))
+            face.glassEffect(clear ? .clear : .regular, in: RoundedRectangle(cornerRadius: r[4], style: .continuous))
           }
         }
         .offset(x: r[0], y: r[1])

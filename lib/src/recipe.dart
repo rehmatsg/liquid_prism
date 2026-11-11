@@ -216,6 +216,7 @@ final class GlassRecipe {
     this.faceFill = .2,
     this.faceGray = 1,
     this.tintAmount = GlassTint.standard,
+    this.shadow = true,
   ]);
   final double kind;
   final bool dark;
@@ -249,6 +250,7 @@ final class GlassRecipe {
   final double faceFill;
   final double faceGray;
   final double tintAmount;
+  final bool shadow;
 
   GlassRecipe _copyWith({
     double? presence,
@@ -259,6 +261,7 @@ final class GlassRecipe {
     double? faceFill,
     double? faceGray,
     double? tintAmount,
+    bool? shadow,
   }) => GlassRecipe(
     kind,
     dark,
@@ -273,6 +276,7 @@ final class GlassRecipe {
     faceFill ?? this.faceFill,
     faceGray ?? this.faceGray,
     tintAmount ?? this.tintAmount,
+    shadow ?? this.shadow,
   );
 
   GlassRecipe withTint(double tint) => _copyWith(
@@ -294,9 +298,15 @@ final class GlassRecipe {
 
   GlassRecipe withLensRim(double value) =>
       value == lensRim ? this : _copyWith(lensRim: value);
+  GlassRecipe withShadow(bool value) =>
+      value == shadow ? this : _copyWith(shadow: value);
 
   bool get usesNativeControlShadow => kind != 0 && role != GlassRole.surface;
-  double get shadowStrength => presence * (kind == 3 ? 0 : 1);
+  double get shadowStrength =>
+      presence *
+      (shadow && kind != 3 && !(kind == 2 && role == GlassRole.surface)
+          ? 1
+          : 0);
   static GlassRecipe resolve(
     Glass glass,
     Brightness brightness,
@@ -364,6 +374,9 @@ final class GlassRecipe {
           tint: const Color(0x00000000),
           brightness: 0,
           saturation: 1,
+          // Native clear glass shows no reflection of nearby content; the
+          // preset's broad lobe drew labels above a surface as streaks.
+          reflection: 0,
         )
       : LiquidPrismStyle(
           refraction: 48,
@@ -372,7 +385,9 @@ final class GlassRecipe {
           brightness: 0,
           tint: const Color(0x00000000),
           saturation: 1,
-          reflection: 0.08,
+          // No reflection lobe: native shows none of the nearby content, and
+          // the measured rim mirror is drawn by the shader separately.
+          reflection: 0,
           cornerRadius: radius,
         );
   List<double> get uniforms => [
@@ -436,9 +451,9 @@ abstract final class NativeGlassDepth {
   static const bleedBlend = .716;
 
   /// Share of a plain surface's lens (rim refraction and dispersion) at this
-  /// shortest side. Measured on device against native: a 48-point surface
-  /// does not bend its backdrop, and surfaces from 64 points bend it fully.
-  static double lens(double extent) => ((extent - 48) / 16).clamp(0.0, 1.0);
+  /// shortest side: none below 10 points, full from 16. Native 44-point
+  /// circles and capsules bend their backdrop, so only slivers lose the lens.
+  static double lens(double extent) => ((extent - 10) / 6).clamp(0.0, 1.0);
 
   /// Fitted light-appearance face contrast gain per unit of [amount].
   static const lightGain = .087;

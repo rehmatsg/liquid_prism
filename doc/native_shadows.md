@@ -136,8 +136,15 @@ empirically verified rule for these fixtures, not recovered Apple source code.
 
 ## Flutter implementation and limits
 
+HDR light-regular surfaces use a separate calibrated path: the captured
+size-based shadow replaces the synthetic contact/ambient additions, and
+near-white face shading avoids the SDR inset halo. See
+[HDR rim measurements](native_hdr_rim.md). The descriptions below of the
+restored historical exterior fit continue to apply to the SDR path.
+
 Standalone Regular surfaces use the captured exterior-shadow and inner-ring
-strengths, matching Clear at a given size. Buttons and tab bars use the separate
+strengths. Plain Clear surfaces cast no material shadow, following their zero
+captured inputs. Buttons and tab bars use the separate
 captured control profile described below. Strength is independent of frost. The
 optical shader draws the ring under the key/fill highlight and below foreground
 content (`u_face.y` carries its opacity).
