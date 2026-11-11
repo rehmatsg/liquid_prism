@@ -672,21 +672,83 @@ void main() {
     );
 
     testWidgets(
-      'destructive draws the system red unless an explicit color wins',
+      'destructive draws the system red over themed foregrounds unless the '
+      "button's own color wins",
       (tester) async {
         const explicit = Color(0xFF2266AA);
+        const themed = Color(0xFF7A3EC8);
+        const themedForeground = GlassButtonStyle(foregroundColor: themed);
+        const themedText = GlassButtonStyle(
+          textStyle: TextStyle(color: themed),
+        );
         for (final brightness in Brightness.values) {
-          for (final (name, prominent, foreground, tint, enabled) in [
-            ('regular', false, null, null, true),
-            ('prominent', true, null, null, true),
-            ('explicit foreground', false, explicit, null, true),
-            ('explicit tint', true, null, explicit, true),
-            ('disabled', false, null, null, false),
-          ]) {
+          for (final (name, prominent, foreground, tint, enabled, theme, style)
+              in <
+                (
+                  String,
+                  bool,
+                  Color?,
+                  Color?,
+                  bool,
+                  GlassButtonStyle?,
+                  GlassButtonStyle?,
+                )
+              >[
+                ('regular', false, null, null, true, null, null),
+                ('prominent', true, null, null, true, null, null),
+                (
+                  'explicit foreground',
+                  false,
+                  explicit,
+                  null,
+                  true,
+                  themedForeground,
+                  null,
+                ),
+                ('explicit tint', true, null, explicit, true, null, null),
+                ('disabled', false, null, null, false, null, null),
+                (
+                  'under a theme button foreground',
+                  false,
+                  null,
+                  null,
+                  true,
+                  themedForeground,
+                  null,
+                ),
+                (
+                  'under a theme button text color',
+                  false,
+                  null,
+                  null,
+                  true,
+                  themedText,
+                  null,
+                ),
+                (
+                  'local style foreground',
+                  false,
+                  null,
+                  null,
+                  true,
+                  themedForeground,
+                  const GlassButtonStyle(foregroundColor: explicit),
+                ),
+                (
+                  'local style text color',
+                  false,
+                  null,
+                  null,
+                  true,
+                  themedText,
+                  const GlassButtonStyle(textStyle: TextStyle(color: explicit)),
+                ),
+              ]) {
             await show(
               tester,
               LiquidPrismTheme(
                 brightness: brightness,
+                data: LiquidPrismThemeData(button: theme),
                 child: LiquidPrismButton(
                   label: label,
                   destructive: true,
@@ -696,6 +758,7 @@ void main() {
                       : GlassButtonVariant.regular,
                   foregroundColor: foreground,
                   tintColor: tint,
+                  style: style,
                   onPressed: () {},
                 ),
               ),
@@ -706,13 +769,17 @@ void main() {
                 .glass!;
             final reason = '$name, $brightness';
             switch (name) {
-              case 'regular':
+              case 'regular' ||
+                  'under a theme button foreground' ||
+                  'under a theme button text color':
                 expect(labelColor(tester), colors.red, reason: reason);
                 expect(glass.tintColor, isNull, reason: reason);
               case 'prominent':
                 expect(labelColor(tester), const Color(0xFFFFFFFF));
                 expect(glass.tintColor, colors.red, reason: reason);
-              case 'explicit foreground':
+              case 'explicit foreground' ||
+                  'local style foreground' ||
+                  'local style text color':
                 expect(labelColor(tester), explicit, reason: reason);
               case 'explicit tint':
                 expect(glass.tintColor, explicit, reason: reason);
