@@ -188,7 +188,7 @@ separate scopes, native timings and input guarantees.
 | `minimizationRestoration` | `automatic` restores on reversal; `atScrollEdge` waits for the top with on-scroll-down |
 | `minimizationSafeAreaAdjustment` | `automatic` / `disabled` keep content insets stable; `enabled` makes them follow the bar |
 | `minimizationThreshold` | Fitted initial travel 13⅓ points, after large-title collapse |
-| `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; capsule at least 38 tall, padding 14 × 9 around the title; leading 22 with `leadingPadding` 12 start, 11 top and bottom, 10 before the title (a 44-point capsule); regular glass (measured from iOS 27 SwiftUI apps' device screenshots) |
+| `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; inline capsule matches bar control height (44 top, 48 rail), adapting default vertical insets to content; explicit padding/minimum heights and larger text can grow it; above-avatar capsule at least 38 tall with 14 × 9 padding; leading 22, 12 start and 10 gap; regular glass |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
 | `revealSpring` / `hideSpring` | Native-fitted inline fade/rise springs: mass 1, stiffness/damping 225/28.3 entering, 93.3/18.22 leaving |
 | `inlineTitleDelay` | Fitted 12 ms onset after the large fade, only when starting at rest; zero disables it |

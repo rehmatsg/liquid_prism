@@ -9,6 +9,10 @@
 - Plain clear surfaces no longer cast a material shadow, matching native's captured inputs. Clear buttons and tab bars keep theirs.
 - Keep the rim lens on small plain regular surfaces. It now fades out only below 16 points, to none at 10, where 0.11.0 removed it at 48 points; native 44-point circles and capsules bend their backdrop.
 - Stop the native regular and clear recipes from drawing a broad reflection of nearby content, which showed labels above a surface as streaks.
+- Restore activity badges to the full native badge height while preserving their corner placement and materialization.
+
+- Lay out title logos at their declared slot size, preserving their corner geometry while moving between avatar and inline positions.
+- Match inline glass-title capsules to bar icon-button heights, fitting default text/leading insets around subtitles and honoring custom control heights and larger text.
 
 ## 0.12.0
 

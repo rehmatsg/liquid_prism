@@ -876,13 +876,8 @@ class _LiquidPrismToolbarGroupState extends State<LiquidPrismToolbarGroup>
                   clipBehavior: Clip.none,
                   children: [
                     PositionedDirectional(
-                      top:
-                          -2.8 -
-                          (vertical ? left : 0) +
-                          (badge.text == null ? 4 : 0),
-                      end:
-                          (vertical ? inset - 3 : -3) +
-                          (badge.text == null ? 4 : 0),
+                      top: -2.8 - (vertical ? left : 0),
+                      end: vertical ? inset - 3 : -3,
                       child: Builder(
                         builder: (context) => GlassContentPresence(
                           presence: progress * LiquidPrismPresence.of(context),

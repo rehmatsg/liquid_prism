@@ -229,13 +229,11 @@ void main() {
       final capsule = tester.getRect(find.byType(LiquidPrismTitle));
       expect(
         capsule.height,
-        44,
-        reason: '22 pt leading, 11 pt above and below',
+        tester.getSize(find.byType(LiquidPrismToolbarGroup)).width,
+        reason: 'the inline title matches the rail icon buttons',
       );
-      // Native: the avatar 12 pt from the capsule's start, nearly as far as
-      // from its top and bottom.
       expect(face.left - capsule.left, 12);
-      expect(face.top - capsule.top, 11);
+      expect(face.center.dy, closeTo(capsule.center.dy, .01));
       // Unlike a plain title, the capsule stays centred beside Invite.
       expect(capsule.center.dx, closeTo(191, .01));
       // The text button stays in the top bar beside the rail, ending at the

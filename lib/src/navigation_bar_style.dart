@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'motion.dart' show GlassSpring;
-import 'title.dart' show GlassTitleStyle, GlassTitleSubtitle, LiquidPrismTitle;
+import 'title.dart' show GlassTitleStyle, GlassTitleLayout, LiquidPrismTitle;
 
 enum GlassTitleAlignment { automatic, leading, center, trailing }
 
@@ -246,12 +246,14 @@ Widget glassTitled(
   required bool large,
   GlassTitleAlignment alignment = GlassTitleAlignment.center,
   double subtitleOffset = 0,
+  double controlHeight = 44,
 }) {
-  if (!large && title is LiquidPrismTitle && subtitle != null) {
+  if (!large && title is LiquidPrismTitle) {
     return _FitsRow(
-      child: GlassTitleSubtitle(
+      child: GlassTitleLayout(
         subtitle: subtitle,
         style: subtitleStyle,
+        controlHeight: controlHeight,
         child: title,
       ),
     );
