@@ -725,10 +725,29 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final top = widget.sheet
         ? _ChromeLayout._sheetTop
         : math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
-    final navigation =
+    final merged =
         (LiquidPrismTheme.of(context).navigationBar ??
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
+    // On a vertical rail (iPhone Duo) the controls live in the rail and the
+    // top bar holds little more than the title, so an automatic bar with a
+    // plain title scrolls away and returns only at the top. A bar that
+    // reveals its title on scroll, and a sheet's bar, stay put.
+    final navigation =
+        rail &&
+            !widget.sheet &&
+            widget.largeTitle == null &&
+            widget.header == null &&
+            (merged.minimizationBehavior == null ||
+                merged.minimizationBehavior ==
+                    GlassToolbarMinimizationBehavior.automatic)
+        ? merged.copyWith(
+            minimizationBehavior: GlassToolbarMinimizationBehavior.onScrollDown,
+            minimizationRestoration:
+                merged.minimizationRestoration ??
+                GlassToolbarMinimizationRestoration.atScrollEdge,
+          )
+        : merged;
     final titleStyle = TextStyle(
       fontFamily: 'CupertinoSystemText',
       fontSize: widget.subtitle == null ? 17 : 15,

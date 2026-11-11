@@ -81,7 +81,11 @@ class GlassNavigationBarStyle {
   /// Expanded title alignment. Automatic retains the native leading edge.
   final GlassTitleAlignment? largeTitleAlignment;
 
-  /// Automatic retains the captured non-minimizing default.
+  /// Automatic retains the captured non-minimizing default, except in a
+  /// scaffold on a vertical rail (iPhone Duo): there a bar with a plain title,
+  /// no large title or header, and outside a sheet minimizes on scroll down
+  /// and, unless [minimizationRestoration] says otherwise, returns at the
+  /// scroll edge.
   /// Top-bar controls follow the title; rail controls and accessories stay visible.
   final GlassToolbarMinimizationBehavior? minimizationBehavior;
 

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- On vertical-rail layouts (iPhone Duo), an automatic scaffold bar with a plain title, no large title or header, and outside a sheet now hides on scroll down and returns at the top. Bars that reveal a title on scroll keep it; an explicit `minimizationBehavior` still wins.
 - Add `enabled`, `onLongPress`, `isLoading`, `autoLoading`, `loadingIndicator`, `destructive`, `tintColor`, `trailingIcon` and `semanticLabel` to `LiquidPrismButton`, with a built-in activity indicator and `GlassButtonStyle.loadingIndicator`. `LiquidPrismPressable` takes `onLongPress`, and `GlassHapticComponent.button` reports a button's long press.
 - Fade a scaffold's bottom scroll edge with its bottom bar's height, so a bar kept mounted while collapsed draws no edge at zero height.
 - Center automatic inline titles on vertical-rail layouts when the page has no trailing actions; titles keep leading alignment beside them.
