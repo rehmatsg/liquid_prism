@@ -113,7 +113,8 @@ swaps the content for an activity indicator in the same space and ignores
 activation while keeping its colors, focus and enabled semantics; `loadingIndicator` (or the
 style's) replaces the built-in indicator. Without either, async callbacks can
 overlap. `destructive` draws the system red as a regular button's foreground
-and a prominent button's tint; `tintColor` tints the glass directly. `icon`
+and a prominent button's tint, over a component theme's foreground (the
+widget's own `foregroundColor` or local `style` still wins); `tintColor` tints the glass directly. `icon`
 sits beside the label at the style's `labelPlacement` and `trailingIcon`
 follows both. `onLongPress` plays the theme's long-press haptic
 (`GlassHapticComponent.button`) and wins over the tap once recognized.

@@ -161,7 +161,9 @@ class LiquidPrismButton extends StatefulWidget {
   /// foreground through `IconTheme` and `DefaultTextStyle`.
   final Widget? loadingIndicator;
 
-  /// Draws the system red; an explicit foreground or [tintColor] still wins.
+  /// Draws the system red, over a component theme's foreground; the widget's
+  /// own [foregroundColor] or local [style] foreground, or [tintColor], still
+  /// wins.
   final bool destructive;
 
   /// Tints the glass, as a prominent button tints it with the accent.
@@ -293,10 +295,16 @@ class _LiquidPrismButtonState extends State<LiquidPrismButton> {
             );
             widget.onLongPress!();
           };
-    final explicitForeground =
+    // Resolution order: the widget's own foreground or local style, then
+    // `destructive` (a direct argument), then the component theme, then the
+    // native fallbacks.
+    final local = widget.style;
+    final directForeground =
         widget.foregroundColor ??
-        appearance.foregroundColor ??
-        appearance.textStyle?.color;
+        local?.foregroundColor ??
+        local?.textStyle?.color;
+    final themedForeground =
+        theme.button?.foregroundColor ?? theme.button?.textStyle?.color;
     final base =
         widget.glass ?? appearance.glass ?? theme.glass ?? Glass.regular;
     final material = widget.tintColor != null
@@ -306,12 +314,12 @@ class _LiquidPrismButtonState extends State<LiquidPrismButton> {
         : base;
     final foreground = !enabled
         ? colors.disabledLabel
-        : explicitForeground ??
+        : directForeground ??
               (prominent
-                  ? const Color(0xFFFFFFFF)
+                  ? themedForeground ?? const Color(0xFFFFFFFF)
                   : widget.destructive
                   ? colors.red
-                  : theme.foregroundColor ?? tint);
+                  : themedForeground ?? theme.foregroundColor ?? tint);
     final alignment = appearance.alignment ?? Alignment.center;
     final iconSize =
         appearance.iconSize ??
