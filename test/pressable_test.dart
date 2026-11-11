@@ -8,7 +8,8 @@ import 'package:liquid_prism/liquid_prism.dart';
 const _contentKey = ValueKey('pressable-content');
 
 Widget _harness({
-  required VoidCallback onPressed,
+  required VoidCallback? onPressed,
+  VoidCallback? onLongPress,
   bool reduceMotion = false,
   bool selected = false,
   Key? controlKey,
@@ -27,6 +28,7 @@ Widget _harness({
               label: 'Favorite',
               selected: selected,
               onPressed: onPressed,
+              onLongPress: onLongPress,
               child: const SizedBox(
                 key: _contentKey,
                 width: 100,
@@ -214,4 +216,36 @@ void main() {
       expect(taps, 1);
     },
   );
+
+  testWidgets('a long press wins over the tap and needs an action', (
+    tester,
+  ) async {
+    var taps = 0, holds = 0;
+    await tester.pumpWidget(
+      _harness(onPressed: () => taps++, onLongPress: () => holds++),
+    );
+    await tester.longPress(find.byKey(_contentKey));
+    await tester.pumpAndSettle();
+    expect((taps, holds), (0, 1));
+    await tester.tap(find.byKey(_contentKey));
+    await tester.pumpAndSettle();
+    expect((taps, holds), (1, 1));
+    tester.semantics.longPress(find.semantics.byLabel('Favorite'));
+    await tester.pump();
+    expect((taps, holds), (1, 2));
+
+    await tester.pumpWidget(
+      _harness(onPressed: null, onLongPress: () => holds++),
+    );
+    await tester.longPress(find.byKey(_contentKey));
+    await tester.pumpAndSettle();
+    expect((taps, holds), (1, 2));
+    expect(
+      tester
+          .getSemantics(find.byType(LiquidPrismPressable))
+          .getSemanticsData()
+          .hasAction(SemanticsAction.longPress),
+      isFalse,
+    );
+  });
 }

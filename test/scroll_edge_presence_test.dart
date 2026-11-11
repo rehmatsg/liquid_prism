@@ -8,7 +8,7 @@ import 'app_bar_scroll_test.dart' as scrolling;
 void main() {
   for (final sliver in [false, true]) {
     testWidgets(
-      'initial downward scrolling does not flash the header edge, sliver $sliver',
+      'initial downward scrolling does not flash the full header edge, sliver $sliver',
       (tester) async {
         phone(tester);
         const modes = {
@@ -43,7 +43,11 @@ void main() {
               ),
             );
             await tester.pumpAndSettle();
-            void edgeIs(bool visible) {
+            // A scaffold bar leaving without a reveal keeps the compact edge
+            // over the status bar (62 on this phone); the sliver bar has none.
+            final hidden = sliver ? 'none' : 'compact';
+            void edgeIs(String state) {
+              final reason = '${mode.key} accessory $accessory';
               final progress = tester
                   .widget<LiquidPrismScrollEdge>(
                     find.byType(LiquidPrismScrollEdge),
@@ -51,35 +55,44 @@ void main() {
                   .progress;
               expect(
                 progress,
-                visible ? greaterThan(0) : 0,
-                reason: '${mode.key} accessory $accessory',
+                state == 'none' ? 0 : greaterThan(0),
+                reason: reason,
               );
+              final blur = find.byType(LiquidPrismEdgeBlur);
               expect(
-                find.byType(LiquidPrismEdgeBlur),
-                visible ? findsOneWidget : findsNothing,
+                blur,
+                state == 'none' ? findsNothing : findsOneWidget,
+                reason: reason,
+              );
+              if (state == 'none') return;
+              expect(
+                tester.getRect(blur).bottom,
+                state == 'compact' ? 62 : greaterThan(62),
+                reason: '$reason: $state edge',
               );
             }
 
+            String shownOr(bool full) => full ? 'full' : hidden;
             for (final offset in [1.0, 5.0, 8.0, 30.0]) {
               controller.jumpTo(offset);
               await tester.pumpAndSettle();
-              edgeIs(accessory || mode.key == 'sticky');
+              edgeIs(shownOr(accessory || mode.key == 'sticky'));
             }
             controller.jumpTo(25);
             await tester.pumpAndSettle();
-            edgeIs(accessory || mode.key != 'away');
+            edgeIs(shownOr(accessory || mode.key != 'away'));
             controller.jumpTo(100);
             await tester.pumpAndSettle();
-            edgeIs(accessory || mode.key == 'sticky');
+            edgeIs(shownOr(accessory || mode.key == 'sticky'));
             controller.jumpTo(95);
             await tester.pumpAndSettle();
-            edgeIs(accessory || mode.key != 'away');
+            edgeIs(shownOr(accessory || mode.key != 'away'));
             controller.jumpTo(0);
             await tester.pumpAndSettle();
-            edgeIs(false);
+            edgeIs('none');
             controller.jumpTo(8);
             await tester.pumpAndSettle();
-            edgeIs(accessory || mode.key == 'sticky');
+            edgeIs(shownOr(accessory || mode.key == 'sticky'));
             expect(tester.takeException(), isNull);
           }
         }
@@ -199,6 +212,65 @@ void main() {
       );
       expect(bottom.sigma, 3);
       expect(bottom.fadeOpacity, .25);
+    },
+  );
+
+  testWidgets(
+    'the bottom edge fades out over a collapsing bar\'s last 16 points',
+    (tester) async {
+      phone(tester);
+      double? height = 50;
+      late StateSetter update;
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return LiquidPrismScaffold(
+                title: const Text('Top'),
+                bottomBar: height == null ? null : SizedBox(height: height),
+                slivers: rows(),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final bottomEdge = find.byWidgetPredicate(
+        (widget) =>
+            widget is LiquidPrismScrollEdge && widget.edge == GlassEdge.bottom,
+      );
+      // Content remains below at rest, so only the bar's height limits it.
+      for (final (bar, strength) in <(double?, double)>[
+        (50, 1),
+        (16, 1),
+        (8, .5),
+        (0, 0),
+        (null, 0),
+        (50, 1),
+      ]) {
+        update(() => height = bar);
+        await tester.pump();
+        await tester.pump();
+        final reason = 'bar height $bar';
+        if (bar == null) {
+          expect(bottomEdge, findsNothing, reason: reason);
+          continue;
+        }
+        expect(
+          tester.widget<LiquidPrismScrollEdge>(bottomEdge).progress,
+          closeTo(strength, 1e-9),
+          reason: reason,
+        );
+        expect(
+          find.descendant(
+            of: bottomEdge,
+            matching: find.byType(LiquidPrismEdgeBlur),
+          ),
+          strength == 0 ? findsNothing : findsOneWidget,
+          reason: reason,
+        );
+      }
     },
   );
 
