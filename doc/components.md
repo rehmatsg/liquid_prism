@@ -407,8 +407,8 @@ participates in focus and accessibility.
 `navigationBarStyle.minimizationBehavior` moves the navigation title and controls:
 `automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
 and restores it on reversal; `onScrollUp` reverses those directions. On a
-vertical rail (iPhone Duo), a scaffold's `automatic` bar with a plain title (no
-`largeTitle` or `header`) outside a sheet behaves as `onScrollDown` with
+vertical rail (iPhone Duo), a scaffold's `automatic` bar with an inline title (no
+`trailing`, `largeTitle` or `header`) outside a sheet behaves as `onScrollDown` with
 at-scroll-edge restoration, since its controls stay in the rail; set `never` to
 keep such a bar pinned.
 `minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps

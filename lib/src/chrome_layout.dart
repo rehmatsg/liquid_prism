@@ -294,7 +294,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// [backgroundColor] that cover the status bar and the bar. The effect
   /// follows the body's outermost scroll view and shares the chrome's backdrop
   /// captures, so the leading control and actions refract the unblurred
-  /// content beneath them. Without a top bar nothing is drawn.
+  /// content beneath them. A page without top chrome (no title, leading,
+  /// trailing, accessory or toolbar items) draws no top edge.
   ///
   /// Turning it on after the page appears, as a page might once its entering
   /// transition settles, fades the effects in, blur and fade together, over
@@ -769,12 +770,15 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
     // On a vertical rail (iPhone Duo) the controls live in the rail and the
-    // top bar holds little more than the title, so an automatic bar with a
-    // plain title scrolls away and returns only at the top. A bar that
-    // reveals its title on scroll, and a sheet's bar, stay put.
+    // top bar holds only the title, so an automatic bar with an inline title
+    // scrolls away and returns only at the top. A bar that reveals its title
+    // on scroll, one whose `trailing` stays in the top bar, and a sheet's bar
+    // stay put.
     final navigation =
         rail &&
             !widget.sheet &&
+            inlineTitle != null &&
+            widget.trailing == null &&
             widget.largeTitle == null &&
             widget.header == null &&
             (merged.minimizationBehavior == null ||
@@ -979,9 +983,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         widget.trailing != null ||
         sidebarTabs != null ||
         (!rail && glassToolbarHasContent(content));
+    // Page chrome, not a tab shell's: a sidebar of tabs alone leaves the edge
+    // to the pages it hosts, whose scroll it also hears.
     final hasChrome =
-        topBar ||
+        inlineTitle != null ||
+        widget.largeTitle != null ||
         leading != null ||
+        widget.trailing != null ||
         widget.accessory != null ||
         glassToolbarHasContent(content);
     _minimization.configure(
@@ -1105,28 +1113,30 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               LayoutId(
                 id: _Slot.scrollEdge,
                 child: GlassGroupMembers(
-                  child: ScrollEdgeProgressBuilder(
-                    listenable: Listenable.merge([
-                      _scrollOffset,
-                      _edgeStrength,
-                      _minimization.revealed,
-                    ]),
-                    progress: () =>
-                        _edgeStrength.value *
-                        LiquidPrismScrollEdge.progressFor(
-                          _scrollOffset.value,
-                          revealExtent: revealExtent,
+                  // The style follows a reveal even while the strength holds
+                  // still, so it rebuilds on the flip itself.
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _minimization.revealed,
+                    builder: (context, revealed, _) =>
+                        ScrollEdgeProgressBuilder(
+                          listenable: Listenable.merge([
+                            _scrollOffset,
+                            _edgeStrength,
+                          ]),
+                          progress: () =>
+                              _edgeStrength.value *
+                              LiquidPrismScrollEdge.progressFor(
+                                _scrollOffset.value,
+                                revealExtent: revealExtent,
+                              ),
+                          builder: (context, progress) => LiquidPrismScrollEdge(
+                            progress: progress,
+                            color: widget.backgroundColor,
+                            style: !fullEdge || (compactWhenHidden && !revealed)
+                                ? compactEdge.style
+                                : widget.scrollEdgeStyle,
+                          ),
                         ),
-                    builder: (context, progress) => LiquidPrismScrollEdge(
-                      progress: progress,
-                      color: widget.backgroundColor,
-                      style:
-                          !fullEdge ||
-                              (compactWhenHidden &&
-                                  !_minimization.revealed.value)
-                          ? compactEdge.style
-                          : widget.scrollEdgeStyle,
-                    ),
                   ),
                 ),
               ),

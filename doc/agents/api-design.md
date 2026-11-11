@@ -52,7 +52,10 @@ its own explicit reset: `Glass.tint(null)`.
   (slider track, unselected segments) yield cross-axis drags to an ancestor
   scrollable and lift nothing while held. Do not wrap controls in other
   recognizers, and keep disabled controls recognizer-free so scrolls pass.
-- Async button callbacks may overlap. Loading/exclusive state belongs to the app.
+- Async button callbacks may overlap unless the button opts in: `isLoading`, or
+  `autoLoading` while the returned future is pending, makes `LiquidPrismButton`
+  ignore activation while it stays enabled, focusable and announced as a
+  button. Other exclusive state belongs to the app.
 - Custom tab icons must currently avoid nested repaint boundaries; document this
   renderer limitation rather than silently replacing their stateful subtree.
 
