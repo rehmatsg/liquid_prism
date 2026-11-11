@@ -299,7 +299,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// Turning it on after the page appears, as a page might once its entering
   /// transition settles, fades the effects in, blur and fade together, over
   /// [scrollEdgeFadeDuration]; turning it off fades them out.
-  /// The full top edge covers bars with ordinary text titles. Every other
+  /// The full top edge covers bars with ordinary text titles and any page with
+  /// an [accessory], which sits inside the edge. Every other
   /// page with top chrome (actions only, a glass title, or a bar minimized on
   /// scroll down without a reveal) takes a compact edge over the status bar:
   /// it ends as far below the Dynamic Island as the island sits below the
@@ -892,9 +893,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     // far below the Dynamic Island as the island sits below the screen's
     // top edge, or at the status bar's bottom without an island. Sheets have
     // no status bar beneath them and keep only the full edge.
+    // An accessory row sits inside the edge, so content scrolling under it
+    // takes the full edge whatever the bar above it holds.
     final fullEdge =
-        (inlineTitle != null || widget.largeTitle != null) &&
-        inlineTitle is! LiquidPrismTitle;
+        widget.accessory != null ||
+        ((inlineTitle != null || widget.largeTitle != null) &&
+            inlineTitle is! LiquidPrismTitle);
     final compactWhenHidden = hidesOnScrollDown && widget.accessory == null;
     final compactEdge = _compactEdge(context, media);
     _collapseAt = widget.header != null
@@ -976,7 +980,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         sidebarTabs != null ||
         (!rail && glassToolbarHasContent(content));
     final hasChrome =
-        topBar || leading != null || glassToolbarHasContent(content);
+        topBar ||
+        leading != null ||
+        widget.accessory != null ||
+        glassToolbarHasContent(content);
     _minimization.configure(
       navigation,
       collapseExtent: widget.largeTitle == null ? 0 : extent + largeTitleLead,

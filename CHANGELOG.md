@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Give a scaffold with an `accessory` the full top scroll edge whatever its bar holds, including an accessory with no top bar, as in a search header.
 - Give every non-sheet scaffold with top chrome a top scroll edge. Actions-only bars, glass-title bars and bars minimized on scroll down take a compact edge over the status bar that ends as far below the Dynamic Island as the island sits below the screen's top edge (the status bar's bottom without an island); a revealed bar grows it back to the full edge. `scrollEdge: false` still turns both edges off.
 - Draw rim reflections as one continuous line: the regular rim mirror and the `reflection` band average the surroundings along the edge with Gaussian weights over 15% of the short side (3 to 12 points each way), so nearby detail no longer shows as broken pieces on small controls and a reflection fades out smoothly where it ends.
 - Confine `LiquidPrismStyle.reflection` to the rim: a band at most 4 points wide, or a quarter of the short side on smaller surfaces. The broad reflection lobe that reached up to 24 points into a surface is removed, so no glass reflects across its interior. The built-in regular and clear recipes are unchanged.

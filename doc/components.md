@@ -504,7 +504,8 @@ A static glass title uses toolbar optics, retaining refraction at compact height
 A glass title reveals through its optical material presence, with its logo and
 text following the same progress. It never passes through a whole-title opacity
 or image-filter layer, so the backdrop stays live throughout the reveal.
-Plain text titles take the full top scroll edge. Actions-only bars, glass-title
+Plain text titles, and any page with an `accessory` (including one with no top
+bar, such as a search header), take the full top scroll edge. Actions-only bars, glass-title
 bars and bars minimized on scroll down without a reveal take a compact edge
 over the status bar instead: it ends as far below the Dynamic Island as the
 island sits below the screen's top edge (the status bar's bottom without an
