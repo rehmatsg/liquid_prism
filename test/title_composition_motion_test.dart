@@ -12,6 +12,36 @@ double paintedWidth(WidgetTester tester, Finder finder) {
 }
 
 void main() {
+  testWidgets('inline logos retain their own layout size and corner geometry', (
+    tester,
+  ) async {
+    for (final size in [22.0, 32.0, 40.0]) {
+      const logoKey = Key('sized-logo');
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: LiquidPrismTitle(
+              style: GlassTitleStyle(leadingSize: size, avatarSize: 96),
+              leading: SizedBox.square(
+                dimension: size,
+                child: ClipRSuperellipse(
+                  key: logoKey,
+                  borderRadius: BorderRadius.circular(size * 2 / 9),
+                  child: const ColoredBox(color: Color(0xFF000000)),
+                ),
+              ),
+              child: const Text('Company'),
+            ),
+            body: const SizedBox.expand(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byKey(logoKey)), Size.square(size));
+      expect(paintedWidth(tester, find.byKey(logoKey)), closeTo(size, .01));
+    }
+  });
+
   test('title spring matches sampled SwiftUI snappy motion', () {
     final simulation = SpringSimulation(
       titleCompositionSpring.description,
@@ -145,7 +175,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
       expect(find.byKey(key), findsOneWidget);
       expect(key.currentContext, same(element));
-      expect(tester.getSize(find.byKey(key)), expandedSize);
+      expect(tester.getSize(find.byKey(key)), Size.square(value ? 22 : 64));
       expect(
         paintedWidth(tester, find.byKey(key)),
         lessThan(expandedSize.width),

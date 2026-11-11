@@ -34,6 +34,79 @@ Widget _page({
 void main() {
   for (final sliver in [false, true]) {
     testWidgets(
+      'inline glass title matches icon button height, sliver $sliver',
+      (tester) async {
+        phone(tester);
+        for (final row in [
+          (subtitle: false, pressed: false, height: null),
+          (subtitle: true, pressed: false, height: null),
+          (subtitle: true, pressed: true, height: null),
+          (subtitle: true, pressed: true, height: 60.0),
+        ]) {
+          for (final rail in sliver ? [false] : [false, true]) {
+            final subtitle = row.subtitle ? const Text('Company') : null;
+            final actions = [
+              GlassToolbarItem(
+                icon: const Icon(CupertinoIcons.ellipsis),
+                label: 'Options',
+                onPressed: () {},
+              ),
+            ];
+            final title = LiquidPrismTitle(
+              style: const GlassTitleStyle(leadingSize: 32),
+              leading: const SizedBox.square(dimension: 32),
+              onPressed: row.pressed ? () {} : null,
+              child: const Text('Software Engineer'),
+            );
+            await tester.pumpWidget(
+              CupertinoApp(
+                home: LiquidPrismTheme(
+                  data: LiquidPrismThemeData(
+                    toolbar: GlassToolbarStyle(height: row.height),
+                  ),
+                  child: sliver
+                      ? CustomScrollView(
+                          slivers: [
+                            LiquidPrismSliverAppBar(
+                              title: title,
+                              subtitle: subtitle,
+                              toolbar: actions,
+                            ),
+                            ...rows(),
+                          ],
+                        )
+                      : LiquidPrismScaffold(
+                          placement: rail
+                              ? GlassChromePlacement.rightRail
+                              : GlassChromePlacement.bottom,
+                          title: title,
+                          subtitle: subtitle,
+                          toolbar: actions,
+                          slivers: rows(),
+                        ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            final titleGlass = find.descendant(
+              of: find.byType(LiquidPrismTitle),
+              matching: find.byType(LiquidPrism),
+            );
+            final actionGlass = find.descendant(
+              of: find.byType(LiquidPrismToolbarGroup),
+              matching: find.byType(LiquidPrism),
+            );
+            expect(
+              tester.getSize(titleGlass).height,
+              tester.getSize(actionGlass).height,
+            );
+            expect(tester.takeException(), isNull);
+          }
+        }
+      },
+    );
+
+    testWidgets(
       'subtitle stays inside inline avatar glass at large text, sliver $sliver',
       (tester) async {
         phone(tester);

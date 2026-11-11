@@ -16,32 +16,36 @@ const titleCompositionSpring = GlassSpring(
   bounce: .22,
 );
 
-/// The scaffold's subtitle, composed inside a glass title's capsule.
+/// Bar control geometry and subtitle composition for a glass title capsule.
 @internal
-class GlassTitleSubtitle extends InheritedWidget {
-  const GlassTitleSubtitle({
+class GlassTitleLayout extends InheritedWidget {
+  const GlassTitleLayout({
     super.key,
     required this.subtitle,
     required this.style,
+    required this.controlHeight,
     required super.child,
   });
-  final Widget subtitle;
+  final Widget? subtitle;
+  final double controlHeight;
   final TextStyle style;
-  static GlassTitleSubtitle? maybeOf(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<GlassTitleSubtitle>();
+  static GlassTitleLayout? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GlassTitleLayout>();
   @override
-  bool updateShouldNotify(GlassTitleSubtitle oldWidget) =>
-      subtitle != oldWidget.subtitle || style != oldWidget.style;
+  bool updateShouldNotify(GlassTitleLayout oldWidget) =>
+      subtitle != oldWidget.subtitle ||
+      style != oldWidget.style ||
+      controlHeight != oldWidget.controlHeight;
 }
 
-/// Geometry of a [LiquidPrismTitle]. Null fields fall back to the theme's
-/// `GlassNavigationBarStyle.titleCapsule`, then to the defaults, measured on
-/// iOS 27 device screenshots of SwiftUI apps on iPhone Duo (3x, about a third
-/// of a point): a 64-point avatar that the capsule tucks 6 points under; a
-/// capsule at least 38 points tall with 14 x 9 points of padding around the
-/// title; and a 22-point inline leading inset 12 points from the capsule's
-/// start and 11 above and below, 10 points before the title, which makes the
-/// capsule 44 points tall.
+/// Geometry of a [LiquidPrismTitle]. Null fields inherit the theme's
+/// `GlassNavigationBarStyle.titleCapsule`, then the component defaults.
+/// Inline capsules match the bar controls (44 points on a top bar, 48 on a
+/// rail); default vertical insets adapt to the text and leading slot. Larger
+/// text, explicit insets and minimum heights can require more space.
+/// Above-avatar headers use a 64-point avatar, a 6-point overlap, a capsule
+/// at least 38 points tall and 14 x 9 points of title padding. The default
+/// inline leading size is 22 points, with a 12-point start and 10-point gap.
 @immutable
 final class GlassTitleStyle {
   const GlassTitleStyle({
@@ -195,14 +199,21 @@ class LiquidPrismTitle extends StatefulWidget {
           .merge(style);
 
   /// The height this title takes in a bar whose title line is [lineHeight]
-  /// points tall: the capsule, and the avatar above it.
+  /// points tall: the capsule, and the avatar above it. [controlHeight]
+  /// supplies the bar's icon-button height for inline compositions.
   static double extentOf(
     LiquidPrismTitle title,
     GlassTitleStyle style,
     double lineHeight, {
     double subtitleHeight = 0,
+    double controlHeight = 44,
   }) {
-    return _capsuleHeight(title, style, lineHeight + subtitleHeight) +
+    return _capsuleHeight(
+          title,
+          style,
+          lineHeight + subtitleHeight,
+          controlHeight,
+        ) +
         (title.avatar == null
             ? 0
             : math.max(
@@ -216,15 +227,16 @@ class LiquidPrismTitle extends StatefulWidget {
     LiquidPrismTitle title,
     GlassTitleStyle style,
     double lineHeight,
-  ) => math.max(
-    math.max(
-      style.resolvedMinHeight,
-      lineHeight + style.resolvedPadding.vertical,
-    ),
-    title.leading == null
-        ? 0.0
-        : style.resolvedLeadingSize + style.resolvedLeadingPadding.vertical,
-  );
+    double controlHeight,
+  ) {
+    final metrics = _titleMetrics(
+      style,
+      lineHeight,
+      controlHeight,
+      compact: title.avatar == null,
+    );
+    return title.leading == null ? metrics.plainHeight : metrics.inlineHeight;
+  }
 
   @override
   State<LiquidPrismTitle> createState() => _LiquidPrismTitleState();
@@ -302,8 +314,8 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
 
   Widget _build(BuildContext context) {
     final resolved = widget.resolve(context);
-    final padding = resolved.resolvedPadding;
-    final subtitle = GlassTitleSubtitle.maybeOf(context);
+    final layout = GlassTitleLayout.maybeOf(context);
+    final subtitle = layout?.subtitle;
     final inline = _inline.value.clamp(0.0, 1.0);
     final text = DefaultTextStyle.of(context).style;
     final line =
@@ -311,20 +323,30 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
         (text.height ?? 1.2);
     final subtitleHeight = subtitle == null
         ? 0.0
-        : MediaQuery.textScalerOf(context)
-                      .scale(subtitle.style.fontSize ?? 12) *
-                  (subtitle.style.height ?? 1.2) +
+        : MediaQuery.textScalerOf(context).scale(layout!.style.fontSize ?? 12) *
+                  (layout.style.height ?? 1.2) +
               2;
-    final plainHeight = math.max(
-      resolved.resolvedMinHeight,
-      line + subtitleHeight + padding.vertical,
+    final natural = _titleMetrics(
+      resolved,
+      line + subtitleHeight,
+      layout?.controlHeight ?? 44,
+      compact: false,
     );
-    final inlineHeight = math.max(
-      plainHeight,
-      resolved.resolvedLeadingSize + resolved.resolvedLeadingPadding.vertical,
+    final compact = _titleMetrics(
+      resolved,
+      line + subtitleHeight,
+      layout?.controlHeight ?? 44,
+      compact: true,
     );
-    final height = plainHeight + (inlineHeight - plainHeight) * inline;
-    final around = resolved.resolvedLeadingPadding;
+    final above = _above.value.clamp(0.0, 1.0);
+    final padding = EdgeInsets.lerp(compact.padding, natural.padding, above)!;
+    final around = compact.around;
+    final inlineHeight = compact.inlineHeight;
+    final height =
+        natural.plainHeight +
+        (inlineHeight - natural.plainHeight) * inline +
+        (compact.plainHeight - natural.plainHeight) *
+            (1 - above - inline).clamp(0.0, 1.0);
     final inset = EdgeInsetsGeometry.lerp(
       padding,
       EdgeInsetsDirectional.only(start: around.start, end: padding.right),
@@ -359,10 +381,10 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   DefaultTextStyle(
-                    style: subtitle.style,
+                    style: layout!.style,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    child: subtitle.subtitle,
+                    child: subtitle,
                   ),
                 ],
               ],
@@ -391,27 +413,18 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
               glass: glass.interactive(false),
               role: GlassRole.button,
               shape: GlassShape.capsule,
-              child: Padding(
-                padding: inset,
-                child: DefaultTextStyle.merge(
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  child: content,
-                ),
-              ),
+              child: Padding(padding: inset, child: content),
             ),
           );
     final avatar = _avatar;
-    final above = math.max(0.0, _above.value);
+    final aboveExtent = math.max(0.0, _above.value);
     final size = resolved.resolvedAvatarSize;
     final overlap = math.min(resolved.resolvedAvatarOverlap, size);
     return GlassGroupMembers(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: (size - overlap) * above),
+          SizedBox(height: (size - overlap) * aboveExtent),
           Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.topCenter,
@@ -455,7 +468,7 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                           size / 2 * (1 - placement) +
                           inlineHeight / 2 * placement -
                           dimension / 2 -
-                          (size - overlap) * above;
+                          (size - overlap) * aboveExtent;
                       final hidden =
                           widget.avatar == null && widget.leading == null;
                       return Stack(
@@ -487,10 +500,9 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
                                       scale: .8 + .2 * presence,
                                       child: FittedBox(
                                         child: SizedBox.square(
-                                          dimension: math.max(
-                                            size,
-                                            resolved.resolvedLeadingSize,
-                                          ),
+                                          dimension: widget.avatar != null
+                                              ? size
+                                              : resolved.resolvedLeadingSize,
                                           child: avatar,
                                         ),
                                       ),
@@ -511,4 +523,49 @@ class _LiquidPrismTitleState extends State<LiquidPrismTitle>
       ),
     );
   }
+}
+
+({
+  EdgeInsets padding,
+  EdgeInsetsDirectional around,
+  double plainHeight,
+  double inlineHeight,
+})
+_titleMetrics(
+  GlassTitleStyle style,
+  double textHeight,
+  double controlHeight, {
+  required bool compact,
+}) {
+  var padding = style.resolvedPadding;
+  var around = style.resolvedLeadingPadding;
+  if (compact) {
+    if (style.padding == null) {
+      final vertical = math.min(
+        padding.top,
+        math.max(0.0, (controlHeight - textHeight) / 2),
+      );
+      padding = padding.copyWith(top: vertical, bottom: vertical);
+    }
+    if (style.leadingPadding == null) {
+      final vertical = math.min(
+        around.top,
+        math.max(0.0, (controlHeight - style.resolvedLeadingSize) / 2),
+      );
+      around = around.copyWith(top: vertical, bottom: vertical);
+    }
+  }
+  final plainHeight = math.max(
+    math.max(style.resolvedMinHeight, compact ? controlHeight : 0.0),
+    textHeight + padding.vertical,
+  );
+  return (
+    padding: padding,
+    around: around,
+    plainHeight: plainHeight,
+    inlineHeight: math.max(
+      plainHeight,
+      style.resolvedLeadingSize + around.vertical,
+    ),
+  );
 }

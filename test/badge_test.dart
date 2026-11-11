@@ -141,7 +141,7 @@ void main() {
     for (final direction in TextDirection.values) {
       Offset? horizontalAnchor;
       for (final axis in Axis.values) {
-        double? countWidth;
+        double? countHeight;
         for (final badge in [
           const GlassBadge.count(7),
           const GlassBadge.dot(),
@@ -170,9 +170,9 @@ void main() {
           final rect = tester.getRect(find.byType(GlassBadgeView));
           final group = tester.getRect(find.byType(LiquidPrismToolbarGroup));
           if (badge.count != null) {
-            countWidth = rect.width;
+            countHeight = rect.height;
           } else {
-            expect(rect.width, lessThan(countWidth!));
+            expect(rect.height, countHeight!);
             final anchor = Offset(
               direction == TextDirection.ltr
                   ? group.right - rect.center.dx
