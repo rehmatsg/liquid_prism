@@ -221,6 +221,7 @@ class GlassButtonStyle {
     this.textStyle,
     this.iconSize,
     this.foregroundColor,
+    this.loadingIndicator,
   }) : assert(blur == null || blur >= 0 && blur <= 12),
        assert(iconSize == null || iconSize > 0),
        assert(spacing == null || spacing >= 0);
@@ -246,6 +247,9 @@ class GlassButtonStyle {
   final double? iconSize;
   final Color? foregroundColor;
 
+  /// Replaces the built-in activity indicator of a loading button.
+  final Widget? loadingIndicator;
+
   /// Keep existing fields when an argument is null.
   GlassButtonStyle copyWith({
     GlassButtonVariant? variant,
@@ -265,6 +269,7 @@ class GlassButtonStyle {
     TextStyle? textStyle,
     double? iconSize,
     Color? foregroundColor,
+    Widget? loadingIndicator,
   }) => GlassButtonStyle(
     variant: variant ?? this.variant,
     size: size ?? this.size,
@@ -283,6 +288,7 @@ class GlassButtonStyle {
     textStyle: textStyle ?? this.textStyle,
     iconSize: iconSize ?? this.iconSize,
     foregroundColor: foregroundColor ?? this.foregroundColor,
+    loadingIndicator: loadingIndicator ?? this.loadingIndicator,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -306,6 +312,7 @@ class GlassButtonStyle {
           textStyle: textStyle?.merge(other.textStyle) ?? other.textStyle,
           iconSize: other.iconSize ?? iconSize,
           foregroundColor: other.foregroundColor ?? foregroundColor,
+          loadingIndicator: other.loadingIndicator ?? loadingIndicator,
         );
 }
 

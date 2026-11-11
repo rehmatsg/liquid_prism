@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add `enabled`, `onLongPress`, `isLoading`, `autoLoading`, `loadingIndicator`, `destructive`, `tintColor`, `trailingIcon` and `semanticLabel` to `LiquidPrismButton`, with a built-in activity indicator and `GlassButtonStyle.loadingIndicator`. `LiquidPrismPressable` takes `onLongPress`, and `GlassHapticComponent.button` reports a button's long press.
+- Fade a scaffold's bottom scroll edge with its bottom bar's height, so a bar kept mounted while collapsed draws no edge at zero height.
+- Center automatic inline titles on vertical-rail layouts when the page has no trailing actions; titles keep leading alignment beside them.
+
 ## 0.13.0
 
 - Add HDR lighting for light glass on supported iOS displays. `LiquidPrism.preload()` enables it automatically and `preload(enableHDR: false)` keeps the SDR path. Regular glass lifts its face to about 1.07× white with a rim reaching about 1.3× at the poles and along flat edges; clear glass lifts its face to about 1.19×. Measured against native Liquid Glass in the same HDR capture on device. The rim stays lit under Control Center, as native's does.

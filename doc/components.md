@@ -91,6 +91,15 @@ LiquidPrismButton.icon(
   icon: const Icon(CupertinoIcons.heart),
   onPressed: toggleFavorite,
 )
+
+LiquidPrismButton(
+  label: 'Delete',
+  size: GlassControlSize.small,
+  icon: const Icon(CupertinoIcons.trash),
+  destructive: true,
+  autoLoading: true,
+  onPressed: deleteDraft, // returns a Future
+)
 ```
 
 The icon constructor defaults to a circle and a 48-point minimum extent.
@@ -98,8 +107,19 @@ Style overrides include typography, icon size, material, optics, blur, shape,
 padding, foreground and motion. A direct `variant`, `padding` or
 `foregroundColor` wins over the style, including explicit defaults. Prominent
 buttons default to white text and use a neutral material tint while disabled.
-Null callbacks disable every activation path.
-Async callbacks can overlap; set `onPressed: null` while exclusive work runs.
+Null callbacks and `enabled: false` disable every activation path.
+`isLoading`, or `autoLoading` while the future `onPressed` returns is pending,
+swaps the content for an activity indicator in the same space and ignores
+activation without drawing the disabled colors; `loadingIndicator` (or the
+style's) replaces the built-in indicator. Without either, async callbacks can
+overlap. `destructive` draws the system red as a regular button's foreground
+and a prominent button's tint; `tintColor` tints the glass directly. `icon`
+sits beside the label at the style's `labelPlacement` and `trailingIcon`
+follows both. `onLongPress` plays the theme's long-press haptic
+(`GlassHapticComponent.button`) and wins over the tap once recognized.
+`semanticLabel` replaces the accessible name. Every button keeps a 44-point
+hit area, so `GlassControlSize.small` (28 points) suits text actions in a
+bar's `trailing` slot.
 
 ## Switches
 

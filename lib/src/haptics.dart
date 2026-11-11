@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import 'theme.dart';
 
-enum GlassHapticComponent { tabBar, switchControl, slider, refresh }
+enum GlassHapticComponent { tabBar, switchControl, slider, refresh, button }
 
 enum GlassHapticKind {
   selectionChange,
