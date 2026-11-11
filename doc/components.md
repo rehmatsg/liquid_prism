@@ -272,7 +272,9 @@ page its controller. Pinned `SliverPersistentHeader`s pin below the bar, and
 `SliverFillRemaining` fills the space between the insets, for empty and error
 states. `bottomBar` pins a bar above the home indicator, tab bar or keyboard;
 content under it takes a bottom scroll edge effect in the same glass group as
-the top one. Like a Material `bottomNavigationBar`, it is offered the screen's
+the top one. That edge follows the bar's laid-out height, so a bar that
+collapses to nothing (a presence animation kept mounted) fades its edge out
+over its last 16 points and draws none at zero height. Like a Material `bottomNavigationBar`, it is offered the screen's
 height and must size to its content: an `Align` or a presence animation that
 fills its constraints would cover the page, so wrap one in
 `Column(mainAxisSize: MainAxisSize.min)`. A `body` still works for content that builds its own scrollable:

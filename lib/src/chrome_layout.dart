@@ -309,7 +309,8 @@ class LiquidPrismScaffold extends StatefulWidget {
 
   /// Overrides the theme's [GlassScrollEdgeStyle] field by field. Its
   /// `fadeColor` applies when [backgroundColor] is null. The bottom bar uses
-  /// the soft variant. Set [scrollEdge] to false to disable both edges.
+  /// the soft variant and fades out as the bar collapses to zero height. Set
+  /// [scrollEdge] to false to disable both edges.
   final GlassScrollEdgeStyle? scrollEdgeStyle;
 
   /// The placement of the nearest scaffold, or null outside one.
@@ -485,6 +486,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// [LiquidPrismScaffold.bottomBar].
   final _scrollRemaining = ValueNotifier<double>(0);
 
+  /// The laid-out height of the [LiquidPrismScaffold.bottomBar]. A bar that
+  /// collapses to nothing fades its scroll edge out with it.
+  final _bottomBarExtent = ValueNotifier<double>(0);
+
   /// [_scrollOffset] limited to the range the layout reads: the large title
   /// and its row stop moving once they have scrolled away, so further scroll
   /// frames no longer lay out (and repaint) the chrome.
@@ -565,6 +570,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _layoutOffset.dispose();
     _minimization.dispose();
     _scrollRemaining.dispose();
+    _bottomBarExtent.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _reselection.dispose();
     super.dispose();
@@ -908,6 +914,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         refreshBoundary: _refreshBoundary,
+        bottomBarExtent: _bottomBarExtent,
         placement: resolved,
         minimization: _minimization.progress,
         onMinimizationExtent: _minimization.setExtent,
@@ -1052,9 +1059,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       listenable: Listenable.merge([
                         _scrollRemaining,
                         _edgeStrength,
+                        _bottomBarExtent,
                       ]),
                       progress: () =>
                           _edgeStrength.value *
+                          (_bottomBarExtent.value / revealExtent).clamp(
+                            0.0,
+                            1.0,
+                          ) *
                           LiquidPrismScrollEdge.progressFor(
                             _scrollRemaining.value,
                             revealExtent: revealExtent,
@@ -1497,6 +1509,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.minimization,
     required this.onMinimizationExtent,
     required this.refreshBoundary,
+    required this.bottomBarExtent,
     required this.adjustsMinimizationInsets,
     required this.tabDock,
     required this.style,
@@ -1532,6 +1545,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final Animation<double> minimization;
   final ValueChanged<double> onMinimizationExtent;
   final ValueNotifier<Rect> refreshBoundary;
+
+  /// Receives the bottom bar's laid-out height, zero without one.
+  final ValueNotifier<double> bottomBarExtent;
   final bool adjustsMinimizationInsets;
   final GlassScaffoldStyle style;
   final double keyboard, actionsTop, railBottom;
@@ -2118,6 +2134,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           ),
         ),
       );
+      bottomBarExtent.value = bar.height;
       final barTop = size.height - floor - bar.height;
       final alignment = (style.bottomBarAlignment ?? Alignment.center).resolve(
         textDirection,
@@ -2143,6 +2160,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         );
         positionChild(_Slot.bottomScrollEdge, Offset(contentLeft, barTop));
       }
+    } else {
+      bottomBarExtent.value = 0;
     }
     covered = covered.copyWith(
       bottom: math.max(covered.bottom, keyboard),
