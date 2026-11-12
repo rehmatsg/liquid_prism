@@ -51,10 +51,17 @@ class LiquidPrismStyle {
       brightness,
       saturation,
       light,
-      reflection,
-      reflectionReach,
       splay,
       cornerRadius;
+
+  /// Strength of the surroundings mirrored into the rim band, at most 4
+  /// points (or a quarter of the short side) inside the contour; the interior
+  /// never reflects.
+  final double reflection;
+
+  /// How far outside the contour the rim band reads, growing with depth into
+  /// the rim.
+  final double reflectionReach;
   final Color tint;
 
   LiquidPrismStyle copyWith({

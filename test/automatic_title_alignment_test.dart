@@ -4,46 +4,124 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 void main() {
   testWidgets(
-    'rail text titles lead by default and respect explicit centering',
+    'rail titles center without trailing actions and lead beside them',
     (tester) async {
-      tester.view
-        ..devicePixelRatio = 1
-        ..physicalSize = const Size(800, 600);
-      addTearDown(tester.view.reset);
-      for (final placement in [
-        GlassChromePlacement.leftRail,
-        GlassChromePlacement.rightRail,
-      ]) {
-        for (final centered in [false, true]) {
+      GlassToolbarItem item(GlassToolbarPlacement placement) =>
+          GlassToolbarItem(
+            label: 'Action',
+            icon: const Icon(CupertinoIcons.ellipsis),
+            placement: placement,
+            onPressed: () {},
+          );
+      const trailing = SizedBox(width: 44, height: 44);
+      const leading = GlassTitleAlignment.leading;
+      const center = GlassTitleAlignment.center;
+      for (final left in [true, false]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        final padding = FakeViewPadding(
+          left: left ? 84 : 0,
+          right: left ? 0 : 84,
+          bottom: 34,
+        );
+        tester.view
+          ..devicePixelRatio = 1
+          ..physicalSize = const Size(466, 678)
+          ..padding = padding
+          ..viewPadding = padding;
+        addTearDown(tester.view.reset);
+        for (final (name, expected, title, trailingWidget, toolbar, explicit)
+            in <
+              (
+                String,
+                GlassTitleAlignment,
+                Widget,
+                Widget?,
+                List<GlassToolbarContent>,
+                GlassTitleAlignment?,
+              )
+            >[
+              ('no actions', center, const Text('Inbox'), null, [], null),
+              (
+                'only bottom toolbar items',
+                center,
+                const Text('Inbox'),
+                null,
+                [item(GlassToolbarPlacement.bottom)],
+                null,
+              ),
+              (
+                'a trailing widget',
+                leading,
+                const Text('Inbox'),
+                trailing,
+                [],
+                null,
+              ),
+              (
+                'a top-trailing toolbar item',
+                leading,
+                const Text('Inbox'),
+                null,
+                [item(GlassToolbarPlacement.automatic)],
+                null,
+              ),
+              (
+                'explicit center beside actions',
+                center,
+                const Text('Inbox'),
+                trailing,
+                [],
+                center,
+              ),
+              (
+                'explicit leading without actions',
+                leading,
+                const Text('Inbox'),
+                null,
+                [],
+                leading,
+              ),
+              (
+                'a glass title beside actions',
+                center,
+                const LiquidPrismTitle(child: Text('Inbox')),
+                trailing,
+                [],
+                null,
+              ),
+            ]) {
           await tester.pumpWidget(
             CupertinoApp(
               home: LiquidPrismScaffold(
-                placement: placement,
-                title: const Text('Inbox'),
-                navigationBarStyle: centered
-                    ? const GlassNavigationBarStyle(
-                        titleAlignment: GlassTitleAlignment.center,
-                      )
-                    : null,
+                title: title,
+                trailing: trailingWidget,
+                toolbar: toolbar,
+                navigationBarStyle: GlassNavigationBarStyle(
+                  titleAlignment: explicit,
+                ),
                 body: const SizedBox.expand(key: Key('rail body')),
               ),
             ),
           );
           await tester.pumpAndSettle();
-          final title = tester.getRect(find.text('Inbox'));
-          if (centered) {
-            expect(title.left, greaterThan(150));
-          } else {
+          final body = tester.element(find.byKey(const Key('rail body')));
+          expect(
+            LiquidPrismScaffold.placementOf(body),
+            left
+                ? GlassChromePlacement.leftRail
+                : GlassChromePlacement.rightRail,
+          );
+          final inset = MediaQuery.paddingOf(body);
+          final text = tester.getRect(find.text('Inbox'));
+          final reason = '$name, left rail $left';
+          if (expected == center) {
             expect(
-              title.left,
-              closeTo(
-                MediaQuery.paddingOf(
-                      tester.element(find.byKey(const Key('rail body'))),
-                    ).left +
-                    16,
-                .01,
-              ),
+              text.center.dx,
+              closeTo((inset.left + 466 - inset.right) / 2, .01),
+              reason: reason,
             );
+          } else {
+            expect(text.left, closeTo(inset.left + 16, .01), reason: reason);
           }
         }
       }

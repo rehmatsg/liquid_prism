@@ -321,32 +321,50 @@ vec3 sampleGlass(vec2 samplePoint, vec2 dx, vec2 dy, vec2 direction,
     return color;
 }
 
+// The surroundings beside the rim, averaged along the edge with Gaussian
+// weights over +-halfWindow (sigma halfWindow/2), so the rim reads as one
+// continuous line: detail outside the glass becomes gradual changes in
+// brightness and colour, and where bright surroundings end the line ramps out
+// along the kernel instead of breaking off. Alternate taps step +-across along
+// the normal so thin features outside never line up with the tap grid.
+// Arguments are in scene pixels.
+vec3 readAlongEdge(vec2 center, vec2 tangent, vec2 normal, float across) {
+    vec3 sum = vec3(0.);
+    float total = 0.;
+    for (int i = -4; i <= 4; i++) {
+        float x = float(i) * .25;
+        float w = exp(-2.*x*x);
+        float side = mod(float(i + 4), 2.) * 2. - 1.;
+        sum += readScene(center + tangent*x + normal*(side*across)) * w;
+        total += w;
+    }
+    return sum / total;
+}
+
+// Half the window the rim averages its surroundings over: wide enough on a
+// small control that the reflection is a smooth line, narrower relative to a
+// large surface so it keeps some sense of what is around it.
+float edgeWindow() {
+    return clamp(.15*min(u_extent.x,u_extent.y), 3., 12.);
+}
+
+// Reflection lives on the rim only: the surroundings just outside the contour
+// mirrored into a band at most 4 points (and a quarter of the short side)
+// wide, so no surface reflects across its interior.
 vec3 reflectGlass(vec3 color, vec2 local, vec2 normal, float d, float depth) {
     if (depth < u_derived[3].x) {
-        float broadEnd = u_derived[2].x;
-        float rimEnd = u_derived[2].y;
+        float rimWidth = u_derived[2].x;
         mat2 toScene = mat2(u_transform.x,u_transform.z,u_transform.y,u_transform.w)*u_geometry.y;
         vec2 sceneBoundary = scenePoint(local-normal*d);
         vec2 sceneNormal = toScene*normal;
         vec2 sceneTangent = toScene*vec2(-normal.y,normal.x);
         float reach = u_geometry.z;
-        if (depth < rimEnd) {
-            float edge = max(1.-depth/4.,0.);
-            float rim = edge*sqrt(edge);
-            vec2 tap = sceneBoundary+sceneNormal*(1.+depth*reach/12.);
-            vec2 s = sceneNormal*u_derived[2].z;
-            vec3 reflected = u_derived[2].z > 0.05
-                ? (readScene(tap+s) + readScene(tap-s)) * 0.5
-                : readScene(tap);
-            color = radiance(color,reflected,u_finish.z*rim);
-        }
-        if (depth < broadEnd) {
-            vec2 lobe = sceneBoundary+sceneNormal*(reach*0.5);
-            vec2 spread = sceneTangent*(reach*0.4);
-            vec3 diffuse = (readScene(lobe+spread) + readScene(lobe-spread))*0.5;
-            float fade = 1.-depth/24.;
-            color = radiance(color,diffuse,u_finish.z*fade*fade*0.32);
-        }
+        float edge = max(1.-depth/rimWidth,0.);
+        float rim = edge*sqrt(edge);
+        vec2 tap = sceneBoundary+sceneNormal*(1.+depth*reach/12.);
+        vec3 reflected = readAlongEdge(tap, sceneTangent*edgeWindow(),
+            sceneNormal, max(1.5,u_derived[2].z));
+        color = radiance(color,reflected,u_finish.z*rim);
     }
     return color;
 }
@@ -354,7 +372,10 @@ vec3 reflectGlass(vec3 color, vec2 local, vec2 normal, float d, float depth) {
 // Regular glass shows its surroundings in the outermost point of the face:
 // native mixes in the backdrop from outside the contour (its outer refraction
 // amount, a quarter of the shortest side and at least 16 points, less 4) at
-// .6 opacity on the contour, falling to nothing one point in. Measured on
+// .6 opacity on the contour, falling to nothing one point in. Native mirrors
+// point for point; here the surroundings are averaged along the edge
+// (readAlongEdge) so a small surface shows one continuous line rather than
+// broken pieces of nearby detail. Measured on
 // device with white content at set distances outside the surface.
 vec3 mirrorSurroundings(vec3 color, vec2 local, vec2 normal, float depth) {
     if (u_material.x < .5 || u_material.x > 1.5 || depth >= 1.) return color;
@@ -362,9 +383,9 @@ vec3 mirrorSurroundings(vec3 color, vec2 local, vec2 normal, float depth) {
     if (len < 0.0001) return color;
     vec2 n = normal/len;
     float reach = max(16.,0.25*min(min(u_extent.x,u_extent.y),150.)) - 4.;
-    vec2 p = local + n*reach;
-    vec3 outside = (readScene(scenePoint(p)) * 2.
-        + readScene(scenePoint(p+n*3.)) + readScene(scenePoint(p-n*3.))) / 4.;
+    mat2 toScene = mat2(u_transform.x,u_transform.z,u_transform.y,u_transform.w)*u_geometry.y;
+    vec3 outside = readAlongEdge(scenePoint(local + n*reach),
+        toScene*vec2(-n.y,n.x)*edgeWindow(), toScene*n, 3.);
     // The mirrored surroundings keep a small surface's grade at any size.
     outside = gradeFaceAt(gradeInput(outside),u_material.y > .5 ? .6 : 1.);
     return mix(color,outside,0.6*(1.-depth)*min(len,1.)*u_finish.y);

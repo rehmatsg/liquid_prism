@@ -151,6 +151,233 @@ void main() {
     }
   });
 
+  testWidgets(
+    'an automatic rail bar with an inline title scrolls away until the top',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      const never = GlassNavigationBarStyle(
+        minimizationBehavior: GlassToolbarMinimizationBehavior.never,
+      );
+      final trailingOnly = Semantics(
+        label: 'Edit',
+        child: const SizedBox(width: 44, height: 44),
+      );
+      final railItem = GlassToolbarItem(
+        label: 'Rail action',
+        icon: const Icon(CupertinoIcons.ellipsis),
+        onPressed: () {},
+      );
+      // hides: gone at 300; reveals: back after scrolling up to 240.
+      for (final (name, rail, hides, reveals, page)
+          in <
+            (
+              String,
+              bool,
+              bool,
+              bool,
+              LiquidPrismScaffold Function(ScrollController),
+            )
+          >[
+            (
+              'rail title',
+              true,
+              true,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'rail title with top-trailing items in the rail',
+              true,
+              true,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                toolbar: [railItem],
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'explicit reveal restoration',
+              true,
+              true,
+              true,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                navigationBarStyle: const GlassNavigationBarStyle(
+                  minimizationRestoration:
+                      GlassToolbarMinimizationRestoration.automatic,
+                ),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'phone title',
+              false,
+              false,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'explicit never',
+              true,
+              false,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                navigationBarStyle: never,
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'a trailing widget in the top bar',
+              true,
+              false,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                trailing: const SizedBox(width: 44, height: 44),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'a large title',
+              true,
+              false,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                largeTitle: const Text('Large'),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'a header',
+              true,
+              false,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                header: const SizedBox(height: 120),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'a sheet',
+              true,
+              false,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                sheet: true,
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'no title, only a trailing widget',
+              true,
+              false,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                trailing: trailingOnly,
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            // Positive control: the trailing probe sees a bar that leaves.
+            (
+              'no title, a trailing widget and explicit onScrollDown',
+              true,
+              true,
+              false,
+              (scroll) => LiquidPrismScaffold(
+                trailing: trailingOnly,
+                navigationBarStyle: const GlassNavigationBarStyle(
+                  minimizationBehavior:
+                      GlassToolbarMinimizationBehavior.onScrollDown,
+                  minimizationRestoration:
+                      GlassToolbarMinimizationRestoration.atScrollEdge,
+                ),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+          ]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        final padding = rail
+            ? const FakeViewPadding(left: 84, bottom: 34)
+            : const FakeViewPadding(top: 62, bottom: 34);
+        tester.view
+          ..devicePixelRatio = 1
+          ..physicalSize = rail ? const Size(466, 678) : const Size(402, 874)
+          ..padding = padding
+          ..viewPadding = padding;
+        addTearDown(tester.view.reset);
+        final scroll = ScrollController();
+        addTearDown(scroll.dispose);
+        final scaffold = page(scroll);
+        await tester.pumpWidget(CupertinoApp(home: scaffold));
+        await tester.pumpAndSettle();
+        void barShown(bool shown, double offset) => expect(
+          find.semantics.byLabel(scaffold.title == null ? 'Edit' : 'Inline'),
+          shown ? findsOneWidget : findsNothing,
+          reason: '$name at $offset',
+        );
+
+        if (scaffold.largeTitle == null && scaffold.header == null) {
+          barShown(true, 0);
+        }
+        scroll.jumpTo(300);
+        await tester.pumpAndSettle();
+        barShown(!hides, 300);
+        scroll.jumpTo(240);
+        await tester.pumpAndSettle();
+        barShown(!hides || reveals, 240);
+        if (scaffold.largeTitle == null && scaffold.header == null) {
+          scroll.jumpTo(0);
+          await tester.pumpAndSettle();
+          barShown(true, 0);
+        }
+        expect(tester.takeException(), isNull);
+      }
+
+      // A theme's explicit behavior wins as the scaffold's does.
+      await tester.pumpWidget(const SizedBox.shrink());
+      final scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismTheme(
+            data: const LiquidPrismThemeData(navigationBar: never),
+            child: LiquidPrismScaffold(
+              title: const Text('Inline'),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+        ),
+      );
+      scroll.jumpTo(300);
+      await tester.pumpAndSettle();
+      expect(find.semantics.byLabel('Inline'), findsOneWidget);
+      semantics.dispose();
+    },
+  );
+
   for (final dock in [GlassTabBarPlacement.top, GlassTabBarPlacement.bottom]) {
     testWidgets('only integrated top tabs minimize with the bar, $dock', (
       tester,

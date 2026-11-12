@@ -16,6 +16,7 @@ class LiquidPrismPressable extends StatefulWidget {
     required this.child,
     required this.onPressed,
     required this.label,
+    this.onLongPress,
     this.selected = false,
     this.motion,
     this.focusNode,
@@ -29,6 +30,7 @@ class LiquidPrismPressable extends StatefulWidget {
     required this.child,
     required this.onPressed,
     required this.label,
+    this.onLongPress,
     this.selected = false,
     this.motion,
     this.focusNode,
@@ -44,6 +46,7 @@ class LiquidPrismPressable extends StatefulWidget {
     required this.child,
     this.motion,
   }) : onPressed = null,
+       onLongPress = null,
        label = '',
        selected = false,
        focusNode = null,
@@ -54,6 +57,9 @@ class LiquidPrismPressable extends StatefulWidget {
        _feedbackOnly = true;
   final Widget child;
   final FutureOr<void> Function()? onPressed;
+
+  /// Wins over the tap once recognized; ignored while [onPressed] is null.
+  final VoidCallback? onLongPress;
   final String label;
   final bool selected;
   final GlassMotion? motion;
@@ -179,6 +185,11 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
     alphaPerUnit: NativeMotion.buttonGlowOpacity * .9 * .2,
   );
 
+  void _longPress() {
+    _suppressTap = true;
+    if (_attached && mounted) widget.onLongPress?.call();
+  }
+
   void _invoke() {
     if (_attached && mounted && widget.onPressed != null) widget.onPressed!();
   }
@@ -269,6 +280,9 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
                   : () {
                       if (!_suppressTap) _invoke();
                     },
+              onLongPress: !_enabled || widget.onLongPress == null
+                  ? null
+                  : _longPress,
               child: visual,
             ),
     );
@@ -279,6 +293,7 @@ class _LiquidPrismPressableState extends State<LiquidPrismPressable>
       selected: widget.selected,
       enabled: _enabled,
       onTap: _enabled ? _invoke : null,
+      onLongPress: _enabled && widget.onLongPress != null ? _longPress : null,
       excludeSemantics: true,
       child: FocusableActionDetector(
         enabled: _enabled,

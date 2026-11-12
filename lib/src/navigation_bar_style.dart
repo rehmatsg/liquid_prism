@@ -73,14 +73,20 @@ class GlassNavigationBarStyle {
   /// Automatic centers the inline title when it fits between the controls.
   /// Otherwise it leads in the full available gap before truncating. Explicit
   /// center, leading and trailing keep their requested alignment.
-  /// Vertical-rail layouts lead ordinary automatic titles.
+  /// Vertical-rail layouts lead ordinary automatic titles when the page has
+  /// trailing actions and center them when it has none.
   /// LiquidPrismTitle capsules retain their centered automatic layout.
   final GlassTitleAlignment? titleAlignment;
 
   /// Expanded title alignment. Automatic retains the native leading edge.
   final GlassTitleAlignment? largeTitleAlignment;
 
-  /// Automatic retains the captured non-minimizing default.
+  /// Automatic retains the captured non-minimizing default, except in a
+  /// scaffold on a vertical rail (iPhone Duo): there a bar with an inline
+  /// title, no `trailing`, large title or header, and outside a sheet
+  /// minimizes on scroll down
+  /// and, unless [minimizationRestoration] says otherwise, returns at the
+  /// scroll edge.
   /// Top-bar controls follow the title; rail controls and accessories stay visible.
   final GlassToolbarMinimizationBehavior? minimizationBehavior;
 

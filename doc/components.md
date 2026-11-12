@@ -91,6 +91,15 @@ LiquidPrismButton.icon(
   icon: const Icon(CupertinoIcons.heart),
   onPressed: toggleFavorite,
 )
+
+LiquidPrismButton(
+  label: 'Delete',
+  size: GlassControlSize.small,
+  icon: const Icon(CupertinoIcons.trash),
+  destructive: true,
+  autoLoading: true,
+  onPressed: deleteDraft, // returns a Future
+)
 ```
 
 The icon constructor defaults to a circle and a 48-point minimum extent.
@@ -98,8 +107,20 @@ Style overrides include typography, icon size, material, optics, blur, shape,
 padding, foreground and motion. A direct `variant`, `padding` or
 `foregroundColor` wins over the style, including explicit defaults. Prominent
 buttons default to white text and use a neutral material tint while disabled.
-Null callbacks disable every activation path.
-Async callbacks can overlap; set `onPressed: null` while exclusive work runs.
+Null callbacks and `enabled: false` disable every activation path.
+`isLoading`, or `autoLoading` while the future `onPressed` returns is pending,
+swaps the content for an activity indicator in the same space and ignores
+activation while keeping its colors, focus and enabled semantics; `loadingIndicator` (or the
+style's) replaces the built-in indicator. Without either, async callbacks can
+overlap. `destructive` draws the system red as a regular button's foreground
+and a prominent button's tint, over a component theme's foreground (the
+widget's own `foregroundColor` or local `style` still wins); `tintColor` tints the glass directly. `icon`
+sits beside the label at the style's `labelPlacement` and `trailingIcon`
+follows both. `onLongPress` plays the theme's long-press haptic
+(`GlassHapticComponent.button`) and wins over the tap once recognized.
+`semanticLabel` replaces the accessible name. Every button keeps a 44-point
+hit area, so `GlassControlSize.small` (28 points) suits text actions in a
+bar's `trailing` slot.
 
 ## Switches
 
@@ -272,7 +293,9 @@ page its controller. Pinned `SliverPersistentHeader`s pin below the bar, and
 `SliverFillRemaining` fills the space between the insets, for empty and error
 states. `bottomBar` pins a bar above the home indicator, tab bar or keyboard;
 content under it takes a bottom scroll edge effect in the same glass group as
-the top one. Like a Material `bottomNavigationBar`, it is offered the screen's
+the top one. That edge follows the bar's laid-out height, so a bar that
+collapses to nothing (a presence animation kept mounted) fades its edge out
+over its last `revealExtent` points (16 by default) and draws none at zero height. Like a Material `bottomNavigationBar`, it is offered the screen's
 height and must size to its content: an `Align` or a presence animation that
 fills its constraints would cover the page, so wrap one in
 `Column(mainAxisSize: MainAxisSize.min)`. A `body` still works for content that builds its own scrollable:
@@ -384,7 +407,11 @@ participates in focus and accessibility.
 
 `navigationBarStyle.minimizationBehavior` moves the navigation title and controls:
 `automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
-and restores it on reversal; `onScrollUp` reverses those directions.
+and restores it on reversal; `onScrollUp` reverses those directions. On a
+vertical rail (iPhone Duo), a scaffold's `automatic` bar with an inline title (no
+`trailing`, `largeTitle` or `header`) outside a sheet behaves as `onScrollDown` with
+at-scroll-edge restoration, since its controls stay in the rail; set `never` to
+keep such a bar pinned.
 `minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
 an on-scroll-down bar hidden until content reaches the top. Automatic safe-area
 adjustment keeps content insets stable so rows follow scrolling one for one.
@@ -395,8 +422,8 @@ independent. Minimization follows scroll progress, without a separate fixed-time
 animation. An accessory row stays visible and interactive, moving up to the safe
 top edge as the bar leaves. Its scroll-edge effect and content clearance remain.
 On initial downward departure, the outgoing header does not introduce an edge
-blur/fade band. Reveal-on-scroll-up makes the compact title and its edge eligible
-when scrolling actually restores the bar. With at-scroll-edge restoration, an
+blur/fade band. Until scrolling actually restores the bar, its top edge is the compact
+status-bar edge; a reveal grows it back to the full edge as the bar returns. With at-scroll-edge restoration, an
 expanded title or `header` has no compact-title subtree. A sole inline title still
 appears at the top. Accessories beneath ordinary text titles retain their edge protection in all minimization modes.
 These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
@@ -478,10 +505,16 @@ A static glass title uses toolbar optics, retaining refraction at compact height
 A glass title reveals through its optical material presence, with its logo and
 text following the same progress. It never passes through a whole-title opacity
 or image-filter layer, so the backdrop stays live throughout the reveal.
-Actions-only bars and glass-title bars omit the top scroll-edge blur/fade; plain
-text titles retain it. The bottom scroll edge is independent. On vertical-rail
-layouts, ordinary automatic titles lead; glass titles remain centered and
-explicit alignment wins.
+Plain text titles, and any page with an `accessory` (including one with no top
+bar, such as a search header), take the full top scroll edge. Actions-only bars, glass-title
+bars and bars minimized on scroll down without a reveal take a compact edge
+over the status bar instead: it ends as far below the Dynamic Island as the
+island sits below the screen's top edge (the status bar's bottom without an
+island), so no page with top chrome is left without a top edge. Sheets have no
+status bar beneath them and keep only the full edge. The bottom scroll edge is independent. On vertical-rail
+layouts, ordinary automatic titles lead when the page has trailing actions and
+center when it has none; glass titles remain centered and explicit alignment
+wins.
 
 Toolbar groups materialize as complete, unclipped capsules while their reserved
 layout extent changes. The parent toolbar owns this transition for its groups;

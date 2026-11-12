@@ -294,13 +294,19 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// [backgroundColor] that cover the status bar and the bar. The effect
   /// follows the body's outermost scroll view and shares the chrome's backdrop
   /// captures, so the leading control and actions refract the unblurred
-  /// content beneath them. Without a top bar nothing is drawn.
+  /// content beneath them. A page without top chrome (no title, leading,
+  /// trailing, accessory or top toolbar items) draws no top edge.
   ///
   /// Turning it on after the page appears, as a page might once its entering
   /// transition settles, fades the effects in, blur and fade together, over
   /// [scrollEdgeFadeDuration]; turning it off fades them out.
-  /// Top edges apply to ordinary text titles. Actions-only and glass-title
-  /// bars keep the backdrop clear; bottom edges remain independent.
+  /// The full top edge covers bars with ordinary text titles and any page with
+  /// an [accessory], which sits inside the edge. Every other
+  /// page with top chrome (actions only, a glass title, or a bar minimized on
+  /// scroll down without a reveal) takes a compact edge over the status bar:
+  /// it ends as far below the Dynamic Island as the island sits below the
+  /// screen's top edge, or at the status bar's bottom without an island.
+  /// Sheets keep only the full edge; bottom edges remain independent.
   final bool scrollEdge;
 
   /// How long the scroll edge effects take to fade in or out when
@@ -309,7 +315,8 @@ class LiquidPrismScaffold extends StatefulWidget {
 
   /// Overrides the theme's [GlassScrollEdgeStyle] field by field. Its
   /// `fadeColor` applies when [backgroundColor] is null. The bottom bar uses
-  /// the soft variant. Set [scrollEdge] to false to disable both edges.
+  /// the soft variant and fades out as the bar collapses to zero height. Set
+  /// [scrollEdge] to false to disable both edges.
   final GlassScrollEdgeStyle? scrollEdgeStyle;
 
   /// The placement of the nearest scaffold, or null outside one.
@@ -436,6 +443,39 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    SystemChromeListener.instance.island.addListener(_islandChanged);
+  }
+
+  void _islandChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// The compact top edge: how far down its effect reaches ([target]), the
+  /// soft style it draws with, and the box that leaves for the style's
+  /// dissolve below it ([height]).
+  ({double target, double height, GlassScrollEdgeStyle style}) _compactEdge(
+    BuildContext context,
+    MediaQueryData media,
+  ) {
+    final island = SystemChromeListener.instance.island.value;
+    final target = widget.sheet
+        ? 0.0
+        : island != null
+        ? island.bottom + math.max(0.0, island.top)
+        : media.viewPadding.top;
+    final extension = math.min(
+      GlassScrollEdgeStyle.resolve(context, widget.scrollEdgeStyle).extension ??
+          GlassScrollEdgeStyle.defaultExtension,
+      target,
+    );
+    return (
+      target: target,
+      height: target - extension,
+      style: (widget.scrollEdgeStyle ?? const GlassScrollEdgeStyle()).copyWith(
+        variant: GlassScrollEdgeVariant.soft,
+        extension: extension,
+      ),
+    );
   }
 
   @override
@@ -484,6 +524,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// How much of that scroll view's content lies beyond its end, under a
   /// [LiquidPrismScaffold.bottomBar].
   final _scrollRemaining = ValueNotifier<double>(0);
+
+  /// The laid-out height of the [LiquidPrismScaffold.bottomBar]. A bar that
+  /// collapses to nothing fades its scroll edge out with it.
+  final _bottomBarExtent = ValueNotifier<double>(0);
 
   /// [_scrollOffset] limited to the range the layout reads: the large title
   /// and its row stop moving once they have scrolled away, so further scroll
@@ -552,6 +596,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
   @override
   void dispose() {
+    SystemChromeListener.instance.island.removeListener(_islandChanged);
     _refreshDisplacement.dispose();
     _refreshBoundary.dispose();
     _titleHeight.dispose();
@@ -565,6 +610,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     _layoutOffset.dispose();
     _minimization.dispose();
     _scrollRemaining.dispose();
+    _bottomBarExtent.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _reselection.dispose();
     super.dispose();
@@ -719,10 +765,32 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final top = widget.sheet
         ? _ChromeLayout._sheetTop
         : math.max(media.viewPadding.top, _ChromeLayout._minimumTop);
-    final navigation =
+    final merged =
         (LiquidPrismTheme.of(context).navigationBar ??
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
+    // On a vertical rail (iPhone Duo) the controls live in the rail and the
+    // top bar holds only the title, so an automatic bar with an inline title
+    // scrolls away and returns only at the top. A bar that reveals its title
+    // on scroll, one whose `trailing` stays in the top bar, and a sheet's bar
+    // stay put.
+    final navigation =
+        rail &&
+            !widget.sheet &&
+            inlineTitle != null &&
+            widget.trailing == null &&
+            widget.largeTitle == null &&
+            widget.header == null &&
+            (merged.minimizationBehavior == null ||
+                merged.minimizationBehavior ==
+                    GlassToolbarMinimizationBehavior.automatic)
+        ? merged.copyWith(
+            minimizationBehavior: GlassToolbarMinimizationBehavior.onScrollDown,
+            minimizationRestoration:
+                merged.minimizationRestoration ??
+                GlassToolbarMinimizationRestoration.atScrollEdge,
+          )
+        : merged;
     final titleStyle = TextStyle(
       fontFamily: 'CupertinoSystemText',
       fontSize: widget.subtitle == null ? 17 : 15,
@@ -823,6 +891,20 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _ => false,
     };
     final edges = widget.scrollEdge || !_edgePresence.isDismissed;
+    // The full top edge belongs to ordinary text titles. Every other page
+    // with top chrome (actions only, a glass title, or a bar minimized
+    // without reveal) takes the compact edge over the status bar: it ends as
+    // far below the Dynamic Island as the island sits below the screen's
+    // top edge, or at the status bar's bottom without an island. Sheets have
+    // no status bar beneath them and keep only the full edge.
+    // An accessory row sits inside the edge, so content scrolling under it
+    // takes the full edge whatever the bar above it holds.
+    final fullEdge =
+        widget.accessory != null ||
+        ((inlineTitle != null || widget.largeTitle != null) &&
+            inlineTitle is! LiquidPrismTitle);
+    final compactWhenHidden = hidesOnScrollDown && widget.accessory == null;
+    final compactEdge = _compactEdge(context, media);
     _collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
         : widget.largeTitle == null
@@ -901,6 +983,15 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         widget.trailing != null ||
         sidebarTabs != null ||
         (!rail && glassToolbarHasContent(content));
+    // Page chrome, not a tab shell's: a sidebar of tabs alone leaves the edge
+    // to the pages it hosts, whose scroll it also hears.
+    final hasChrome =
+        inlineTitle != null ||
+        widget.largeTitle != null ||
+        leading != null ||
+        widget.trailing != null ||
+        widget.accessory != null ||
+        glassToolbarHasContent(content);
     _minimization.configure(
       navigation,
       collapseExtent: widget.largeTitle == null ? 0 : extent + largeTitleLead,
@@ -908,6 +999,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         refreshBoundary: _refreshBoundary,
+        bottomBarExtent: _bottomBarExtent,
         placement: resolved,
         minimization: _minimization.progress,
         onMinimizationExtent: _minimization.setExtent,
@@ -937,9 +1029,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             ? GlassTitleAlignment.center
             : navigation.titleAlignment == null ||
                   navigation.titleAlignment == GlassTitleAlignment.automatic
-            ? (rail
+            ? (!rail
+                  ? GlassTitleAlignment.automatic
+                  : widget.trailing != null ||
+                        glassToolbarHasContent(widget._trailingContent)
                   ? GlassTitleAlignment.leading
-                  : GlassTitleAlignment.automatic)
+                  : GlassTitleAlignment.center)
             : navigation.titleAlignment!,
         contentPadding: (navigation.contentPadding ?? EdgeInsets.zero).resolve(
           Directionality.of(context),
@@ -953,6 +1048,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         actionsTop: actionsTop,
         railBottom: railBottom,
         sheet: widget.sheet,
+        fullEdge: fullEdge,
+        compactEdgeHeight: compactEdge.height,
+        compactWhenHidden: compactWhenHidden,
+        revealed: _minimization.revealed,
         edgeFrame:
             widget.accessory == null &&
                 GlassScrollEdgeStyle.resolve(
@@ -1010,33 +1109,34 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ),
               ),
             ),
-            if (edges &&
-                (inlineTitle != null || widget.largeTitle != null) &&
-                inlineTitle is! LiquidPrismTitle)
+            if (edges && (fullEdge || (compactEdge.target > 0 && hasChrome)))
               LayoutId(
                 id: _Slot.scrollEdge,
                 child: GlassGroupMembers(
-                  child: ScrollEdgeProgressBuilder(
-                    listenable: Listenable.merge([
-                      _scrollOffset,
-                      _edgeStrength,
-                      _minimization.revealed,
-                    ]),
-                    progress: () =>
-                        (widget.accessory != null ||
-                                !hidesOnScrollDown ||
-                                _minimization.revealed.value
-                            ? _edgeStrength.value
-                            : 0) *
-                        LiquidPrismScrollEdge.progressFor(
-                          _scrollOffset.value,
-                          revealExtent: revealExtent,
+                  // The style follows a reveal even while the strength holds
+                  // still, so it rebuilds on the flip itself.
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _minimization.revealed,
+                    builder: (context, revealed, _) =>
+                        ScrollEdgeProgressBuilder(
+                          listenable: Listenable.merge([
+                            _scrollOffset,
+                            _edgeStrength,
+                          ]),
+                          progress: () =>
+                              _edgeStrength.value *
+                              LiquidPrismScrollEdge.progressFor(
+                                _scrollOffset.value,
+                                revealExtent: revealExtent,
+                              ),
+                          builder: (context, progress) => LiquidPrismScrollEdge(
+                            progress: progress,
+                            color: widget.backgroundColor,
+                            style: !fullEdge || (compactWhenHidden && !revealed)
+                                ? compactEdge.style
+                                : widget.scrollEdgeStyle,
+                          ),
                         ),
-                    builder: (context, progress) => LiquidPrismScrollEdge(
-                      progress: progress,
-                      color: widget.backgroundColor,
-                      style: widget.scrollEdgeStyle,
-                    ),
                   ),
                 ),
               ),
@@ -1049,9 +1149,14 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       listenable: Listenable.merge([
                         _scrollRemaining,
                         _edgeStrength,
+                        _bottomBarExtent,
                       ]),
                       progress: () =>
                           _edgeStrength.value *
+                          (_bottomBarExtent.value / revealExtent).clamp(
+                            0.0,
+                            1.0,
+                          ) *
                           LiquidPrismScrollEdge.progressFor(
                             _scrollRemaining.value,
                             revealExtent: revealExtent,
@@ -1494,6 +1599,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.minimization,
     required this.onMinimizationExtent,
     required this.refreshBoundary,
+    required this.bottomBarExtent,
     required this.adjustsMinimizationInsets,
     required this.tabDock,
     required this.style,
@@ -1517,11 +1623,22 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.actionsTop,
     required this.railBottom,
     required this.sheet,
+    required this.fullEdge,
+    required this.compactEdgeHeight,
+    required this.compactWhenHidden,
+    required this.revealed,
     required this.edgeFrame,
     required this.corner,
     required this.sidebar,
     required this.reveal,
-  }) : super(relayout: Listenable.merge([reveal, scrollOffset, minimization]));
+  }) : super(
+         relayout: Listenable.merge([
+           reveal,
+           scrollOffset,
+           minimization,
+           revealed,
+         ]),
+       );
 
   final GlassChromePlacement placement;
   final EdgeInsets viewPadding;
@@ -1529,6 +1646,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final Animation<double> minimization;
   final ValueChanged<double> onMinimizationExtent;
   final ValueNotifier<Rect> refreshBoundary;
+
+  /// Receives the bottom bar's laid-out height, zero without one.
+  final ValueNotifier<double> bottomBarExtent;
   final bool adjustsMinimizationInsets;
   final GlassScaffoldStyle style;
   final double keyboard, actionsTop, railBottom;
@@ -1538,6 +1658,20 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   /// 27, a hard edge ends at the bar frame, 10 points below 44-point
   /// controls; with an accessory the accessory ends the frame.
   final double edgeFrame;
+
+  /// Whether the top edge can take the full bar extent (an ordinary text
+  /// title); otherwise it is the compact status-bar edge.
+  final bool fullEdge;
+
+  /// The compact edge's box height.
+  final double compactEdgeHeight;
+
+  /// Whether a bar that minimizes on scroll down falls back to the compact
+  /// edge until a scroll reversal reveals it.
+  final bool compactWhenHidden;
+
+  /// Whether a scroll reversal has revealed a minimized bar.
+  final ValueListenable<bool> revealed;
 
   /// Height of the row below the top bar, 0 without one.
   final double accessoryHeight;
@@ -1799,22 +1933,30 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         contentPadding.right;
 
     if (hasChild(_Slot.scrollEdge)) {
+      final full = math.max(
+        0.0,
+        top +
+            barRow +
+            largeHeight +
+            accessoryHeight +
+            topDockHeight +
+            edgeFrame -
+            (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
+      );
+      // A revealed bar grows its edge back from the compact one as it
+      // returns, so the hand-over is continuous at either end.
+      final double height = !fullEdge
+          ? compactEdgeHeight
+          : !compactWhenHidden
+          ? full
+          : revealed.value
+          ? compactEdgeHeight +
+                (full - compactEdgeHeight) * (1 - minimization.value)
+          : compactEdgeHeight;
       layoutChild(
         _Slot.scrollEdge,
         BoxConstraints.tight(
-          Size(
-            math.max(0, contentRight - contentLeft),
-            math.max(
-              0,
-              top +
-                  barRow +
-                  largeHeight +
-                  accessoryHeight +
-                  topDockHeight +
-                  edgeFrame -
-                  (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
-            ),
-          ),
+          Size(math.max(0, contentRight - contentLeft), math.max(0, height)),
         ),
       );
       positionChild(_Slot.scrollEdge, Offset(contentLeft, 0));
@@ -2115,6 +2257,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           ),
         ),
       );
+      bottomBarExtent.value = bar.height;
       final barTop = size.height - floor - bar.height;
       final alignment = (style.bottomBarAlignment ?? Alignment.center).resolve(
         textDirection,
@@ -2140,6 +2283,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         );
         positionChild(_Slot.bottomScrollEdge, Offset(contentLeft, barTop));
       }
+    } else {
+      bottomBarExtent.value = 0;
     }
     covered = covered.copyWith(
       bottom: math.max(covered.bottom, keyboard),
@@ -2159,6 +2304,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   @override
   bool shouldRelayout(_ChromeLayout old) =>
       placement != old.placement ||
+      fullEdge != old.fullEdge ||
+      compactEdgeHeight != old.compactEdgeHeight ||
+      compactWhenHidden != old.compactWhenHidden ||
+      revealed != old.revealed ||
       minimization != old.minimization ||
       adjustsMinimizationInsets != old.adjustsMinimizationInsets ||
       onMinimizationExtent != old.onMinimizationExtent ||

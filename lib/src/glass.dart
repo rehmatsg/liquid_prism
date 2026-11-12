@@ -1046,12 +1046,14 @@ class _RenderGlass extends RenderProxyBox {
     final displacement = math.min(style.refraction * lens, minExtent * 0.55);
     final dpr = pixelRatio;
     final sigma = style.frost * dpr;
-    var broadEnd = 0.0;
+    // Reflection is a rim band: 4 points, or a quarter of the short side on a
+    // smaller surface, ending where its weight moves no channel two steps.
+    final rimWidth = math.max(math.min(4.0, minExtent * 0.25), 0.001);
     var rimEnd = 0.0;
     if (style.reflection > 0.001 && style.reflectionReach > 0.001) {
       final invisible = 0.00784 / math.max(style.reflection, 0.0001);
-      broadEnd = 24 * (1 - math.sqrt(math.min(invisible / 0.32, 1)));
-      rimEnd = 4 * (1 - math.pow(math.min(invisible, 1), 2 / 3).toDouble());
+      rimEnd =
+          rimWidth * (1 - math.pow(math.min(invisible, 1), 2 / 3).toDouble());
     }
     final radius = math.min(style.cornerRadius, minExtent * 0.5);
     // One device pixel in points, from the contour transform's scale. The
@@ -1077,11 +1079,11 @@ class _RenderGlass extends RenderProxyBox {
       // A moment-matched pair integrates footprints up to 2.2 sigma.
       4.84 * sigma * sigma,
       0, // Chromatic split is written alongside its band after packet assembly.
-      broadEnd,
+      rimWidth,
       rimEnd,
       style.frost * 0.85,
       radius,
-      math.max(broadEnd, rimEnd),
+      rimEnd,
       1 / dpr,
       rect.width / rect.height,
       bypass,
