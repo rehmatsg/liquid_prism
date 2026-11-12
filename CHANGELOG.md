@@ -2,12 +2,14 @@
 
 ## Unreleased
 
+## 0.14.0
+
 - Give a scaffold with an `accessory` the full top scroll edge whatever its bar holds, including an accessory with no top bar, as in a search header.
 - Give every non-sheet scaffold with top chrome a top scroll edge. Actions-only bars, glass-title bars and bars minimized on scroll down take a compact edge over the status bar that ends as far below the Dynamic Island as the island sits below the screen's top edge (the status bar's bottom without an island); a revealed bar grows it back to the full edge. `scrollEdge: false` still turns both edges off.
 - Draw rim reflections as one continuous line: the regular rim mirror and the `reflection` band average the surroundings along the edge with Gaussian weights over 15% of the short side (3 to 12 points each way), so nearby detail no longer shows as broken pieces on small controls and a reflection fades out smoothly where it ends.
 - Confine `LiquidPrismStyle.reflection` to the rim: a band at most 4 points wide, or a quarter of the short side on smaller surfaces. The broad reflection lobe that reached up to 24 points into a surface is removed, so no glass reflects across its interior. The built-in regular and clear recipes are unchanged.
 - On vertical-rail layouts (iPhone Duo), an automatic scaffold bar with an inline title, no `trailing`, large title or header, and outside a sheet now hides on scroll down and returns at the top. Bars that reveal a title on scroll keep it; an explicit `minimizationBehavior` still wins.
-- Add `enabled`, `onLongPress`, `isLoading`, `autoLoading`, `loadingIndicator`, `destructive`, `tintColor`, `trailingIcon` and `semanticLabel` to `LiquidPrismButton`, with a built-in activity indicator and `GlassButtonStyle.loadingIndicator`. `LiquidPrismPressable` takes `onLongPress`, and `GlassHapticComponent.button` reports a button's long press.
+- Add `enabled`, `onLongPress`, `isLoading`, `autoLoading`, `loadingIndicator`, `destructive`, `tintColor`, `trailingIcon` and `semanticLabel` to `LiquidPrismButton`, with a built-in activity indicator and `GlassButtonStyle.loadingIndicator`. `LiquidPrismPressable` takes `onLongPress`, and `GlassHapticComponent.button` reports a button's long press; an exhaustive `switch` over `GlassHapticComponent` needs the new case. A button's foreground now resolves as its own `foregroundColor` or local `style`, then `destructive`, then the theme's button style, so a local `textStyle` colour beats a theme button foreground.
 - Fade a scaffold's bottom scroll edge with its bottom bar's height, so a bar kept mounted while collapsed draws no edge at zero height.
 - Center automatic inline titles on vertical-rail layouts when the page has no trailing actions; titles keep leading alignment beside them.
 
