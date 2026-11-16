@@ -1,6 +1,6 @@
 # Contributing
 
-Use Flutter 3.47+ with Dart 3.13.3+. iOS builds require macOS and a compatible Xcode.
+Use Flutter 3.50+ with Dart 3.14+. iOS builds require macOS and a compatible Xcode.
 The public API is exported by `lib/liquid_prism.dart`; keep consumer examples and
 `doc/` in sync when changing it.
 

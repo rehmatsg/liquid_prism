@@ -10,7 +10,7 @@ change, reusable styles for a component, or a theme for the whole app.
 
 ## Install
 
-Requires **Flutter 3.47+ / Dart 3.13.3+**. The supported app targets are iOS and
+Requires **Flutter 3.50+ / Dart 3.14+**. The supported app targets are iOS and
 Android. Native menus require iOS 17.4+; other platforms use the Material fallback.
 Glass uses Impeller shader filters when available and a frosted fallback otherwise.
 
@@ -19,7 +19,7 @@ dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: v0.14.0
+      ref: v0.15.0
 ```
 
 Run `flutter pub get`. For breaking API changes, see the [0.7 migration guide](doc/releases/0.7.md).
@@ -32,7 +32,7 @@ pub.dev.
 https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
 Future<void> main() async {
@@ -173,7 +173,7 @@ LiquidPrismSlider(
 The tab bar is compact by default and grows for longer labels. Use
 `GlassTabBarStyle(sizing: GlassTabBarSizing.fill)` for full-width navigation. Place it where your
 layout needs it; the widget does not add safe-area margins. The icons below use
-`package:flutter/cupertino.dart`.
+`package:cupertino_ui/cupertino_ui.dart`.
 
 https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142
 

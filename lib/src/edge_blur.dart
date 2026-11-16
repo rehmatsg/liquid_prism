@@ -599,13 +599,36 @@ class _RenderEdgeBlur extends RenderProxyBox {
     return _fadePicture = recorder.endRecording();
   }
 
+  /// Paints the fade strips, clipped to the box by the same hard edge that
+  /// clips the content in [_paintContent].
+  ///
+  /// Each strip overhangs the box by [_fadeBleed] on its outer edge and both
+  /// sides, so the clip alone decides how much of a partly covered edge pixel
+  /// the strip owns, by the same rule that decides the content's share. A
+  /// strip that stopped exactly at the box edge would cover that pixel by its
+  /// own anti-aliasing instead, and a box at a fractional position (any
+  /// scroll offset) would show a hairline of unfaded content along the edge.
+  /// The gradient stays anchored on the true strip; its clamped end holds the
+  /// solid color through the overhang.
+  ///
+  /// The paint is not anti-aliased, which keeps it off Impeller's SDF renderer
+  /// (opt-in on iOS, on by default on desktop). Since Flutter 3.50 that
+  /// renderer shades linear gradients itself without the ordered dither the
+  /// gradient pipelines apply (flutter/flutter#192124, #192962), so a long,
+  /// low-contrast fade bands into visible steps. The strip needs no edge
+  /// anti-aliasing of its own while the clip shapes its edges; restore it once
+  /// UberSDF gradients dither.
   void _drawFades(Canvas canvas) {
+    canvas
+      ..save()
+      ..clipRect(Offset.zero & size, doAntiAlias: false);
     for (final spec in _fades) {
       final rect = _stripRect(spec);
       if (rect.isEmpty) continue;
       canvas.drawRect(
-        rect,
+        _overhang(rect, spec.edge),
         Paint()
+          ..isAntiAlias = false
           ..shader = GlassEdgeFade.shader(
             color: spec.fadeColor!,
             rect: rect,
@@ -616,6 +639,44 @@ class _RenderEdgeBlur extends RenderProxyBox {
           ),
       );
     }
+    canvas.restore();
+  }
+
+  /// How far a fade strip overhangs the box past each edge it shares with the
+  /// box. One logical pixel spans more than the half physical pixel an
+  /// anti-aliased edge reaches outward at any scale above a sixth.
+  static const _fadeBleed = 1.0;
+
+  /// [strip] grown by [_fadeBleed] past the box on its outer edge and both
+  /// sides. The inner edge, where the fade ends inside the box, stays put.
+  static Rect _overhang(Rect strip, GlassEdge edge) {
+    const bleed = _fadeBleed;
+    return switch (edge) {
+      GlassEdge.top => Rect.fromLTRB(
+        strip.left - bleed,
+        strip.top - bleed,
+        strip.right + bleed,
+        strip.bottom,
+      ),
+      GlassEdge.bottom => Rect.fromLTRB(
+        strip.left - bleed,
+        strip.top,
+        strip.right + bleed,
+        strip.bottom + bleed,
+      ),
+      GlassEdge.left => Rect.fromLTRB(
+        strip.left - bleed,
+        strip.top - bleed,
+        strip.right,
+        strip.bottom + bleed,
+      ),
+      GlassEdge.right => Rect.fromLTRB(
+        strip.left,
+        strip.top - bleed,
+        strip.right + bleed,
+        strip.bottom + bleed,
+      ),
+    };
   }
 
   /// The self-contained two-pass filter for the texture frame, rebuilt only
