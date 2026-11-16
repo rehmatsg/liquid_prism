@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.15.0
+
+- Require Flutter 3.50 and Dart 3.14. Material and Cupertino now come from the `material_ui` and `cupertino_ui` packages, which Flutter 3.50 makes the home of its design libraries, so an app that installs its theme through `material_ui` themes the fallback menu.
+- Cover a box's edge pixels fully with its edge fade. A box at a fractional position, such as a scrolled list or an animating sheet, no longer shows a hairline of unfaded content along the strip's outer or side edges.
+- Keep edge fades smooth under Impeller's SDF renderer, which since Flutter 3.50 draws linear gradients without dithering. Long, low-contrast fades banded into visible steps there.
+
 ## 0.14.0
 
 - Give a scaffold with an `accessory` the full top scroll edge whatever its bar holds, including an accessory with no top bar, as in a search header.
