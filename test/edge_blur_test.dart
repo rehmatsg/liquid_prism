@@ -73,6 +73,47 @@ void main() {
     expect(pixels[3][0], 0);
   });
 
+  testWidgets('a solid fade covers the content up to a fractional box edge', (
+    tester,
+  ) async {
+    final imageKey = GlobalKey();
+    await tester.pumpWidget(
+      glassHarness(
+        imageKey: imageKey,
+        background: const Color(0xFF000000),
+        // 199 x 119 centred in 240 x 160: every box edge lands on a half pixel,
+        // the way a scrolled or animated box does.
+        child: SizedBox(
+          width: 199,
+          height: 119,
+          child: LiquidPrismEdgeBlur(
+            edges: const [
+              GlassEdgeBlur(
+                edge: GlassEdge.bottom,
+                extent: 40,
+                sigma: 0,
+                plateau: .5,
+                fadeColor: Color(0xFF000000),
+              ),
+            ],
+            child: const ColoredBox(color: Color(0xFFFFFFFF)),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    // The box spans x 20.5–219.5 and y 20.5–139.5. Row 139 and column 219
+    // are half inside it; the strip is solid there, so no content shows.
+    final pixels = await pixelsAt(tester, imageKey, const [
+      Offset(120, 139), // the outer edge
+      Offset(219, 130), // a side edge inside the solid plateau
+      Offset(120, 60), // above the strip: content
+    ]);
+    expect(pixels[0][0], 0, reason: 'content leaks under the outer edge');
+    expect(pixels[1][0], 0, reason: 'content leaks under the side edge');
+    expect(pixels[2][0], greaterThan(250));
+  });
+
   testWidgets('keeps child state as strips toggle', (tester) async {
     final controller = ScrollController();
     addTearDown(controller.dispose);
