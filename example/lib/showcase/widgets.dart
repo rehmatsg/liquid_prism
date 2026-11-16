@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show DisplayFeatureState;
 
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
 /// System grouped-list colors the package palette doesn't carry.

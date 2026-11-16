@@ -17,7 +17,7 @@ jobs:
       - run: python3 tool/release.py check --tag "$GITHUB_REF_NAME"
       - uses: subosito/flutter-action@v2.23.0
         with:
-          flutter-version: '3.47.4'
+          flutter-version: '3.50.0'
           channel: stable
           cache: true
       - run: ./tool/check.sh

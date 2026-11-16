@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/physics.dart';
 import 'package:liquid_prism/src/title.dart' show titleCompositionSpring;
 import 'package:flutter_test/flutter_test.dart';

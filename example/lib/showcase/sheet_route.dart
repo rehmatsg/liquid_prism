@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 /// Cupertino's drag/scroll coordination with plain transforms over live glass.
 class ShowcaseSheetRoute extends CupertinoSheetRoute<void> {
