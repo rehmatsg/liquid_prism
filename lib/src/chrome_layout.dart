@@ -997,9 +997,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           final visible =
               eligible && (!swaps || (large ? !_collapsed : _collapsed));
           final inline = _inlineFade.value;
+          // A bar hidden on scroll down moves off with the content at full
+          // presence; only a bar that appears on scroll up fades.
           final opacity =
               (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
-              (1 - _minimization.progress.value) *
+              (hidesOnScrollDown ? 1.0 : 1 - _minimization.progress.value) *
               (eligible ? 1 : 0);
           final moved = large || !swaps
               ? child!
@@ -1055,6 +1057,16 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       navigation,
       collapseExtent: widget.largeTitle == null ? 0 : extent + largeTitleLead,
     );
+    // Every action counts, in the bar or on the rail.
+    final titleAlignment = glassDefaultTitleAlignment(
+      requested: navigation.titleAlignment,
+      glassTitle: inlineTitle is LiquidPrismTitle,
+      actions:
+          glassToolbarItemCount(widget._trailingContent) +
+          (widget.trailing != null ? 1 : 0),
+      foldedRail: rail && !regular,
+      sheet: widget.sheet,
+    );
     final layout = CustomMultiChildLayout(
       delegate: _ChromeLayout(
         refreshBoundary: _refreshBoundary,
@@ -1065,6 +1077,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         adjustsMinimizationInsets:
             navigation.minimizationSafeAreaAdjustment ==
             GlassToolbarMinimizationSafeAreaAdjustment.enabled,
+        slidesOff: hidesOnScrollDown,
         tabDock: explicitDock,
         style: scaffoldStyle,
         viewPadding: padding,
@@ -1080,22 +1093,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             (rail || sidebar || corner != null
                 ? 16
                 : LiquidPrismScaffold.topBarClearance),
-        titleAlignment:
-            (navigation.titleAlignment == null ||
-                    navigation.titleAlignment ==
-                        GlassTitleAlignment.automatic) &&
-                inlineTitle is LiquidPrismTitle
-            ? GlassTitleAlignment.center
-            : navigation.titleAlignment == null ||
-                  navigation.titleAlignment == GlassTitleAlignment.automatic
-            ? (!rail
-                  ? GlassTitleAlignment.automatic
-                  : widget.trailing != null ||
-                        glassToolbarHasContent(widget._trailingContent) ||
-                        glassToolbarHasContent(barLeading)
-                  ? GlassTitleAlignment.leading
-                  : GlassTitleAlignment.center)
-            : navigation.titleAlignment!,
+        titleAlignment: titleAlignment,
         contentPadding: (navigation.contentPadding ?? EdgeInsets.zero).resolve(
           Directionality.of(context),
         ),
@@ -1253,12 +1251,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     subtitleStyle,
                     large: false,
                     controlHeight: titleControlHeight,
-                    alignment:
-                        navigation.titleAlignment == null ||
-                            navigation.titleAlignment ==
-                                GlassTitleAlignment.automatic
+                    alignment: titleAlignment == GlassTitleAlignment.automatic
                         ? GlassTitleAlignment.center
-                        : navigation.titleAlignment!,
+                        : titleAlignment,
                   ),
                   titleStyle,
                   large: false,
@@ -1431,7 +1426,12 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               _Slot.barActions ||
               _Slot.trailing => true,
               _Slot.leading || _Slot.actions => !rail,
-              _Slot.scrollEdge => widget.accessory == null,
+              // A bar that scrolls away leaves the compact edge in place; the
+              // edge grows back by its own height and strength on a reveal.
+              // A backdrop blur ignores a fading ancestor, so wrapping it
+              // would pop the blur in at the hidden end.
+              _Slot.scrollEdge =>
+                widget.accessory == null && !hidesOnScrollDown,
               _Slot.tabBar => explicitDock == GlassTabBarPlacement.top,
               _ => false,
             };
@@ -1440,6 +1440,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     id: child.id,
                     child: NavigationBarPresence(
                       progress: _minimization.progress,
+                      fades: !hidesOnScrollDown,
                       child: child.child,
                     ),
                   )
@@ -1777,6 +1778,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.refreshBoundary,
     required this.bottomBarExtent,
     required this.adjustsMinimizationInsets,
+    required this.slidesOff,
     required this.tabDock,
     required this.style,
     required this.viewPadding,
@@ -1826,6 +1828,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   /// Receives the bottom bar's laid-out height, zero without one.
   final ValueNotifier<double> bottomBarExtent;
   final bool adjustsMinimizationInsets;
+
+  /// Whether a minimizing bar travels past the screen's top edge, so it
+  /// scrolls fully away instead of stopping under the status bar.
+  final bool slidesOff;
   final GlassScaffoldStyle style;
   final double keyboard, actionsTop, railBottom;
   final bool sheet;
@@ -2076,7 +2082,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                 (barRow +
                         (accessoryHeight == 0 ? contentSpacing : 0) +
                         bar.height +
-                        margin.vertical) *
+                        margin.vertical +
+                        (slidesOff ? naturalTop : 0)) *
                     minimization.value,
           ),
         );
@@ -2085,15 +2092,21 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         covered = covered.copyWith(top: covered.top + topDockHeight);
       }
     }
+    // A bar that scrolls away travels past its own top as well, so nothing
+    // of it stays on screen once the content has carried it off.
     final minimizedExtent =
         barRow + (accessoryHeight == 0 ? contentSpacing : 0) + topDockHeight;
-    onMinimizationExtent(minimizedExtent);
-    top -= minimizedExtent * minimization.value;
+    final travel = minimizedExtent + (slidesOff ? naturalTop : 0);
+    onMinimizationExtent(travel);
+    final moved = travel * minimization.value;
+    top -= moved;
     if (adjustsMinimizationInsets) {
+      // Insets give back at most the bar's own room; the extra travel past
+      // the screen's top frees nothing the content could use.
       covered = covered.copyWith(
         top: math.max(
           naturalTop,
-          covered.top - minimizedExtent * minimization.value,
+          covered.top - math.min(moved, minimizedExtent),
         ),
       );
     }
@@ -2126,8 +2139,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           : !compactWhenHidden
           ? full
           : revealed.value
-          ? compactEdgeHeight +
-                (full - compactEdgeHeight) * (1 - minimization.value)
+          ? math.max(
+              compactEdgeHeight,
+              compactEdgeHeight +
+                  (full - compactEdgeHeight) * (1 - minimization.value),
+            )
           : compactEdgeHeight;
       layoutChild(
         _Slot.scrollEdge,
@@ -2558,6 +2574,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       revealed != old.revealed ||
       minimization != old.minimization ||
       adjustsMinimizationInsets != old.adjustsMinimizationInsets ||
+      slidesOff != old.slidesOff ||
       onMinimizationExtent != old.onMinimizationExtent ||
       tabDock != old.tabDock ||
       style != old.style ||

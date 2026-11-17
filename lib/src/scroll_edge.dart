@@ -22,11 +22,13 @@ enum GlassScrollEdgeVariant {
 /// applies to content scrolled under a bar.
 ///
 /// Unspecified fields inherit the theme, then the measured native defaults
-/// (doc/native_scroll_edge_spec.md, iOS 27.0): a 1.5-point variable blur and
+/// (doc/native_scroll_edge_spec.md, iOS 27): a 3-point variable blur and
 /// a half-opacity fade that hold full strength over the top third of the
 /// effect and fall along [GlassEdgeFade.curve] over its remaining 98 points,
-/// a 16-point haze blended in at half opacity, and 50 points of reach past
-/// the bar. The hard variant blurs 2 points, keeps a quarter of its blur, its
+/// a 32-point haze blended in at half opacity, and 50 points of reach past
+/// the bar. Both blurs drop samples past the effect's edges and reweight the
+/// rest, as native's do, so content at the screen edge does not smear. The
+/// hard variant blurs 4 points, keeps a quarter of its blur, its
 /// whole fade and its whole haze to the bar's edge, and draws a hairline
 /// there. The effect arrives over the first 16 points of scroll, which is
 /// this package's reveal; native bars show it as soon as content is beneath.
@@ -179,19 +181,27 @@ class GlassScrollEdgeStyle {
     spring,
   );
 
-  static const double defaultSigma = 1.5;
+  /// Native radii are half the Gaussian sigma (doc/native_defaults.md): the
+  /// variable blur's radius 1.5 is sigma 3 and the heavy blur's radius 16 is
+  /// sigma 32, matched against native line spread on the iOS 27.1 simulator
+  /// (doc/native_scroll_edge_spec.md, "Edge sampling and width").
+  static const double defaultSigma = 3;
   static const double defaultFalloff = 98;
   static const double defaultExtension = 50;
   static const double defaultFadeOpacity = .5;
-  static const double defaultHaze = 16;
+
+  /// The fade at a bottom edge, under a bottom bar: 0.45, measured on the
+  /// iOS 27.1 simulator against 0.46 at the top of the same screen.
+  static const double defaultBottomFadeOpacity = .45;
+  static const double defaultHaze = 32;
   static const double defaultHazeOpacity = .5;
   static const double defaultHazePlateau = .34;
   static const double defaultRevealExtent = 16;
 
-  /// The hard variant's defaults: a 2-point blur that keeps a quarter of its
-  /// strength at the edge, falling over the lower 51 points of the bar, with
-  /// no reach past it and the fade and haze held to the edge.
-  static const double defaultHardSigma = 2;
+  /// The hard variant's defaults: a 4-point blur (native radius 2) that keeps
+  /// a quarter of its strength at the edge, falling over the lower 51 points
+  /// of the bar, with no reach past it and the fade and haze held to the edge.
+  static const double defaultHardSigma = 4;
   static const double defaultHardFalloff = 51;
   static const double defaultHardFloor = .25;
 
@@ -290,7 +300,10 @@ class LiquidPrismScrollEdge extends StatelessWidget {
             : GlassScrollEdgeStyle.defaultSigma);
     final fade = color ?? resolved.fadeColor;
     final opacity =
-        resolved.fadeOpacity ?? GlassScrollEdgeStyle.defaultFadeOpacity;
+        resolved.fadeOpacity ??
+        (edge == GlassEdge.bottom
+            ? GlassScrollEdgeStyle.defaultBottomFadeOpacity
+            : GlassScrollEdgeStyle.defaultFadeOpacity);
     final haze = resolved.haze ?? GlassScrollEdgeStyle.defaultHaze;
     final hazeOpacity =
         resolved.hazeOpacity ?? GlassScrollEdgeStyle.defaultHazeOpacity;

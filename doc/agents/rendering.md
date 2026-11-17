@@ -194,14 +194,20 @@ is smoothstep, fitted to the native mask (doc/native_scroll_edge_spec.md).
 The pass is ALU bound: taps are formed in uv space (the clamp is a free
 saturate) and, from a 1.5-texel sigma up, the kernel ends at 2.88 sigma
 (under 0.4% of its mass dropped, at most one 8-bit step); below that one pair
-carries too much weight to drop, so 3 sigma stays.
+carries too much weight to drop, so 3 sigma stays. Taps past the box are
+dropped and the kernel renormalised (Core Animation's `inputNormalizeEdges`,
+measured on every native scroll edge blur): each tap of a pair counts by the
+part of its texel inside the box, so the box edge never repeats its last row.
 
-The haze (`GlassEdgeBlur.haze`) is a third backdrop filter after the vertical
-pass: a plain `ImageFilter.blur(sigma)` whose backdrop layer has one child, a
-`dstIn` linear gradient (`_paintHazeWeights`) that scales the blurred strip
+The haze (`GlassEdgeBlur.haze`) is one more backdrop filter per strip after
+the vertical pass: `ImageFilter.blur(sigma, tileMode: decal, bounds: strip)`,
+Impeller's bounded blur, which drops samples outside the strip and divides by
+the remaining weight, as native's `inputNormalizeEdges` with `marginWidth` 0
+does. Its backdrop layer has one child, a
+`dstIn` linear gradient (`_paintHazeWeight`) that scales the blurred strip
 by its per-row weight (opacity over the plateau fraction, then linearly to
 zero), so composited over the pass it blends the heavy blur in by that
-weight, as native bars composite a 16-point blur at half opacity under a
+weight, as native bars composite a 32-point blur at half opacity under a
 linear mask. Keep the blur the top-level filter: Impeller passes a coverage
 hint (the clip) only to the outermost filter, so a blur composed under a
 shader or colour filter is computed over the whole captured screen every

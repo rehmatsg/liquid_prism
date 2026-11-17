@@ -855,24 +855,25 @@ void main() {
         await tester.pump();
         scroll.jumpTo(40);
         await tester.pumpAndSettle();
+        // The bar moves with the content from the first point, at full
+        // presence: it scrolls away rather than fading.
         final delta = top - tester.getTopLeft(find.text('Back')).dy;
-        expect(delta, closeTo(40 - 40 / 3, .01));
-        final opacity = tester
-            .widget<Opacity>(
-              find.ancestor(
-                of: find.text('Inline'),
-                matching: find.byType(Opacity),
-              ),
-            )
-            .opacity;
-        expect(opacity, closeTo(1 - delta / 54, .001));
+        expect(delta, closeTo(40, .01));
+        final opacities = tester.widgetList<Opacity>(
+          find.ancestor(
+            of: find.text('Inline'),
+            matching: find.byType(Opacity),
+          ),
+        );
+        expect(opacities.every((o) => o.opacity == 1), isTrue);
         scroll.jumpTo(300);
         await tester.pumpAndSettle();
         expect(find.semantics.byLabel('Back'), findsNothing);
         expect(find.semantics.byLabel('Inline'), findsNothing);
         expect(focus.canRequestFocus, isFalse);
         expect(focus.hasFocus, isFalse);
-        scroll.jumpTo(240);
+        // Reversing the bar's whole travel brings it back.
+        scroll.jumpTo(150);
         await tester.pumpAndSettle();
         expect(tester.getTopLeft(find.text('Back')).dy, closeTo(top, .01));
         expect(find.semantics.byLabel('Back'), findsOneWidget);

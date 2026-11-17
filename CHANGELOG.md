@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.17.0
+
+- Stop smearing content at the screen edge under the scroll edge effect. Its blur and haze drop samples past the strip and reweight the rest, as native bars do (Core Animation's `inputNormalizeEdges`), where they repeated the edge row before. Content below the strip no longer bleeds into the haze either.
+- Blur the scroll edge as widely as native: the variable blur defaults to sigma 3 (hard 4) and the haze to 32, where 1.5 (2) and 16 had been read from native radii as sigmas. Content under the edge now blurs instead of keeping its sharpness under a faint glow. Set `GlassScrollEdgeStyle(sigma:, haze:)` to keep the old look.
+- Fade the scroll edge under a bottom bar to 0.45 by default (`GlassScrollEdgeStyle.defaultBottomFadeOpacity`), as measured under native bottom bars, where it used the top's 0.5.
+- Scroll a bar that hides on scroll down away with the content: it now moves one for one from the first point (`minimizationThreshold` defaults to 0 for `onScrollDown`), travels past the top of the screen, and keeps full presence instead of fading and blurring out as it went. Scaffold and sliver bars alike.
+- Grow the top scroll edge back smoothly when such a bar is revealed. Its blur appeared at full strength around the Dynamic Island at the start of a reveal; the scaffold now keeps the compact status-bar edge while the bar is gone, and the sliver bar brings its edge back with the bar.
+- Lead automatic inline titles when the bar has more than one action, and on the folded iPhone Duo outside sheets. Sheets there, the unfolded Duo and other iPhones center a title that fits.
+
 ## 0.16.1
 
 - Center a scaffold's `bottom` toolbar content on the window, where it was centered in the room between the leading and trailing groups, so a count or label beside one edge item no longer sits off center.

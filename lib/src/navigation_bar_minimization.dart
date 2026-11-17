@@ -47,7 +47,13 @@ class NavigationBarMinimization {
     _restoration = restoration;
     _collapseExtent = collapseExtent;
     if (extent != null) setExtent(extent);
-    _threshold = style.minimizationThreshold ?? 40 / 3;
+    // A bar that hides on scroll down moves with the content from the first
+    // point, as content does; one that appears on scroll up waits.
+    _threshold =
+        style.minimizationThreshold ??
+        (behavior == GlassToolbarMinimizationBehavior.onScrollDown
+            ? 0
+            : 40 / 3);
     _hidden = _hidden.clamp(0.0, _extent);
     _publish();
   }
@@ -119,13 +125,19 @@ class NavigationBarMinimization {
 }
 
 /// Fades glass through its recipe, keeping the live backdrop available.
+///
+/// With [fades] false the child keeps full presence while it moves and is
+/// only taken out of hit testing, focus and painting at the hidden end: a bar
+/// that scrolls away with the content, rather than dissolving.
 class NavigationBarPresence extends StatelessWidget {
   const NavigationBarPresence({
     super.key,
     required this.progress,
+    this.fades = true,
     required this.child,
   });
   final Animation<double> progress;
+  final bool fades;
   final Widget child;
 
   @override
@@ -141,12 +153,14 @@ class NavigationBarPresence extends StatelessWidget {
             excluding: hidden,
             child: _BarVisibility(
               hidden: hidden,
-              child: LiquidPrismPresence(
-                progress: ReverseAnimation(progress),
-                materialize: false,
-                contentBlur: 0,
-                child: child!,
-              ),
+              child: fades
+                  ? LiquidPrismPresence(
+                      progress: ReverseAnimation(progress),
+                      materialize: false,
+                      contentBlur: 0,
+                      child: child!,
+                    )
+                  : child!,
             ),
           ),
         ),

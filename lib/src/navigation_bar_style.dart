@@ -22,7 +22,8 @@ enum GlassToolbarMinimizationSafeAreaAdjustment { automatic, enabled, disabled }
 ///
 /// Defaults are measured on iOS 27 (see doc/package_features_spec.md): a
 /// 17-point semibold inline title on the 44-point control row, centred when
-/// it fits between controls and leading-aligned otherwise; a
+/// it fits between controls and leading-aligned otherwise (leading by
+/// default beside more than one action and on the folded iPhone Duo); a
 /// 34-point bold large title in a 52-point row 16 points from the edge, which
 /// scrolls with the content and swaps to the inline title once the scroll
 /// passes its row.
@@ -73,9 +74,10 @@ class GlassNavigationBarStyle {
   /// Automatic centers the inline title when it fits between the controls.
   /// Otherwise it leads in the full available gap before truncating. Explicit
   /// center, leading and trailing keep their requested alignment.
-  /// Vertical-rail layouts lead ordinary automatic titles when the page has
-  /// trailing actions and center them when it has none.
-  /// LiquidPrismTitle capsules retain their centered automatic layout.
+  /// Automatic titles lead when the bar has more than one action (toolbar
+  /// items and a `trailing` widget, wherever they sit), and on the folded
+  /// iPhone Duo's rail outside sheets. LiquidPrismTitle capsules retain their
+  /// centered automatic layout.
   final GlassTitleAlignment? titleAlignment;
 
   /// Expanded title alignment. Automatic retains the native leading edge.
@@ -90,7 +92,9 @@ class GlassNavigationBarStyle {
   /// Top-bar controls follow the title; rail controls and accessories stay visible.
   final GlassToolbarMinimizationBehavior? minimizationBehavior;
 
-  /// Initial scroll distance before minimization starts; fitted default 13⅓ pt.
+  /// Initial scroll distance before minimization starts. A bar hidden on
+  /// scroll down defaults to none, so it moves with the content from the
+  /// first point; one shown on scroll up keeps the fitted 13⅓ pt.
   final double? minimizationThreshold;
 
   /// Automatic restores on scroll reversal. At-scroll-edge restoration applies
@@ -312,6 +316,27 @@ Widget _titled(
     ],
   );
 }
+
+/// The inline title's alignment when none is set (or `automatic` is): a glass
+/// title centres; a bar with more than one action leads; the folded iPhone
+/// Duo's rail leads outside sheets; everywhere else the title centres when it
+/// fits between the controls ([GlassTitleAlignment.automatic]).
+@internal
+GlassTitleAlignment glassDefaultTitleAlignment({
+  required GlassTitleAlignment? requested,
+  required bool glassTitle,
+  required int actions,
+  required bool foldedRail,
+  required bool sheet,
+}) => requested != null && requested != GlassTitleAlignment.automatic
+    ? requested
+    : glassTitle
+    ? GlassTitleAlignment.center
+    : actions > 1
+    ? GlassTitleAlignment.leading
+    : foldedRail && !sheet
+    ? GlassTitleAlignment.leading
+    : GlassTitleAlignment.automatic;
 
 /// Adaptive layout policy fitted to native inline-title captures. Measure in
 /// the full available gap before resolving automatic; constrained center-only

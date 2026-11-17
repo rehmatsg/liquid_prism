@@ -399,6 +399,9 @@ native-fitted reveal/hide springs (`revealSpring` and `hideSpring`).
 
 Automatic inline titles center when they fit between the controls, then align
 to the leading edge when crowded to use the available space before truncating.
+They lead by default when the bar has more than one action (toolbar items and a
+`trailing` widget, in the bar or on the rail), and on the folded iPhone Duo
+outside sheets; sheets there, the unfolded Duo and other iPhones center.
 `LiquidPrismTitle` glass capsules retain their centered default. Set `titleAlignment`
 to `leading`, `center` or `trailing`; directional alignment mirrors in RTL.
 `largeTitleAlignment` independently controls the expanded title, leading by default.
@@ -407,7 +410,11 @@ participates in focus and accessibility.
 
 `navigationBarStyle.minimizationBehavior` moves the navigation title and controls:
 `automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
-and restores it on reversal; `onScrollUp` reverses those directions. On a
+and restores it on reversal; `onScrollUp` reverses those directions. An
+`onScrollDown` bar scrolls away with the content one for one, from the first point
+and past the top of the screen, at full presence: it neither fades nor blurs. Its
+top edge stays the compact status-bar edge while it is gone and grows back with
+the bar on a reveal, strength and all, so the blur never switches on at once. On a
 vertical rail (iPhone Duo), a scaffold's `automatic` bar with an inline title (no
 `trailing`, `largeTitle` or `header`) outside a sheet behaves as `onScrollDown` with
 at-scroll-edge restoration, since its controls stay in the rail; set `never` to
@@ -784,8 +791,8 @@ outermost scroll view is scrolled, fading toward its `backgroundColor`
 always uses the soft variant, including when its top edge is hard;
 `scrollEdge: false` disables both edges. The defaults are
 measured from iOS 27's own effect ([spec](native_scroll_edge_spec.md)): a
-1.5-point variable blur and a half-opacity fade held over the top third of the
-strip and falling along a smoothstep over its last 98 points, a 16-point haze
+3-point variable blur and a half-opacity fade held over the top third of the
+strip and falling along a smoothstep over its last 98 points, a 32-point haze
 blended in at half opacity, 50 points of reach below the bar, and a 16-point
 scroll over which it arrives (the reveal is this package's; native shows it as
 soon as content is beneath).
@@ -852,8 +859,10 @@ LiquidPrismEdgeBlur(
 Each strip can also hold a `floor` of strength at its inner end, a `fadeFloor`
 for a fade that stays flat, and a `haze`: a heavy blur blended in at
 `hazeOpacity`, masked linearly past `hazePlateau`, the way native bars lay a
-16-point blur at half opacity under their light variable blur so fine detail
-softens without vanishing. Animate by scaling `sigma`, `fadeOpacity` and
+32-point blur at half opacity under their light variable blur so fine detail
+softens without vanishing. Both blurs stay inside their strip: like native
+blurs, they drop samples past its edges and reweight the rest, so content at
+the screen edge or below the strip does not bleed in. Animate by scaling `sigma`, `fadeOpacity` and
 `hazeOpacity`; an ancestor `Opacity` does not attenuate a backdrop blur. With
 nothing active the widget paints straight through without a layer, so child
 state survives. `GlassEdgeFade.gradient` builds the same fade as a plain

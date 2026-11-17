@@ -59,13 +59,15 @@ void main() {
         }
         // Centred on the controls' row.
         expect(trailing.center.dy, closeTo(capsule.center.dy, .01));
-        // The centered title stays clear of the trailing content.
+        // Two actions (the item and the trailing widget) lead the title,
+        // clear of the trailing content.
         final title = tester.getRect(find.text('Matches'));
         if (rtl) {
           expect(title.left, greaterThanOrEqualTo(trailing.right));
+          expect(title.right, closeTo(402 - 16, .01));
         } else {
           expect(title.right, lessThanOrEqualTo(trailing.left));
-          expect(title.center.dx, closeTo(201, .01));
+          expect(title.left, closeTo(16, .01));
         }
         await tester.tap(find.byKey(const ValueKey('pill')));
         expect(taps, 1);

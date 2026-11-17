@@ -10,6 +10,7 @@ import 'navigation_bar_style.dart';
 import 'navigation_title_motion.dart';
 import 'navigation_bar_minimization.dart';
 import 'scroll_edge.dart';
+import 'system_chrome.dart';
 import 'theme.dart';
 import 'title.dart';
 import 'toolbar.dart';
@@ -256,15 +257,23 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             ],
           );
     final minimizingExtent = barRow + (accessoryHeight == 0 ? clearance : 0);
+    // A bar hidden on scroll down travels past its own top too, so the
+    // content carries it fully off screen.
+    final travel =
+        minimizingExtent +
+        (navigation.minimizationBehavior ==
+                GlassToolbarMinimizationBehavior.onScrollDown
+            ? top
+            : 0);
     return _MinimizingSliverBar(
       style: navigation,
       collapseExtent: largeTitle == null ? 0 : largeRow + lead,
-      extent: minimizingExtent,
+      extent: travel,
       builder: (minimization, revealed) {
         final reduction =
             navigation.minimizationSafeAreaAdjustment ==
                 GlassToolbarMinimizationSafeAreaAdjustment.enabled
-            ? minimizingExtent * minimization.value
+            ? math.min(travel * minimization.value, minimizingExtent)
             : 0.0;
         return SliverPersistentHeader(
           pinned: true,
@@ -578,9 +587,14 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         final visible =
             eligible && (!swaps || (large ? !_collapsed : _collapsed));
         final inline = _inlineFade.value;
+        // A bar hidden on scroll down moves off with the content at full
+        // presence; only a bar that appears on scroll up fades.
         final opacity =
             (swaps ? (large ? 1 - _largeFade.value : inline) : 1.0) *
-            (1 - _d.minimization.value) *
+            (_d.navigation.minimizationBehavior ==
+                    GlassToolbarMinimizationBehavior.onScrollDown
+                ? 1.0
+                : 1 - _d.minimization.value) *
             (eligible ? 1 : 0);
         final moved = large || !swaps
             ? child!
@@ -627,6 +641,23 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       GlassToolbarPlacement.topTrailing,
     );
     final shrink = widget.shrinkOffset.clamp(0.0, _d.maxExtent - _d.minExtent);
+    final system =
+        LiquidPrismSystemChrome.scopeOf(context)?.chrome ??
+        LiquidPrismSystemChrome.listenable.value;
+    final regular = switch (system?.horizontalSizeClass) {
+      GlassSizeClass.regular => true,
+      GlassSizeClass.compact => false,
+      null => MediaQuery.sizeOf(context).width >= 700,
+    };
+    final titleAlignment = glassDefaultTitleAlignment(
+      requested: _d.navigation.titleAlignment,
+      glassTitle: _d.inlineTitle is LiquidPrismTitle,
+      actions: glassToolbarItemCount(content) + (bar.trailing != null ? 1 : 0),
+      foldedRail:
+          (LiquidPrismScaffold.placementOf(context)?.isRail ?? false) &&
+          !regular,
+      sheet: bar.sheet,
+    );
     final edgeStyle = GlassScrollEdgeStyle.resolve(
       context,
       bar.scrollEdgeStyle,
@@ -637,13 +668,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
           textDirection: Directionality.of(context),
           largeTitleAlignment:
               _d.navigation.largeTitleAlignment ?? GlassTitleAlignment.leading,
-          titleAlignment:
-              (_d.navigation.titleAlignment == null ||
-                      _d.navigation.titleAlignment ==
-                          GlassTitleAlignment.automatic) &&
-                  _d.inlineTitle is LiquidPrismTitle
-              ? GlassTitleAlignment.center
-              : _d.navigation.titleAlignment ?? GlassTitleAlignment.automatic,
+          titleAlignment: titleAlignment,
           insets: _d.insets,
           top:
               _d.top -
@@ -653,8 +678,10 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                           : (_d.navigation.contentSpacing ??
                                 (_d.lead > 0
                                     ? _d.lead
-                                    : LiquidPrismScaffold.topBarClearance)))) *
+                                    : LiquidPrismScaffold.topBarClearance))) +
+                      (hidesOnScrollDown ? _d.top : 0)) *
                   _d.minimization.value,
+          safeTop: _d.top,
           barRow: _d.barRow,
           largeRow: _d.largeRow,
           lead: _d.lead,
@@ -679,11 +706,15 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                   child: IgnorePointer(
                     child: ScrollEdgeProgressBuilder(
                       listenable: Listenable.merge([_scrolled, _edgeStrength]),
+                      // A revealed bar brings its edge back with it: the
+                      // strength follows the bar's return instead of
+                      // switching on at once.
                       progress: () =>
-                          (_d.accessory != null ||
-                                  !hidesOnScrollDown ||
-                                  _d.revealed
+                          (_d.accessory != null || !hidesOnScrollDown
                               ? _edgeStrength.value
+                              : _d.revealed
+                              ? _edgeStrength.value *
+                                    (1 - _d.minimization.value)
                               : 0) *
                           LiquidPrismScrollEdge.progressFor(
                             _scrolled.value,
@@ -739,12 +770,9 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                             GlassToolbarSize.navigation,
                           ).height ??
                           44,
-                      alignment:
-                          _d.navigation.titleAlignment == null ||
-                              _d.navigation.titleAlignment ==
-                                  GlassTitleAlignment.automatic
+                      alignment: titleAlignment == GlassTitleAlignment.automatic
                           ? GlassTitleAlignment.center
-                          : _d.navigation.titleAlignment!,
+                          : titleAlignment,
                     ),
                     _d.titleStyle,
                     large: false,
@@ -766,15 +794,19 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
               if (bar.trailing case final trailing?)
                 LayoutId(id: _Slot.trailing, child: trailing),
             ].map((child) {
+              // The edge sets its own strength; a backdrop blur ignores a
+              // fading ancestor, so wrapping it would pop the blur in.
               final pinned =
                   child.id == _Slot.accessory ||
-                  (child.id == _Slot.edge && _d.accessory != null);
+                  (child.id == _Slot.edge &&
+                      (_d.accessory != null || hidesOnScrollDown));
               return pinned
                   ? child
                   : LayoutId(
                       id: child.id,
                       child: NavigationBarPresence(
                         progress: _d.minimization,
+                        fades: !hidesOnScrollDown,
                         child: child.child,
                       ),
                     );
@@ -793,6 +825,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     required this.largeTitleAlignment,
     required this.insets,
     required this.top,
+    required this.safeTop,
     required this.barRow,
     required this.largeRow,
     required this.lead,
@@ -807,6 +840,10 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
   final GlassTitleAlignment titleAlignment, largeTitleAlignment;
   final EdgeInsets insets;
   final double top, barRow, largeRow, shrink, accessoryHeight, gutter, gap;
+
+  /// The bar's top before minimization: an accessory stays below it while
+  /// the bar itself scrolls past.
+  final double safeTop;
 
   /// The bar frame above a large title's row, and its line within the row.
   final double lead, largeTitleTop;
@@ -967,7 +1004,10 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         _Slot.accessory,
         BoxConstraints.tightFor(width: size.width, height: accessoryHeight),
       );
-      positionChild(_Slot.accessory, Offset(0, top + barRow + largeHeight));
+      positionChild(
+        _Slot.accessory,
+        Offset(0, math.max(safeTop, top + barRow + largeHeight)),
+      );
     }
   }
 
@@ -978,6 +1018,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       old.largeTitleAlignment != largeTitleAlignment ||
       old.insets != insets ||
       old.top != top ||
+      old.safeTop != safeTop ||
       old.barRow != barRow ||
       old.largeRow != largeRow ||
       old.lead != lead ||
