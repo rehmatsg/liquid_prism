@@ -64,6 +64,7 @@ export "src/segmented_control.dart" show LiquidPrismSegmentedControl;
 export 'src/toolbar.dart'
     show
         GlassToolbarSize,
+        GlassToolbarAxisBehavior,
         GlassToolbarContent,
         GlassToolbarPlacement,
         GlassToolbarItem,
