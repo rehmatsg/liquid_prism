@@ -80,14 +80,47 @@ hard blur's attenuation at the edge, 0.19, is what a 0.5 pt sigma leaves of
 
 ## What Liquid Prism takes from this
 
-`GlassScrollEdgeStyle` defaults: variable blur sigma 1.5 (hard 2), falloff 98
+`GlassScrollEdgeStyle` defaults: variable blur sigma 3 (hard 4), falloff 98
 pt of a 156 pt strip (hard 51 of 116), reach 50 pt past the bar (hard 0), fade
-opacity 0.5, haze 16 at 0.5 masked linearly from 34% (hard constant), hard
+opacity 0.5, haze 32 at 0.5 masked linearly from 34% (hard constant), hard
 floor 0.25 with the fade held flat and a one-pixel hairline (10% black in
 light, 10% white in dark). The blur-fill opacities (lighten 0.6, darken 0.4, normal 0.25 in light; darken
 0.6, lighten 0.4, normal 0 in dark) are reproduced only as the measured net
 fade toward the background. The `.automatic` style was not measured; the
 reveal over the first points of scroll is this package's, not native.
+
+## Edge sampling and width
+
+Measured on 2026-11-16 with `tool/native_edge_sampling_probe` (SwiftUI
+`.scrollEdgeEffectStyle(.soft)`, iOS 27.1 simulator on the folded iPhone Duo,
+466 × 678 pt at 3x, plus macOS 27.2) and its Flutter twin
+`example/lib/edge_probe_main.dart` on the same simulator. Evidence:
+`_research/edge_sampling/` (local).
+
+Direct, from the layer tree: every native scroll edge blur sets
+`inputNormalizeEdges = true` on its `gaussianBlur`/`blur` filter, with
+backdrop `marginWidth` 0 (iOS soft `Replay` radius 16 at scale 0.25 and
+`Pocket` radius 1.5; macOS soft and hard alike). Samples past the strip, at
+the screen edge or past its inner end, are dropped and the rest reweighted.
+
+Fitted, from 4 pt black lines on white normalised per row against all-white
+and all-black frames, over rows 0–40 pt:
+
+- Edge handling: renormalise fits best (RMS 0.0084), then mirror (0.0103),
+  then clamp (0.0211). A line touching the edge keeps 0.28 of its contrast at
+  the edge row; clamping (repeating the edge row) leaves 0.40 or more.
+- Width: lines 8–32 pt from the edge spread to 7.7–8.3 pt FWHM (a sharp 4 pt
+  line reads 3.7), a Gaussian of sigma about 3 pt. The row-0 response to lines
+  8–96 pt away falls like a sigma of 33–38 pt at weight about 0.55. Both
+  follow the rule that a native blur radius is half its sigma
+  (`native_defaults.md`), which this spec had first read as radius = sigma.
+
+Liquid Prism before and after (same simulator, RMS of the line profile
+against native over 0–120 pt): line 8 pt 0.151 → 0.022, 16 pt 0.150 → 0.020,
+32 pt 0.142 → 0.012; FWHM 4.3 → 7.0–7.7 pt; edge-row contrast of a line at the
+edge 0.79 → 0.46. Native keeps lower contrast over its top 30 pt (0.21
+against 0.31): its blur fill's lighten/darken blend, which this package draws
+only as a net fade.
 
 ## Hard hairline
 

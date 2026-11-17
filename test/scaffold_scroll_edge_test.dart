@@ -458,7 +458,8 @@ void main() {
           );
         }
 
-        controller.jumpTo(300);
+        // A reveal of the bar's whole travel (the status bar and its row).
+        controller.jumpTo(200);
         await tester.pumpAndSettle();
         expect(
           tester.getRect(blur).bottom,

@@ -78,9 +78,12 @@ void main() {
 
   float along = vertical ? p.y : p.x;
   float lenAlong = vertical ? boxSize.y : boxSize.x;
-  // Keep bilinear taps half a texel inside the box.
-  float maxBack = max(along * stretch - 0.5, 0.0);
-  float maxForward = max((lenAlong - along) * stretch - 0.5, 0.0);
+  // Distance in texels to the centre of the last texel inside the box on
+  // each side. Taps past it are dropped and the kernel renormalised, as
+  // Core Animation's inputNormalizeEdges does: the box edge (the screen's,
+  // or the strip's inner end) never repeats its last row.
+  float maxBack = along * stretch - 0.5;
+  float maxForward = (lenAlong - along) * stretch - 0.5;
 
   // Incremental Gaussian weights (GPU Gems 3, ch. 40); pair adjacent taps.
   vec3 g = vec3(1.0, exp(-0.5 / (sigma * sigma)), 0.0);
@@ -99,11 +102,21 @@ void main() {
     float w0 = g.x;
     g.xy *= g.yz;
     float w1 = g.x;
-    float w = w0 + w1;
-    float offset = x0 + w1 / w;
-    total += (sampleUV(uv + tapStep * min(offset, maxForward))
-              + sampleUV(uv - tapStep * min(offset, maxBack))) * w;
-    totalWeight += 2.0 * w;
+    // Each tap counts by the part of its texel inside the box, so a box at
+    // a fractional position fades its last texel instead of stepping.
+    float f0 = clamp(maxForward + 1.0 - x0, 0.0, 1.0) * w0;
+    float f1 = clamp(maxForward - x0, 0.0, 1.0) * w1;
+    float b0 = clamp(maxBack + 1.0 - x0, 0.0, 1.0) * w0;
+    float b1 = clamp(maxBack - x0, 0.0, 1.0) * w1;
+    float forward = f0 + f1;
+    float back = b0 + b1;
+    if (forward > 0.0) {
+      total += sampleUV(uv + tapStep * (x0 + f1 / forward)) * forward;
+    }
+    if (back > 0.0) {
+      total += sampleUV(uv - tapStep * (x0 + b1 / back)) * back;
+    }
+    totalWeight += forward + back;
   }
   frag_color = total / totalWeight;
 }

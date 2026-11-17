@@ -61,9 +61,11 @@ class GlassEdgeBlur {
   final double? fadeFloor;
 
   /// Sigma of a heavy blur blended into the strip at [hazeOpacity], the way
-  /// native bars lay a 16-point blur at half opacity under their light
+  /// native bars lay a 32-point blur at half opacity under their light
   /// variable blur, so fine detail softens without disappearing. Zero adds
-  /// none. It runs through the engine's own blur, not the per-pixel pass.
+  /// none. It runs through the engine's own blur, not the per-pixel pass,
+  /// bounded to the strip: samples past it are dropped and the rest
+  /// reweighted.
   final double haze;
 
   /// The haze's opacity at the edge, 0–1.
@@ -333,9 +335,15 @@ class _RenderEdgeBlur extends RenderProxyBox {
     LayerHandle<_EdgePassLayer>(),
   ];
   final _fadeLayer = LayerHandle<_EdgeFadeLayer>();
-  final _hazeClipLayer = LayerHandle<ClipPathLayer>();
-  final _hazeLayer = LayerHandle<_EdgeHazeLayer>();
-  ({double sigma, ui.ImageFilter filter})? _hazeBlur;
+  // One haze per strip: each blur is bounded to its own strip.
+  final _hazeClipLayers = [
+    LayerHandle<ClipRectLayer>(),
+    LayerHandle<ClipRectLayer>(),
+  ];
+  final _hazeLayers = [
+    LayerHandle<_EdgeHazeLayer>(),
+    LayerHandle<_EdgeHazeLayer>(),
+  ];
 
   List<_EdgePassFilter>? _screenFilters;
   List<_EdgePassFilter>? _textureFilters;
@@ -394,8 +402,10 @@ class _RenderEdgeBlur extends RenderProxyBox {
   void detach() {
     _contentLayer.layer?.blur = null;
     _fadeLayer.layer?.blur = null;
-    _hazeLayer.layer?.blur = null;
     for (final handle in _passLayers) {
+      handle.layer?.blur = null;
+    }
+    for (final handle in _hazeLayers) {
       handle.layer?.blur = null;
     }
     super.detach();
@@ -415,9 +425,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _inputClipLayer.layer = null;
     _fadeLayer.layer?.blur = null;
     _fadeLayer.layer = null;
-    _hazeClipLayer.layer = null;
-    _hazeLayer.layer?.blur = null;
-    _hazeLayer.layer = null;
+    _releaseHazes(from: 0);
     for (var pass = 0; pass < 2; pass++) {
       _stripClipLayers[pass].layer = null;
       _passLayers[pass].layer?.blur = null;
@@ -425,11 +433,19 @@ class _RenderEdgeBlur extends RenderProxyBox {
     }
   }
 
+  /// Drops the haze layers from strip [from] on.
+  void _releaseHazes({required int from}) {
+    for (var i = from; i < _hazeLayers.length; i++) {
+      _hazeClipLayers[i].layer = null;
+      _hazeLayers[i].layer?.blur = null;
+      _hazeLayers[i].layer = null;
+    }
+  }
+
   void _disposeFilters() {
     for (final filter in [...?_screenFilters, ...?_textureFilters]) {
       filter.dispose();
     }
-    _hazeBlur = null;
     _screenFilters = null;
     _textureFilters = null;
     _textureCompose = null;
@@ -476,15 +492,20 @@ class _RenderEdgeBlur extends RenderProxyBox {
         _passLayers[pass].layer = null;
       }
     }
-    if (_hazing) {
-      final strips = _stripPath(_hazes);
-      final haze = _hazeLayer.layer ??= _EdgeHazeLayer();
-      haze.blur = this;
-      _hazeClipLayer.layer = context.pushClipPath(
+    var hazes = 0;
+    for (final spec in _hazes) {
+      final strip = _stripRect(spec);
+      if (strip.isEmpty) continue;
+      final haze = _hazeLayers[hazes].layer ??= _EdgeHazeLayer();
+      haze
+        ..blur = this
+        ..sigma = spec.haze
+        // The blur's bounds live in the same layer space as the clip.
+        ..bounds = strip.shift(offset);
+      _hazeClipLayers[hazes].layer = context.pushClipRect(
         needsCompositing,
         offset,
-        strips.getBounds(),
-        strips,
+        strip,
         (context, offset) => context.pushLayer(
           haze,
           (context, offset) =>
@@ -492,19 +513,16 @@ class _RenderEdgeBlur extends RenderProxyBox {
                 final canvas = context.canvas
                   ..save()
                   ..translate(offset.dx, offset.dy);
-                _paintHazeWeights(canvas);
+                _paintHazeWeight(canvas, spec);
                 canvas.restore();
               }, offset),
           offset,
         ),
-        clipBehavior: Clip.hardEdge,
-        oldLayer: _hazeClipLayer.layer,
+        oldLayer: _hazeClipLayers[hazes].layer,
       );
-    } else {
-      _hazeClipLayer.layer = null;
-      _hazeLayer.layer?.blur = null;
-      _hazeLayer.layer = null;
+      hazes++;
     }
+    _releaseHazes(from: hazes);
     if (_fades.isNotEmpty) {
       final fade = _fadeLayer.layer ??= _EdgeFadeLayer();
       fade
@@ -730,58 +748,34 @@ class _RenderEdgeBlur extends RenderProxyBox {
   static const _screenFrame = 0.0;
   static const _textureFrame = 1.0;
 
-  /// The haze: the engine's blur at the strips' sigma, as the backdrop
-  /// filter itself. Impeller limits a top-level blur to its clip; composed
-  /// under a shader it would blur the whole captured screen every frame. Its
-  /// backdrop layer's child ([_paintHazeWeights]) then scales the blurred
-  /// strip by the per-row weight, so the layer composites the blur in.
-  ui.ImageFilter _hazeScreenFilter() {
-    var sigma = 0.0;
-    for (final spec in _hazes) {
-      sigma = math.max(sigma, spec.haze);
-    }
-    final cached = _hazeBlur;
-    if (cached != null && cached.sigma == sigma) return cached.filter;
-    final filter = ui.ImageFilter.blur(
-      sigmaX: sigma,
-      sigmaY: sigma,
-      tileMode: ui.TileMode.clamp,
-    );
-    _hazeBlur = (sigma: sigma, filter: filter);
-    return filter;
-  }
-
-  /// Multiplies the haze layer's blurred strips by their weight in this box's
+  /// Multiplies a haze layer's blurred strip by its weight in this box's
   /// space (`dstIn`): the haze opacity held over the leading plateau
   /// fraction, then falling linearly to zero at the strip's far end.
-  void _paintHazeWeights(Canvas canvas) {
-    for (final spec in _hazes) {
-      final rect = _stripRect(spec);
-      if (rect.isEmpty) continue;
-      final (begin, end) = switch (spec.edge) {
-        GlassEdge.top => (rect.topCenter, rect.bottomCenter),
-        GlassEdge.bottom => (rect.bottomCenter, rect.topCenter),
-        GlassEdge.left => (rect.centerLeft, rect.centerRight),
-        GlassEdge.right => (rect.centerRight, rect.centerLeft),
-      };
-      final weight = Color.from(
-        alpha: spec.hazeOpacity,
-        red: 0,
-        green: 0,
-        blue: 0,
-      );
-      canvas.drawRect(
-        rect,
-        Paint()
-          ..blendMode = BlendMode.dstIn
-          ..shader = ui.Gradient.linear(
-            begin,
-            end,
-            [weight, weight, weight.withValues(alpha: 0)],
-            [0, spec.hazePlateau.clamp(0, 1), 1],
-          ),
-      );
-    }
+  void _paintHazeWeight(Canvas canvas, GlassEdgeBlur spec) {
+    final rect = _stripRect(spec);
+    final (begin, end) = switch (spec.edge) {
+      GlassEdge.top => (rect.topCenter, rect.bottomCenter),
+      GlassEdge.bottom => (rect.bottomCenter, rect.topCenter),
+      GlassEdge.left => (rect.centerLeft, rect.centerRight),
+      GlassEdge.right => (rect.centerRight, rect.centerLeft),
+    };
+    final weight = Color.from(
+      alpha: spec.hazeOpacity,
+      red: 0,
+      green: 0,
+      blue: 0,
+    );
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..blendMode = BlendMode.dstIn
+        ..shader = ui.Gradient.linear(
+          begin,
+          end,
+          [weight, weight, weight.withValues(alpha: 0)],
+          [0, spec.hazePlateau.clamp(0, 1), 1],
+        ),
+    );
   }
 
   /// The shader's float uniforms in declaration order after the engine-set
@@ -949,12 +943,42 @@ class _EdgePassLayer extends ContainerLayer {
   }
 }
 
-/// The haze over the strips: a heavy engine blur blended in by a per-row
+/// The haze over one strip: a heavy engine blur blended in by a per-row
 /// weight, after the variable blur. Adds nothing while isolated.
+///
+/// The blur is bounded to the strip ([bounds]): samples outside it are
+/// dropped and the rest renormalised, as Core Animation's
+/// `inputNormalizeEdges` does for native bars, so neither the screen edge nor
+/// content past the strip's inner end bleeds in. It stays the backdrop
+/// layer's top-level filter: Impeller passes a coverage hint (the clip) only
+/// to the outermost filter, so a blur composed under a shader would be
+/// computed over the whole captured screen every frame.
 class _EdgeHazeLayer extends ContainerLayer {
   _RenderEdgeBlur? blur;
+  double sigma = 0;
+
+  /// The strip in the layer space this layer is composited in.
+  Rect bounds = Rect.zero;
+
   final _filter = LayerHandle<BackdropFilterLayer>(BackdropFilterLayer());
   BackdropFilterLayer get filter => _filter.layer!;
+
+  ({double sigma, Rect bounds, ui.ImageFilter filter})? _cached;
+
+  ui.ImageFilter _blurFilter() {
+    final cached = _cached;
+    if (cached != null && cached.sigma == sigma && cached.bounds == bounds) {
+      return cached.filter;
+    }
+    final filter = ui.ImageFilter.blur(
+      sigmaX: sigma,
+      sigmaY: sigma,
+      tileMode: ui.TileMode.decal,
+      bounds: bounds,
+    );
+    _cached = (sigma: sigma, bounds: bounds, filter: filter);
+    return filter;
+  }
 
   @override
   bool get alwaysNeedsAddToScene => true;
@@ -971,7 +995,7 @@ class _EdgeHazeLayer extends ContainerLayer {
     if (owner == null || !owner.attached) return;
     if (owner._isolated) return;
     filter
-      ..filter = owner._hazeScreenFilter()
+      ..filter = _blurFilter()
       ..backdropKey = null;
     final clip = compositedAncestorClip(this);
     if (clip != null) builder.pushClipPath(clip);

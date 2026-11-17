@@ -263,6 +263,18 @@ List<GlassToolbarContent> glassBottomToolbarContent(
   ];
 }
 
+/// How many items [content] holds, counting each item of a group.
+int glassToolbarItemCount(List<GlassToolbarContent> content) => content.fold(
+  0,
+  (count, entry) =>
+      count +
+      switch (entry) {
+        GlassToolbarGroup(:final items) => items.length,
+        GlassToolbarItem() => 1,
+        GlassToolbarSpacer() => 0,
+      },
+);
+
 bool glassToolbarHasContent(List<GlassToolbarContent> content) => content.any(
   (entry) => switch (entry) {
     GlassToolbarGroup(:final items) => items.isNotEmpty,

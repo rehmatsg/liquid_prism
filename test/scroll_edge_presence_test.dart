@@ -81,10 +81,30 @@ void main() {
             controller.jumpTo(25);
             await tester.pumpAndSettle();
             edgeIs(shownOr(accessory || mode.key != 'away'));
-            controller.jumpTo(100);
+            // Past the bar's whole travel: the status bar and the bar row.
+            controller.jumpTo(300);
             await tester.pumpAndSettle();
             edgeIs(shownOr(accessory || mode.key == 'sticky'));
-            controller.jumpTo(95);
+            // A reveal grows the edge back with the returning bar, from
+            // nothing (sliver) or the compact edge (scaffold), never at once.
+            controller.jumpTo(295);
+            await tester.pumpAndSettle();
+            if (accessory || mode.key == 'sticky') {
+              edgeIs('full');
+            } else if (sliver) {
+              expect(
+                tester
+                    .widget<LiquidPrismScrollEdge>(
+                      find.byType(LiquidPrismScrollEdge),
+                    )
+                    .progress,
+                lessThan(.1),
+                reason: '${mode.key}: a small reveal',
+              );
+            } else {
+              edgeIs('compact');
+            }
+            controller.jumpTo(150);
             await tester.pumpAndSettle();
             edgeIs(shownOr(accessory || mode.key != 'away'));
             controller.jumpTo(0);
