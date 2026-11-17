@@ -142,6 +142,7 @@ class LiquidPrismScaffold extends StatefulWidget {
     this.resizeToAvoidBottomInset = true,
     this.scrollEdge = true,
     this.scrollEdgeStyle,
+    this.hiddenScrollEdges = const {},
   }) : assert(
          (body == null) != (slivers == null),
          'Pass either body or slivers.',
@@ -262,10 +263,6 @@ class LiquidPrismScaffold extends StatefulWidget {
 
   List<GlassToolbarContent> get _trailingContent =>
       glassToolbarAt(toolbar, GlassToolbarPlacement.topTrailing);
-  List<GlassToolbarItem> get _allActions => [
-    for (final entry in glassToolbarSegments(_trailingContent))
-      if (entry is GlassToolbarGroup) ...entry.items,
-  ];
 
   /// A row below the top bar and inside its scroll edge effect, such as
   /// segmented tabs, sized by its preferred height and spanning the content
@@ -318,6 +315,13 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// the soft variant and fades out as the bar collapses to zero height. Set
   /// [scrollEdge] to false to disable both edges.
   final GlassScrollEdgeStyle? scrollEdgeStyle;
+
+  /// Edges that draw no scroll edge effect, as SwiftUI's
+  /// `scrollEdgeEffectHidden(_:for:)`: [GlassEdge.top] under the top bar,
+  /// [GlassEdge.bottom] over the bottom bar, such as a floating selection bar
+  /// whose glass needs no fade beneath it. Other edges are ignored. A vertical
+  /// rail draws no edge either way, as natively.
+  final Set<GlassEdge> hiddenScrollEdges;
 
   /// The placement of the nearest scaffold, or null outside one.
   static GlassChromePlacement? placementOf(BuildContext context) =>
@@ -698,10 +702,17 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         tabBar != null &&
         sidebarTabs == null &&
         (verticalTabs || explicitDock == GlassTabBarPlacement.top || !keyboard);
-    final leadingContent = glassToolbarAt(
-      widget.toolbar,
-      GlassToolbarPlacement.topLeading,
+    // On a vertical rail, items that suit a vertical bar move into it and the
+    // rest stay in a horizontal bar, as native bars split them: top items in
+    // the top bar, bottom ones along the content's bottom edge.
+    final leadingSplit = _byAxis(
+      glassToolbarAt(widget.toolbar, GlassToolbarPlacement.topLeading),
+      rail: rail,
     );
+    final leadingContent = leadingSplit.vertical;
+    final barLeading = leadingSplit.horizontal;
+    final trailingSplit = _byAxis(widget._trailingContent, rail: rail);
+    final barActions = trailingSplit.horizontal;
     final principal = glassToolbarAt(
       widget.toolbar,
       GlassToolbarPlacement.principal,
@@ -711,6 +722,21 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         (widget.automaticallyImplyLeading ? _impliedLeading(context) : null);
     final leading = leadingContent.isEmpty
         ? leadingWidget
+        : rail
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (leadingWidget != null) ...[
+                leadingWidget,
+                const SizedBox(height: _ChromeLayout._railGap),
+              ],
+              LiquidPrismToolbar(
+                content: leadingContent,
+                style: glassToolbarStyleFor(context, GlassToolbarSize.bottom),
+                axis: Axis.vertical,
+              ),
+            ],
+          )
         : Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -735,7 +761,22 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             content: principal,
             style: glassToolbarStyleFor(context, GlassToolbarSize.navigation),
           );
-    final bottomContent = glassBottomToolbarContent(widget.toolbar);
+    // Bottom items that suit a vertical bar sit at the rail's bottom; the rest
+    // keep the horizontal bottom bar.
+    final railBottomContent = rail
+        ? _byAxis([
+            for (final placement in const [
+              GlassToolbarPlacement.bottomLeading,
+              GlassToolbarPlacement.bottom,
+              GlassToolbarPlacement.bottomTrailing,
+            ])
+              ...glassToolbarAt(widget.toolbar, placement),
+          ], rail: true).vertical
+        : const <GlassToolbarContent>[];
+    final bottomContent = glassBottomToolbarContent([
+      for (final entry in widget.toolbar)
+        if (!railBottomContent.contains(entry)) entry,
+    ]);
     final bottomBar = bottomContent.isEmpty
         ? widget.bottomBar
         : Column(
@@ -751,14 +792,18 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final railLeading = rail && leading != null
         ? 48 + _ChromeLayout._railGap
         : 0;
+    final railBottomLength = railBottomContent.isEmpty
+        ? 0.0
+        : _railLength(railBottomContent) + _ChromeLayout._railGap;
     final content =
         rail &&
             !_fitsRail(
-              railBottom - actionsTop - railLeading,
+              railBottom - actionsTop - railLeading - railBottomLength,
+              trailingSplit.vertical,
               tabs: showTabBar && explicitDock == null ? tabBar : null,
             )
-        ? _overflowRailContent()
-        : widget._trailingContent;
+        ? _overflowRailContent(trailingSplit.vertical)
+        : trailingSplit.vertical;
     final features = addFeatures
         ? system?.displayFeatures ?? const []
         : const <DisplayFeature>[];
@@ -772,13 +817,15 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     // On a vertical rail (iPhone Duo) the controls live in the rail and the
     // top bar holds only the title, so an automatic bar with an inline title
     // scrolls away and returns only at the top. A bar that reveals its title
-    // on scroll, one whose `trailing` stays in the top bar, and a sheet's bar
-    // stay put.
+    // on scroll, one whose `trailing` or horizontal items stay in the top
+    // bar, and a sheet's bar stay put.
     final navigation =
         rail &&
             !widget.sheet &&
             inlineTitle != null &&
             widget.trailing == null &&
+            barLeading.isEmpty &&
+            barActions.isEmpty &&
             widget.largeTitle == null &&
             widget.header == null &&
             (merged.minimizationBehavior == null ||
@@ -982,7 +1029,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         (!rail && leading != null) ||
         widget.trailing != null ||
         sidebarTabs != null ||
-        (!rail && glassToolbarHasContent(content));
+        (!rail && glassToolbarHasContent(content)) ||
+        glassToolbarHasContent(barLeading) ||
+        glassToolbarHasContent(barActions);
     // Page chrome, not a tab shell's: a sidebar of tabs alone leaves the edge
     // to the pages it hosts, whose scroll it also hears.
     final hasChrome =
@@ -991,7 +1040,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         leading != null ||
         widget.trailing != null ||
         widget.accessory != null ||
-        glassToolbarHasContent(content);
+        glassToolbarHasContent(content) ||
+        glassToolbarHasContent(barLeading) ||
+        glassToolbarHasContent(barActions);
     _minimization.configure(
       navigation,
       collapseExtent: widget.largeTitle == null ? 0 : extent + largeTitleLead,
@@ -1032,7 +1083,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             ? (!rail
                   ? GlassTitleAlignment.automatic
                   : widget.trailing != null ||
-                        glassToolbarHasContent(widget._trailingContent)
+                        glassToolbarHasContent(widget._trailingContent) ||
+                        glassToolbarHasContent(barLeading)
                   ? GlassTitleAlignment.leading
                   : GlassTitleAlignment.center)
             : navigation.titleAlignment!,
@@ -1109,7 +1161,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 ),
               ),
             ),
-            if (edges && (fullEdge || (compactEdge.target > 0 && hasChrome)))
+            if (edges &&
+                !widget.hiddenScrollEdges.contains(GlassEdge.top) &&
+                (fullEdge || (compactEdge.target > 0 && hasChrome)))
               LayoutId(
                 id: _Slot.scrollEdge,
                 child: GlassGroupMembers(
@@ -1140,7 +1194,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   ),
                 ),
               ),
-            if (edges && bottomBar != null)
+            if (edges &&
+                bottomBar != null &&
+                !widget.hiddenScrollEdges.contains(GlassEdge.bottom))
               LayoutId(
                 id: _Slot.bottomScrollEdge,
                 child: GlassGroupMembers(
@@ -1300,6 +1356,48 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                   ),
                 ),
               ),
+            if (glassToolbarHasContent(barLeading))
+              LayoutId(
+                id: _Slot.barLeading,
+                child: GlassGroupMembers(
+                  child: LiquidPrismToolbar(
+                    content: barLeading,
+                    style: glassToolbarStyleFor(
+                      context,
+                      GlassToolbarSize.navigation,
+                    ),
+                    axis: Axis.horizontal,
+                  ),
+                ),
+              ),
+            if (glassToolbarHasContent(barActions))
+              LayoutId(
+                id: _Slot.barActions,
+                child: GlassGroupMembers(
+                  child: LiquidPrismToolbar(
+                    content: barActions,
+                    style: glassToolbarStyleFor(
+                      context,
+                      GlassToolbarSize.navigation,
+                    ),
+                    axis: Axis.horizontal,
+                  ),
+                ),
+              ),
+            if (railBottomContent.isNotEmpty)
+              LayoutId(
+                id: _Slot.railBottom,
+                child: GlassGroupMembers(
+                  child: LiquidPrismToolbar(
+                    content: railBottomContent,
+                    style: glassToolbarStyleFor(
+                      context,
+                      GlassToolbarSize.bottom,
+                    ),
+                    axis: Axis.vertical,
+                  ),
+                ),
+              ),
             if (widget.trailing case final trailing?)
               LayoutId(
                 id: _Slot.trailing,
@@ -1321,6 +1419,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               _Slot.title ||
               _Slot.largeTitle ||
               _Slot.sidebarToggle ||
+              _Slot.barLeading ||
+              _Slot.barActions ||
               _Slot.trailing => true,
               _Slot.leading || _Slot.actions => !rail,
               _Slot.scrollEdge => widget.accessory == null,
@@ -1427,14 +1527,29 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     );
   }
 
-  List<GlassToolbarContent> _overflowRailContent() {
-    final actions = widget._allActions
-        .where((item) => item.child == null)
-        .toList();
-    if (actions.length < 2) return widget._trailingContent;
+  /// [content] split between a vertical rail and the horizontal bar beside
+  /// it, or kept whole in the horizontal bar without a rail.
+  static ({
+    List<GlassToolbarContent> vertical,
+    List<GlassToolbarContent> horizontal,
+  })
+  _byAxis(List<GlassToolbarContent> content, {required bool rail}) => rail
+      ? glassToolbarSplitByAxis(content)
+      : (vertical: content, horizontal: const []);
+
+  List<GlassToolbarContent> _overflowRailContent(
+    List<GlassToolbarContent> content,
+  ) {
+    final actions = [
+      for (final entry in glassToolbarSegments(content))
+        if (entry is GlassToolbarGroup)
+          for (final item in entry.items)
+            if (item.child == null) item,
+    ];
+    if (actions.length < 2) return content;
     final result = <GlassToolbarContent>[];
     var inserted = false;
-    for (final entry in glassToolbarSegments(widget._trailingContent)) {
+    for (final entry in glassToolbarSegments(content)) {
       if (entry is! GlassToolbarGroup) {
         result.add(entry);
         continue;
@@ -1453,11 +1568,24 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     return result;
   }
 
-  bool _fitsRail(double height, {required Widget? tabs}) {
+  bool _fitsRail(
+    double height,
+    List<GlassToolbarContent> content, {
+    required Widget? tabs,
+  }) {
+    final tabsLength = switch (tabs) {
+      LiquidPrismTabBar(:final tabs) => 50.0 * tabs.length + 12,
+      _ => 0.0,
+    };
+    return _railLength(content) + _ChromeLayout._railGap + tabsLength <= height;
+  }
+
+  /// The length [content] takes stacked in the rail.
+  double _railLength(List<GlassToolbarContent> content) {
     final theme =
         LiquidPrismTheme.of(context).toolbar ?? const GlassToolbarStyle();
     var length = 0.0, gap = 0.0;
-    for (final entry in glassToolbarSegments(widget._trailingContent)) {
+    for (final entry in glassToolbarSegments(content)) {
       if (entry is GlassToolbarSpacer) {
         length += entry.extent ?? 0;
         gap = 0;
@@ -1483,11 +1611,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         gap = theme.groupSpacing ?? 8;
       }
     }
-    final tabsLength = switch (tabs) {
-      LiquidPrismTabBar(:final tabs) => 50.0 * tabs.length + 12,
-      _ => 0.0,
-    };
-    return length + _ChromeLayout._railGap + tabsLength <= height;
+    return length;
   }
 }
 
@@ -1536,6 +1660,9 @@ enum _Slot {
   sidebarToggle,
   leading,
   actions,
+  barLeading,
+  barActions,
+  railBottom,
   trailing,
   tabBar,
 }
@@ -2062,6 +2189,29 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       }
     }
 
+    // Trailing items that stay horizontal beside a rail end at the content's
+    // edge on the rail's side, the rail's own gap from its column, as
+    // `trailing` does.
+    if (hasChild(_Slot.barActions)) {
+      final child = layoutChild(_Slot.barActions, BoxConstraints.loose(size));
+      final edge = rail && right != rtl ? 0.0 : _edge;
+      final x = rtl
+          ? (actionsInBar ? leadingEnd + _trailingGap : barLeft + edge)
+          : (actionsInBar ? trailingStart - _trailingGap : barRight - edge) -
+                child.width;
+      if (rtl) {
+        leadingEnd = x + child.width;
+      } else {
+        trailingStart = x;
+      }
+      actionsInBar = true;
+      refreshHeaderBottom = math.max(
+        refreshHeaderBottom,
+        centred(child) + child.height,
+      );
+      positionChild(_Slot.barActions, Offset(x, centred(child)));
+    }
+
     if (hasChild(_Slot.trailing)) {
       final child = layoutChild(_Slot.trailing, BoxConstraints.loose(size));
       final edge = rail && right != rtl ? 0.0 : _edge;
@@ -2109,6 +2259,39 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           rtl
               ? barRight - leadingOffset - child.width
               : barLeft + leadingOffset,
+          centred(child),
+        ),
+      );
+    }
+
+    // Leading items that stay horizontal beside a rail keep the top bar's
+    // leading edge, flush with the content where the rail is on that side.
+    if (hasChild(_Slot.barLeading)) {
+      final offset = rail && right == rtl ? 0.0 : leadingOffset;
+      final room = rtl
+          ? barRight -
+                offset -
+                (actionsInBar ? leadingEnd + titleGap : barLeft + _edge)
+          : (actionsInBar ? trailingStart - titleGap : barRight - _edge) -
+                barLeft -
+                offset;
+      final child = layoutChild(
+        _Slot.barLeading,
+        BoxConstraints.loose(Size(math.max(0, room), size.height)),
+      );
+      if (rtl) {
+        trailingStart = barRight - offset - child.width;
+      } else {
+        leadingEnd = barLeft + offset + child.width;
+      }
+      refreshHeaderBottom = math.max(
+        refreshHeaderBottom,
+        centred(child) + child.height,
+      );
+      positionChild(
+        _Slot.barLeading,
+        Offset(
+          rtl ? barRight - offset - child.width : barLeft + offset,
           centred(child),
         ),
       );
@@ -2185,6 +2368,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         ),
       );
     }
+    // The bottom of the rail's free run: its end, or above a tab bar in it.
+    var railFloor = railBottom;
     if (hasChild(_Slot.tabBar) &&
         !sideDock &&
         tabDock != GlassTabBarPlacement.top) {
@@ -2199,6 +2384,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           _Slot.tabBar,
           Offset(railX(bar.width), railBottom - bar.height),
         );
+        if (!bar.isEmpty) railFloor = railBottom - bar.height - _railGap;
       } else {
         final margin =
             dockMargin ??
@@ -2232,6 +2418,19 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         );
         covered = covered.copyWith(bottom: margin.vertical + bar.height + 3);
       }
+    }
+
+    // Bottom items in the rail sit at its bottom, a gap above any tab bar
+    // there, as native bottom-bar items do on a vertical bar.
+    if (hasChild(_Slot.railBottom)) {
+      final group = layoutChild(
+        _Slot.railBottom,
+        BoxConstraints.loose(Size(48, math.max(0, railFloor - railTop))),
+      );
+      positionChild(
+        _Slot.railBottom,
+        Offset(railX(group.width), railFloor - group.height),
+      );
     }
 
     if (hasChild(_Slot.bottomBar)) {

@@ -82,6 +82,127 @@ void main() {
     );
   });
 
+  group('toolbar items on a rail split by axis, as native bars do', () {
+    const icon = Icon(CupertinoIcons.star);
+    Widget app(List<GlassToolbarContent> toolbar, {Set<GlassEdge>? hidden}) =>
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: const Text('Library'),
+            toolbar: toolbar,
+            hiddenScrollEdges: hidden ?? const {},
+            body: const SizedBox.expand(key: _body),
+          ),
+        );
+    bool inRail(Rect rect) => rect.left >= 394 && rect.right <= 442;
+
+    testWidgets('text items stay in the top bar; icons take the rail', (
+      tester,
+    ) async {
+      window(tester, duo);
+      await tester.pumpWidget(
+        app([
+          GlassToolbarItem(
+            label: 'Select All',
+            onPressed: () {},
+            placement: GlassToolbarPlacement.topLeading,
+          ),
+          GlassToolbarItem(label: 'Done', onPressed: () {}),
+          GlassToolbarItem(icon: icon, label: 'Share', onPressed: () {}),
+        ]),
+      );
+
+      final selectAll = tester.getRect(find.text('Select All'));
+      final done = tester.getRect(find.text('Done'));
+      expect(inRail(selectAll), isFalse);
+      expect(inRail(done), isFalse);
+      expect(selectAll.center.dx, lessThan(done.center.dx));
+      expect(selectAll.top, lessThan(100), reason: 'in the top bar row');
+      expect(done.top, lessThan(100), reason: 'in the top bar row');
+      expect(
+        inRail(tester.getRect(find.bySemanticsLabel('Share'))),
+        isTrue,
+        reason: 'an icon item moves into the rail',
+      );
+    });
+
+    testWidgets('bottom icons sit at the rail bottom; text stays below the '
+        'content, and iPhone keeps both in the bottom bar', (tester) async {
+      const count = Key('count');
+      final toolbar = [
+        const GlassToolbarItem.custom(
+          placement: GlassToolbarPlacement.bottom,
+          child: Text('2 Selected', key: count),
+        ),
+        GlassToolbarItem(
+          icon: icon,
+          label: 'Delete',
+          onPressed: () {},
+          placement: GlassToolbarPlacement.bottomTrailing,
+        ),
+      ];
+
+      window(tester, duo);
+      await tester.pumpWidget(app(toolbar));
+      final delete = tester.getRect(find.bySemanticsLabel('Delete'));
+      expect(inRail(delete), isTrue);
+      expect(delete.bottom, greaterThan(678 / 2), reason: "the rail's bottom");
+      final label = tester.getRect(find.byKey(count));
+      expect(inRail(label), isFalse);
+      expect(label.top, greaterThan(678 / 2), reason: 'along the bottom');
+
+      window(tester, phone);
+      await tester.pumpWidget(app(toolbar));
+      // The item moved bars, so the bottom toolbar materializes it.
+      await tester.pump(const Duration(seconds: 1));
+      final phoneDelete = tester.getRect(find.bySemanticsLabel('Delete'));
+      expect(phoneDelete.top, greaterThan(874 - 120));
+      expect(phoneDelete.right, greaterThan(402 - 80), reason: 'trailing');
+    });
+
+    testWidgets('an axis behavior overrides the inference', (tester) async {
+      window(tester, duo);
+      await tester.pumpWidget(
+        app([
+          GlassToolbarItem(
+            icon: icon,
+            label: 'Edit',
+            onPressed: () {},
+            axisBehavior: GlassToolbarAxisBehavior.horizontalOnly,
+          ),
+          const GlassToolbarItem.custom(
+            axisBehavior: GlassToolbarAxisBehavior.verticalPreferred,
+            child: SizedBox(key: Key('custom'), width: 30, height: 30),
+          ),
+        ]),
+      );
+
+      expect(inRail(tester.getRect(find.bySemanticsLabel('Edit'))), isFalse);
+      expect(inRail(tester.getRect(find.byKey(const Key('custom')))), isTrue);
+    });
+
+    testWidgets('a hidden edge drops only that scroll edge', (tester) async {
+      window(tester, phone);
+      final toolbar = [
+        GlassToolbarItem(
+          icon: icon,
+          label: 'Delete',
+          onPressed: () {},
+          placement: GlassToolbarPlacement.bottomTrailing,
+        ),
+      ];
+      await tester.pumpWidget(app(toolbar));
+      final both = find.byType(LiquidPrismScrollEdge).evaluate().length;
+
+      await tester.pumpWidget(app(toolbar, hidden: const {GlassEdge.bottom}));
+      expect(find.byType(LiquidPrismScrollEdge), findsNWidgets(both - 1));
+
+      await tester.pumpWidget(
+        app(toolbar, hidden: const {GlassEdge.top, GlassEdge.bottom}),
+      );
+      expect(find.byType(LiquidPrismScrollEdge), findsNWidgets(both - 2));
+    });
+  });
+
   testWidgets('iPhone Duo: a back button heads the rail, above the toolbar', (
     tester,
   ) async {

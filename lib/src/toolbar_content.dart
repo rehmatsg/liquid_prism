@@ -11,6 +11,26 @@ enum GlassToolbarPlacement {
   bottomTrailing,
 }
 
+/// Which bar axes an item may sit in, as SwiftUI's `ToolbarItemAxisBehavior`.
+///
+/// Where the system lays bars out vertically (the iPhone Duo's side rail),
+/// items that suit a fixed width and flexible height move into the vertical
+/// bar and the rest stay in a horizontal one: top items in the top bar and
+/// bottom items along the content's bottom edge.
+enum GlassToolbarAxisBehavior {
+  /// An item with an icon may sit in a vertical bar; a text-only item or a
+  /// custom widget stays horizontal.
+  automatic,
+
+  /// Always horizontal: for an item whose label changes between a symbol and
+  /// text, such as Edit and Done, which would otherwise jump between axes.
+  horizontalOnly,
+
+  /// Prefers the vertical bar when there is one: for a custom widget that has
+  /// a good vertical form.
+  verticalPreferred,
+}
+
 @immutable
 sealed class GlassToolbarContent {
   const GlassToolbarContent({
@@ -33,6 +53,7 @@ final class GlassToolbarItem extends GlassToolbarContent {
     this.foregroundColor,
     this.badge,
     this.width,
+    this.axisBehavior = GlassToolbarAxisBehavior.automatic,
   }) : menu = null,
        onMenuSelected = null,
        _menuEnabled = false,
@@ -51,6 +72,7 @@ final class GlassToolbarItem extends GlassToolbarContent {
     this.foregroundColor,
     this.badge,
     this.width,
+    this.axisBehavior = GlassToolbarAxisBehavior.automatic,
   }) : onPressed = null,
        onMenuSelected = onSelected,
        _menuEnabled = enabled,
@@ -64,6 +86,7 @@ final class GlassToolbarItem extends GlassToolbarContent {
     this.width,
     super.key,
     super.placement,
+    this.axisBehavior = GlassToolbarAxisBehavior.automatic,
   }) : label = '',
        icon = null,
        onPressed = null,
@@ -90,6 +113,10 @@ final class GlassToolbarItem extends GlassToolbarContent {
   /// measured, and grouped custom content defaults to the control's extent.
   /// Ungrouped custom content can instead use its intrinsic size.
   final double? width;
+
+  /// Which bar axes the item may sit in when the scaffold lays bars out
+  /// vertically.
+  final GlassToolbarAxisBehavior axisBehavior;
 }
 
 /// Items that share one capsule, including an empty group that may appear later.
@@ -177,6 +204,42 @@ double glassToolbarItemExtent(
   final width = math.max(38.0, painter.width + 16);
   painter.dispose();
   return width;
+}
+
+/// Whether [entry] may sit in a vertical bar. A group goes vertical only when
+/// every item in it can, so related items keep one axis; an empty group keeps
+/// its place in the vertical bar, where it may later fill.
+bool glassToolbarIsVertical(GlassToolbarContent entry) => switch (entry) {
+  GlassToolbarItem(:final axisBehavior) => switch (axisBehavior) {
+    GlassToolbarAxisBehavior.horizontalOnly => false,
+    GlassToolbarAxisBehavior.verticalPreferred => true,
+    GlassToolbarAxisBehavior.automatic =>
+      entry.icon != null && entry.child == null,
+  },
+  GlassToolbarGroup(:final items) => items.every(glassToolbarIsVertical),
+  GlassToolbarSpacer() => true,
+};
+
+/// Splits [content] between a vertical bar and the horizontal bar beside it.
+///
+/// Items keep their order on both sides. Spacers go with the vertical side,
+/// where a flexible spacer collapses to nothing, as natively; the horizontal
+/// side here is the few items a vertical layout leaves behind, so it takes no
+/// spacing of its own.
+({List<GlassToolbarContent> vertical, List<GlassToolbarContent> horizontal})
+glassToolbarSplitByAxis(List<GlassToolbarContent> content) {
+  final vertical = <GlassToolbarContent>[];
+  final horizontal = <GlassToolbarContent>[];
+  for (final entry in content) {
+    if (entry is GlassToolbarSpacer) {
+      if (entry.extent != null) vertical.add(entry);
+    } else if (glassToolbarIsVertical(entry)) {
+      vertical.add(entry);
+    } else {
+      horizontal.add(entry);
+    }
+  }
+  return (vertical: vertical, horizontal: horizontal);
 }
 
 List<GlassToolbarContent> glassBottomToolbarContent(

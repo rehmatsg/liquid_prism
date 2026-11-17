@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.16.0
+
+- Split toolbar items by axis on vertical-rail layouts (iPhone Duo), as SwiftUI does. An item with an icon moves into the rail; a text-only item or custom widget now stays in a horizontal bar: text top items keep the top bar on their own side, in the bar's glass capsule, where every top item moved into the rail before. Bottom items with an icon now sit at the rail's bottom, above any tab bar there, instead of in the bottom bar; text and custom bottom items keep the bottom bar. A group moves only when all of its items can.
+- Add `GlassToolbarItem(axisBehavior:)` and `GlassToolbarAxisBehavior` (`automatic`, `horizontalOnly`, `verticalPreferred`), matching SwiftUI's `axisBehavior(_:)`, to override that inference. A custom widget that should stay in the rail needs `verticalPreferred`.
+- Add `LiquidPrismScaffold.hiddenScrollEdges`, matching SwiftUI's `scrollEdgeEffectHidden(_:for:)`, to drop the top or bottom scroll edge effect on its own, such as under a floating selection bar.
+
 ## 0.15.0
 
 - Require Flutter 3.50 and Dart 3.14. Material and Cupertino now come from the `material_ui` and `cupertino_ui` packages, which Flutter 3.50 makes the home of its design libraries, so an app that installs its theme through `material_ui` themes the fallback menu.

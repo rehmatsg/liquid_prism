@@ -446,6 +446,26 @@ A text button in glass, such as Invite, also goes in `trailing:`; it stays in
 the top bar on iPhone Duo, where only the icon actions move to the rail, and
 there ends at the content's edge, the rail's 12 points from its column.
 
+Toolbar items split the same way on a vertical rail, as SwiftUI's do: an item
+with an icon moves into the rail, and a text-only item or custom widget stays
+in a horizontal bar. A text `topLeading` item, such as Select All, keeps the
+top bar's leading edge and a text `topTrailing` item, such as Done, its
+trailing edge, each in the bar's own glass capsule. Bottom items that move
+sit at the rail's bottom, a gap above any tab bar there, keeping their groups,
+while the rest keep the bottom bar, as Photos keeps a "Show Selected" label
+below its grid while Share and Delete move into the rail. A group moves only
+when all of its items can, so related items share an axis. Override the
+inference with `GlassToolbarItem(axisBehavior:)`, as SwiftUI's
+`axisBehavior(_:)`: `horizontalOnly` for an item whose label alternates
+between a symbol and text, `verticalPreferred` for a custom widget with a good
+vertical form. Flexible spacers collapse on the rail; fixed spacers keep their
+extent.
+
+`hiddenScrollEdges` drops the scroll edge effect on the edges it names, as
+SwiftUI's `scrollEdgeEffectHidden(_:for:)`: `{GlassEdge.bottom}` for a
+floating selection bar whose glass needs no fade beneath it. `scrollEdge:
+false` still turns both edges off.
+
 ### Glass titles and avatars
 
 Changing `avatar` or `leading` animates between the above-avatar, inline-avatar,
@@ -549,7 +569,7 @@ CustomScrollView(
 
 It takes `leading` (or implies a back or close button), `title`,
 `largeTitle`, `subtitle`, `toolbar`, `trailing`, `accessory`, `sheet`, `backgroundColor` (the fade colour),
-`scrollEdge`, `scrollEdgeStyle` and `navigationBarStyle`, with the scaffold's
+`scrollEdge`, `scrollEdgeStyle`, `hiddenScrollEdges` and `navigationBarStyle`, with the scaffold's
 measured geometry: 16-point edges, the 44-point control row under the status
 bar, a 52-point large title row that rides the scroll before the titles swap
 on a timer, and 16 points of clearance before the content. The bar's glass and
