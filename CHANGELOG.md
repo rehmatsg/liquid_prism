@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.16.1
+
+- Center a scaffold's `bottom` toolbar content on the window, where it was centered in the room between the leading and trailing groups, so a count or label beside one edge item no longer sits off center.
+- Inset a scaffold's bottom toolbar groups by the floating tab bar's 24-point side margin, so an edge item no longer sits flush against the window's edge and under the display's rounded corner.
+
 ## 0.16.0
 
 - Split toolbar items by axis on vertical-rail layouts (iPhone Duo), as SwiftUI does. An item with an icon moves into the rail; a text-only item or custom widget now stays in a horizontal bar: text top items keep the top bar on their own side, in the bar's glass capsule, where every top item moved into the rail before. Bottom items with an icon now sit at the rail's bottom, above any tab bar there, instead of in the bottom bar; text and custom bottom items keep the bottom bar. A group moves only when all of its items can.

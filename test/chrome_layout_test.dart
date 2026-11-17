@@ -159,6 +159,39 @@ void main() {
       expect(phoneDelete.right, greaterThan(402 - 80), reason: 'trailing');
     });
 
+    testWidgets('iPhone: a bottom center item sits on the window center, and '
+        'edge items keep clear of the corners', (tester) async {
+      const count = Key('count');
+      window(tester, phone);
+      await tester.pumpWidget(
+        app([
+          const GlassToolbarItem.custom(
+            placement: GlassToolbarPlacement.bottom,
+            child: Text('2 Selected', key: count),
+          ),
+          GlassToolbarItem(
+            icon: icon,
+            label: 'Delete',
+            onPressed: () {},
+            placement: GlassToolbarPlacement.bottomTrailing,
+          ),
+          GlassToolbarItem(
+            icon: icon,
+            label: 'Share',
+            onPressed: () {},
+            placement: GlassToolbarPlacement.bottomLeading,
+          ),
+        ]),
+      );
+
+      // Centred on the window, not on the room between the edge groups.
+      expect(tester.getCenter(find.byKey(count)).dx, closeTo(402 / 2, 0.5));
+      final delete = tester.getRect(find.bySemanticsLabel('Delete'));
+      final share = tester.getRect(find.bySemanticsLabel('Share'));
+      expect(402 - delete.right, greaterThanOrEqualTo(24));
+      expect(share.left, greaterThanOrEqualTo(24));
+    });
+
     testWidgets('an axis behavior overrides the inference', (tester) async {
       window(tester, duo);
       await tester.pumpWidget(
