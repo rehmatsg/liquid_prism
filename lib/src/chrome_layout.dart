@@ -773,16 +773,24 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               ...glassToolbarAt(widget.toolbar, placement),
           ], rail: true).vertical
         : const <GlassToolbarContent>[];
-    final bottomContent = glassBottomToolbarContent([
-      for (final entry in widget.toolbar)
+    List<GlassToolbarContent> bottomAt(GlassToolbarPlacement placement) => [
+      for (final entry in glassToolbarAt(widget.toolbar, placement))
         if (!railBottomContent.contains(entry)) entry,
-    ]);
-    final bottomBar = bottomContent.isEmpty
+    ];
+    final bottomLeading = bottomAt(GlassToolbarPlacement.bottomLeading);
+    final bottomCenter = bottomAt(GlassToolbarPlacement.bottom);
+    final bottomTrailing = bottomAt(GlassToolbarPlacement.bottomTrailing);
+    final bottomBar =
+        bottomLeading.isEmpty && bottomCenter.isEmpty && bottomTrailing.isEmpty
         ? widget.bottomBar
         : Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              LiquidPrismToolbar(content: bottomContent),
+              _BottomToolbar(
+                leading: bottomLeading,
+                center: bottomCenter,
+                trailing: bottomTrailing,
+              ),
               if (widget.bottomBar != null) ...[
                 const SizedBox(height: 8),
                 widget.bottomBar!,
@@ -1612,6 +1620,47 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       }
     }
     return length;
+  }
+}
+
+/// A bottom toolbar's three regions, as native bottom bars place them: the
+/// leading and trailing groups at the bar's edges, inset from the window's
+/// corners by the floating tab bar's side margin, and the center group on
+/// the window's center, whatever the groups beside it take.
+class _BottomToolbar extends StatelessWidget {
+  const _BottomToolbar({
+    required this.leading,
+    required this.center,
+    required this.trailing,
+  });
+
+  final List<GlassToolbarContent> leading, center, trailing;
+
+  /// The floating tab bar's measured side margin, which keeps edge items
+  /// clear of the display's rounded corners.
+  static const double sideMargin = 24;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget edge(List<GlassToolbarContent> content, AlignmentDirectional at) =>
+        Align(
+          alignment: at,
+          heightFactor: 1,
+          child: LiquidPrismToolbar(content: content),
+        );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: sideMargin),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (center.isNotEmpty) LiquidPrismToolbar(content: center),
+          if (leading.isNotEmpty)
+            edge(leading, AlignmentDirectional.centerStart),
+          if (trailing.isNotEmpty)
+            edge(trailing, AlignmentDirectional.centerEnd),
+        ],
+      ),
+    );
   }
 }
 

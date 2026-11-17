@@ -708,7 +708,12 @@ ungrouped custom content may size intrinsically.
 `placement` to `topLeading`, `principal`, `bottomLeading`, `bottom` or
 `bottomTrailing`. Principal content replaces the inline title while the large
 title remains independent. Bottom regions form a window footer in a scaffold;
-in a sliver app bar they form a pinned row below the accessory.
+in a sliver app bar they form a pinned row below the accessory. In a
+scaffold's footer, `bottom` content sits on the window's center whatever the
+leading and trailing groups beside it take, and those groups keep the
+floating tab bar's 24-point side margin, clear of the display's rounded
+corners. The margin follows the tab bar's measured margin; the bottom
+toolbar's own has not been measured separately.
 
 Consecutive loose actions share one capsule. `GlassToolbarGroup(items: [...])`
 starts a separate capsule, with an optional local `style`. Fixed and flexible
