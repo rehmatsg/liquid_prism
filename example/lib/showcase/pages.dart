@@ -1,6 +1,7 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
+import 'blur_fill_page.dart';
 import 'model.dart';
 import 'previews.dart';
 import 'refresh_page.dart';
@@ -84,6 +85,16 @@ class ExplorePage extends StatelessWidget {
             iconColor: GlassColors.of(context).indigo,
             onPressed: () => Navigator.of(context).push<void>(
               CupertinoPageRoute(builder: (_) => const RefreshFeedPage()),
+            ),
+          ),
+          ListRow(
+            key: const ValueKey('open-blur-fill'),
+            title: 'Scroll edge blur fill',
+            subtitle: 'Switch it over text, stripes and color',
+            icon: CupertinoIcons.drop_triangle_fill,
+            iconColor: GlassColors.of(context).teal,
+            onPressed: () => Navigator.of(context).push<void>(
+              CupertinoPageRoute(builder: (_) => const BlurFillPage()),
             ),
           ),
         ],
