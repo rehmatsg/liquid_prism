@@ -239,11 +239,40 @@ void main() {
     // Full strength holds down to 98 points above the strip's end.
     expect(spec.plateau, closeTo(1 - 98 / 150, 1e-9));
     expect(spec.haze, GlassScrollEdgeStyle.defaultHaze);
+    // The native blur fill, at its light-appearance weights.
+    expect(spec.fill, GlassScrollEdgeStyle.defaultFill);
+    expect((spec.fillLighten, spec.fillDarken, spec.fillNormal), (.6, .4, .25));
 
     await tester.pumpWidget(build(.5));
     final half = tester.widget<LiquidPrismEdgeBlur>(blur).edges.single;
     expect(half.sigma, GlassScrollEdgeStyle.defaultSigma / 2);
     expect(half.fadeOpacity, GlassScrollEdgeStyle.defaultFadeOpacity / 2);
+    expect(half.fillLighten, .3, reason: 'the fill reveals with the effect');
+  });
+
+  testWidgets('the blur fill swaps its blends in dark appearance and a zero '
+      'sigma leaves it out', (tester) async {
+    Widget build(GlassScrollEdgeStyle? style) => CupertinoApp(
+      home: LiquidPrismTheme(
+        brightness: Brightness.dark,
+        child: Center(
+          child: SizedBox(
+            width: 300,
+            height: 100,
+            child: LiquidPrismScrollEdge(progress: 1, style: style),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(build(null));
+    final blur = find.byType(LiquidPrismEdgeBlur);
+    final dark = tester.widget<LiquidPrismEdgeBlur>(blur).edges.single;
+    expect((dark.fillLighten, dark.fillDarken, dark.fillNormal), (.4, .6, 0));
+    expect(dark.fills, isTrue);
+
+    await tester.pumpWidget(build(const GlassScrollEdgeStyle(fill: 0)));
+    final off = tester.widget<LiquidPrismEdgeBlur>(blur).edges.single;
+    expect(off.fills, isFalse);
   });
 
   testWidgets('scroll edge style resolves theme below direct choices', (

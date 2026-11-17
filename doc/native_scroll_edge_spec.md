@@ -84,10 +84,14 @@ hard blur's attenuation at the edge, 0.19, is what a 0.5 pt sigma leaves of
 pt of a 156 pt strip (hard 51 of 116), reach 50 pt past the bar (hard 0), fade
 opacity 0.5, haze 16 at 0.5 masked linearly from 34% (hard constant), hard
 floor 0.25 with the fade held flat and a one-pixel hairline (10% black in
-light, 10% white in dark). The blur-fill opacities (lighten 0.6, darken 0.4, normal 0.25 in light; darken
-0.6, lighten 0.4, normal 0 in dark) are reproduced only as the measured net
-fade toward the background. The `.automatic` style was not measured; the
-reveal over the first points of scroll is this package's, not native.
+light, 10% white in dark), and the blur fill: a 16 pt blur blended over the
+strip through lighten 0.6, darken 0.4 and normal 0.25 in light (lighten 0.4,
+darken 0.6, normal 0 in dark), in that order, weighted along the variable
+blur's mask. The fade toward the background, which approximated the blur
+fill's net effect, stays at 0.5 alongside it. The blend order and the blur
+fill's own mask are inferred from the layer properties, not measured. The
+`.automatic` style was not measured; the reveal over the first points of
+scroll is this package's, not native.
 
 ## Hard hairline
 

@@ -45,7 +45,15 @@ class GlassScrollEdgeStyle {
     this.hairline,
     this.revealExtent,
     this.spring,
+    this.fill,
+    this.fillLighten,
+    this.fillDarken,
+    this.fillNormal,
   }) : assert(sigma == null || sigma >= 0),
+       assert(fill == null || fill >= 0),
+       assert(fillLighten == null || (fillLighten >= 0 && fillLighten <= 1)),
+       assert(fillDarken == null || (fillDarken >= 0 && fillDarken <= 1)),
+       assert(fillNormal == null || (fillNormal >= 0 && fillNormal <= 1)),
        assert(falloff == null || falloff >= 0),
        assert(extension == null || extension >= 0),
        assert(floor == null || (floor >= 0 && floor <= 1)),
@@ -99,6 +107,15 @@ class GlassScrollEdgeStyle {
   /// Spring for effects that animate in and out ([LiquidPrismScrollFade]).
   final GlassSpring? spring;
 
+  /// Sigma of the blur fill blended over the variable blur
+  /// ([GlassEdgeBlur.fill]). Zero leaves it out.
+  final double? fill;
+
+  /// The blur fill's lighten, darken and normal opacities. Unset ones take
+  /// the native weights for the appearance: 0.6, 0.4 and 0.25 in light, 0.4,
+  /// 0.6 and 0 in dark.
+  final double? fillLighten, fillDarken, fillNormal;
+
   /// Keep existing fields when an argument is null.
   GlassScrollEdgeStyle copyWith({
     GlassScrollEdgeVariant? variant,
@@ -113,6 +130,10 @@ class GlassScrollEdgeStyle {
     bool? hairline,
     double? revealExtent,
     GlassSpring? spring,
+    double? fill,
+    double? fillLighten,
+    double? fillDarken,
+    double? fillNormal,
   }) => GlassScrollEdgeStyle(
     variant: variant ?? this.variant,
     sigma: sigma ?? this.sigma,
@@ -126,6 +147,10 @@ class GlassScrollEdgeStyle {
     hairline: hairline ?? this.hairline,
     revealExtent: revealExtent ?? this.revealExtent,
     spring: spring ?? this.spring,
+    fill: fill ?? this.fill,
+    fillLighten: fillLighten ?? this.fillLighten,
+    fillDarken: fillDarken ?? this.fillDarken,
+    fillNormal: fillNormal ?? this.fillNormal,
   );
 
   /// Apply a partial override, retaining unspecified fields.
@@ -144,6 +169,10 @@ class GlassScrollEdgeStyle {
           hairline: other.hairline ?? hairline,
           revealExtent: other.revealExtent ?? revealExtent,
           spring: other.spring ?? spring,
+          fill: other.fill ?? fill,
+          fillLighten: other.fillLighten ?? fillLighten,
+          fillDarken: other.fillDarken ?? fillDarken,
+          fillNormal: other.fillNormal ?? fillNormal,
         );
 
   @override
@@ -161,10 +190,18 @@ class GlassScrollEdgeStyle {
           other.hazeOpacity == hazeOpacity &&
           other.hairline == hairline &&
           other.revealExtent == revealExtent &&
-          other.spring == spring;
+          other.spring == spring &&
+          other.fill == fill &&
+          other.fillLighten == fillLighten &&
+          other.fillDarken == fillDarken &&
+          other.fillNormal == fillNormal;
 
   @override
   int get hashCode => Object.hash(
+    fill,
+    fillLighten,
+    fillDarken,
+    fillNormal,
     variant,
     sigma,
     falloff,
@@ -187,6 +224,15 @@ class GlassScrollEdgeStyle {
   static const double defaultHazeOpacity = .5;
   static const double defaultHazePlateau = .34;
   static const double defaultRevealExtent = 16;
+
+  /// The blur fill native scroll edges blend over their variable blur: a
+  /// 16-point blur at lighten 0.6, darken 0.4 and normal 0.25 in light, and
+  /// with lighten and darken swapped and no normal blend in dark.
+  static const double defaultFill = 16;
+  static const ({double lighten, double darken, double normal})
+  defaultLightFill = (lighten: .6, darken: .4, normal: .25);
+  static const ({double lighten, double darken, double normal})
+  defaultDarkFill = (lighten: .4, darken: .6, normal: 0);
 
   /// The hard variant's defaults: a 2-point blur that keeps a quarter of its
   /// strength at the edge, falling over the lower 51 points of the bar, with
@@ -295,6 +341,11 @@ class LiquidPrismScrollEdge extends StatelessWidget {
     final hazeOpacity =
         resolved.hazeOpacity ?? GlassScrollEdgeStyle.defaultHazeOpacity;
     final hairline = hard && (resolved.hairline ?? true);
+    final fill = resolved.fill ?? GlassScrollEdgeStyle.defaultFill;
+    final fillWeights =
+        LiquidPrismTheme.brightnessOf(context) == Brightness.dark
+        ? GlassScrollEdgeStyle.defaultDarkFill
+        : GlassScrollEdgeStyle.defaultLightFill;
     final pixel = 1 / MediaQuery.devicePixelRatioOf(context);
     return Stack(
       clipBehavior: Clip.none,
@@ -329,6 +380,16 @@ class LiquidPrismScrollEdge extends StatelessWidget {
                       hazePlateau: hard
                           ? 1
                           : GlassScrollEdgeStyle.defaultHazePlateau,
+                      fill: fill,
+                      fillLighten:
+                          (resolved.fillLighten ?? fillWeights.lighten) *
+                          strength,
+                      fillDarken:
+                          (resolved.fillDarken ?? fillWeights.darken) *
+                          strength,
+                      fillNormal:
+                          (resolved.fillNormal ?? fillWeights.normal) *
+                          strength,
                     ),
                   ],
                 );

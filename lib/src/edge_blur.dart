@@ -21,6 +21,10 @@ class GlassEdgeBlur {
     this.haze = 0,
     this.hazeOpacity = .5,
     this.hazePlateau = .34,
+    this.fill = 0,
+    this.fillLighten = 0,
+    this.fillDarken = 0,
+    this.fillNormal = 0,
   }) : assert(extent >= 0),
        assert(sigma >= 0),
        assert(plateau >= 0 && plateau < 1),
@@ -29,7 +33,11 @@ class GlassEdgeBlur {
        assert(fadeFloor == null || (fadeFloor >= 0 && fadeFloor <= 1)),
        assert(haze >= 0),
        assert(hazeOpacity >= 0 && hazeOpacity <= 1),
-       assert(hazePlateau >= 0 && hazePlateau <= 1);
+       assert(hazePlateau >= 0 && hazePlateau <= 1),
+       assert(fill >= 0),
+       assert(fillLighten >= 0 && fillLighten <= 1),
+       assert(fillDarken >= 0 && fillDarken <= 1),
+       assert(fillNormal >= 0 && fillNormal <= 1);
 
   /// Which edge of the box the strip sits on.
   final GlassEdge edge;
@@ -73,6 +81,31 @@ class GlassEdgeBlur {
   /// linearly to nothing at the inner end; 1 holds it to the edge.
   final double hazePlateau;
 
+  /// Sigma of the blur fill: a heavy blur of the content blended back over
+  /// the strip, the way native scroll edges finish their variable blur. Its
+  /// three blends run in order, each weighted by its opacity times the
+  /// variable blur's ramp ([plateau], [floor]): [fillLighten] lifts detail
+  /// darker than its surroundings toward them, [fillDarken] pulls brighter
+  /// detail down toward them, and [fillNormal] mixes the blur in. Detail
+  /// loses contrast toward its own surroundings rather than toward one color.
+  /// Zero adds none.
+  final double fill;
+
+  /// The blur fill's lighten opacity at full strength, 0–1.
+  final double fillLighten;
+
+  /// The blur fill's darken opacity at full strength, 0–1.
+  final double fillDarken;
+
+  /// The blur fill's normal opacity at full strength, 0–1.
+  final double fillNormal;
+
+  /// Whether the strip blends a blur fill.
+  bool get fills =>
+      fill > 0.01 &&
+      extent > 0 &&
+      (fillLighten > 0 || fillDarken > 0 || fillNormal > 0);
+
   /// Whether the strip blurs.
   bool get blurs => sigma > 0.01 && extent > 0;
 
@@ -95,6 +128,10 @@ class GlassEdgeBlur {
     double? haze,
     double? hazeOpacity,
     double? hazePlateau,
+    double? fill,
+    double? fillLighten,
+    double? fillDarken,
+    double? fillNormal,
   }) => GlassEdgeBlur(
     edge: edge ?? this.edge,
     extent: extent ?? this.extent,
@@ -107,12 +144,20 @@ class GlassEdgeBlur {
     haze: haze ?? this.haze,
     hazeOpacity: hazeOpacity ?? this.hazeOpacity,
     hazePlateau: hazePlateau ?? this.hazePlateau,
+    fill: fill ?? this.fill,
+    fillLighten: fillLighten ?? this.fillLighten,
+    fillDarken: fillDarken ?? this.fillDarken,
+    fillNormal: fillNormal ?? this.fillNormal,
   );
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is GlassEdgeBlur &&
+          other.fill == fill &&
+          other.fillLighten == fillLighten &&
+          other.fillDarken == fillDarken &&
+          other.fillNormal == fillNormal &&
           other.edge == edge &&
           other.extent == extent &&
           other.sigma == sigma &&
@@ -138,13 +183,18 @@ class GlassEdgeBlur {
     haze,
     hazeOpacity,
     hazePlateau,
+    fill,
+    fillLighten,
+    fillDarken,
+    fillNormal,
   );
 
   @override
   String toString() =>
       'GlassEdgeBlur(${edge.name}, extent: $extent, sigma: $sigma, '
       'plateau: $plateau, floor: $floor, fade: $fadeColor @ $fadeOpacity, '
-      'haze: $haze @ $hazeOpacity)';
+      'haze: $haze @ $hazeOpacity, fill: $fill @ '
+      '$fillLighten/$fillDarken/$fillNormal)';
 }
 
 /// Blurs and fades up to two opposite edges of its [child] progressively,
@@ -334,8 +384,28 @@ class _RenderEdgeBlur extends RenderProxyBox {
   ];
   final _fadeLayer = LayerHandle<_EdgeFadeLayer>();
   final _hazeClipLayer = LayerHandle<ClipPathLayer>();
-  final _hazeLayer = LayerHandle<_EdgeHazeLayer>();
+  final _hazeLayer = LayerHandle<_EdgeBackdropLayer>();
   ({double sigma, ui.ImageFilter filter})? _hazeBlur;
+  final _fillClipLayer = LayerHandle<ClipPathLayer>();
+  final _fillLayers = [
+    for (var i = 0; i < _fillModes.length; i++)
+      LayerHandle<_EdgeBackdropLayer>(),
+  ];
+  ({double sigma, ui.ImageFilter filter})? _fillBlur;
+
+  /// The blur fill's blends, in the order they run.
+  static const _fillModes = [
+    BlendMode.lighten,
+    BlendMode.darken,
+    BlendMode.srcOver,
+  ];
+
+  static double _fillOpacity(GlassEdgeBlur spec, BlendMode mode) =>
+      switch (mode) {
+        BlendMode.lighten => spec.fillLighten,
+        BlendMode.darken => spec.fillDarken,
+        _ => spec.fillNormal,
+      };
 
   List<_EdgePassFilter>? _screenFilters;
   List<_EdgePassFilter>? _textureFilters;
@@ -382,9 +452,13 @@ class _RenderEdgeBlur extends RenderProxyBox {
   Iterable<GlassEdgeBlur> get _hazes => LiquidPrism._edgeProgram == null
       ? const []
       : _specs.where((spec) => spec.hazes);
+  Iterable<GlassEdgeBlur> get _fills => LiquidPrism._edgeProgram == null
+      ? const []
+      : _specs.where((spec) => spec.fills);
   bool get _blurring => _blurs.isNotEmpty;
   bool get _hazing => _hazes.isNotEmpty;
-  bool get _isActive => _blurring || _hazing || _fades.isNotEmpty;
+  bool get _filling => _fills.isNotEmpty;
+  bool get _isActive => _blurring || _hazing || _filling || _fades.isNotEmpty;
   bool get hasChild => child != null;
 
   @override
@@ -396,6 +470,9 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _fadeLayer.layer?.blur = null;
     _hazeLayer.layer?.blur = null;
     for (final handle in _passLayers) {
+      handle.layer?.blur = null;
+    }
+    for (final handle in _fillLayers) {
       handle.layer?.blur = null;
     }
     super.detach();
@@ -418,10 +495,19 @@ class _RenderEdgeBlur extends RenderProxyBox {
     _hazeClipLayer.layer = null;
     _hazeLayer.layer?.blur = null;
     _hazeLayer.layer = null;
+    _releaseFillLayers();
     for (var pass = 0; pass < 2; pass++) {
       _stripClipLayers[pass].layer = null;
       _passLayers[pass].layer?.blur = null;
       _passLayers[pass].layer = null;
+    }
+  }
+
+  void _releaseFillLayers() {
+    _fillClipLayer.layer = null;
+    for (final handle in _fillLayers) {
+      handle.layer?.blur = null;
+      handle.layer = null;
     }
   }
 
@@ -430,6 +516,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
       filter.dispose();
     }
     _hazeBlur = null;
+    _fillBlur = null;
     _screenFilters = null;
     _textureFilters = null;
     _textureCompose = null;
@@ -476,9 +563,51 @@ class _RenderEdgeBlur extends RenderProxyBox {
         _passLayers[pass].layer = null;
       }
     }
+    if (_filling) {
+      final strips = _stripPath(_fills);
+      _fillClipLayer.layer = context.pushClipPath(
+        needsCompositing,
+        offset,
+        strips.getBounds(),
+        strips,
+        (context, offset) {
+          for (var i = 0; i < _fillModes.length; i++) {
+            final mode = _fillModes[i];
+            if (!_fills.any((spec) => _fillOpacity(spec, mode) > 0)) {
+              _fillLayers[i].layer?.blur = null;
+              _fillLayers[i].layer = null;
+              continue;
+            }
+            final fill = _fillLayers[i].layer ??= _EdgeBackdropLayer(
+              (owner) => owner._fillScreenFilter(),
+              blendMode: mode,
+            );
+            fill.blur = this;
+            context.pushLayer(
+              fill,
+              (context, offset) =>
+                  context.pushLayer(fill.filter, (context, offset) {
+                    final canvas = context.canvas
+                      ..save()
+                      ..translate(offset.dx, offset.dy);
+                    _paintFillWeights(canvas, mode);
+                    canvas.restore();
+                  }, offset),
+              offset,
+            );
+          }
+        },
+        clipBehavior: Clip.hardEdge,
+        oldLayer: _fillClipLayer.layer,
+      );
+    } else {
+      _releaseFillLayers();
+    }
     if (_hazing) {
       final strips = _stripPath(_hazes);
-      final haze = _hazeLayer.layer ??= _EdgeHazeLayer();
+      final haze = _hazeLayer.layer ??= _EdgeBackdropLayer(
+        (owner) => owner._hazeScreenFilter(),
+      );
       haze.blur = this;
       _hazeClipLayer.layer = context.pushClipPath(
         needsCompositing,
@@ -751,6 +880,47 @@ class _RenderEdgeBlur extends RenderProxyBox {
     return filter;
   }
 
+  /// The blur fill's engine blur, as each fill layer's backdrop filter.
+  ui.ImageFilter _fillScreenFilter() {
+    var sigma = 0.0;
+    for (final spec in _fills) {
+      sigma = math.max(sigma, spec.fill);
+    }
+    final cached = _fillBlur;
+    if (cached != null && cached.sigma == sigma) return cached.filter;
+    final filter = ui.ImageFilter.blur(
+      sigmaX: sigma,
+      sigmaY: sigma,
+      tileMode: ui.TileMode.clamp,
+    );
+    _fillBlur = (sigma: sigma, filter: filter);
+    return filter;
+  }
+
+  /// Multiplies a fill layer's blurred strips by the [mode] blend's weight
+  /// (`dstIn`): its opacity along the variable blur's ramp. Every filling
+  /// strip is painted, at zero where this blend has no opacity, so no strip
+  /// keeps the unweighted blur.
+  void _paintFillWeights(Canvas canvas, BlendMode mode) {
+    for (final spec in _fills) {
+      final rect = _stripRect(spec);
+      if (rect.isEmpty) continue;
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..blendMode = BlendMode.dstIn
+          ..shader = GlassEdgeFade.shader(
+            color: const Color(0xFF000000),
+            rect: rect,
+            edge: spec.edge,
+            plateau: spec.plateau,
+            floor: spec.floor,
+            opacity: _fillOpacity(spec, mode),
+          ),
+      );
+    }
+  }
+
   /// Multiplies the haze layer's blurred strips by their weight in this box's
   /// space (`dstIn`): the haze opacity held over the leading plateau
   /// fraction, then falling linearly to zero at the strip's far end.
@@ -949,11 +1119,19 @@ class _EdgePassLayer extends ContainerLayer {
   }
 }
 
-/// The haze over the strips: a heavy engine blur blended in by a per-row
-/// weight, after the variable blur. Adds nothing while isolated.
-class _EdgeHazeLayer extends ContainerLayer {
+/// A heavy engine blur over the strips, composited onto them by [blendMode]
+/// at a per-row weight its child paints: the haze, and each blend of the blur
+/// fill. Adds nothing while isolated.
+class _EdgeBackdropLayer extends ContainerLayer {
+  _EdgeBackdropLayer(this.filterOf, {BlendMode blendMode = BlendMode.srcOver})
+    : _filter = LayerHandle<BackdropFilterLayer>(
+        BackdropFilterLayer(blendMode: blendMode),
+      );
+
+  /// The owner's current blur for this layer.
+  final ui.ImageFilter Function(_RenderEdgeBlur owner) filterOf;
   _RenderEdgeBlur? blur;
-  final _filter = LayerHandle<BackdropFilterLayer>(BackdropFilterLayer());
+  final LayerHandle<BackdropFilterLayer> _filter;
   BackdropFilterLayer get filter => _filter.layer!;
 
   @override
@@ -971,7 +1149,7 @@ class _EdgeHazeLayer extends ContainerLayer {
     if (owner == null || !owner.attached) return;
     if (owner._isolated) return;
     filter
-      ..filter = owner._hazeScreenFilter()
+      ..filter = filterOf(owner)
       ..backdropKey = null;
     final clip = compositedAncestorClip(this);
     if (clip != null) builder.pushClipPath(clip);

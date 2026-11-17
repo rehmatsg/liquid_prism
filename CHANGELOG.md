@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Blend the native blur fill into scroll edges: a 16-point blur of the content laid back over the strip through lighten, darken and normal blends (0.6, 0.4 and 0.25 in light appearance; 0.4, 0.6 and 0 in dark), weighted along the variable blur's ramp. Detail under a bar now loses contrast toward its own surroundings, as it does natively, instead of only softening. The fade toward the page is unchanged, so an edge with both is lighter than native; set `GlassScrollEdgeStyle(fadeOpacity: 0)` for the blur fill alone, or `fill: 0` to leave it out. `GlassEdgeBlur` takes `fill`, `fillLighten`, `fillDarken` and `fillNormal`, and `GlassScrollEdgeStyle` the same four.
+- Add a Scroll edge blur fill page to the showcase, under Explore, that switches the blur fill and the fade over text, 2-point stripes and color.
+
 ## 0.16.1
 
 - Center a scaffold's `bottom` toolbar content on the window, where it was centered in the room between the leading and trailing groups, so a count or label beside one edge item no longer sits off center.
