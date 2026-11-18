@@ -420,7 +420,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     for (var i = 0; i < values.length; i++) {
       shader.setFloat(i + 2, values[i]);
     }
-    return ui.ImageFilter.shader(shader);
+    return ui.ImageFilter.shader(shader, filterQuality: FilterQuality.low);
   }
 
   final _warp = LayerHandle<_ContentLensLayer>();

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.18.0
+
+- Sample the backdrop bilinearly again under Flutter 3.50. Its `ImageFilter.shader` reads the filter input with nearest-neighbour sampling unless the filter asks otherwise, which pixelated glass refraction and the tab lens and left boxy steps in the edge blur. Every shader filter now requests `FilterQuality.low`, the sampling the package had before 3.50.
+
 ## 0.17.0
 
 - Stop smearing content at the screen edge under the scroll edge effect. Its blur and haze drop samples past the strip and reweight the rest, as native bars do (Core Animation's `inputNormalizeEdges`), where they repeated the edge row before. Content below the strip no longer bleeds into the haze either.

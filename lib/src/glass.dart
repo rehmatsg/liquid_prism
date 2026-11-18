@@ -124,6 +124,7 @@ class LiquidPrism extends StatefulWidget {
             _linearSampler!,
             filterQuality: ui.FilterQuality.low,
           ),
+        filterQuality: ui.FilterQuality.low,
       ),
       inner: ui.ImageFilter.blur(
         sigmaX: sigma,
@@ -199,7 +200,9 @@ class LiquidPrism extends StatefulWidget {
   }
 
   /// The edge blur reads pairs of texels through one bilinear sample, so its
-  /// backdrop sampler is bound linear the same way.
+  /// filter must sample the backdrop linearly. Since Flutter 3.50 the engine
+  /// takes that from `ImageFilter.shader(filterQuality:)` and ignores the
+  /// sampling bound here.
   static ui.FragmentShader? _createEdgeShader() {
     final shader = _edgeProgram?.fragmentShader();
     if (shader != null && _linearSampler != null) {
@@ -1518,14 +1521,17 @@ class _GlassFilterCache {
 ui.ImageFilter _opticalFilter(ui.FragmentShader shader, double frost) =>
     frost > 0.05
     ? ui.ImageFilter.compose(
-        outer: ui.ImageFilter.shader(shader),
+        outer: ui.ImageFilter.shader(
+          shader,
+          filterQuality: ui.FilterQuality.low,
+        ),
         inner: ui.ImageFilter.blur(
           sigmaX: frost,
           sigmaY: frost,
           tileMode: ui.TileMode.clamp,
         ),
       )
-    : ui.ImageFilter.shader(shader);
+    : ui.ImageFilter.shader(shader, filterQuality: ui.FilterQuality.low);
 
 /// Kept in the original paint order unless the group paints this shadow once
 /// before capturing its common backdrop. The first shared member to reach the
