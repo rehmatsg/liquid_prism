@@ -6,6 +6,7 @@
 
 - Place a title's inline leading as far from the capsule's start as from its top and bottom by default, at every capsule height. A 22-point leading starts 11 points in on a top bar and 13 on a rail, and a 32-point avatar 6 and 8, where the start was a fixed 12 however tall the capsule grew. An explicit `leadingPadding` is still used as given.
 - Add `GlassTitleStyle.leadingCornerRadius` for a leading that isn't a circle. It defaults to half of `leadingSize`; a rounded-square logo that passes its radius moves in until its corners clear the capsule's rounded end by as much as its top and bottom do.
+- Give a `LiquidPrismTitle` the full top scroll edge, as a text title has, down to the bottom of the bar so its capsule sits inside it. Scaffold and sliver bars alike. It took the compact edge over the status bar before (none on the iPhone Duo, which has no status bar above the content), and the sliver bar drew no edge for it.
 
 ## 0.18.0
 

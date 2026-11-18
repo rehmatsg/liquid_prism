@@ -699,8 +699,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         children:
             [
               if ((bar.scrollEdge || !_edgePresence.isDismissed) &&
-                  (_d.inlineTitle != null || bar.largeTitle != null) &&
-                  _d.inlineTitle is! LiquidPrismTitle)
+                  (_d.inlineTitle != null || bar.largeTitle != null))
                 LayoutId(
                   id: _Slot.edge,
                   child: IgnorePointer(
