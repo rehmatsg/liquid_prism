@@ -519,7 +519,12 @@ The avatar and leading are laid out in squares (64 and 22 points by default)
 so the bar knows its height: with an avatar it grows below the control row,
 which the leading control, actions and `trailing` keep, and the content starts
 below the capsule. For an inline company avatar, use `leading` with
-`GlassTitleStyle(leadingSize: 32)`. A scaffold or sliver bar's `subtitle` belongs
+`GlassTitleStyle(leadingSize: 32)`. The leading is centred in the capsule's
+height and treated as a circle, as far from the capsule's start as from its top
+and bottom at every height. A rounded-square logo passes its
+`leadingCornerRadius`, which moves it in until its corners clear the capsule's
+rounded end by as much; `leadingPadding` sets exact insets instead and overrides
+the radius. A scaffold or sliver bar's `subtitle` belongs
 inside the glass capsule beneath the title text. Inline capsules match the
 bar's icon-button height by default (44 points on top bars, 48 on rails), using
 adaptive vertical insets around logos and subtitle lines. Custom toolbar heights
@@ -532,9 +537,10 @@ A static glass title uses toolbar optics, retaining refraction at compact height
 A glass title reveals through its optical material presence, with its logo and
 text following the same progress. It never passes through a whole-title opacity
 or image-filter layer, so the backdrop stays live throughout the reveal.
-Plain text titles, and any page with an `accessory` (including one with no top
-bar, such as a search header), take the full top scroll edge. Actions-only bars, glass-title
-bars and bars minimized on scroll down without a reveal take a compact edge
+Text and glass titles, and any page with an `accessory` (including one with no
+top bar, such as a search header), take the full top scroll edge, down to the
+bottom of the bar, so a glass title's capsule sits inside it. Actions-only bars
+and bars minimized on scroll down without a reveal take a compact edge
 over the status bar instead: it ends as far below the Dynamic Island as the
 island sits below the screen's top edge (the status bar's bottom without an
 island), so no page with top chrome is left without a top edge. Sheets have no

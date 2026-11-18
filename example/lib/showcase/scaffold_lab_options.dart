@@ -123,9 +123,10 @@ class ScaffoldLabOptions {
       avatarSize: n('avatarSize'),
       avatarOverlap: n('avatarOverlap'),
       leadingSize: n('leadingSize'),
+      leadingCornerRadius: n('leadingCornerRadius'),
       leadingPadding: values.keys.any((key) => key.startsWith('leadingPadding'))
           ? EdgeInsetsDirectional.fromSTEB(
-              n('leadingPaddingStart') ?? 12,
+              n('leadingPaddingStart') ?? 11,
               n('leadingPaddingTop') ?? 11,
               n('leadingPaddingEnd') ?? 10,
               n('leadingPaddingBottom') ?? 11,
@@ -438,7 +439,8 @@ class ScaffoldLabOptions {
           number('avatarSize', 64, 16, 96),
           number('avatarOverlap', 6, 0, 20),
           number('leadingSize', 22, 12, 48),
-          number('leadingPaddingStart', 12, 0, 28),
+          number('leadingCornerRadius', 11, 0, 24),
+          number('leadingPaddingStart', 11, 0, 28),
           number('leadingPaddingEnd', 10, 0, 28),
           number('leadingPaddingTop', 11, 0, 24),
           number('leadingPaddingBottom', 11, 0, 24),

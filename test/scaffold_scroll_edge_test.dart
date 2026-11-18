@@ -68,8 +68,8 @@ void main() {
   );
 
   testWidgets(
-    'text titles and accessories take the full top edge, other top chrome '
-    'the compact soft one over the status bar',
+    'text and glass titles and accessories take the full top edge, other top '
+    'chrome the compact soft one over the status bar',
     (tester) async {
       phone(tester);
       const accessoryKey = Key('accessory');
@@ -94,7 +94,7 @@ void main() {
           _chrome(title: const Text('Page'), toolbar: action),
         ),
         ('actions only', false, _chrome(toolbar: action)),
-        ('a glass title', false, _chrome(title: glassTitle, toolbar: action)),
+        ('a glass title', true, _chrome(title: glassTitle, toolbar: action)),
         (
           'a leading control only',
           false,
@@ -155,6 +155,48 @@ void main() {
           expect(spec.extent, 62, reason: '$name: dissolve counted inside');
         }
       }
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+  testWidgets(
+    'a glass title in a bar that stays on the iPhone Duo, with no status bar '
+    'above it, takes the full edge to its capsule',
+    (tester) async {
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = const Size(466, 678)
+        ..padding = const FakeViewPadding(right: 84, bottom: 34)
+        ..viewPadding = const FakeViewPadding(right: 84, bottom: 34);
+      addTearDown(tester.view.reset);
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            navigationBarStyle: const GlassNavigationBarStyle(
+              minimizationBehavior: GlassToolbarMinimizationBehavior.never,
+            ),
+            title: const LiquidPrismTitle(child: Text('Company')),
+            toolbar: [
+              GlassToolbarItem(
+                label: 'More',
+                icon: const Icon(CupertinoIcons.ellipsis),
+                onPressed: () {},
+              ),
+            ],
+            scrollController: controller,
+            slivers: const [SliverToBoxAdapter(child: SizedBox(height: 2000))],
+          ),
+        ),
+      );
+      controller.jumpTo(100);
+      await tester.pumpAndSettle();
+      final blur = find.byType(LiquidPrismEdgeBlur);
+      expect(blur, findsOneWidget);
+      expect(
+        tester.getRect(find.byType(LiquidPrismScrollEdge)).bottom,
+        tester.getRect(find.byType(LiquidPrismTitle)).bottom,
+      );
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );

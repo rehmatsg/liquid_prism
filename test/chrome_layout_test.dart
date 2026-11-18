@@ -386,8 +386,12 @@ void main() {
         tester.getSize(find.byType(LiquidPrismToolbarGroup)).width,
         reason: 'the inline title matches the rail icon buttons',
       );
-      expect(face.left - capsule.left, 12);
       expect(face.center.dy, closeTo(capsule.center.dy, .01));
+      expect(
+        face.left - capsule.left,
+        closeTo(face.top - capsule.top, .01),
+        reason: 'a circle sits as far from the start as from the top',
+      );
       // Unlike a plain title, the capsule stays centred beside Invite.
       expect(capsule.center.dx, closeTo(191, .01));
       // The text button stays in the top bar beside the rail, ending at the
@@ -396,6 +400,48 @@ void main() {
       expect(button.right, 382);
       expect(button.center.dy, closeTo(capsule.center.dy, .01));
       expect(tester.getRect(find.byType(LiquidPrismToolbarGroup)).left, 394);
+    });
+
+    testWidgets('a leading corner radius sets its start unless padding is '
+        'explicit', (tester) async {
+      window(tester, duo);
+      Future<({double start, double height})> leading(
+        GlassTitleStyle style,
+      ) async {
+        await tester.pumpWidget(
+          CupertinoApp(
+            home: LiquidPrismScaffold(
+              title: LiquidPrismTitle(
+                style: style,
+                leading: const ColoredBox(
+                  key: inline,
+                  color: Color(0xFFEE8866),
+                ),
+                child: const Text('Acme'),
+              ),
+              body: const SizedBox.expand(),
+            ),
+          ),
+        );
+        final capsule = tester.getRect(find.byType(LiquidPrismTitle));
+        return (
+          start: tester.getRect(find.byKey(inline)).left - capsule.left,
+          height: capsule.height,
+        );
+      }
+
+      final square = await leading(
+        const GlassTitleStyle(leadingSize: 32, leadingCornerRadius: 7),
+      );
+      expect(square.start, closeTo(square.height / 2 - 7, .01));
+      final explicit = await leading(
+        const GlassTitleStyle(
+          leadingSize: 32,
+          leadingCornerRadius: 7,
+          leadingPadding: EdgeInsetsDirectional.fromSTEB(15, 6, 10, 6),
+        ),
+      );
+      expect(explicit.start, 15);
     });
 
     testWidgets('a capsule title centres its subtitle beside controls', (

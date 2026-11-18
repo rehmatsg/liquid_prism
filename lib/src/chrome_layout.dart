@@ -297,10 +297,11 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// Turning it on after the page appears, as a page might once its entering
   /// transition settles, fades the effects in, blur and fade together, over
   /// [scrollEdgeFadeDuration]; turning it off fades them out.
-  /// The full top edge covers bars with ordinary text titles and any page with
-  /// an [accessory], which sits inside the edge. Every other
-  /// page with top chrome (actions only, a glass title, or a bar minimized on
-  /// scroll down without a reveal) takes a compact edge over the status bar:
+  /// The full top edge covers bars with a title, text or [LiquidPrismTitle],
+  /// down to the bottom of the bar, and any page with an [accessory], which
+  /// sits inside the edge. Every other page with top chrome (actions only, or
+  /// a bar minimized on scroll down without a reveal) takes a compact edge
+  /// over the status bar:
   /// it ends as far below the Dynamic Island as the island sits below the
   /// screen's top edge, or at the status bar's bottom without an island.
   /// Sheets keep only the full edge; bottom edges remain independent.
@@ -946,18 +947,19 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
       _ => false,
     };
     final edges = widget.scrollEdge || !_edgePresence.isDismissed;
-    // The full top edge belongs to ordinary text titles. Every other page
-    // with top chrome (actions only, a glass title, or a bar minimized
-    // without reveal) takes the compact edge over the status bar: it ends as
-    // far below the Dynamic Island as the island sits below the screen's
-    // top edge, or at the status bar's bottom without an island. Sheets have
-    // no status bar beneath them and keep only the full edge.
+    // The full top edge belongs to titled bars, text or glass, and reaches
+    // the bottom of the bar, so a glass title's capsule sits inside it. Every
+    // other page with top chrome (actions only, or a bar minimized without
+    // reveal) takes the compact edge over the status bar: it ends as far
+    // below the Dynamic Island as the island sits below the screen's top
+    // edge, or at the status bar's bottom without an island. Sheets have no
+    // status bar beneath them and keep only the full edge.
     // An accessory row sits inside the edge, so content scrolling under it
     // takes the full edge whatever the bar above it holds.
     final fullEdge =
         widget.accessory != null ||
-        ((inlineTitle != null || widget.largeTitle != null) &&
-            inlineTitle is! LiquidPrismTitle);
+        inlineTitle != null ||
+        widget.largeTitle != null;
     final compactWhenHidden = hidesOnScrollDown && widget.accessory == null;
     final compactEdge = _compactEdge(context, media);
     _collapseAt = widget.header != null
