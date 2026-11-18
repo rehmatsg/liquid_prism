@@ -309,7 +309,10 @@ class _EdgePassFilter {
       _shader.setFloat(2 + i, values[i]);
     }
     _values = values;
-    return _filter = ui.ImageFilter.shader(_shader);
+    return _filter = ui.ImageFilter.shader(
+      _shader,
+      filterQuality: ui.FilterQuality.low,
+    );
   }
 
   void dispose() => _shader.dispose();
