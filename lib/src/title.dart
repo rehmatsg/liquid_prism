@@ -45,13 +45,15 @@ class GlassTitleLayout extends InheritedWidget {
 /// text, explicit insets and minimum heights can require more space.
 /// Above-avatar headers use a 64-point avatar, a 6-point overlap, a capsule
 /// at least 38 points tall and 14 x 9 points of title padding. The default
-/// inline leading size is 22 points, with a 12-point start and 10-point gap.
+/// inline leading is a 22-point circle, as far from the capsule's start as
+/// from its top and bottom, with a 10-point gap before the title.
 @immutable
 final class GlassTitleStyle {
   const GlassTitleStyle({
     this.avatarSize,
     this.avatarOverlap,
     this.leadingSize,
+    this.leadingCornerRadius,
     this.leadingPadding,
     this.padding,
     this.minHeight,
@@ -59,6 +61,7 @@ final class GlassTitleStyle {
   }) : assert(avatarSize == null || avatarSize >= 0),
        assert(avatarOverlap == null || avatarOverlap >= 0),
        assert(leadingSize == null || leadingSize >= 0),
+       assert(leadingCornerRadius == null || leadingCornerRadius >= 0),
        assert(minHeight == null || minHeight >= 0);
 
   /// Side of the square the [LiquidPrismTitle.avatar] is laid out in.
@@ -70,9 +73,19 @@ final class GlassTitleStyle {
   /// Side of the square the [LiquidPrismTitle.leading] is laid out in.
   final double? leadingSize;
 
-  /// Space around the leading widget: from the capsule's start, top and
-  /// bottom, and before the title (end). With a leading widget its start
-  /// replaces [padding]'s on that side.
+  /// Corner radius of the [LiquidPrismTitle.leading]'s shape; defaults to
+  /// half of [leadingSize], a circle. Without [leadingPadding] the leading is
+  /// centred in the capsule's height and starts half that height minus this
+  /// radius in, so no part of it comes closer to the capsule's rounded end
+  /// than its top and bottom do: a circle sits as far from the start as from
+  /// the top and bottom, and a rounded square moves in until its corners
+  /// clear the curve by as much.
+  final double? leadingCornerRadius;
+
+  /// Space around the leading widget, used as given: from the capsule's
+  /// start, top and bottom, and before the title (end). With a leading widget
+  /// its start replaces [padding]'s on that side. When set it overrides
+  /// [leadingCornerRadius]; unset, the start follows the capsule's height.
   final EdgeInsetsDirectional? leadingPadding;
 
   /// Padding around the title inside the capsule.
@@ -86,12 +99,19 @@ final class GlassTitleStyle {
 
   static const _avatarSize = 64.0, _avatarOverlap = 6.0;
   static const _leadingSize = 22.0, _minHeight = 38.0;
-  static const _leadingPadding = EdgeInsetsDirectional.fromSTEB(12, 11, 10, 11);
+  static const _leadingPadding = EdgeInsetsDirectional.fromSTEB(11, 11, 10, 11);
   static const _padding = EdgeInsets.symmetric(horizontal: 14, vertical: 9);
 
   double get resolvedAvatarSize => avatarSize ?? _avatarSize;
   double get resolvedAvatarOverlap => avatarOverlap ?? _avatarOverlap;
   double get resolvedLeadingSize => leadingSize ?? _leadingSize;
+
+  /// [leadingCornerRadius], at most half of [resolvedLeadingSize].
+  double get resolvedLeadingCornerRadius {
+    final half = resolvedLeadingSize / 2;
+    return math.min(leadingCornerRadius ?? half, half);
+  }
+
   EdgeInsetsDirectional get resolvedLeadingPadding =>
       leadingPadding ?? _leadingPadding;
   EdgeInsets get resolvedPadding => padding ?? _padding;
@@ -101,6 +121,7 @@ final class GlassTitleStyle {
     double? avatarSize,
     double? avatarOverlap,
     double? leadingSize,
+    double? leadingCornerRadius,
     EdgeInsetsDirectional? leadingPadding,
     EdgeInsets? padding,
     double? minHeight,
@@ -109,6 +130,7 @@ final class GlassTitleStyle {
     avatarSize: avatarSize ?? this.avatarSize,
     avatarOverlap: avatarOverlap ?? this.avatarOverlap,
     leadingSize: leadingSize ?? this.leadingSize,
+    leadingCornerRadius: leadingCornerRadius ?? this.leadingCornerRadius,
     leadingPadding: leadingPadding ?? this.leadingPadding,
     padding: padding ?? this.padding,
     minHeight: minHeight ?? this.minHeight,
@@ -122,6 +144,7 @@ final class GlassTitleStyle {
           avatarSize: other.avatarSize ?? avatarSize,
           avatarOverlap: other.avatarOverlap ?? avatarOverlap,
           leadingSize: other.leadingSize ?? leadingSize,
+          leadingCornerRadius: other.leadingCornerRadius ?? leadingCornerRadius,
           leadingPadding: other.leadingPadding ?? leadingPadding,
           padding: other.padding ?? padding,
           minHeight: other.minHeight ?? minHeight,
@@ -134,6 +157,7 @@ final class GlassTitleStyle {
       other.avatarSize == avatarSize &&
       other.avatarOverlap == avatarOverlap &&
       other.leadingSize == leadingSize &&
+      other.leadingCornerRadius == leadingCornerRadius &&
       other.leadingPadding == leadingPadding &&
       other.padding == padding &&
       other.minHeight == minHeight &&
@@ -144,6 +168,7 @@ final class GlassTitleStyle {
     avatarSize,
     avatarOverlap,
     leadingSize,
+    leadingCornerRadius,
     leadingPadding,
     padding,
     minHeight,
@@ -559,13 +584,26 @@ _titleMetrics(
     math.max(style.resolvedMinHeight, compact ? controlHeight : 0.0),
     textHeight + padding.vertical,
   );
+  final inlineHeight = math.max(
+    plainHeight,
+    style.resolvedLeadingSize + around.vertical,
+  );
+  if (style.leadingPadding == null) {
+    // The leading is centred in the capsule's height. Its start puts the
+    // centre of its start corners over the centre of the capsule's rounded
+    // end, so those corners clear the curve by its top and bottom inset.
+    final vertical = (inlineHeight - style.resolvedLeadingSize) / 2;
+    around = EdgeInsetsDirectional.fromSTEB(
+      inlineHeight / 2 - style.resolvedLeadingCornerRadius,
+      vertical,
+      around.end,
+      vertical,
+    );
+  }
   return (
     padding: padding,
     around: around,
     plainHeight: plainHeight,
-    inlineHeight: math.max(
-      plainHeight,
-      style.resolvedLeadingSize + around.vertical,
-    ),
+    inlineHeight: inlineHeight,
   );
 }

@@ -519,7 +519,12 @@ The avatar and leading are laid out in squares (64 and 22 points by default)
 so the bar knows its height: with an avatar it grows below the control row,
 which the leading control, actions and `trailing` keep, and the content starts
 below the capsule. For an inline company avatar, use `leading` with
-`GlassTitleStyle(leadingSize: 32)`. A scaffold or sliver bar's `subtitle` belongs
+`GlassTitleStyle(leadingSize: 32)`. The leading is centred in the capsule's
+height and treated as a circle, as far from the capsule's start as from its top
+and bottom at every height. A rounded-square logo passes its
+`leadingCornerRadius`, which moves it in until its corners clear the capsule's
+rounded end by as much; `leadingPadding` sets exact insets instead and overrides
+the radius. A scaffold or sliver bar's `subtitle` belongs
 inside the glass capsule beneath the title text. Inline capsules match the
 bar's icon-button height by default (44 points on top bars, 48 on rails), using
 adaptive vertical insets around logos and subtitle lines. Custom toolbar heights
