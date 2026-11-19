@@ -4,6 +4,9 @@
 
 - Leave 12 points between a standard top bar's controls and the body (`LiquidPrismScaffold.topBarClearance`), where it was 10. Rail, sidebar and corner layouts keep 16, and `GlassNavigationBarStyle.contentSpacing` still overrides it.
 - End the soft top scroll edge's fade at the bottom of a glass title (a `LiquidPrismTitle` or principal toolbar items), where it ran 50 points past the bar as it does under a text title. The fade keeps bare text legible and glass carries its own material, so a bar with a large title or an accessory still fades past it. Scaffold and sliver bars alike; the hard style is unchanged.
+- On vertical-rail layouts (iPhone Duo), reveal an automatic scaffold bar with an inline title on scroll up, as SwiftUI does there, where it stayed hidden until the content reached the top. `minimizationRestoration: atScrollEdge` keeps the old restoration.
+- Bring an `atScrollEdge` bar back in with the content's top. It stayed fully hidden while scrolling back up and appeared at once at offset 0, so it trailed the content; it is now never hidden over more than the content has scrolled.
+- Keep the top scroll edge when a bar hides on scroll down where there is no status bar above the content (the iPhone Duo's outer display). It handed over to the compact status-bar edge, which is empty there; the bar's own edge now follows it off screen and leaves its fade at the top, as native does.
 
 ## 0.18.1
 

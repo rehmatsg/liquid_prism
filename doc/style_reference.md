@@ -185,7 +185,7 @@ separate scopes, native timings and input guarantees.
 | `gutter` / `controlGap` | 16 / 12 |
 | `contentSpacing` | 12 below a standard top bar; 16 in rail/sidebar layouts |
 | `minimizationBehavior` | `automatic` (pinned); `never`, `onScrollDown`, `onScrollUp` |
-| `minimizationRestoration` | `automatic` restores on reversal; `atScrollEdge` waits for the top with on-scroll-down |
+| `minimizationRestoration` | `automatic` restores on reversal; `atScrollEdge` returns with the content's top with on-scroll-down |
 | `minimizationSafeAreaAdjustment` | `automatic` / `disabled` keep content insets stable; `enabled` makes them follow the bar |
 | `minimizationThreshold` | Fitted initial travel 13⅓ points, after large-title collapse |
 | `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; inline capsule matches bar control height (44 top, 48 rail), adapting default vertical insets to content; explicit padding/minimum heights and larger text can grow it; above-avatar capsule at least 38 tall with 14 × 9 padding; leading 22, a circle (`leadingCornerRadius` half its size) as far from the start as from the top and bottom, and 10 gap; regular glass |

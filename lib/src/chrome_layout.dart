@@ -825,9 +825,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             .merge(widget.navigationBarStyle);
     // On a vertical rail (iPhone Duo) the controls live in the rail and the
     // top bar holds only the title, so an automatic bar with an inline title
-    // scrolls away and returns only at the top. A bar that reveals its title
-    // on scroll, one whose `trailing` or horizontal items stay in the top
-    // bar, and a sheet's bar stay put.
+    // hides on scroll down and reveals on scroll up, as SwiftUI's does there.
+    // A bar that reveals its title on scroll, one whose `trailing` or
+    // horizontal items stay in the top bar, and a sheet's bar stay put.
     final navigation =
         rail &&
             !widget.sheet &&
@@ -842,9 +842,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     GlassToolbarMinimizationBehavior.automatic)
         ? merged.copyWith(
             minimizationBehavior: GlassToolbarMinimizationBehavior.onScrollDown,
-            minimizationRestoration:
-                merged.minimizationRestoration ??
-                GlassToolbarMinimizationRestoration.atScrollEdge,
           )
         : merged;
     final titleStyle = TextStyle(
@@ -960,8 +957,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         widget.accessory != null ||
         inlineTitle != null ||
         widget.largeTitle != null;
-    final compactWhenHidden = hidesOnScrollDown && widget.accessory == null;
     final compactEdge = _compactEdge(context, media);
+    // A hidden bar hands over to the compact edge only where there is one.
+    // With no status bar above the content (the iPhone Duo's outer display),
+    // the bar's own edge follows it off screen and leaves its fade at the
+    // top, as native does.
+    final compactWhenHidden =
+        hidesOnScrollDown && widget.accessory == null && compactEdge.target > 0;
     _collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
         : widget.largeTitle == null

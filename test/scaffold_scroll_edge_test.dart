@@ -203,6 +203,35 @@ void main() {
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
   testWidgets(
+    'a rail bar hidden on scroll down leaves its edge fade at the top of an '
+    'iPhone Duo with no status bar above the content',
+    (tester) async {
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = const Size(466, 678)
+        ..padding = const FakeViewPadding(right: 84, bottom: 34)
+        ..viewPadding = const FakeViewPadding(right: 84, bottom: 34);
+      addTearDown(tester.view.reset);
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: const Text('Profile'),
+            scrollController: controller,
+            slivers: const [SliverToBoxAdapter(child: SizedBox(height: 2000))],
+          ),
+        ),
+      );
+      controller.jumpTo(400);
+      await tester.pumpAndSettle();
+      final blur = find.byType(LiquidPrismEdgeBlur);
+      expect(blur, findsOneWidget);
+      expect(tester.getRect(blur).bottom, greaterThan(0));
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+  testWidgets(
     "a glass title's soft edge fades out at the glass; a text title's fades "
     'past the bar',
     (tester) async {

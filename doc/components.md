@@ -414,13 +414,16 @@ and restores it on reversal; `onScrollUp` reverses those directions. An
 `onScrollDown` bar scrolls away with the content one for one, from the first point
 and past the top of the screen, at full presence: it neither fades nor blurs. Its
 top edge stays the compact status-bar edge while it is gone and grows back with
-the bar on a reveal, strength and all, so the blur never switches on at once. On a
-vertical rail (iPhone Duo), a scaffold's `automatic` bar with an inline title (no
-`trailing`, `largeTitle` or `header`) outside a sheet behaves as `onScrollDown` with
-at-scroll-edge restoration, since its controls stay in the rail; set `never` to
-keep such a bar pinned.
+the bar on a reveal, strength and all, so the blur never switches on at once.
+Where there is no compact edge (no status bar above the content, as on the
+iPhone Duo's outer display), the bar's own edge follows it off screen and its
+fade stays at the top. On a vertical rail (iPhone Duo), a scaffold's `automatic`
+bar with an inline title (no `trailing`, `largeTitle` or `header`) outside a sheet
+behaves as `onScrollDown`, revealed on scroll up as SwiftUI's is, since its
+controls stay in the rail; set `never` to keep such a bar pinned.
 `minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
-an on-scroll-down bar hidden until content reaches the top. Automatic safe-area
+an on-scroll-down bar from returning on reversal: it rides back in with the
+content's top, never hidden over more than the content has scrolled. Automatic safe-area
 adjustment keeps content insets stable so rows follow scrolling one for one.
 `minimizationSafeAreaAdjustment: enabled` explicitly makes insets follow the bar;
 `disabled` keeps them fixed. Rail controls stay fixed below the system status
