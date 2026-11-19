@@ -350,8 +350,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// The top bar's measured height: 44 pt navigation capsules.
   static const double topBarHeight = 44;
 
-  /// Native navigation frame clearance below its 44-point controls.
-  static const double topBarClearance = 10;
+  /// Gap between a standard top bar's 44-point controls and the body.
+  static const double topBarClearance = 12;
 
   @override
   State<LiquidPrismScaffold> createState() => _LiquidPrismScaffoldState();
@@ -825,9 +825,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             .merge(widget.navigationBarStyle);
     // On a vertical rail (iPhone Duo) the controls live in the rail and the
     // top bar holds only the title, so an automatic bar with an inline title
-    // scrolls away and returns only at the top. A bar that reveals its title
-    // on scroll, one whose `trailing` or horizontal items stay in the top
-    // bar, and a sheet's bar stay put.
+    // hides on scroll down and reveals on scroll up, as SwiftUI's does there.
+    // A bar that reveals its title on scroll, one whose `trailing` or
+    // horizontal items stay in the top bar, and a sheet's bar stay put.
     final navigation =
         rail &&
             !widget.sheet &&
@@ -842,9 +842,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     GlassToolbarMinimizationBehavior.automatic)
         ? merged.copyWith(
             minimizationBehavior: GlassToolbarMinimizationBehavior.onScrollDown,
-            minimizationRestoration:
-                merged.minimizationRestoration ??
-                GlassToolbarMinimizationRestoration.atScrollEdge,
           )
         : merged;
     final titleStyle = TextStyle(
@@ -960,8 +957,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         widget.accessory != null ||
         inlineTitle != null ||
         widget.largeTitle != null;
-    final compactWhenHidden = hidesOnScrollDown && widget.accessory == null;
     final compactEdge = _compactEdge(context, media);
+    // A hidden bar hands over to the compact edge only where there is one.
+    // With no status bar above the content (the iPhone Duo's outer display),
+    // the bar's own edge follows it off screen and leaves its fade at the
+    // top, as native does.
+    final compactWhenHidden =
+        hidesOnScrollDown && widget.accessory == null && compactEdge.target > 0;
     _collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
         : widget.largeTitle == null
@@ -1121,6 +1123,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     GlassScrollEdgeVariant.hard
             ? 10
             : 0,
+        edgeInset: topEdgeInset(
+          inlineTitle,
+          bareRows: widget.accessory != null || widget.largeTitle != null,
+          style: GlassScrollEdgeStyle.resolve(context, widget.scrollEdgeStyle),
+        ),
         corner: corner,
         sidebar: sidebar
             ? (sidebarLeft ? AxisDirection.left : AxisDirection.right)
@@ -1772,6 +1779,27 @@ class _InsetBody extends StatelessWidget {
 /// sits 13.67 points below the controls and content starts at the row's end.
 const double largeTitleLead = 10;
 
+/// How far a full top edge's box stops short of the chrome it covers.
+///
+/// The fade past an edge keeps bare text legible over the content below it:
+/// a text title, a large title or an accessory row. Glass carries its own
+/// material, so when the bar's title is glass and nothing bare sits on the
+/// edge, the box stops short by the fade's length and the fade ends at the
+/// bottom of the glass, as the compact edge's fade ends inside it.
+double topEdgeInset(
+  Widget? inlineTitle, {
+  required bool bareRows,
+  required GlassScrollEdgeStyle style,
+}) {
+  final glass =
+      inlineTitle is LiquidPrismTitle || inlineTitle is LiquidPrismToolbar;
+  if (!glass || bareRows) return 0;
+  return style.extension ??
+      (style.variant == GlassScrollEdgeVariant.hard
+          ? 0
+          : GlassScrollEdgeStyle.defaultExtension);
+}
+
 class _ChromeLayout extends MultiChildLayoutDelegate {
   _ChromeLayout({
     required this.placement,
@@ -1808,6 +1836,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.compactWhenHidden,
     required this.revealed,
     required this.edgeFrame,
+    required this.edgeInset,
     required this.corner,
     required this.sidebar,
     required this.reveal,
@@ -1842,6 +1871,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   /// 27, a hard edge ends at the bar frame, 10 points below 44-point
   /// controls; with an accessory the accessory ends the frame.
   final double edgeFrame;
+
+  /// How far the full edge's box stops short of the chrome, so a glass
+  /// title's fade ends at the glass ([topEdgeInset]).
+  final double edgeInset;
 
   /// Whether the top edge can take the full bar extent (an ordinary text
   /// title); otherwise it is the compact status-bar edge.
@@ -2132,6 +2165,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
             accessoryHeight +
             topDockHeight +
             edgeFrame -
+            edgeInset -
             (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
       );
       // A revealed bar grows its edge back from the compact one as it
@@ -2600,6 +2634,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       railBottom != old.railBottom ||
       sheet != old.sheet ||
       edgeFrame != old.edgeFrame ||
+      edgeInset != old.edgeInset ||
       corner != old.corner ||
       sidebar != old.sidebar ||
       reveal != old.reveal;

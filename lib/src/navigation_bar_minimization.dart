@@ -90,6 +90,13 @@ class NavigationBarMinimization {
             _restoration != GlassToolbarMinimizationRestoration.atScrollEdge) {
           _hidden = (_hidden + delta).clamp(0.0, _extent);
           if (_hidden < previous) _revealed = true;
+        } else {
+          // A bar that returns at the scroll edge rides back in with the
+          // content's top, never hidden over more than the content scrolled.
+          _hidden = math.min(
+            _hidden,
+            math.max(0.0, pixels - _collapseExtent - _threshold),
+          );
         }
         if (_hidden >= _extent) _revealed = false;
       case GlassToolbarMinimizationBehavior.onScrollUp:

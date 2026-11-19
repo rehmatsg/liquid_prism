@@ -547,7 +547,7 @@ void main() {
     expect(toolbar.height, 44);
 
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
-    expect(padding.top, 62 + 44 + 10);
+    expect(padding.top, 62 + 44 + LiquidPrismScaffold.topBarClearance);
     expect(padding.bottom, 874 - bar.top + 3);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 

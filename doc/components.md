@@ -414,13 +414,16 @@ and restores it on reversal; `onScrollUp` reverses those directions. An
 `onScrollDown` bar scrolls away with the content one for one, from the first point
 and past the top of the screen, at full presence: it neither fades nor blurs. Its
 top edge stays the compact status-bar edge while it is gone and grows back with
-the bar on a reveal, strength and all, so the blur never switches on at once. On a
-vertical rail (iPhone Duo), a scaffold's `automatic` bar with an inline title (no
-`trailing`, `largeTitle` or `header`) outside a sheet behaves as `onScrollDown` with
-at-scroll-edge restoration, since its controls stay in the rail; set `never` to
-keep such a bar pinned.
+the bar on a reveal, strength and all, so the blur never switches on at once.
+Where there is no compact edge (no status bar above the content, as on the
+iPhone Duo's outer display), the bar's own edge follows it off screen and its
+fade stays at the top. On a vertical rail (iPhone Duo), a scaffold's `automatic`
+bar with an inline title (no `trailing`, `largeTitle` or `header`) outside a sheet
+behaves as `onScrollDown`, revealed on scroll up as SwiftUI's is, since its
+controls stay in the rail; set `never` to keep such a bar pinned.
 `minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
-an on-scroll-down bar hidden until content reaches the top. Automatic safe-area
+an on-scroll-down bar from returning on reversal: it rides back in with the
+content's top, never hidden over more than the content has scrolled. Automatic safe-area
 adjustment keeps content insets stable so rows follow scrolling one for one.
 `minimizationSafeAreaAdjustment: enabled` explicitly makes insets follow the bar;
 `disabled` keeps them fixed. Rail controls stay fixed below the system status
@@ -539,7 +542,10 @@ text following the same progress. It never passes through a whole-title opacity
 or image-filter layer, so the backdrop stays live throughout the reveal.
 Text and glass titles, and any page with an `accessory` (including one with no
 top bar, such as a search header), take the full top scroll edge, down to the
-bottom of the bar, so a glass title's capsule sits inside it. Actions-only bars
+bottom of the bar, so a glass title's capsule sits inside it. The fade past the
+bar keeps bare text legible, so it runs below a text title, a large title or an
+accessory; a glass title with nothing bare on the edge has its fade end at the
+bottom of the glass instead (`topEdgeInset`). Actions-only bars
 and bars minimized on scroll down without a reveal take a compact edge
 over the status bar instead: it ends as far below the Dynamic Island as the
 island sits below the screen's top edge (the status bar's bottom without an

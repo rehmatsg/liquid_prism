@@ -160,7 +160,7 @@ void main() {
   );
   testWidgets(
     'a glass title in a bar that stays on the iPhone Duo, with no status bar '
-    'above it, takes the full edge to its capsule',
+    'above it, keeps its capsule inside the edge',
     (tester) async {
       tester.view
         ..devicePixelRatio = 1
@@ -194,9 +194,76 @@ void main() {
       final blur = find.byType(LiquidPrismEdgeBlur);
       expect(blur, findsOneWidget);
       expect(
-        tester.getRect(find.byType(LiquidPrismScrollEdge)).bottom,
-        tester.getRect(find.byType(LiquidPrismTitle)).bottom,
+        tester.getRect(blur).bottom,
+        greaterThanOrEqualTo(
+          tester.getRect(find.byType(LiquidPrismTitle)).bottom,
+        ),
       );
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+  testWidgets(
+    'a rail bar hidden on scroll down leaves its edge fade at the top of an '
+    'iPhone Duo with no status bar above the content',
+    (tester) async {
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = const Size(466, 678)
+        ..padding = const FakeViewPadding(right: 84, bottom: 34)
+        ..viewPadding = const FakeViewPadding(right: 84, bottom: 34);
+      addTearDown(tester.view.reset);
+      final controller = ScrollController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: const Text('Profile'),
+            scrollController: controller,
+            slivers: const [SliverToBoxAdapter(child: SizedBox(height: 2000))],
+          ),
+        ),
+      );
+      controller.jumpTo(400);
+      await tester.pumpAndSettle();
+      final blur = find.byType(LiquidPrismEdgeBlur);
+      expect(blur, findsOneWidget);
+      expect(tester.getRect(blur).bottom, greaterThan(0));
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+  testWidgets(
+    "a glass title's soft edge fades out at the glass; a text title's fades "
+    'past the bar',
+    (tester) async {
+      phone(tester);
+      for (final (name, title) in <(String, Widget)>[
+        ('glass', const LiquidPrismTitle(child: Text('Company'))),
+        ('text', const Text('Company')),
+      ]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(
+          CupertinoApp(
+            home: LiquidPrismScaffold(
+              title: title,
+              scrollController: controller,
+              slivers: const [
+                SliverToBoxAdapter(child: SizedBox(height: 2000)),
+              ],
+            ),
+          ),
+        );
+        controller.jumpTo(100);
+        await tester.pumpAndSettle();
+        expect(
+          tester.getRect(find.byType(LiquidPrismEdgeBlur)).bottom,
+          name == 'glass'
+              ? tester.getRect(find.byType(LiquidPrismTitle)).bottom
+              : 62 + 44 + GlassScrollEdgeStyle.defaultExtension,
+          reason: name,
+        );
+      }
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
@@ -701,7 +768,7 @@ void accessoryTests() {
     expect(tabs.height, 36);
     expect(tabs.width, 402);
     final padding = MediaQuery.paddingOf(tester.element(find.byKey(_body)));
-    expect(padding.top, 62 + 44 + 36 + 10);
+    expect(padding.top, 62 + 44 + 36 + LiquidPrismScaffold.topBarClearance);
 
     controller.jumpTo(100);
     await tester.pump();

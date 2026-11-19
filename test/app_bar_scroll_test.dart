@@ -152,7 +152,8 @@ void main() {
   });
 
   testWidgets(
-    'an automatic rail bar with an inline title scrolls away until the top',
+    'an automatic rail bar with an inline title hides on scroll down and '
+    'reveals on scroll up',
     (tester) async {
       final semantics = tester.ensureSemantics();
       const never = GlassNavigationBarStyle(
@@ -182,7 +183,7 @@ void main() {
               'rail title',
               true,
               true,
-              false,
+              true,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 scrollController: scroll,
@@ -193,7 +194,7 @@ void main() {
               'rail title with top-trailing items in the rail',
               true,
               true,
-              false,
+              true,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 toolbar: [railItem],
@@ -202,15 +203,15 @@ void main() {
               ),
             ),
             (
-              'explicit reveal restoration',
+              'explicit scroll-edge restoration',
               true,
               true,
-              true,
+              false,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 navigationBarStyle: const GlassNavigationBarStyle(
                   minimizationRestoration:
-                      GlassToolbarMinimizationRestoration.automatic,
+                      GlassToolbarMinimizationRestoration.atScrollEdge,
                 ),
                 scrollController: scroll,
                 slivers: rows(),
@@ -884,7 +885,8 @@ void main() {
     );
 
     testWidgets(
-      'edge restoration ignores reversal until the top, sliver $sliver',
+      'edge restoration ignores reversal until the content top returns, '
+      'sliver $sliver',
       (tester) async {
         phone(tester);
         final semantics = tester.ensureSemantics();
@@ -905,10 +907,11 @@ void main() {
         await tester.pumpAndSettle();
         scroll.jumpTo(400);
         await tester.pumpAndSettle();
-        scroll.jumpTo(100);
+        scroll.jumpTo(200);
         await tester.pumpAndSettle();
         expect(find.semantics.byLabel('Inline'), findsNothing);
-        scroll.jumpTo(0);
+        // The bar rides back in with the content's top, before it reaches 0.
+        scroll.jumpTo(40);
         await tester.pumpAndSettle();
         expect(find.semantics.byLabel('Inline'), findsOneWidget);
         expect(tester.takeException(), isNull);
@@ -969,12 +972,13 @@ void main() {
         final initial = tester
             .getTopLeft(find.byKey(const ValueKey('row0')))
             .dy;
-        expect(initial, closeTo(116, .01));
+        const barBottom = 62 + 44 + LiquidPrismScaffold.topBarClearance;
+        expect(initial, closeTo(barBottom, .01));
         scroll.jumpTo(100);
         await tester.pumpAndSettle();
         // The first row has moved out of view; row 2 retains the same 100pt gap.
         final y = tester.getTopLeft(find.byKey(const ValueKey('row2'))).dy;
-        expect(y, closeTo(fixedInsets ? 116 : 62, .01));
+        expect(y, closeTo(fixedInsets ? barBottom : 62, .01));
         expect(tester.takeException(), isNull);
       });
     }
