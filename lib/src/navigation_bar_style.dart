@@ -67,7 +67,7 @@ class GlassNavigationBarStyle {
   final TextStyle? subtitleStyle, largeSubtitleStyle;
   final double? gutter, controlGap;
 
-  /// Clearance below navigation chrome: 10 pt for standard top bars,
+  /// Clearance below navigation chrome: 12 pt for standard top bars,
   /// 16 pt for rail/sidebar layouts.
   final double? contentSpacing;
 

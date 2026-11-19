@@ -183,7 +183,7 @@ separate scopes, native timings and input guarantees.
 | `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold, semantic label |
 | `titleAlignment` / `largeTitleAlignment` | Centered inline / leading expanded; automatic follows those defaults |
 | `gutter` / `controlGap` | 16 / 12 |
-| `contentSpacing` | 10 below a standard top bar; 16 in rail/sidebar layouts |
+| `contentSpacing` | 12 below a standard top bar; 16 in rail/sidebar layouts |
 | `minimizationBehavior` | `automatic` (pinned); `never`, `onScrollDown`, `onScrollUp` |
 | `minimizationRestoration` | `automatic` restores on reversal; `atScrollEdge` waits for the top with on-scroll-down |
 | `minimizationSafeAreaAdjustment` | `automatic` / `disabled` keep content insets stable; `enabled` makes them follow the bar |

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Leave 12 points between a standard top bar's controls and the body (`LiquidPrismScaffold.topBarClearance`), where it was 10. Rail, sidebar and corner layouts keep 16, and `GlassNavigationBarStyle.contentSpacing` still overrides it.
+
 ## 0.18.1
 
 - Place a title's inline leading as far from the capsule's start as from its top and bottom by default, at every capsule height. A 22-point leading starts 11 points in on a top bar and 13 on a rail, and a 32-point avatar 6 and 8, where the start was a fixed 12 however tall the capsule grew. An explicit `leadingPadding` is still used as given.

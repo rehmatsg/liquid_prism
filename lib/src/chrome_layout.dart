@@ -350,8 +350,8 @@ class LiquidPrismScaffold extends StatefulWidget {
   /// The top bar's measured height: 44 pt navigation capsules.
   static const double topBarHeight = 44;
 
-  /// Native navigation frame clearance below its 44-point controls.
-  static const double topBarClearance = 10;
+  /// Gap between a standard top bar's 44-point controls and the body.
+  static const double topBarClearance = 12;
 
   @override
   State<LiquidPrismScaffold> createState() => _LiquidPrismScaffoldState();

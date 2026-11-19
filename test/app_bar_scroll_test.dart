@@ -969,12 +969,13 @@ void main() {
         final initial = tester
             .getTopLeft(find.byKey(const ValueKey('row0')))
             .dy;
-        expect(initial, closeTo(116, .01));
+        const barBottom = 62 + 44 + LiquidPrismScaffold.topBarClearance;
+        expect(initial, closeTo(barBottom, .01));
         scroll.jumpTo(100);
         await tester.pumpAndSettle();
         // The first row has moved out of view; row 2 retains the same 100pt gap.
         final y = tester.getTopLeft(find.byKey(const ValueKey('row2'))).dy;
-        expect(y, closeTo(fixedInsets ? 116 : 62, .01));
+        expect(y, closeTo(fixedInsets ? barBottom : 62, .01));
         expect(tester.takeException(), isNull);
       });
     }

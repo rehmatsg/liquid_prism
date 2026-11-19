@@ -418,7 +418,7 @@ class ScaffoldLabOptions {
           number('controlRowHeight', 44, 44, 88),
           number('gutter', 16, 0, 40),
           number('controlGap', 8, 0, 32),
-          number('contentSpacing', 10, 0, 40),
+          number('contentSpacing', 12, 0, 40),
           number('contentPaddingStart', 0, 0, 32),
           number('contentPaddingEnd', 0, 0, 32),
           number('contentPaddingTop', 0, 0, 24),
