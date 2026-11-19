@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Leave 12 points between a standard top bar's controls and the body (`LiquidPrismScaffold.topBarClearance`), where it was 10. Rail, sidebar and corner layouts keep 16, and `GlassNavigationBarStyle.contentSpacing` still overrides it.
+- End the soft top scroll edge's fade at the bottom of a glass title (a `LiquidPrismTitle` or principal toolbar items), where it ran 50 points past the bar as it does under a text title. The fade keeps bare text legible and glass carries its own material, so a bar with a large title or an accessory still fades past it. Scaffold and sliver bars alike; the hard style is unchanged.
 
 ## 0.18.1
 

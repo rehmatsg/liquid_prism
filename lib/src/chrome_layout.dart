@@ -1121,6 +1121,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                     GlassScrollEdgeVariant.hard
             ? 10
             : 0,
+        edgeInset: topEdgeInset(
+          inlineTitle,
+          bareRows: widget.accessory != null || widget.largeTitle != null,
+          style: GlassScrollEdgeStyle.resolve(context, widget.scrollEdgeStyle),
+        ),
         corner: corner,
         sidebar: sidebar
             ? (sidebarLeft ? AxisDirection.left : AxisDirection.right)
@@ -1772,6 +1777,27 @@ class _InsetBody extends StatelessWidget {
 /// sits 13.67 points below the controls and content starts at the row's end.
 const double largeTitleLead = 10;
 
+/// How far a full top edge's box stops short of the chrome it covers.
+///
+/// The fade past an edge keeps bare text legible over the content below it:
+/// a text title, a large title or an accessory row. Glass carries its own
+/// material, so when the bar's title is glass and nothing bare sits on the
+/// edge, the box stops short by the fade's length and the fade ends at the
+/// bottom of the glass, as the compact edge's fade ends inside it.
+double topEdgeInset(
+  Widget? inlineTitle, {
+  required bool bareRows,
+  required GlassScrollEdgeStyle style,
+}) {
+  final glass =
+      inlineTitle is LiquidPrismTitle || inlineTitle is LiquidPrismToolbar;
+  if (!glass || bareRows) return 0;
+  return style.extension ??
+      (style.variant == GlassScrollEdgeVariant.hard
+          ? 0
+          : GlassScrollEdgeStyle.defaultExtension);
+}
+
 class _ChromeLayout extends MultiChildLayoutDelegate {
   _ChromeLayout({
     required this.placement,
@@ -1808,6 +1834,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.compactWhenHidden,
     required this.revealed,
     required this.edgeFrame,
+    required this.edgeInset,
     required this.corner,
     required this.sidebar,
     required this.reveal,
@@ -1842,6 +1869,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   /// 27, a hard edge ends at the bar frame, 10 points below 44-point
   /// controls; with an accessory the accessory ends the frame.
   final double edgeFrame;
+
+  /// How far the full edge's box stops short of the chrome, so a glass
+  /// title's fade ends at the glass ([topEdgeInset]).
+  final double edgeInset;
 
   /// Whether the top edge can take the full bar extent (an ordinary text
   /// title); otherwise it is the compact status-bar edge.
@@ -2132,6 +2163,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
             accessoryHeight +
             topDockHeight +
             edgeFrame -
+            edgeInset -
             (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
       );
       // A revealed bar grows its edge back from the compact one as it
@@ -2600,6 +2632,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       railBottom != old.railBottom ||
       sheet != old.sheet ||
       edgeFrame != old.edgeFrame ||
+      edgeInset != old.edgeInset ||
       corner != old.corner ||
       sidebar != old.sidebar ||
       reveal != old.reveal;

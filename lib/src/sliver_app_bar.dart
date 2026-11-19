@@ -695,6 +695,11 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                   edgeStyle.variant == GlassScrollEdgeVariant.hard
               ? 10
               : 0,
+          edgeInset: topEdgeInset(
+            _d.inlineTitle,
+            bareRows: _d.accessoryHeight > 0 || bar.largeTitle != null,
+            style: edgeStyle,
+          ),
         ),
         children:
             [
@@ -834,6 +839,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     required this.gutter,
     required this.gap,
     required this.edgeFrame,
+    required this.edgeInset,
   });
   final TextDirection textDirection;
   final GlassTitleAlignment titleAlignment, largeTitleAlignment;
@@ -850,6 +856,10 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
   /// Extra depth of a hard edge, to the bar frame 10 points below the
   /// controls, as measured; an accessory ends the frame itself.
   final double edgeFrame;
+
+  /// How far the edge's box stops short of the bar, so a glass title's fade
+  /// ends at the glass ([topEdgeInset]).
+  final double edgeInset;
 
   /// The controls' measured inset from the screen edges.
   static const _edge = 16.0;
@@ -878,6 +888,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
                   largeHeight +
                   accessoryHeight +
                   edgeFrame -
+                  edgeInset -
                   (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
             ),
           ),
@@ -1026,5 +1037,6 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       old.accessoryHeight != accessoryHeight ||
       old.gutter != gutter ||
       old.gap != gap ||
-      old.edgeFrame != edgeFrame;
+      old.edgeFrame != edgeFrame ||
+      old.edgeInset != edgeInset;
 }

@@ -160,7 +160,7 @@ void main() {
   );
   testWidgets(
     'a glass title in a bar that stays on the iPhone Duo, with no status bar '
-    'above it, takes the full edge to its capsule',
+    'above it, keeps its capsule inside the edge',
     (tester) async {
       tester.view
         ..devicePixelRatio = 1
@@ -194,9 +194,47 @@ void main() {
       final blur = find.byType(LiquidPrismEdgeBlur);
       expect(blur, findsOneWidget);
       expect(
-        tester.getRect(find.byType(LiquidPrismScrollEdge)).bottom,
-        tester.getRect(find.byType(LiquidPrismTitle)).bottom,
+        tester.getRect(blur).bottom,
+        greaterThanOrEqualTo(
+          tester.getRect(find.byType(LiquidPrismTitle)).bottom,
+        ),
       );
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+  testWidgets(
+    "a glass title's soft edge fades out at the glass; a text title's fades "
+    'past the bar',
+    (tester) async {
+      phone(tester);
+      for (final (name, title) in <(String, Widget)>[
+        ('glass', const LiquidPrismTitle(child: Text('Company'))),
+        ('text', const Text('Company')),
+      ]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(
+          CupertinoApp(
+            home: LiquidPrismScaffold(
+              title: title,
+              scrollController: controller,
+              slivers: const [
+                SliverToBoxAdapter(child: SizedBox(height: 2000)),
+              ],
+            ),
+          ),
+        );
+        controller.jumpTo(100);
+        await tester.pumpAndSettle();
+        expect(
+          tester.getRect(find.byType(LiquidPrismEdgeBlur)).bottom,
+          name == 'glass'
+              ? tester.getRect(find.byType(LiquidPrismTitle)).bottom
+              : 62 + 44 + GlassScrollEdgeStyle.defaultExtension,
+          reason: name,
+        );
+      }
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );

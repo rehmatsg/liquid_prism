@@ -539,7 +539,10 @@ text following the same progress. It never passes through a whole-title opacity
 or image-filter layer, so the backdrop stays live throughout the reveal.
 Text and glass titles, and any page with an `accessory` (including one with no
 top bar, such as a search header), take the full top scroll edge, down to the
-bottom of the bar, so a glass title's capsule sits inside it. Actions-only bars
+bottom of the bar, so a glass title's capsule sits inside it. The fade past the
+bar keeps bare text legible, so it runs below a text title, a large title or an
+accessory; a glass title with nothing bare on the edge has its fade end at the
+bottom of the glass instead (`topEdgeInset`). Actions-only bars
 and bars minimized on scroll down without a reveal take a compact edge
 over the status bar instead: it ends as far below the Dynamic Island as the
 island sits below the screen's top edge (the status bar's bottom without an
