@@ -202,35 +202,85 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
-  testWidgets(
-    'a rail bar hidden on scroll down leaves its edge fade at the top of an '
-    'iPhone Duo with no status bar above the content',
-    (tester) async {
-      tester.view
-        ..devicePixelRatio = 1
-        ..physicalSize = const Size(466, 678)
-        ..padding = const FakeViewPadding(right: 84, bottom: 34)
-        ..viewPadding = const FakeViewPadding(right: 84, bottom: 34);
-      addTearDown(tester.view.reset);
-      final controller = ScrollController();
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(
-        CupertinoApp(
-          home: LiquidPrismScaffold(
-            title: const Text('Profile'),
-            scrollController: controller,
-            slivers: const [SliverToBoxAdapter(child: SizedBox(height: 2000))],
-          ),
-        ),
+  for (final sliver in [false, true]) {
+    for (final restoration in GlassToolbarMinimizationRestoration.values) {
+      testWidgets(
+        'Duo soft edge follows visible chrome, sliver $sliver, $restoration',
+        (tester) async {
+          tester.view
+            ..devicePixelRatio = 1
+            ..physicalSize = const Size(466, 678)
+            ..padding = const FakeViewPadding(right: 84, bottom: 34)
+            ..viewPadding = const FakeViewPadding(right: 84, bottom: 34);
+          addTearDown(tester.view.reset);
+          final controller = ScrollController();
+          addTearDown(controller.dispose);
+          final style = GlassNavigationBarStyle(
+            minimizationBehavior: GlassToolbarMinimizationBehavior.onScrollDown,
+            minimizationRestoration: restoration,
+          );
+          const rows = [SliverToBoxAdapter(child: SizedBox(height: 2000))];
+          await tester.pumpWidget(
+            CupertinoApp(
+              home: sliver
+                  ? CustomScrollView(
+                      controller: controller,
+                      slivers: [
+                        LiquidPrismSliverAppBar(
+                          title: const Text('Profile'),
+                          navigationBarStyle: style,
+                        ),
+                        ...rows,
+                      ],
+                    )
+                  : LiquidPrismScaffold(
+                      title: const Text('Profile'),
+                      scrollController: controller,
+                      navigationBarStyle: style,
+                      slivers: rows,
+                    ),
+            ),
+          );
+          final blur = find.byType(LiquidPrismEdgeBlur);
+          Future<void> scroll(double offset) async {
+            controller.jumpTo(offset);
+            await tester.pumpAndSettle();
+          }
+
+          await scroll(16);
+          expect(blur, findsNothing, reason: 'title travels with the rows');
+          await scroll(400);
+          expect(blur, findsNothing, reason: 'fully hidden');
+          await scroll(398);
+          if (restoration == GlassToolbarMinimizationRestoration.atScrollEdge) {
+            expect(blur, findsNothing, reason: 'reversal away from the edge');
+            await scroll(30);
+            expect(blur, findsNothing, reason: 'title returns with the rows');
+          } else {
+            expect(blur, findsOneWidget);
+            final partial = tester
+                .widget<LiquidPrismEdgeBlur>(blur)
+                .edges
+                .single;
+            expect(partial.fadeFloor, isNull);
+            expect(partial.extent, lessThan(4));
+            expect(partial.sigma, lessThan(.1));
+            await scroll(290);
+            final restored = tester
+                .widget<LiquidPrismEdgeBlur>(blur)
+                .edges
+                .single;
+            expect(restored.fadeFloor, isNull);
+            expect(restored.sigma, GlassScrollEdgeStyle.defaultSigma);
+            expect(restored.extent, 82 + GlassScrollEdgeStyle.defaultExtension);
+            await scroll(420);
+            expect(blur, findsNothing, reason: 'hidden again');
+          }
+        },
+        variant: TargetPlatformVariant.only(TargetPlatform.iOS),
       );
-      controller.jumpTo(400);
-      await tester.pumpAndSettle();
-      final blur = find.byType(LiquidPrismEdgeBlur);
-      expect(blur, findsOneWidget);
-      expect(tester.getRect(blur).bottom, greaterThan(0));
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
-  );
+    }
+  }
   testWidgets(
     "a glass title's soft edge fades out at the glass; a text title's fades "
     'past the bar',

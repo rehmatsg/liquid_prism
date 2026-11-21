@@ -1,4 +1,5 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:flutter/rendering.dart' show RenderSliver;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
@@ -281,10 +282,10 @@ void main() {
               ),
             ),
             (
-              'a header',
+              'a custom header reveals at its threshold and stays pinned',
               true,
-              true,
-              true,
+              false,
+              false,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 header: const SizedBox(height: 120),
@@ -361,7 +362,15 @@ void main() {
           reason: '$name at $offset',
         );
 
-        if (scaffold.largeTitle == null && scaffold.header == null) {
+        if (scaffold.header != null) {
+          barShown(false, 0);
+          scroll.jumpTo(119);
+          await tester.pumpAndSettle();
+          barShown(false, 119);
+          scroll.jumpTo(121);
+          await tester.pumpAndSettle();
+          barShown(true, 121);
+        } else {
           barShown(true, 0);
         }
         scroll.jumpTo(300);
@@ -703,8 +712,14 @@ void main() {
                 scroll.offset -
                 8 * 50;
             final initialInset = bodyInset();
+            double obstruction() => tester
+                .renderObject<RenderSliver>(
+                  find.byType(SliverPersistentHeader).first,
+                )
+                .geometry!
+                .maxScrollObstructionExtent;
             final clearance =
-                initialInset -
+                obstruction() -
                 tester.getBottomLeft(find.byKey(accessoryKey)).dy;
             var expectedTaps = 0;
             Future<void> check({required bool headerVisible}) async {
@@ -725,7 +740,7 @@ void main() {
                 reason: mode.key,
               );
               expect(
-                bodyInset(),
+                obstruction(),
                 closeTo(accessory.bottom + clearance, .01),
                 reason: mode.key,
               );
@@ -739,8 +754,9 @@ void main() {
             await tester.pumpAndSettle();
             await check(headerVisible: mode.key == 'sticky');
             if (mode.key != 'sticky') {
-              expect(bodyInset(), lessThan(initialInset));
+              expect(obstruction(), lessThan(initialInset));
             }
+            expect(bodyInset(), closeTo(initialInset, .01));
             scroll.jumpTo(240);
             await tester.pumpAndSettle();
             await check(headerVisible: mode.key != 'scroll-away');
@@ -1005,7 +1021,14 @@ void main() {
         await tester.pumpAndSettle();
         // The first row has moved out of view; row 2 retains the same 100pt gap.
         final y = tester.getTopLeft(find.byKey(const ValueKey('row2'))).dy;
-        expect(y, closeTo(fixedInsets ? barBottom : 62, .01));
+        expect(y, closeTo(barBottom, .01));
+        final obstruction = tester
+            .renderObject<RenderSliver>(
+              find.byType(SliverPersistentHeader).first,
+            )
+            .geometry!
+            .maxScrollObstructionExtent;
+        expect(obstruction, closeTo(fixedInsets ? barBottom : 62, .01));
         expect(tester.takeException(), isNull);
       });
     }

@@ -107,7 +107,9 @@ class GlassNavigationBarStyle {
   final GlassToolbarMinimizationRestoration? minimizationRestoration;
 
   /// Automatic follows the bar on a vertical rail and keeps the inset stable
-  /// on horizontal bars. Enabled and disabled explicitly choose either behavior.
+  /// on horizontal bars. Enabled and disabled explicitly choose either behavior
+  /// for pinned clearance. The leading scroll extent and the scaffold's
+  /// caller-owned body padding stay fixed during minimization.
   final GlassToolbarMinimizationSafeAreaAdjustment?
   minimizationSafeAreaAdjustment;
 
