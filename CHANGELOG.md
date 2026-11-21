@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.20.0
+
+- Match iPhone Duo navigation title defaults in scaffold and sliver app bars. A rail title uses a 28-point bold face, or 22 points alongside a subtitle. Inline mode uses 17 or 15 points.
+- Add `GlassToolbarTitleDisplayMode` with `automatic`, `inline`, `inlineLarge` and `large`. Set it through `GlassNavigationBarStyle.titleDisplayMode`.
+- On a vertical rail, automatic minimization reveals the title on reversal and adjusts the top content inset with the bar. Use `onScrollDown` with `atScrollEdge` to restore at the top, and set safe-area adjustment to `disabled` for a fixed inset. `onScrollUp` restores the bar at the top.
+
 ## 0.19.0
 
 - Leave 12 points between a standard top bar's controls and the body (`LiquidPrismScaffold.topBarClearance`), where it was 10. Rail, sidebar and corner layouts keep 16, and `GlassNavigationBarStyle.contentSpacing` still overrides it.

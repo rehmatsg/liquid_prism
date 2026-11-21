@@ -408,39 +408,45 @@ to `leading`, `center` or `trailing`; directional alignment mirrors in RTL.
 Title widgets keep their own pointer and keyboard input. Only the active title
 participates in focus and accessibility.
 
-`navigationBarStyle.minimizationBehavior` moves the navigation title and controls:
-`automatic` and `never` keep it pinned; `onScrollDown` hides it as content advances
-and restores it on reversal; `onScrollUp` reverses those directions. An
-`onScrollDown` bar scrolls away with the content one for one, from the first point
-and past the top of the screen, at full presence: it neither fades nor blurs. Its
-top edge stays the compact status-bar edge while it is gone and grows back with
-the bar on a reveal, strength and all, so the blur never switches on at once.
-Where there is no compact edge (no status bar above the content, as on the
-iPhone Duo's outer display), the bar's own edge follows it off screen and its
-fade stays at the top. On a vertical rail (iPhone Duo), a scaffold's `automatic`
-bar with an inline title (no `trailing`, `largeTitle` or `header`) outside a sheet
-behaves as `onScrollDown`, revealed on scroll up as SwiftUI's is, since its
-controls stay in the rail; set `never` to keep such a bar pinned.
-`minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge` keeps
-an on-scroll-down bar from returning on reversal: it rides back in with the
-content's top, never hidden over more than the content has scrolled. Automatic safe-area
-adjustment keeps content insets stable so rows follow scrolling one for one.
-`minimizationSafeAreaAdjustment: enabled` explicitly makes insets follow the bar;
-`disabled` keeps them fixed. Rail controls stay fixed below the system status
-region while the title minimizes. A top-docked tab bar follows the navigation bar; other docks remain
-independent. Minimization follows scroll progress, without a separate fixed-time
-animation. An accessory row stays visible and interactive, moving up to the safe
-top edge as the bar leaves. Its scroll-edge effect and content clearance remain.
-On initial downward departure, the outgoing header does not introduce an edge
-blur/fade band. Until scrolling actually restores the bar, its top edge is the compact
-status-bar edge; a reveal grows it back to the full edge as the bar returns. With at-scroll-edge restoration, an
-expanded title or `header` has no compact-title subtree. A sole inline title still
-appears at the top. Accessories beneath ordinary text titles retain their edge protection in all minimization modes.
-These settings also work with `scrollEdge: false`, in scaffolds and sliver bars.
+Use `GlassNavigationBarStyle.titleDisplayMode` with either scaffold or sliver
+bars. The four values correspond to SwiftUI's toolbar title modes.
 
-Use `largeTitle` plus `title` for large-to-inline collapse under pinned controls.
-Use `header` for page content that scrolls away entirely. Use minimization to move
-title and controls together. See [native measurements and limits](navigation_bar_spec.json).
+| Mode | iPhone Duo with a vertical bar | Horizontal bar |
+| --- | --- | --- |
+| `automatic` | Large type in the control row | Uses the supplied title widgets. The Duo's horizontal layout also expands a single text title. |
+| `inline` | Compact type in the control row | Compact type in the control row |
+| `inlineLarge` | Large type in the control row | Large type in the control row |
+| `large` | Large type in the control row | Large type in a separate row beneath the controls |
+
+On the Duo rail, large titles use 28-point bold type, or 22 points with an
+11-point subtitle. Compact titles use 17-point semibold type, or 15 points with
+a 12-point subtitle. The measured title row is 58 points. Text styles, row
+height, padding, spacing and alignment still accept overrides. An explicit
+`largeTitleExtent` with a supplied `largeTitle` keeps a separate expanded row in
+automatic mode. Use `LiquidPrismSystemChrome.setVerticalBarBehavior` to select
+the system's automatic or disabled vertical-bar behavior.
+
+Automatic minimization hides a titled rail bar as content advances and brings
+the same title back on reversal, including in sheets. Horizontal bars stay
+pinned automatically. `never` pins the bar and lets an in-row large title
+switch to compact type as content advances. Use `onScrollDown` to specify the
+hide direction yourself. Pair it with `atScrollEdge` to return with the content
+top. Automatic rail minimization follows the system's reversal behavior.
+`onScrollUp` hides the bar when scrolling back toward the top and restores it
+at the top or when content advances again.
+
+Rail safe-area adjustment follows the bar by default. The folded Duo fixture
+goes from a top content inset of 82 points to 24 when minimized. Horizontal
+bars keep their inset during minimization by default. Use `enabled` or
+`disabled` to set this explicitly.
+
+A bar that hides on scroll down moves off-screen at full presence. The
+scaffold's top edge shrinks to the status-bar edge where present and grows back
+with the bar on reveal. Rail controls in a scaffold remain fixed and
+accessories stay interactive at the top. A top-docked tab bar follows the
+navigation bar. Other docks remain independent. Minimization is scroll-driven
+and also works with `scrollEdge: false`. Use `header` for custom page content
+that scrolls away below the navigation bar. See [the measurements](navigation_bar_spec.json).
 
 `trailing:` places a widget of your own before the action capsules, such as a
 credits pill or a counter, centred on the control row 8 points from the first
@@ -1007,8 +1013,10 @@ locale's digit grouping). Styles expose `badgeColor` and `badgeTextStyle`.
 
 `LiquidPrismScaffold(title: Text('Inbox'), largeTitle: Text('Inbox'), body: list)`
 adds a header that follows the outermost vertical scroll view, even with
-`scrollEdge: false`: the large title scrolls up with the content and, once its
-row has gone, fades out as the inline title rises in, as on iOS 27. Supply only `title` for an inline header. The accessory sits
+`scrollEdge: false`. On a horizontal bar the large title scrolls away and
+the inline title rises in. On the iPhone Duo rail the large title shares the
+control row and returns on scroll reversal. Use `GlassToolbarTitleDisplayMode.inline`
+with a single title to request compact type. The accessory sits
 below the title rows. Keyboard height enters body padding once; the body's
 bottom viewInset is consumed. Set `resizeToAvoidBottomInset: false` to delegate
 keyboard avoidance to descendants.

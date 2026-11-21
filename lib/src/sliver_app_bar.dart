@@ -108,38 +108,85 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (LiquidPrismSystemChrome.scopeOf(context) case final scope?) {
+      return _build(context, scope.chrome);
+    }
+    return ValueListenableBuilder<GlassSystemChrome?>(
+      valueListenable: LiquidPrismSystemChrome.listenable,
+      builder: (context, system, _) => _build(context, system),
+    );
+  }
+
+  Widget _build(BuildContext context, GlassSystemChrome? system) {
     final media = MediaQuery.of(context);
-    final navigation =
+    final systemPlacement = glassSystemChromePlacement(
+      media.viewPadding,
+      system,
+    );
+    final rail =
+        (LiquidPrismScaffold.placementOf(context) ?? systemPlacement).isRail;
+    final merged =
         (LiquidPrismTheme.of(context).navigationBar ??
                 const GlassNavigationBarStyle())
             .merge(navigationBarStyle);
-    final colors = GlassColors.of(context);
-    final titleStyle = TextStyle(
-      fontFamily: 'CupertinoSystemText',
-      fontSize: subtitle == null ? 17 : 15,
-      fontWeight: FontWeight.w600,
-      letterSpacing: subtitle == null ? -.41 : -.23,
-      color: colors.label,
-    ).merge(navigation.titleStyle);
-    final largeTitleStyle = TextStyle(
-      fontFamily: 'CupertinoSystemDisplay',
-      fontSize: 34,
-      fontWeight: FontWeight.w700,
-      letterSpacing: .38,
-      color: colors.label,
-    ).merge(navigation.largeTitleStyle);
-    final scaler = media.textScaler;
-    final insets = (navigation.contentPadding ?? EdgeInsets.zero).resolve(
-      Directionality.of(context),
-    );
-    final top = (sheet ? 16.0 : math.max(media.padding.top, 24.0)) + insets.top;
     final principal = glassToolbarAt(toolbar, GlassToolbarPlacement.principal);
-    final inlineTitle = principal.isEmpty
+    final suppliedTitle = principal.isEmpty
         ? title
         : LiquidPrismToolbar(
             content: principal,
             style: glassToolbarStyleFor(context, GlassToolbarSize.navigation),
           );
+    final corner = glassTopChromeCorner(media.size, [
+      for (final region in system?.occlusions ?? const <GlassReservedRegion>[])
+        if (region.active) region.frame,
+    ]);
+    final horizontalDuo = !rail && (systemPlacement.isRail || corner != null);
+    final titles = GlassNavigationTitles(
+      title: suppliedTitle,
+      largeTitle: rail && principal.isNotEmpty ? null : largeTitle,
+      style: merged,
+      rail: rail,
+      horizontalDuo: horizontalDuo,
+      customTitle: suppliedTitle is LiquidPrismTitle || principal.isNotEmpty,
+    );
+    final inlineTitle = titles.inRow;
+    final expandedTitle = titles.expanded;
+    final largeInRow = titles.largeInRow != null;
+    final navigation = resolveNavigationMinimization(
+      merged,
+      rail: rail,
+      hasTitle: inlineTitle != null || expandedTitle != null,
+    );
+    final colors = GlassColors.of(context);
+    final titleStyle = glassNavigationTitleTypography(
+      large: false,
+      rail: rail,
+      hasSubtitle: subtitle != null,
+      color: colors.label,
+      override: titles.compactStyle,
+    );
+    final largeTitleStyle = glassNavigationTitleTypography(
+      large: true,
+      rail: rail && largeInRow,
+      hasSubtitle: subtitle != null,
+      color: colors.label,
+      override: titles.largeStyle,
+    );
+    final nativeDuoRow =
+        (rail || horizontalDuo) &&
+        inlineTitle != null &&
+        inlineTitle is! LiquidPrismTitle;
+    final scaler = media.textScaler;
+    final insets = (navigation.contentPadding ?? EdgeInsets.zero).resolve(
+      Directionality.of(context),
+    );
+    final top =
+        (sheet
+            ? 16.0
+            : corner == null || rail
+            ? math.max(media.padding.top, 24.0)
+            : 24.0) +
+        insets.top;
     final bottom = glassBottomToolbarContent(toolbar);
     final accessoryHeight =
         (accessory?.preferredSize.height ?? 0) + (bottom.isEmpty ? 0 : 48);
@@ -156,19 +203,27 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
               SizedBox(height: 48, child: LiquidPrismToolbar(content: bottom)),
             ],
           );
-    final subtitleStyle = TextStyle(
-      fontSize: 12,
+    final subtitleStyle = glassNavigationSubtitleTypography(
+      large: false,
       color: colors.secondaryLabel,
-    ).merge(navigation.subtitleStyle);
-    final largeSubtitleStyle = TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
+      override: navigation.subtitleStyle,
+    );
+    final largeSubtitleStyle = glassNavigationSubtitleTypography(
+      large: true,
       color: colors.secondaryLabel,
-    ).merge(navigation.largeSubtitleStyle);
+      override: navigation.largeSubtitleStyle,
+    );
+    final rowTitleStyle = largeInRow ? largeTitleStyle : titleStyle;
+    final rowSubtitleStyle = largeInRow ? largeSubtitleStyle : subtitleStyle;
     final rowHeight =
-        navigation.controlRowHeight ?? LiquidPrismScaffold.topBarHeight;
+        navigation.controlRowHeight ??
+        (nativeDuoRow ? 58.0 : LiquidPrismScaffold.topBarHeight);
     final titleLine =
-        scaler.scale(titleStyle.fontSize ?? 17) * (titleStyle.height ?? 1.2);
+        scaler.scale(rowTitleStyle.fontSize!) * (rowTitleStyle.height ?? 1.2);
+    final subtitleLine = subtitle == null
+        ? 0.0
+        : scaler.scale(rowSubtitleStyle.fontSize!) *
+              (rowSubtitleStyle.height ?? 1.2);
     final capsuleHeight = inlineTitle is LiquidPrismTitle
         ? LiquidPrismTitle.extentOf(
             inlineTitle,
@@ -182,11 +237,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
                   GlassToolbarSize.navigation,
                 ).height ??
                 44,
-            subtitleHeight: subtitle == null
-                ? 0
-                : scaler.scale(subtitleStyle.fontSize ?? 12) *
-                          (subtitleStyle.height ?? 1.2) +
-                      2,
+            subtitleHeight: subtitle == null ? 0 : subtitleLine + 2,
           )
         : 0.0;
     final barRow =
@@ -194,12 +245,10 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             ? rowHeight
             : math.max(
                 math.max(rowHeight, capsuleHeight),
-                scaler.scale(titleStyle.fontSize ?? 17) *
-                        (titleStyle.height ?? 1.2) +
-                    8,
+                titleLine + 8 + (nativeDuoRow ? subtitleLine : 0),
               )) +
         insets.bottom;
-    final largeRow = largeTitle == null
+    final largeRow = expandedTitle == null
         ? 0.0
         : navigation.largeTitleExtent ??
               scaler.scale(largeTitleStyle.fontSize ?? 34) *
@@ -209,14 +258,16 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
                       ? 0
                       : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
                             6.13);
-    final lead = largeTitle == null ? 0.0 : largeTitleLead;
+    final lead = expandedTitle == null || horizontalDuo ? 0.0 : largeTitleLead;
     final clearance =
         navigation.contentSpacing ??
-        (lead > 0 && accessoryHeight == 0
+        (nativeDuoRow
+            ? 0.0
+            : lead > 0 && accessoryHeight == 0
             ? lead
             : LiquidPrismScaffold.topBarClearance);
     final minExtent = top + barRow + accessoryHeight + clearance;
-    final maxExtent = largeTitle == null
+    final maxExtent = expandedTitle == null
         ? minExtent
         : top +
               barRow +
@@ -267,7 +318,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             : 0);
     return _MinimizingSliverBar(
       style: navigation,
-      collapseExtent: largeTitle == null ? 0 : largeRow + lead,
+      collapseExtent: expandedTitle == null ? 0 : largeRow + lead,
       extent: travel,
       builder: (minimization, revealed) {
         final reduction =
@@ -283,6 +334,10 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             revealed: revealed,
             leading: barLeading,
             inlineTitle: inlineTitle,
+            expandedTitle: expandedTitle,
+            compactTitle: titles.compact,
+            largeInRow: largeInRow,
+            rail: rail,
             accessory: barAccessory,
             insets: insets,
             titleStyle: titleStyle,
@@ -292,6 +347,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             navigation: navigation,
             top: top,
             barRow: barRow,
+            clearance: clearance,
             largeRow: largeRow,
             lead: lead,
             largeTitleTop: subtitle == null ? 3.67 : 6.67,
@@ -381,6 +437,10 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.revealed,
     required this.leading,
     required this.inlineTitle,
+    required this.expandedTitle,
+    required this.compactTitle,
+    required this.largeInRow,
+    required this.rail,
     required this.accessory,
     required this.insets,
     required this.titleStyle,
@@ -390,6 +450,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.navigation,
     required this.top,
     required this.barRow,
+    required this.clearance,
     required this.largeRow,
     required this.lead,
     required this.largeTitleTop,
@@ -401,7 +462,9 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   final bool revealed;
   final LiquidPrismSliverAppBar bar;
   final Animation<double> minimization;
-  final Widget? leading, inlineTitle, accessory;
+  final Widget? leading, inlineTitle, expandedTitle, compactTitle, accessory;
+  final bool largeInRow, rail;
+  final double clearance;
   final EdgeInsets insets;
   final TextStyle titleStyle, largeTitleStyle;
   final TextStyle subtitleStyle, largeSubtitleStyle;
@@ -430,6 +493,11 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
       old.revealed != revealed ||
       old.leading != leading ||
       old.inlineTitle != inlineTitle ||
+      old.expandedTitle != expandedTitle ||
+      old.compactTitle != compactTitle ||
+      old.largeInRow != largeInRow ||
+      old.rail != rail ||
+      old.clearance != clearance ||
       old.accessory != accessory ||
       old.insets != insets ||
       old.titleStyle != titleStyle ||
@@ -455,6 +523,7 @@ class _SliverBar extends StatefulWidget {
 }
 
 class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
+  final _sharedTitleKey = GlobalKey();
   late final _largeFade = RetargetableGlassSpring(vsync: this);
   late final _inlineFade = RetargetableGlassSpring(vsync: this);
   bool _collapsed = false;
@@ -491,7 +560,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
 
   bool get _isCollapsed {
     final reveal = _d.navigation.revealExtent ?? _d.largeRow;
-    return _d.bar.largeTitle != null &&
+    return _d.expandedTitle != null &&
         widget.shrinkOffset >= math.min(reveal, _d.largeRow) - .01 &&
         widget.shrinkOffset > 0;
   }
@@ -568,7 +637,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         child: child,
       ),
     );
-    final swaps = _d.bar.largeTitle != null;
+    final swaps = _d.expandedTitle != null;
     final minimizes = switch (_d.navigation.minimizationBehavior) {
       GlassToolbarMinimizationBehavior.onScrollDown ||
       GlassToolbarMinimizationBehavior.onScrollUp => true,
@@ -650,18 +719,24 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       null => MediaQuery.sizeOf(context).width >= 700,
     };
     final titleAlignment = glassDefaultTitleAlignment(
-      requested: _d.navigation.titleAlignment,
+      requested: _d.largeInRow && bar.largeTitle != null
+          ? _d.navigation.largeTitleAlignment ?? _d.navigation.titleAlignment
+          : _d.navigation.titleAlignment,
       glassTitle: _d.inlineTitle is LiquidPrismTitle,
       actions: glassToolbarItemCount(content) + (bar.trailing != null ? 1 : 0),
-      foldedRail:
-          (LiquidPrismScaffold.placementOf(context)?.isRail ?? false) &&
-          !regular,
+      foldedRail: _d.rail && !regular,
       sheet: bar.sheet,
     );
     final edgeStyle = GlassScrollEdgeStyle.resolve(
       context,
       bar.scrollEdgeStyle,
     );
+    final titleControlHeight =
+        glassToolbarStyleFor(context, GlassToolbarSize.navigation).height ?? 44;
+    final sharedTitle =
+        _d.expandedTitle != null && identical(_d.expandedTitle, _d.inlineTitle);
+    Widget titleContent(Widget title) =>
+        sharedTitle ? KeyedSubtree(key: _sharedTitleKey, child: title) : title;
     return LiquidPrismGroup(
       child: CustomMultiChildLayout(
         delegate: _SliverBarLayout(
@@ -673,12 +748,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
           top:
               _d.top -
               (_d.barRow +
-                      (_d.accessoryHeight > 0
-                          ? 0
-                          : (_d.navigation.contentSpacing ??
-                                (_d.lead > 0
-                                    ? _d.lead
-                                    : LiquidPrismScaffold.topBarClearance))) +
+                      (_d.accessoryHeight > 0 ? 0 : _d.clearance) +
                       (hidesOnScrollDown ? _d.top : 0)) *
                   _d.minimization.value,
           safeTop: _d.top,
@@ -697,14 +767,14 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
               : 0,
           edgeInset: topEdgeInset(
             _d.inlineTitle,
-            bareRows: _d.accessoryHeight > 0 || bar.largeTitle != null,
+            bareRows: _d.accessoryHeight > 0 || _d.expandedTitle != null,
             style: edgeStyle,
           ),
         ),
         children:
             [
               if ((bar.scrollEdge || !_edgePresence.isDismissed) &&
-                  (_d.inlineTitle != null || bar.largeTitle != null))
+                  (_d.inlineTitle != null || _d.expandedTitle != null))
                 LayoutId(
                   id: _Slot.edge,
                   child: IgnorePointer(
@@ -734,12 +804,13 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-              if (bar.largeTitle case final large?)
+              if (_d.expandedTitle case final large?
+                  when !sharedTitle || !_collapsed)
                 LayoutId(
                   id: _Slot.largeTitle,
                   child: _header(
                     glassTitled(
-                      large,
+                      titleContent(large),
                       bar.subtitle,
                       _d.largeSubtitleStyle,
                       large: true,
@@ -759,28 +830,53 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
               if (_d.accessory case final accessory?)
                 LayoutId(id: _Slot.accessory, child: accessory),
               if (_d.inlineTitle case final title?
-                  when !(bar.largeTitle != null && scrollsAway))
+                  when !(_d.expandedTitle != null && scrollsAway) &&
+                      (!sharedTitle || _collapsed))
                 LayoutId(
                   id: _Slot.title,
-                  child: _header(
-                    glassTitled(
-                      title,
-                      bar.subtitle,
-                      _d.subtitleStyle,
-                      large: false,
-                      controlHeight:
-                          glassToolbarStyleFor(
-                            context,
-                            GlassToolbarSize.navigation,
-                          ).height ??
-                          44,
-                      alignment: titleAlignment == GlassTitleAlignment.automatic
-                          ? GlassTitleAlignment.center
-                          : titleAlignment,
-                    ),
-                    _d.titleStyle,
-                    large: false,
-                  ),
+                  child:
+                      _d.largeInRow &&
+                          !hidesOnScrollDown &&
+                          _d.navigation.minimizationBehavior !=
+                              GlassToolbarMinimizationBehavior.onScrollUp
+                      ? ValueListenableBuilder<double>(
+                          valueListenable: _scrolled,
+                          builder: (context, offset, _) =>
+                              glassNavigationPinnedTitle(
+                                title: title,
+                                compact: _d.compactTitle ?? title,
+                                subtitle: bar.subtitle,
+                                largeStyle: _d.largeTitleStyle,
+                                compactStyle: _d.titleStyle,
+                                largeSubtitleStyle: _d.largeSubtitleStyle,
+                                compactSubtitleStyle: _d.subtitleStyle,
+                                alignment: titleAlignment,
+                                collapsed:
+                                    offset > 0 &&
+                                    offset >=
+                                        (_d.navigation.revealExtent ?? 52),
+                                controlHeight: titleControlHeight,
+                                decorate: (child, style) =>
+                                    _header(child, style, large: false),
+                              ),
+                        )
+                      : _header(
+                          glassTitled(
+                            titleContent(title),
+                            bar.subtitle,
+                            _d.largeInRow
+                                ? _d.largeSubtitleStyle
+                                : _d.subtitleStyle,
+                            large: false,
+                            controlHeight: titleControlHeight,
+                            alignment:
+                                titleAlignment == GlassTitleAlignment.automatic
+                                ? GlassTitleAlignment.center
+                                : titleAlignment,
+                          ),
+                          _d.largeInRow ? _d.largeTitleStyle : _d.titleStyle,
+                          large: false,
+                        ),
                 ),
               if (_d.leading case final leading?)
                 LayoutId(id: _Slot.leading, child: leading),

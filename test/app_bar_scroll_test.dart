@@ -152,8 +152,7 @@ void main() {
   });
 
   testWidgets(
-    'an automatic rail bar with an inline title hides on scroll down and '
-    'reveals on scroll up',
+    'automatic rail minimization reveals titled scaffold bars when reversing away from the content edge',
     (tester) async {
       final semantics = tester.ensureSemantics();
       const never = GlassNavigationBarStyle(
@@ -203,13 +202,30 @@ void main() {
               ),
             ),
             (
-              'explicit scroll-edge restoration',
+              'edge restoration leaves automatic minimization alone',
+              true,
+              true,
+              true,
+              (scroll) => LiquidPrismScaffold(
+                title: const Text('Inline'),
+                navigationBarStyle: const GlassNavigationBarStyle(
+                  minimizationRestoration:
+                      GlassToolbarMinimizationRestoration.atScrollEdge,
+                ),
+                scrollController: scroll,
+                slivers: rows(),
+              ),
+            ),
+            (
+              'explicit scroll-away behavior',
               true,
               true,
               false,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 navigationBarStyle: const GlassNavigationBarStyle(
+                  minimizationBehavior:
+                      GlassToolbarMinimizationBehavior.onScrollDown,
                   minimizationRestoration:
                       GlassToolbarMinimizationRestoration.atScrollEdge,
                 ),
@@ -243,8 +259,8 @@ void main() {
             (
               'a trailing widget in the top bar',
               true,
-              false,
-              false,
+              true,
+              true,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 trailing: const SizedBox(width: 44, height: 44),
@@ -255,8 +271,8 @@ void main() {
             (
               'a large title',
               true,
-              false,
-              false,
+              true,
+              true,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 largeTitle: const Text('Large'),
@@ -267,8 +283,8 @@ void main() {
             (
               'a header',
               true,
-              false,
-              false,
+              true,
+              true,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 header: const SizedBox(height: 120),
@@ -279,8 +295,8 @@ void main() {
             (
               'a sheet',
               true,
-              false,
-              false,
+              true,
+              true,
               (scroll) => LiquidPrismScaffold(
                 title: const Text('Inline'),
                 sheet: true,
@@ -334,7 +350,13 @@ void main() {
         await tester.pumpWidget(CupertinoApp(home: scaffold));
         await tester.pumpAndSettle();
         void barShown(bool shown, double offset) => expect(
-          find.semantics.byLabel(scaffold.title == null ? 'Edit' : 'Inline'),
+          find.semantics.byLabel(
+            scaffold.largeTitle != null
+                ? 'Large'
+                : scaffold.title == null
+                ? 'Edit'
+                : 'Inline',
+          ),
           shown ? findsOneWidget : findsNothing,
           reason: '$name at $offset',
         );
@@ -943,6 +965,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.semantics.byLabel('Inline'), findsNothing);
       scroll.jumpTo(300);
+      await tester.pumpAndSettle();
+      expect(find.semantics.byLabel('Inline'), findsOneWidget);
+      scroll.jumpTo(240);
+      await tester.pumpAndSettle();
+      scroll.jumpTo(0);
       await tester.pumpAndSettle();
       expect(find.semantics.byLabel('Inline'), findsOneWidget);
       semantics.dispose();
