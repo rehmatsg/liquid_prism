@@ -262,7 +262,7 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
     final clearance =
         navigation.contentSpacing ??
         (nativeDuoRow
-            ? 0.0
+            ? (accessoryHeight == 0 ? 0.0 : 16.0)
             : lead > 0 && accessoryHeight == 0
             ? lead
             : LiquidPrismScaffold.topBarClearance);
@@ -353,7 +353,10 @@ class LiquidPrismSliverAppBar extends StatelessWidget {
             largeTitleTop: subtitle == null ? 3.67 : 6.67,
             accessoryHeight: accessoryHeight,
             minExtent: minExtent - reduction,
-            maxExtent: maxExtent - reduction,
+            // Only the pinned obstruction changes. Rebasing the scroll
+            // extent would move the list a second time during the gesture.
+            maxExtent: maxExtent,
+            titleCollapseExtent: maxExtent - minExtent,
           ),
         );
       },
@@ -457,6 +460,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
     required this.accessoryHeight,
     required this.minExtent,
     required this.maxExtent,
+    required this.titleCollapseExtent,
   }) : minimizationValue = minimization.value;
   final double minimizationValue;
   final bool revealed;
@@ -472,6 +476,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   final double top, barRow, largeRow, lead, largeTitleTop, accessoryHeight;
   @override
   final double minExtent, maxExtent;
+  final double titleCollapseExtent;
 
   @override
   Widget build(
@@ -510,7 +515,8 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
       old.largeTitleTop != largeTitleTop ||
       old.accessoryHeight != accessoryHeight ||
       old.minExtent != minExtent ||
-      old.maxExtent != maxExtent;
+      old.maxExtent != maxExtent ||
+      old.titleCollapseExtent != titleCollapseExtent;
 }
 
 class _SliverBar extends StatefulWidget {
@@ -612,7 +618,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
         : 0.0;
     _scrolled.value = math.max(
       0,
-      position.pixels - start - (_d.maxExtent - _d.minExtent),
+      position.pixels - start - _d.titleCollapseExtent,
     );
   }
 
@@ -709,7 +715,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       bar.toolbar,
       GlassToolbarPlacement.topTrailing,
     );
-    final shrink = widget.shrinkOffset.clamp(0.0, _d.maxExtent - _d.minExtent);
+    final shrink = widget.shrinkOffset.clamp(0.0, _d.titleCollapseExtent);
     final system =
         LiquidPrismSystemChrome.scopeOf(context)?.chrome ??
         LiquidPrismSystemChrome.listenable.value;
@@ -731,6 +737,12 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
       context,
       bar.scrollEdgeStyle,
     );
+    double edgePresence() {
+      if (_d.accessory != null) return 1;
+      if (hidesOnScrollDown && !_d.revealed) return 0;
+      return 1 - _d.minimization.value;
+    }
+
     final titleControlHeight =
         glassToolbarStyleFor(context, GlassToolbarSize.navigation).height ?? 44;
     final sharedTitle =
@@ -779,17 +791,14 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                   id: _Slot.edge,
                   child: IgnorePointer(
                     child: ScrollEdgeProgressBuilder(
-                      listenable: Listenable.merge([_scrolled, _edgeStrength]),
-                      // A revealed bar brings its edge back with it: the
-                      // strength follows the bar's return instead of
-                      // switching on at once.
+                      listenable: Listenable.merge([
+                        _scrolled,
+                        _edgeStrength,
+                        _d.minimization,
+                      ]),
                       progress: () =>
-                          (_d.accessory != null || !hidesOnScrollDown
-                              ? _edgeStrength.value
-                              : _d.revealed
-                              ? _edgeStrength.value *
-                                    (1 - _d.minimization.value)
-                              : 0) *
+                          _edgeStrength.value *
+                          edgePresence() *
                           LiquidPrismScrollEdge.progressFor(
                             _scrolled.value,
                             revealExtent:
@@ -799,7 +808,10 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
                       builder: (context, progress) => LiquidPrismScrollEdge(
                         progress: progress,
                         color: bar.backgroundColor,
-                        style: bar.scrollEdgeStyle,
+                        style: navigationScrollEdgeStyle(
+                          edgeStyle,
+                          edgePresence(),
+                        ),
                       ),
                     ),
                   ),
@@ -897,9 +909,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
               // The edge sets its own strength; a backdrop blur ignores a
               // fading ancestor, so wrapping it would pop the blur in.
               final pinned =
-                  child.id == _Slot.accessory ||
-                  (child.id == _Slot.edge &&
-                      (_d.accessory != null || hidesOnScrollDown));
+                  child.id == _Slot.accessory || child.id == _Slot.edge;
               return pinned
                   ? child
                   : LayoutId(
@@ -979,9 +989,9 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
             size.width,
             math.max(
               0,
-              top +
-                  barRow +
-                  largeHeight +
+              (accessoryHeight > 0
+                      ? math.max(safeTop, top + barRow + largeHeight)
+                      : top + barRow + largeHeight) +
                   accessoryHeight +
                   edgeFrame -
                   edgeInset -

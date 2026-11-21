@@ -40,6 +40,9 @@ class NavigationBarMinimization {
 
   final AnimationController progress;
 
+  /// Published distance the bar has traveled from its resting position.
+  double get distance => progress.value * _extent;
+
   /// Whether the visible bar was restored by a scroll reversal.
   final revealed = ValueNotifier(false);
   GlassToolbarMinimizationBehavior _behavior =

@@ -1,4 +1,5 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:flutter/rendering.dart' show RenderSliver;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
@@ -66,6 +67,88 @@ TextStyle _style(WidgetTester tester, String title) =>
     DefaultTextStyle.of(tester.element(find.text(title))).style;
 
 void main() {
+  testWidgets('Duo accessory keeps its body gap beside rail tabs', (
+    tester,
+  ) async {
+    _duo(tester);
+    const accessory = Key('page tabs');
+    for (final spacing in <double?>[null, 0]) {
+      await tester.pumpWidget(
+        CupertinoApp(
+          home: LiquidPrismScaffold(
+            title: const Text('Applications'),
+            navigationBarStyle: GlassNavigationBarStyle(
+              contentSpacing: spacing,
+            ),
+            accessory: const PreferredSize(
+              preferredSize: Size.fromHeight(38),
+              child: SizedBox(key: accessory),
+            ),
+            tabBar: LiquidPrismTabBar(
+              tabs: const [
+                LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.home)),
+                LiquidPrismTab(
+                  label: 'Saved',
+                  icon: Icon(CupertinoIcons.bookmark),
+                ),
+              ],
+              selectedIndex: 1,
+              onSelected: (_) {},
+            ),
+            slivers: _rows,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(find.byKey(_anchor)).dy -
+            tester.getBottomLeft(find.byKey(accessory)).dy,
+        spacing ?? 16,
+      );
+    }
+  });
+
+  testWidgets('a caller-owned body scrolls once in both directions', (
+    tester,
+  ) async {
+    _duo(tester);
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: LiquidPrismScaffold(
+          title: const Text('Library'),
+          scrollEdge: false,
+          body: ListView(
+            controller: scroll,
+            children: const [
+              SizedBox(key: _anchor, height: 100),
+              SizedBox(height: 1500),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final anchor = find.byKey(_anchor);
+    final initialY = tester.getTopLeft(anchor).dy;
+    final gesture = await tester.startGesture(const Offset(170, 520));
+    await gesture.moveBy(const Offset(0, -21));
+    await tester.pump();
+    final initialOffset = scroll.offset;
+    for (final delta in [-12.0, -15.0, -19.0, 6.0, 11.0, 16.0]) {
+      await gesture.moveBy(Offset(0, delta));
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(
+        tester.getTopLeft(anchor).dy + scroll.offset,
+        closeTo(initialY, .01),
+      );
+    }
+    expect(scroll.offset, greaterThan(initialOffset));
+    await gesture.up();
+    await tester.pumpAndSettle();
+  });
+
   for (final sliver in [false, true]) {
     final kind = sliver ? 'sliver' : 'scaffold';
 
@@ -104,12 +187,17 @@ void main() {
           scroll.jumpTo(400);
           await tester.pumpAndSettle();
           expect(find.semantics.byLabel(RegExp(title)), findsNothing);
-          expect(tester.getTopLeft(find.byKey(_anchor)).dy + scroll.offset, 24);
+          expect(tester.getTopLeft(find.byKey(_anchor)).dy + scroll.offset, 82);
+          final header = tester.renderObject<RenderSliver>(
+            find.byType(SliverPersistentHeader).first,
+          );
+          expect(header.geometry!.maxScrollObstructionExtent, 24);
           scroll.jumpTo(220);
           await tester.pumpAndSettle();
           expect(find.semantics.byLabel(RegExp(title)), findsOneWidget);
           expect(_style(tester, title).fontSize, compact ? 15 : 22);
           expect(tester.getTopLeft(find.byKey(_anchor)).dy + scroll.offset, 82);
+          expect(header.geometry!.maxScrollObstructionExtent, 82);
         }
       } finally {
         semantics.dispose();

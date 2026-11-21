@@ -477,10 +477,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   /// dissolve below it ([height]).
   ({double target, double height, GlassScrollEdgeStyle style}) _compactEdge(
     BuildContext context,
-    MediaQueryData media,
-  ) {
+    MediaQueryData media, {
+    required bool statusBarAboveContent,
+  }) {
     final island = SystemChromeListener.instance.island.value;
-    final target = widget.sheet
+    final target = !statusBarAboveContent
         ? 0.0
         : island != null
         ? island.bottom + math.max(0.0, island.top)
@@ -867,7 +868,11 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final navigation = resolveNavigationMinimization(
       merged,
       rail: rail,
-      hasTitle: inlineTitle != null || expandedTitle != null,
+      // A title that replaces an in-body heading appears when the heading
+      // passes the bar. It has its own scroll threshold.
+      hasTitle:
+          widget.header == null &&
+          (inlineTitle != null || expandedTitle != null),
     );
     final colors = GlassColors.of(context);
     final hasSubtitle = widget.subtitle != null;
@@ -1003,13 +1008,39 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         widget.accessory != null ||
         inlineTitle != null ||
         expandedTitle != null;
-    final compactEdge = _compactEdge(context, media);
-    // A hidden bar hands over to the compact edge only where there is one.
-    // With no status bar above the content (the iPhone Duo's outer display),
-    // the bar's own edge follows it off screen and leaves its fade at the
-    // top, as native does.
+    final compactEdge = _compactEdge(
+      context,
+      media,
+      statusBarAboveContent:
+          !widget.sheet &&
+          corner == null &&
+          !(system?.hasVerticalBar ?? (rail && media.viewPadding.top == 0)),
+    );
+    // The status bar can keep its own compact edge. Without one the whole
+    // edge belongs to the bar and goes with it.
     final compactWhenHidden =
         hidesOnScrollDown && widget.accessory == null && compactEdge.target > 0;
+    double edgePresence() =>
+        widget.accessory == null && fullEdge && !compactWhenHidden
+        ? 1 - _minimization.progress.value
+        : 1;
+    final fullEdgeStyle = GlassScrollEdgeStyle.resolve(
+      context,
+      widget.scrollEdgeStyle,
+    );
+    double edgeScrollOffset(bool revealed) {
+      if (hidesOnScrollDown &&
+          widget.accessory == null &&
+          fullEdge &&
+          !compactWhenHidden &&
+          !revealed) {
+        // While the title travels with the rows, content has only advanced
+        // beneath it by the distance left over after moving the bar.
+        return _scrollOffset.value - _minimization.distance;
+      }
+      return _scrollOffset.value;
+    }
+
     final collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
         : expandedTitle == null
@@ -1155,7 +1186,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         controlRowHeight: controlRowHeight,
         contentSpacing:
             navigation.contentSpacing ??
-            (nativeDuoRow
+            (nativeDuoRow && widget.accessory == null
                 ? 0
                 : rail || sidebar || corner != null
                 ? 16
@@ -1206,6 +1237,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                 placement: resolved,
                 child: _InsetBody(
                   consumeKeyboard: widget.resizeToAvoidBottomInset,
+                  ownsScrollView: widget.slivers != null,
                   media: features.isEmpty
                       ? media
                       : media.copyWith(
@@ -1255,11 +1287,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                           listenable: Listenable.merge([
                             _scrollOffset,
                             _edgeStrength,
+                            _minimization.progress,
                           ]),
                           progress: () =>
+                              edgePresence() *
                               _edgeStrength.value *
                               LiquidPrismScrollEdge.progressFor(
-                                _scrollOffset.value,
+                                edgeScrollOffset(revealed),
                                 revealExtent: revealExtent,
                               ),
                           builder: (context, progress) => LiquidPrismScrollEdge(
@@ -1267,7 +1301,10 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                             color: widget.backgroundColor,
                             style: !fullEdge || (compactWhenHidden && !revealed)
                                 ? compactEdge.style
-                                : widget.scrollEdgeStyle,
+                                : navigationScrollEdgeStyle(
+                                    fullEdgeStyle,
+                                    edgePresence(),
+                                  ),
                           ),
                         ),
                   ),
@@ -1528,12 +1565,6 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               _Slot.barActions ||
               _Slot.trailing => true,
               _Slot.leading || _Slot.actions => !rail,
-              // A bar that scrolls away leaves the compact edge in place; the
-              // edge grows back by its own height and strength on a reveal.
-              // A backdrop blur ignores a fading ancestor, so wrapping it
-              // would pop the blur in at the hidden end.
-              _Slot.scrollEdge =>
-                widget.accessory == null && !hidesOnScrollDown,
               _Slot.tabBar => explicitDock == GlassTabBarPlacement.top,
               _ => false,
             };
@@ -1822,15 +1853,19 @@ enum _Slot {
 /// Body constraints that also carry the chrome's coverage, the technique
 /// Flutter's own Scaffold uses to hand layout-time sizes to its body.
 class _BodyConstraints extends BoxConstraints {
-  _BodyConstraints(super.size, this.covered) : super.tight();
+  _BodyConstraints(super.size, this.covered, this.scrollTop) : super.tight();
   final EdgeInsets covered;
+  final double scrollTop;
 
   @override
   bool operator ==(Object other) =>
-      other is _BodyConstraints && covered == other.covered && super == other;
+      other is _BodyConstraints &&
+      covered == other.covered &&
+      scrollTop == other.scrollTop &&
+      super == other;
 
   @override
-  int get hashCode => Object.hash(super.hashCode, covered);
+  int get hashCode => Object.hash(super.hashCode, covered, scrollTop);
 }
 
 class _InsetBody extends StatelessWidget {
@@ -1838,8 +1873,9 @@ class _InsetBody extends StatelessWidget {
     required this.media,
     required this.child,
     required this.consumeKeyboard,
+    required this.ownsScrollView,
   });
-  final bool consumeKeyboard;
+  final bool consumeKeyboard, ownsScrollView;
   final MediaQueryData media;
   final Widget child;
 
@@ -1849,6 +1885,9 @@ class _InsetBody extends StatelessWidget {
       final covered = constraints is _BodyConstraints
           ? constraints.covered
           : EdgeInsets.zero;
+      final scrollTop = constraints is _BodyConstraints
+          ? math.max(media.padding.top, constraints.scrollTop)
+          : media.padding.top;
       return MediaQuery(
         data: media.copyWith(
           viewInsets: consumeKeyboard
@@ -1856,15 +1895,32 @@ class _InsetBody extends StatelessWidget {
               : media.viewInsets,
           padding: EdgeInsets.fromLTRB(
             math.max(media.padding.left, covered.left),
-            math.max(media.padding.top, covered.top),
+            ownsScrollView
+                ? math.max(media.padding.top, covered.top)
+                : scrollTop,
             math.max(media.padding.right, covered.right),
             math.max(media.padding.bottom, covered.bottom),
           ),
         ),
-        child: child,
+        child: ownsScrollView
+            ? _ScaffoldScrollInset(extent: scrollTop, child: child)
+            : child,
       );
     },
   );
+}
+
+/// The leading scroll extent stays fixed while the pinned obstruction moves.
+class _ScaffoldScrollInset extends InheritedWidget {
+  const _ScaffoldScrollInset({required this.extent, required super.child});
+  final double extent;
+
+  static double of(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<_ScaffoldScrollInset>()!
+      .extent;
+
+  @override
+  bool updateShouldNotify(_ScaffoldScrollInset old) => extent != old.extent;
 }
 
 /// Measured on iOS 27: the bar frame ends 10 points below 44-point controls
@@ -2220,6 +2276,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     onMinimizationExtent(travel);
     final moved = travel * minimization.value;
     top -= moved;
+    // The body consumes this distance as leading scroll extent exactly once.
+    final scrollTop = covered.top;
     if (adjustsMinimizationInsets) {
       // Insets give back at most the bar's own room; the extra travel past
       // the screen's top frees nothing the content could use.
@@ -2242,11 +2300,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         contentPadding.right;
 
     if (hasChild(_Slot.scrollEdge)) {
+      final barBottom = top + barRow + largeHeight;
       final full = math.max(
         0.0,
-        top +
-            barRow +
-            largeHeight +
+        (accessoryHeight > 0 ? math.max(naturalTop, barBottom) : barBottom) +
             accessoryHeight +
             topDockHeight +
             edgeFrame -
@@ -2682,7 +2739,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       contentRight,
       covered.top,
     );
-    layoutChild(_Slot.body, _BodyConstraints(size, covered));
+    layoutChild(_Slot.body, _BodyConstraints(size, covered, scrollTop));
     positionChild(_Slot.body, Offset.zero);
   }
 
@@ -2791,7 +2848,10 @@ class _SliverPageState extends State<_SliverPage> {
       physics: const AlwaysScrollableScrollPhysics(),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
-        SliverPersistentHeader(pinned: true, delegate: _TopInset(padding.top)),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _TopInset(padding.top, _ScaffoldScrollInset.of(context)),
+        ),
         SliverPadding(
           padding: EdgeInsets.only(left: padding.left, right: padding.right),
           sliver: SliverMainAxisGroup(
@@ -2815,17 +2875,15 @@ class _SliverPageState extends State<_SliverPage> {
 
 /// The bar's inset as a pinned sliver that paints nothing.
 class _TopInset extends SliverPersistentHeaderDelegate {
-  _TopInset(this.extent);
-  final double extent;
+  _TopInset(this.minExtent, this.maxExtent);
   @override
-  double get minExtent => extent;
-  @override
-  double get maxExtent => extent;
+  final double minExtent, maxExtent;
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
       const SizedBox.expand();
   @override
-  bool shouldRebuild(_TopInset old) => old.extent != extent;
+  bool shouldRebuild(_TopInset old) =>
+      old.minExtent != minExtent || old.maxExtent != maxExtent;
 }
 
 /// Reports its child's laid-out height after each layout that changes it.

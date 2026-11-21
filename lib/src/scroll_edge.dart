@@ -222,6 +222,19 @@ class GlassScrollEdgeStyle {
       .merge(override);
 }
 
+/// Keeps the soft tail attached to the bar as its visible portion shrinks.
+@internal
+GlassScrollEdgeStyle navigationScrollEdgeStyle(
+  GlassScrollEdgeStyle style,
+  double presence,
+) {
+  if (presence == 1 || style.variant == GlassScrollEdgeVariant.hard) {
+    return style;
+  }
+  final extension = style.extension ?? GlassScrollEdgeStyle.defaultExtension;
+  return style.copyWith(extension: extension * presence);
+}
+
 /// The scroll edge effect of a bar: a progressive blur and partial fade of
 /// whatever is painted beneath this box, strongest at [edge] and dissolving
 /// [GlassScrollEdgeStyle.extension] past the opposite side.

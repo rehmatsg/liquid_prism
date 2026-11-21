@@ -184,10 +184,10 @@ separate scopes, native timings and input guarantees.
 | `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold horizontally. 28 on the Duo rail, or 22 with a subtitle. |
 | `titleAlignment` / `largeTitleAlignment` | Centered inline / leading expanded; automatic follows those defaults |
 | `gutter` / `controlGap` | 16 / 12 |
-| `contentSpacing` | 12 below a standard bar, 0 below the measured Duo title row, 16 in other rail/sidebar layouts |
+| `contentSpacing` | 12 below a standard bar, 0 below a bare Duo title row, 16 below a Duo accessory or in other rail/sidebar layouts |
 | `minimizationBehavior` | `automatic` reveals titled rail bars on reversal and pins horizontal bars. Also accepts `never`, `onScrollDown`, `onScrollUp`. |
 | `minimizationRestoration` | Automatic restores on reversal. Pair `atScrollEdge` with explicit `onScrollDown` for edge restoration. |
-| `minimizationSafeAreaAdjustment` | Automatic follows the bar on a rail and keeps the inset fixed horizontally. `enabled` and `disabled` override the automatic setting. |
+| `minimizationSafeAreaAdjustment` | Automatic moves the pinned clearance with the bar on a rail and keeps it fixed horizontally. `enabled` and `disabled` override this. Scroll extent and caller-owned body padding stay stable. |
 | `minimizationThreshold` | Fitted initial travel 13⅓ points, after large-title collapse |
 | `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; inline capsule matches bar control height (44 top, 48 rail), adapting default vertical insets to content; explicit padding/minimum heights and larger text can grow it; above-avatar capsule at least 38 tall with 14 × 9 padding; leading 22, a circle (`leadingCornerRadius` half its size) as far from the start as from the top and bottom, and 10 gap; regular glass |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |

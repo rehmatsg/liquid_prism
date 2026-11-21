@@ -427,8 +427,9 @@ automatic mode. Use `LiquidPrismSystemChrome.setVerticalBarBehavior` to select
 the system's automatic or disabled vertical-bar behavior.
 
 Automatic minimization hides a titled rail bar as content advances and brings
-the same title back on reversal, including in sheets. Horizontal bars stay
-pinned automatically. `never` pins the bar and lets an in-row large title
+the same title back on reversal, including in sheets. Horizontal bars and
+scaffolds with a custom `header` stay pinned automatically. A custom header's
+compact title appears when the header crosses the bar. `never` pins the bar and lets an in-row large title
 switch to compact type as content advances. Use `onScrollDown` to specify the
 hide direction yourself. Pair it with `atScrollEdge` to return with the content
 top. Automatic rail minimization follows the system's reversal behavior.
@@ -436,14 +437,18 @@ top. Automatic rail minimization follows the system's reversal behavior.
 at the top or when content advances again.
 
 Rail safe-area adjustment follows the bar by default. The folded Duo fixture
-goes from a top content inset of 82 points to 24 when minimized. Horizontal
-bars keep their inset during minimization by default. Use `enabled` or
-`disabled` to set this explicitly.
+goes from 82 points of pinned clearance to 24 when minimized. The leading
+scroll extent stays fixed, so the rows travel with the gesture while the
+pinned clearance adjusts. A caller-owned `body` receives stable top padding
+for the same reason. Horizontal bars keep fixed clearance by default. Use
+`enabled` or `disabled` to choose the pinned clearance behavior explicitly.
 
 A bar that hides on scroll down moves off-screen at full presence. The
 scaffold's top edge shrinks to the status-bar edge where present and grows back
-with the bar on reveal. Rail controls in a scaffold remain fixed and
-accessories stay interactive at the top. A top-docked tab bar follows the
+with the bar on reveal. On the outer Duo display the bar-owned edge disappears
+with the bar. Rail controls in a scaffold remain fixed and accessories stay
+interactive at the top. The Duo keeps 16 points between a top accessory and the
+body by default, which `contentSpacing` can override. A top-docked tab bar follows the
 navigation bar. Other docks remain independent. Minimization is scroll-driven
 and also works with `scrollEdge: false`. Use `header` for custom page content
 that scrolls away below the navigation bar. See [the measurements](navigation_bar_spec.json).

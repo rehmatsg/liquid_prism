@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.20.1
+
+- Keep scroll extent stable while the navigation bar hides or returns. The pinned clearance follows the bar without shifting ordinary rows a second time.
+- Bring the soft edge back with the bar and remove its blur when the bar is fully hidden. Status bars and pinned accessories keep their own edge protection.
+- Keep a custom header's threshold title pinned under automatic minimization. Restore 16 points of body clearance below a top accessory on the Duo.
+
 ## 0.20.0
 
 - Match iPhone Duo navigation title defaults in scaffold and sliver app bars. A rail title uses a 28-point bold face, or 22 points alongside a subtitle. Inline mode uses 17 or 15 points.
