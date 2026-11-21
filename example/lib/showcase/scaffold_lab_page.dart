@@ -5,11 +5,11 @@ import 'widgets.dart';
 import 'sheet_route.dart';
 import 'scaffold_lab_options.dart';
 
-enum _Heading { large, header, inline }
+enum _Heading { automatic, large, inlineLarge, inline, header }
 
 enum _Edge { soft, hard, off }
 
-enum _Scrolling { sticky, away, reveal }
+enum _Scrolling { automatic, sticky, away, reveal }
 
 /// Live scaffold and sliver-app-bar previews with native defaults and
 /// independently resettable style overrides.
@@ -32,9 +32,9 @@ class ScaffoldLabPage extends StatefulWidget {
 class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
   late var _options = widget.initialOptions ?? ScaffoldLabOptions();
   var _tab = 0;
-  var _heading = _Heading.large;
+  var _heading = _Heading.automatic;
   var _edge = _Edge.soft;
-  var _scrolling = _Scrolling.sticky;
+  var _scrolling = _Scrolling.automatic;
   var _accessory = false;
   var _bottomBar = true;
   var _twoCapsules = true;
@@ -121,10 +121,12 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
           children: [
             InsetSection(
               header: 'Heading',
-              footer: 'Sticky keeps the bar visible. Scroll away restores it at the top; reveal restores it when scrolling up. An accessory stays visible in every mode.',
+              footer: 'Automatic follows the bar placement. Sticky keeps the bar visible. Scroll away restores it at the top. Reveal restores it on reversal.',
               children: [
                 _choice<_Heading>('Style', _heading, {
-                  _Heading.large: 'Large title',
+                  _Heading.automatic: 'Automatic',
+                  _Heading.large: 'Large',
+                  _Heading.inlineLarge: 'Inline large',
                   if (!_options.bodyMode &&
                       !_options.sliverAppBar &&
                       _options.scrollDepth == 0)
@@ -132,6 +134,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                   _Heading.inline: 'Inline',
                 }, (v) => _heading = v),
                 _choice<_Scrolling>('Scroll behavior', _scrolling, const {
+                  _Scrolling.automatic: 'Automatic',
                   _Scrolling.sticky: 'Sticky',
                   _Scrolling.away: 'Scroll away',
                   _Scrolling.reveal: 'Reveal',
@@ -186,9 +189,9 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                 _tab = 0;
                 _segment = 0;
                 _refreshed = 0;
-                _heading = _Heading.large;
+                _heading = _Heading.automatic;
                 _edge = _Edge.soft;
-                _scrolling = _Scrolling.sticky;
+                _scrolling = _Scrolling.automatic;
                 _accessory = false;
                 _bottomBar = true;
                 _twoCapsules = true;
@@ -293,12 +296,22 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
             )
           : null,
       navigationBarStyle: _options.navigation(
-        _scrolling == _Scrolling.sticky
-            ? GlassToolbarMinimizationBehavior.never
-            : GlassToolbarMinimizationBehavior.onScrollDown,
+        switch (_scrolling) {
+          _Scrolling.automatic => GlassToolbarMinimizationBehavior.automatic,
+          _Scrolling.sticky => GlassToolbarMinimizationBehavior.never,
+          _Scrolling.away ||
+          _Scrolling.reveal => GlassToolbarMinimizationBehavior.onScrollDown,
+        },
         _scrolling == _Scrolling.away
             ? GlassToolbarMinimizationRestoration.atScrollEdge
             : GlassToolbarMinimizationRestoration.automatic,
+        titleDisplayMode: switch (_heading) {
+          _Heading.automatic => GlassToolbarTitleDisplayMode.automatic,
+          _Heading.large => GlassToolbarTitleDisplayMode.large,
+          _Heading.inlineLarge => GlassToolbarTitleDisplayMode.inlineLarge,
+          _Heading.inline ||
+          _Heading.header => GlassToolbarTitleDisplayMode.inline,
+        },
       ),
       backgroundColor: switch (_options.background) {
         1 =>
@@ -323,7 +336,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
         ),
       },
       subtitle: _subtitle ? const Text('Every page option, live') : null,
-      largeTitle: _heading == _Heading.large
+      largeTitle: (_heading == _Heading.automatic || _heading == _Heading.large)
           ? const Text('Scaffold Lab')
           : null,
       header:

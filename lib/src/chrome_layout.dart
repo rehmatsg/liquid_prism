@@ -60,7 +60,8 @@ enum GlassChromePlacement {
   }
 }
 
-GlassChromePlacement _systemPlacement(
+@internal
+GlassChromePlacement glassSystemChromePlacement(
   EdgeInsets padding,
   GlassSystemChrome? system,
 ) => switch (system) {
@@ -70,6 +71,19 @@ GlassChromePlacement _systemPlacement(
     GlassChromePlacement.leftRail,
   _ => GlassChromePlacement.rightRail,
 };
+
+/// An occlusion touching the top edge in a corner, outside any rail.
+@internal
+Rect? glassTopChromeCorner(Size size, Iterable<Rect> occlusions) {
+  for (final region in occlusions) {
+    final touchesTop = region.top <= 1;
+    final corner = region.left <= 1 || (size.width - region.right).abs() <= 1;
+    if (touchesTop && corner && region.width < size.width / 2) {
+      return region;
+    }
+  }
+  return null;
+}
 
 /// Placement and bar axis published below a [LiquidPrismScaffold].
 @immutable
@@ -343,7 +357,10 @@ class LiquidPrismScaffold extends StatefulWidget {
       padding,
       placement ??
           placementOf(context) ??
-          _systemPlacement(padding, LiquidPrismSystemChrome.of(context)),
+          glassSystemChromePlacement(
+            padding,
+            LiquidPrismSystemChrome.of(context),
+          ),
     );
   }
 
@@ -558,6 +575,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     return false;
   }
 
+  final _sharedTitleKey = GlobalKey();
+  late final _titleMotion = Listenable.merge([_largeFade, _inlineFade]);
   late final _largeFade = RetargetableGlassSpring(vsync: this);
   late final _inlineFade = RetargetableGlassSpring(vsync: this);
   bool _collapsed = false;
@@ -640,7 +659,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
   }) {
     final media = MediaQuery.of(context);
     final resolved =
-        widget.placement ?? _systemPlacement(media.viewPadding, system);
+        widget.placement ??
+        glassSystemChromePlacement(media.viewPadding, system);
     final rail = resolved.isRail;
     final explicitDock = switch (widget.tabBarPlacement) {
       GlassTabBarPlacement.bottom ||
@@ -698,7 +718,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     );
     final corner = rail || widget.sheet
         ? null
-        : _ChromeLayout.topCorner(media.size, occlusions);
+        : glassTopChromeCorner(media.size, occlusions);
     final showTabBar =
         tabBar != null &&
         sidebarTabs == null &&
@@ -756,7 +776,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
               ),
             ],
           );
-    final inlineTitle = principal.isEmpty
+    final suppliedTitle = principal.isEmpty
         ? widget.title
         : LiquidPrismToolbar(
             content: principal,
@@ -823,60 +843,85 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         (LiquidPrismTheme.of(context).navigationBar ??
                 const GlassNavigationBarStyle())
             .merge(widget.navigationBarStyle);
-    // On a vertical rail (iPhone Duo) the controls live in the rail and the
-    // top bar holds only the title, so an automatic bar with an inline title
-    // hides on scroll down and reveals on scroll up, as SwiftUI's does there.
-    // A bar that reveals its title on scroll, one whose `trailing` or
-    // horizontal items stay in the top bar, and a sheet's bar stay put.
-    final navigation =
-        rail &&
-            !widget.sheet &&
-            inlineTitle != null &&
-            widget.trailing == null &&
-            barLeading.isEmpty &&
-            barActions.isEmpty &&
-            widget.largeTitle == null &&
-            widget.header == null &&
-            (merged.minimizationBehavior == null ||
-                merged.minimizationBehavior ==
-                    GlassToolbarMinimizationBehavior.automatic)
-        ? merged.copyWith(
-            minimizationBehavior: GlassToolbarMinimizationBehavior.onScrollDown,
-          )
-        : merged;
-    final titleStyle = TextStyle(
-      fontFamily: 'CupertinoSystemText',
-      fontSize: widget.subtitle == null ? 17 : 15,
-      fontWeight: FontWeight.w600,
-      letterSpacing: widget.subtitle == null ? -.41 : -.23,
-      color: GlassColors.of(context).label,
-    ).merge(navigation.titleStyle);
-    final largeTitleStyle = TextStyle(
-      fontFamily: 'CupertinoSystemDisplay',
-      fontSize: 34,
-      fontWeight: FontWeight.w700,
-      letterSpacing: .38,
-      color: GlassColors.of(context).label,
-    ).merge(navigation.largeTitleStyle);
+    final horizontalDuo =
+        !rail &&
+        (corner != null ||
+            glassSystemChromePlacement(media.viewPadding, system).isRail);
+    final titles = GlassNavigationTitles(
+      title: suppliedTitle,
+      largeTitle: rail && principal.isNotEmpty ? null : widget.largeTitle,
+      style: merged,
+      rail: rail,
+      horizontalDuo:
+          !rail &&
+          (corner != null ||
+              glassSystemChromePlacement(media.viewPadding, system).isRail),
+      customTitle:
+          suppliedTitle is LiquidPrismTitle ||
+          principal.isNotEmpty ||
+          widget.header != null,
+    );
+    final inlineTitle = titles.inRow;
+    final expandedTitle = titles.expanded;
+    final largeInRow = titles.largeInRow != null;
+    final navigation = resolveNavigationMinimization(
+      merged,
+      rail: rail,
+      hasTitle: inlineTitle != null || expandedTitle != null,
+    );
     final colors = GlassColors.of(context);
-    final subtitleStyle = TextStyle(
-      fontSize: 12,
+    final hasSubtitle = widget.subtitle != null;
+    final titleStyle = glassNavigationTitleTypography(
+      large: false,
+      rail: rail,
+      hasSubtitle: hasSubtitle,
+      color: colors.label,
+      override: titles.compactStyle,
+    );
+    final largeTitleStyle = glassNavigationTitleTypography(
+      large: true,
+      rail: rail && largeInRow,
+      hasSubtitle: hasSubtitle,
+      color: colors.label,
+      override: titles.largeStyle,
+    );
+    final subtitleStyle = glassNavigationSubtitleTypography(
+      large: false,
       color: colors.secondaryLabel,
-    ).merge(navigation.subtitleStyle);
-    final largeSubtitleStyle = TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
+      override: navigation.subtitleStyle,
+    );
+    final largeSubtitleStyle = glassNavigationSubtitleTypography(
+      large: true,
       color: colors.secondaryLabel,
-    ).merge(navigation.largeSubtitleStyle);
+      override: navigation.largeSubtitleStyle,
+    );
+    final rowTitleStyle = largeInRow ? largeTitleStyle : titleStyle;
+    final rowSubtitleStyle = largeInRow ? largeSubtitleStyle : subtitleStyle;
+    final nativeDuoRow =
+        (rail || horizontalDuo) &&
+        inlineTitle != null &&
+        inlineTitle is! LiquidPrismTitle;
     final scaler = media.textScaler;
     final titleLine =
-        scaler.scale(titleStyle.fontSize ?? 17) * (titleStyle.height ?? 1.2);
+        scaler.scale(rowTitleStyle.fontSize!) * (rowTitleStyle.height ?? 1.2);
     final barHeight =
         navigation.controlRowHeight ??
-        (rail ? 48.0 : LiquidPrismScaffold.topBarHeight);
+        (nativeDuoRow
+            ? 58.0
+            : rail
+            ? 48.0
+            : LiquidPrismScaffold.topBarHeight);
     final controlRowHeight = inlineTitle == null
         ? barHeight
-        : math.max(barHeight, titleLine + 8);
+        : math.max(
+            barHeight,
+            titleLine +
+                8 +
+                (nativeDuoRow && hasSubtitle
+                    ? scaler.scale(rowSubtitleStyle.fontSize!) *
+                          (rowSubtitleStyle.height ?? 1.2)
+                    : 0),
+          );
     final titleControlHeight =
         glassToolbarStyleFor(
           context,
@@ -911,7 +956,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         immediate: media.disableAnimations || inlineTitle is! LiquidPrismTitle,
       ),
     );
-    final expandedHeight = widget.largeTitle == null
+    final expandedHeight = expandedTitle == null
         ? 0.0
         : navigation.largeTitleExtent ??
               scaler.scale(largeTitleStyle.fontSize ?? 34) *
@@ -922,7 +967,8 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
                       : scaler.scale(largeSubtitleStyle.fontSize ?? 11) * 1.2 +
                             6.13);
     final extent = navigation.revealExtent ?? expandedHeight;
-    _layoutCap = math.max(extent, expandedHeight) + largeTitleLead + 1;
+    final expandedLead = horizontalDuo ? 0.0 : largeTitleLead;
+    _layoutCap = math.max(extent, expandedHeight) + expandedLead + 1;
     _layoutOffset.value = math.min(_scrollOffset.value, _layoutCap);
     final revealExtent =
         GlassScrollEdgeStyle.resolve(
@@ -930,7 +976,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           widget.scrollEdgeStyle,
         ).revealExtent ??
         GlassScrollEdgeStyle.defaultRevealExtent;
-    final swaps = widget.largeTitle != null || widget.header != null;
+    final swaps = expandedTitle != null || widget.header != null;
     final hidesOnScrollDown =
         navigation.minimizationBehavior ==
         GlassToolbarMinimizationBehavior.onScrollDown;
@@ -956,7 +1002,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     final fullEdge =
         widget.accessory != null ||
         inlineTitle != null ||
-        widget.largeTitle != null;
+        expandedTitle != null;
     final compactEdge = _compactEdge(context, media);
     // A hidden bar hands over to the compact edge only where there is one.
     // With no status bar above the content (the iPhone Duo's outer display),
@@ -964,15 +1010,28 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     // top, as native does.
     final compactWhenHidden =
         hidesOnScrollDown && widget.accessory == null && compactEdge.target > 0;
-    _collapseAt = widget.header != null
+    final collapseAt = widget.header != null
         ? (_headerExtent > 0 ? _headerExtent : double.infinity)
-        : widget.largeTitle == null
+        : expandedTitle == null
         ? double.infinity
         : extent;
-    if (!swaps && _collapsed) {
-      _collapsed = false;
-      _largeFade.value = _inlineFade.value = 0;
+    if (_collapseAt != collapseAt) {
+      _collapseAt = collapseAt;
+      _collapsed =
+          _scrollOffset.value > 0 && _scrollOffset.value >= _collapseAt;
+      _largeFade.value = _inlineFade.value = _collapsed ? 1 : 0;
     }
+    final sharedTitle =
+        expandedTitle != null && identical(expandedTitle, inlineTitle);
+    Widget titleSlot(Widget child, {required bool large}) => sharedTitle
+        ? glassNavigationTitleSlot(
+            motion: _titleMotion,
+            visible: () => large != _collapsed,
+            child: child,
+          )
+        : child;
+    Widget titleContent(Widget child) =>
+        sharedTitle ? KeyedSubtree(key: _sharedTitleKey, child: child) : child;
     final titleBlur = LiquidPrismTheme.of(context).transition?.contentBlur ?? 4;
     Widget header(Widget child, TextStyle style, {required bool large}) {
       Widget text = Semantics(
@@ -1039,7 +1098,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
 
     final topBar =
         inlineTitle != null ||
-        widget.largeTitle != null ||
+        expandedTitle != null ||
         (!rail && leading != null) ||
         widget.trailing != null ||
         sidebarTabs != null ||
@@ -1050,7 +1109,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
     // to the pages it hosts, whose scroll it also hears.
     final hasChrome =
         inlineTitle != null ||
-        widget.largeTitle != null ||
+        expandedTitle != null ||
         leading != null ||
         widget.trailing != null ||
         widget.accessory != null ||
@@ -1059,11 +1118,13 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         glassToolbarHasContent(barActions);
     _minimization.configure(
       navigation,
-      collapseExtent: widget.largeTitle == null ? 0 : extent + largeTitleLead,
+      collapseExtent: expandedTitle == null ? 0 : extent + expandedLead,
     );
     // Every action counts, in the bar or on the rail.
     final titleAlignment = glassDefaultTitleAlignment(
-      requested: navigation.titleAlignment,
+      requested: largeInRow && widget.largeTitle != null
+          ? navigation.largeTitleAlignment ?? navigation.titleAlignment
+          : navigation.titleAlignment,
       glassTitle: inlineTitle is LiquidPrismTitle,
       actions:
           glassToolbarItemCount(widget._trailingContent) +
@@ -1094,7 +1155,9 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
         controlRowHeight: controlRowHeight,
         contentSpacing:
             navigation.contentSpacing ??
-            (rail || sidebar || corner != null
+            (nativeDuoRow
+                ? 0
+                : rail || sidebar || corner != null
                 ? 16
                 : LiquidPrismScaffold.topBarClearance),
         titleAlignment: titleAlignment,
@@ -1102,6 +1165,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
           Directionality.of(context),
         ),
         expandedHeight: expandedHeight,
+        expandedLead: expandedLead,
         largeTitleTop: widget.subtitle == null ? 3.67 : 6.67,
         collapseExtent: extent,
         scrollOffset: _layoutOffset,
@@ -1125,7 +1189,7 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             : 0,
         edgeInset: topEdgeInset(
           inlineTitle,
-          bareRows: widget.accessory != null || widget.largeTitle != null,
+          bareRows: widget.accessory != null || expandedTitle != null,
           style: GlassScrollEdgeStyle.resolve(context, widget.scrollEdgeStyle),
         ),
         corner: corner,
@@ -1253,53 +1317,82 @@ class _LiquidPrismScaffoldState extends State<LiquidPrismScaffold>
             if (inlineTitle case final title? when !(scrollsAway && swaps))
               LayoutId(
                 id: _Slot.title,
-                child: header(
-                  glassTitled(
-                    title,
-                    widget.subtitle,
-                    subtitleStyle,
-                    large: false,
-                    controlHeight: titleControlHeight,
-                    alignment: titleAlignment == GlassTitleAlignment.automatic
-                        ? GlassTitleAlignment.center
-                        : titleAlignment,
-                  ),
-                  titleStyle,
-                  large: false,
-                ),
+                child: largeInRow && !minimizes
+                    ? ValueListenableBuilder<double>(
+                        valueListenable: _scrollOffset,
+                        builder: (context, offset, _) =>
+                            glassNavigationPinnedTitle(
+                              title: title,
+                              compact: titles.compact ?? title,
+                              subtitle: widget.subtitle,
+                              largeStyle: largeTitleStyle,
+                              compactStyle: titleStyle,
+                              largeSubtitleStyle: largeSubtitleStyle,
+                              compactSubtitleStyle: subtitleStyle,
+                              alignment: titleAlignment,
+                              collapsed:
+                                  offset >= (navigation.revealExtent ?? 52) &&
+                                  offset > 0,
+                              controlHeight: titleControlHeight,
+                              decorate: (child, style) =>
+                                  header(child, style, large: false),
+                            ),
+                      )
+                    : titleSlot(
+                        header(
+                          glassTitled(
+                            titleContent(title),
+                            widget.subtitle,
+                            rowSubtitleStyle,
+                            large: false,
+                            controlHeight: titleControlHeight,
+                            alignment:
+                                titleAlignment == GlassTitleAlignment.automatic
+                                ? GlassTitleAlignment.center
+                                : titleAlignment,
+                          ),
+                          rowTitleStyle,
+                          large: false,
+                        ),
+                        large: false,
+                      ),
               ),
-            if (widget.largeTitle case final title?)
+            if (expandedTitle case final title?)
               LayoutId(
                 id: _Slot.largeTitle,
-                child: ValueListenableBuilder<double>(
-                  valueListenable: _overscroll,
-                  builder: (context, overscroll, child) => Transform.translate(
-                    offset: Offset(0, overscroll),
-                    child: child,
-                  ),
-                  child: Align(
-                    alignment: glassTitleBoxAlignment(
-                      navigation.largeTitleAlignment ??
-                          GlassTitleAlignment.leading,
-                    ),
-                    child: header(
-                      glassTitled(
-                        title,
-                        widget.subtitle,
-                        largeSubtitleStyle,
-                        large: true,
-                        alignment:
-                            navigation.largeTitleAlignment ??
+                child: titleSlot(
+                  ValueListenableBuilder<double>(
+                    valueListenable: _overscroll,
+                    builder: (context, overscroll, child) =>
+                        Transform.translate(
+                          offset: Offset(0, overscroll),
+                          child: child,
+                        ),
+                    child: Align(
+                      alignment: glassTitleBoxAlignment(
+                        navigation.largeTitleAlignment ??
                             GlassTitleAlignment.leading,
-                        subtitleOffset:
-                            scaler.scale(largeTitleStyle.fontSize ?? 34) *
-                            38.33 /
-                            34,
                       ),
-                      largeTitleStyle,
-                      large: true,
+                      child: header(
+                        glassTitled(
+                          titleContent(title),
+                          widget.subtitle,
+                          largeSubtitleStyle,
+                          large: true,
+                          alignment:
+                              navigation.largeTitleAlignment ??
+                              GlassTitleAlignment.leading,
+                          subtitleOffset:
+                              scaler.scale(largeTitleStyle.fontSize ?? 34) *
+                              38.33 /
+                              34,
+                        ),
+                        largeTitleStyle,
+                        large: true,
+                      ),
                     ),
                   ),
+                  large: true,
                 ),
               ),
             if (widget.accessory case final accessory?)
@@ -1823,6 +1916,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     required this.titleAlignment,
     required this.contentPadding,
     required this.expandedHeight,
+    required this.expandedLead,
     required this.largeTitleTop,
     required this.collapseExtent,
     required this.scrollOffset,
@@ -1899,6 +1993,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final double titleRowHeight,
       controlRowHeight,
       expandedHeight,
+      expandedLead,
       collapseExtent,
       titleGutter,
       largeTitleTop,
@@ -1952,18 +2047,6 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           region.top,
     ];
     return below.isEmpty ? size.height - _railEdge : below.reduce(math.min);
-  }
-
-  /// An occlusion touching the top edge in a corner, outside any rail.
-  static Rect? topCorner(Size size, List<Rect> occlusions) {
-    for (final region in occlusions) {
-      final touchesTop = region.top <= 1;
-      final corner = region.left <= 1 || (size.width - region.right).abs() <= 1;
-      if (touchesTop && corner && region.width < size.width / 2) {
-        return region;
-      }
-    }
-    return null;
   }
 
   static Rect _railColumn(
@@ -2041,7 +2124,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                   shown
         : railRight;
     final barRow = topBar ? titleRowHeight + contentPadding.bottom : 0.0;
-    final lead = expandedHeight > 0 ? largeTitleLead : 0.0;
+    final lead = expandedHeight > 0 ? expandedLead : 0.0;
     final expanded = expandedHeight + lead;
     final collapse = collapseExtent == 0
         ? (scrollOffset.value > 0 ? 1.0 : 0.0)
@@ -2054,7 +2137,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                 barRow +
                 expanded +
                 accessoryHeight +
-                (lead > 0 && accessoryHeight == 0 ? 0 : contentSpacing)
+                (expandedHeight > 0 && accessoryHeight == 0
+                    ? 0
+                    : contentSpacing)
           : top,
     );
     var topDockHeight = 0.0;
@@ -2626,6 +2711,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       titleAlignment != old.titleAlignment ||
       contentPadding != old.contentPadding ||
       expandedHeight != old.expandedHeight ||
+      expandedLead != old.expandedLead ||
       largeTitleTop != old.largeTitleTop ||
       collapseExtent != old.collapseExtent ||
       titleGutter != old.titleGutter ||

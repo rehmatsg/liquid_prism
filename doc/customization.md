@@ -324,15 +324,34 @@ component/kind. A nested non-null hook replaces the outer hook; component false
 silences it. No hook retains native feedback and platform gates. A custom hook
 receives switch/slider feedback on all platforms.
 
-Theme `navigationBar` and scaffold `navigationBarStyle` merge title styles,
-large-title styles, inline/expanded alignment, spacing, collapse timing and toolbar
-minimization field by field. Titles retain explicit child text styles. As measured on iOS 27, the
-large title scrolls with the content; once the scroll passes `revealExtent`
-(its 52-point row) the large title fades over 200 ms with ease-in-out timing;
-the inline title uses separate fitted reveal/hide springs. These animations run
-on time, independently of subsequent scroll movement. Zero
-revealExtent swaps on the first positive scroll offset. The native snap of a
-half-scrolled title on release is not reproduced.
+Theme `navigationBar` and local `navigationBarStyle` merge field by field in
+scaffold and sliver app bars. Explicit text styles on title widgets take
+precedence. The SwiftUI toolbar settings map to these Dart APIs.
+
+| SwiftUI | Liquid Prism |
+| --- | --- |
+| `toolbarTitleDisplayMode` | `GlassNavigationBarStyle.titleDisplayMode` |
+| `toolbarTitleAlignment` | `GlassNavigationBarStyle.titleAlignment` |
+| `toolbarMinimizationBehavior` | `GlassNavigationBarStyle.minimizationBehavior` |
+| `toolbarMinimizationRestoration` | `GlassNavigationBarStyle.minimizationRestoration` |
+| `toolbarMinimizationSafeAreaAdjustment` | `GlassNavigationBarStyle.minimizationSafeAreaAdjustment` |
+| `toolbarVerticalBehavior` | `LiquidPrismSystemChrome.setVerticalBarBehavior` |
+
+For an inline Duo title that comes back only near the top, use:
+
+```dart
+const GlassNavigationBarStyle(
+  titleDisplayMode: GlassToolbarTitleDisplayMode.inline,
+  minimizationBehavior: GlassToolbarMinimizationBehavior.onScrollDown,
+  minimizationRestoration: GlassToolbarMinimizationRestoration.atScrollEdge,
+)
+```
+
+A separate expanded row scrolls with the content. When the scroll passes
+`revealExtent`, the large title fades over 200 ms and the compact title rises
+with its own spring. Zero swaps on the first positive offset. The Duo rail's
+automatic minimization keeps the same title in the control row and restores
+it on reversal.
 
 Tab/toolbar `badgeColor` and `badgeTextStyle` resolve local style > component
 theme > the measured system red and white. Text-style fields merge individually.

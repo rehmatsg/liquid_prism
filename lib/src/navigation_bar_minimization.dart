@@ -7,6 +7,32 @@ import 'package:flutter/widgets.dart';
 import 'glass_transition.dart';
 import 'navigation_bar_style.dart';
 
+/// A vertical system bar reveals its title on reversal by default. An
+/// explicit on-scroll-down behavior enables scroll-edge restoration.
+GlassNavigationBarStyle resolveNavigationMinimization(
+  GlassNavigationBarStyle style, {
+  required bool rail,
+  required bool hasTitle,
+}) {
+  if (!rail) return style;
+  final automatic =
+      style.minimizationBehavior == null ||
+      style.minimizationBehavior == GlassToolbarMinimizationBehavior.automatic;
+  return style.copyWith(
+    minimizationBehavior: automatic && hasTitle
+        ? GlassToolbarMinimizationBehavior.onScrollDown
+        : style.minimizationBehavior,
+    minimizationRestoration: automatic
+        ? GlassToolbarMinimizationRestoration.automatic
+        : style.minimizationRestoration,
+    minimizationSafeAreaAdjustment:
+        style.minimizationSafeAreaAdjustment ==
+            GlassToolbarMinimizationSafeAreaAdjustment.disabled
+        ? GlassToolbarMinimizationSafeAreaAdjustment.disabled
+        : GlassToolbarMinimizationSafeAreaAdjustment.enabled,
+  );
+}
+
 /// Scroll-driven minimization shared by scaffold and sliver navigation chrome.
 class NavigationBarMinimization {
   NavigationBarMinimization({required TickerProvider vsync})
@@ -100,7 +126,7 @@ class NavigationBarMinimization {
         }
         if (_hidden >= _extent) _revealed = false;
       case GlassToolbarMinimizationBehavior.onScrollUp:
-        _hidden = (_hidden - delta).clamp(0.0, _extent);
+        _hidden = pixels == 0 ? 0 : (_hidden - delta).clamp(0.0, _extent);
     }
     _publish();
   }

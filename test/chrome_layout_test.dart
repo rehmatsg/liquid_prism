@@ -1038,6 +1038,7 @@ void main() {
                 textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
                 child: const LiquidPrismScaffold(
                   navigationBarStyle: GlassNavigationBarStyle(
+                    titleDisplayMode: GlassToolbarTitleDisplayMode.inline,
                     contentPadding: EdgeInsetsDirectional.only(start: 20),
                   ),
                   title: Text('Library'),

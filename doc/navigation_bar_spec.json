@@ -88,6 +88,28 @@
       "interpretation": "Large-title replacement fades without a per-title blur. Compact titles have blur filters. This records filter presence, not a recovered radius or algorithm."
     }
   },
+  "iphoneDuo": {
+    "reference": "iOS 27.1 simulator (24A94232), folded portrait, 466 × 678 pt at 3×, default Dynamic Type",
+    "capture": "XCUITest scroll gestures and settled UIKit presentation measurements",
+    "rail": {
+      "automaticLargeAndInlineLargeTitlePoints": 28,
+      "withSubtitleTitleAndSubtitlePoints": [22, 11],
+      "inlineTitlePoints": 17,
+      "inlineWithSubtitleTitleAndSubtitlePoints": [15, 12],
+      "rowTopAndHeightPoints": [24, 58],
+      "automaticVisibleAndHiddenInsetsPoints": [82, 24],
+      "automaticRestoration": "Title returns at the same size on reversal, even with atScrollEdge supplied",
+      "explicitDownAtScrollEdgeRestoration": "Title stays hidden on reversal away from the top",
+      "pinnedLargeToCompactTitlePoints": [28, 17]
+    },
+    "horizontal": {
+      "largeToCompactTitlePoints": [34, 17],
+      "inlineTitlePoints": 17,
+      "inlineLargeUsesControlRow": true,
+      "automaticMinimization": "Pinned",
+      "inlineInsetDuringExplicitMinimizationPoints": [82, 82]
+    }
+  },
   "rendererFits": {
     "inlineRevealSpring": {
       "mass": 1,
@@ -127,9 +149,9 @@
   },
   "limits": [
     "ToolbarTitleAlignment requires iOS 27.2; available simulators run iOS 27.0/27.1. Explicit alignment follows the public API contract, with RTL/layout tests, rather than a runnable 27.2 native comparison.",
-    "Automatic minimization keeps the non-minimizing default. Native searchable toolbarPrincipal integration is not inferred from arbitrary Flutter widgets.",
+    "The 27.0 horizontal reference keeps the non-minimizing default. Native searchable toolbarPrincipal integration is not inferred from arbitrary Flutter widgets.",
     "At-scroll-edge restoration uses the content's top in Flutter. UIKit's overscroll/inset feedback and momentum through that edge are not reproduced exactly.",
-    "SwiftUI inlineLarge was captured as an additional reference; it is not a new implicit title duplication API in this release."
+    "The Duo audit captured settled states on the outer display. Timing and thresholds for same-row title collapse are renderer choices."
   ],
   "documentation": [
     "https://developer.apple.com/documentation/swiftui/view/toolbarminimizationbehavior(_:for:)",

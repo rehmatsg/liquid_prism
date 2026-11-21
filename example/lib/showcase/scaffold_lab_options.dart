@@ -90,8 +90,10 @@ class ScaffoldLabOptions {
   };
   GlassNavigationBarStyle navigation(
     GlassToolbarMinimizationBehavior behavior,
-    GlassToolbarMinimizationRestoration restore,
-  ) => GlassNavigationBarStyle(
+    GlassToolbarMinimizationRestoration restore, {
+    required GlassToolbarTitleDisplayMode titleDisplayMode,
+  }) => GlassNavigationBarStyle(
+    titleDisplayMode: titleDisplayMode,
     titleAlignment: titleAlignment,
     largeTitleAlignment: largeTitleAlignment,
     minimizationBehavior: minimization ?? behavior,

@@ -5,6 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'motion.dart' show GlassSpring;
 import 'title.dart' show GlassTitleStyle, GlassTitleLayout, LiquidPrismTitle;
 
+/// Where a navigation title is displayed, corresponding to SwiftUI's
+/// `ToolbarTitleDisplayMode`.
+enum GlassToolbarTitleDisplayMode { automatic, inline, inlineLarge, large }
+
 enum GlassTitleAlignment { automatic, leading, center, trailing }
 
 enum GlassToolbarMinimizationBehavior {
@@ -31,6 +35,7 @@ enum GlassToolbarMinimizationSafeAreaAdjustment { automatic, enabled, disabled }
 class GlassNavigationBarStyle {
   const GlassNavigationBarStyle({
     this.titleStyle,
+    this.titleDisplayMode,
     this.titleAlignment,
     this.largeTitleAlignment,
     this.minimizationBehavior,
@@ -62,6 +67,10 @@ class GlassNavigationBarStyle {
        assert(minimizationThreshold == null || minimizationThreshold >= 0);
   final TextStyle? titleStyle, largeTitleStyle;
 
+  /// The placement and default typography of the navigation title. Automatic
+  /// adapts to the system rail and to the title widgets supplied by the page.
+  final GlassToolbarTitleDisplayMode? titleDisplayMode;
+
   /// The subtitle under the inline title (12-point regular secondary label)
   /// and under the large title (11-point medium secondary label), measured.
   final TextStyle? subtitleStyle, largeSubtitleStyle;
@@ -83,12 +92,8 @@ class GlassNavigationBarStyle {
   /// Expanded title alignment. Automatic retains the native leading edge.
   final GlassTitleAlignment? largeTitleAlignment;
 
-  /// Automatic retains the captured non-minimizing default, except in a
-  /// scaffold on a vertical rail (iPhone Duo): there a bar with an inline
-  /// title, no `trailing`, large title or header, and outside a sheet
-  /// minimizes on scroll down
-  /// and, unless [minimizationRestoration] says otherwise, returns at the
-  /// scroll edge.
+  /// Automatic reveals titled bars on scroll reversal on a vertical rail.
+  /// Use [GlassToolbarMinimizationBehavior.never] to keep the bar pinned.
   /// Top-bar controls follow the title; rail controls and accessories stay visible.
   final GlassToolbarMinimizationBehavior? minimizationBehavior;
 
@@ -101,9 +106,8 @@ class GlassNavigationBarStyle {
   /// to on-scroll-down minimization and waits until the content reaches its top.
   final GlassToolbarMinimizationRestoration? minimizationRestoration;
 
-  /// Automatic and disabled retain stable body insets as the bar minimizes,
-  /// so content follows scrolling one for one. Enabled opts into insets that
-  /// shrink and grow with the bar.
+  /// Automatic follows the bar on a vertical rail and keeps the inset stable
+  /// on horizontal bars. Enabled and disabled explicitly choose either behavior.
   final GlassToolbarMinimizationSafeAreaAdjustment?
   minimizationSafeAreaAdjustment;
 
@@ -152,6 +156,7 @@ class GlassNavigationBarStyle {
 
   GlassNavigationBarStyle copyWith({
     TextStyle? titleStyle,
+    GlassToolbarTitleDisplayMode? titleDisplayMode,
     GlassTitleAlignment? titleAlignment,
     GlassTitleAlignment? largeTitleAlignment,
     GlassToolbarMinimizationBehavior? minimizationBehavior,
@@ -176,6 +181,7 @@ class GlassNavigationBarStyle {
     GlassTitleStyle? titleCapsule,
   }) => GlassNavigationBarStyle(
     titleStyle: titleStyle ?? this.titleStyle,
+    titleDisplayMode: titleDisplayMode ?? this.titleDisplayMode,
     titleAlignment: titleAlignment ?? this.titleAlignment,
     largeTitleAlignment: largeTitleAlignment ?? this.largeTitleAlignment,
     minimizationBehavior: minimizationBehavior ?? this.minimizationBehavior,
@@ -207,6 +213,7 @@ class GlassNavigationBarStyle {
       ? this
       : GlassNavigationBarStyle(
           titleStyle: titleStyle?.merge(other.titleStyle) ?? other.titleStyle,
+          titleDisplayMode: other.titleDisplayMode ?? titleDisplayMode,
           titleAlignment: other.titleAlignment ?? titleAlignment,
           largeTitleAlignment: other.largeTitleAlignment ?? largeTitleAlignment,
           minimizationBehavior:
@@ -242,6 +249,137 @@ class GlassNavigationBarStyle {
           titleCapsule:
               titleCapsule?.merge(other.titleCapsule) ?? other.titleCapsule,
         );
+}
+
+/// Resolves the native title presentation while retaining the separate widget
+/// slots used by existing callers.
+@internal
+class GlassNavigationTitles {
+  GlassNavigationTitles({
+    required Widget? title,
+    required Widget? largeTitle,
+    required GlassNavigationBarStyle style,
+    required bool rail,
+    required bool horizontalDuo,
+    required bool customTitle,
+  }) {
+    final mode =
+        style.titleDisplayMode ?? GlassToolbarTitleDisplayMode.automatic;
+    final automatic = mode == GlassToolbarTitleDisplayMode.automatic;
+    final preferred = largeTitle ?? title;
+    final usesExpandedRow =
+        mode == GlassToolbarTitleDisplayMode.large && !rail ||
+        automatic &&
+            (rail
+                ? style.largeTitleExtent != null && largeTitle != null
+                : largeTitle != null || horizontalDuo && !customTitle);
+    expanded = usesExpandedRow ? preferred : null;
+    final usesLargeInRow =
+        !usesExpandedRow &&
+        (mode == GlassToolbarTitleDisplayMode.inlineLarge ||
+            rail &&
+                (mode == GlassToolbarTitleDisplayMode.large ||
+                    automatic && (!customTitle || largeTitle != null)));
+    largeInRow = usesLargeInRow ? preferred : null;
+    compact = title ?? (automatic && !rail ? null : largeTitle);
+    compactStyle = style.titleStyle;
+    largeStyle = largeTitle == null
+        ? style.largeTitleStyle?.merge(style.titleStyle) ?? style.titleStyle
+        : style.largeTitleStyle;
+  }
+
+  late final Widget? expanded, largeInRow, compact;
+  late final TextStyle? compactStyle, largeStyle;
+
+  Widget? get inRow => largeInRow ?? compact;
+}
+
+@internal
+TextStyle glassNavigationTitleTypography({
+  required bool large,
+  required bool rail,
+  required bool hasSubtitle,
+  required Color color,
+  TextStyle? override,
+}) => TextStyle(
+  fontFamily: large ? 'CupertinoSystemDisplay' : 'CupertinoSystemText',
+  fontSize: large
+      ? (rail ? (hasSubtitle ? 22 : 28) : 34)
+      : (hasSubtitle ? 15 : 17),
+  fontWeight: large ? FontWeight.w700 : FontWeight.w600,
+  letterSpacing: large ? (rail ? 0 : .38) : (hasSubtitle ? -.23 : -.41),
+  color: color,
+).merge(override);
+
+@internal
+TextStyle glassNavigationSubtitleTypography({
+  required bool large,
+  required Color color,
+  TextStyle? override,
+}) => TextStyle(
+  fontSize: large ? 11 : 12,
+  fontWeight: large ? FontWeight.w500 : null,
+  color: color,
+).merge(override);
+
+/// Mounts a title that supplies both presentations in its active slot only.
+@internal
+Widget glassNavigationTitleSlot({
+  required Listenable motion,
+  required bool Function() visible,
+  required Widget child,
+}) => AnimatedBuilder(
+  animation: motion,
+  builder: (context, child) => visible() ? child! : const SizedBox.shrink(),
+  child: child,
+);
+
+/// Keeps alternate title widgets mounted while a pinned title changes size.
+@internal
+Widget glassNavigationPinnedTitle({
+  required Widget title,
+  required Widget compact,
+  required Widget? subtitle,
+  required TextStyle largeStyle,
+  required TextStyle compactStyle,
+  required TextStyle largeSubtitleStyle,
+  required TextStyle compactSubtitleStyle,
+  required GlassTitleAlignment alignment,
+  required bool collapsed,
+  required double controlHeight,
+  required Widget Function(Widget, TextStyle) decorate,
+}) {
+  final textAlignment = alignment == GlassTitleAlignment.automatic
+      ? GlassTitleAlignment.center
+      : alignment;
+  Widget styled(Widget child, {required bool large}) => decorate(
+    glassTitled(
+      child,
+      large != collapsed ? subtitle : null,
+      large ? largeSubtitleStyle : compactSubtitleStyle,
+      large: false,
+      alignment: textAlignment,
+      controlHeight: controlHeight,
+    ),
+    large ? largeStyle : compactStyle,
+  );
+  if (identical(title, compact)) return styled(title, large: !collapsed);
+  return Stack(
+    alignment: glassTitleBoxAlignment(textAlignment),
+    children: [
+      ExcludeFocus(
+        excluding: collapsed,
+        child: Offstage(offstage: collapsed, child: styled(title, large: true)),
+      ),
+      ExcludeFocus(
+        excluding: !collapsed,
+        child: Offstage(
+          offstage: !collapsed,
+          child: styled(compact, large: false),
+        ),
+      ),
+    ],
+  );
 }
 
 /// A title with an optional subtitle line below it: centred under the inline

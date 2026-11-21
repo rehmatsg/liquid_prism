@@ -90,6 +90,7 @@ export 'src/navigation_bar_style.dart'
     show
         GlassNavigationBarStyle,
         GlassTitleAlignment,
+        GlassToolbarTitleDisplayMode,
         GlassToolbarMinimizationBehavior,
         GlassToolbarMinimizationRestoration,
         GlassToolbarMinimizationSafeAreaAdjustment;

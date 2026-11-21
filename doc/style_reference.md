@@ -179,14 +179,15 @@ separate scopes, native timings and input guarantees.
 | `GlassSegmentedStyle.labelPadding` | Horizontal 10 (measured) / vertical 8, before scale; fit mode only |
 | Tab / toolbar `badgeColor` | System red (measured) |
 | Tab / toolbar `badgeTextStyle` | 12-point medium, white (measured) |
-| `GlassNavigationBarStyle.titleStyle` | 17-point semibold, semantic label |
-| `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold, semantic label |
+| `titleDisplayMode` | `automatic`, `inline`, `inlineLarge`, `large` |
+| `GlassNavigationBarStyle.titleStyle` | Compact 17-point semibold, or 15 with a subtitle. A single title promoted on the Duo rail uses 28-point bold, or 22 with a subtitle. |
+| `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold horizontally. 28 on the Duo rail, or 22 with a subtitle. |
 | `titleAlignment` / `largeTitleAlignment` | Centered inline / leading expanded; automatic follows those defaults |
 | `gutter` / `controlGap` | 16 / 12 |
-| `contentSpacing` | 12 below a standard top bar; 16 in rail/sidebar layouts |
-| `minimizationBehavior` | `automatic` (pinned); `never`, `onScrollDown`, `onScrollUp` |
-| `minimizationRestoration` | `automatic` restores on reversal; `atScrollEdge` returns with the content's top with on-scroll-down |
-| `minimizationSafeAreaAdjustment` | `automatic` / `disabled` keep content insets stable; `enabled` makes them follow the bar |
+| `contentSpacing` | 12 below a standard bar, 0 below the measured Duo title row, 16 in other rail/sidebar layouts |
+| `minimizationBehavior` | `automatic` reveals titled rail bars on reversal and pins horizontal bars. Also accepts `never`, `onScrollDown`, `onScrollUp`. |
+| `minimizationRestoration` | Automatic restores on reversal. Pair `atScrollEdge` with explicit `onScrollDown` for edge restoration. |
+| `minimizationSafeAreaAdjustment` | Automatic follows the bar on a rail and keeps the inset fixed horizontally. `enabled` and `disabled` override the automatic setting. |
 | `minimizationThreshold` | Fitted initial travel 13⅓ points, after large-title collapse |
 | `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; inline capsule matches bar control height (44 top, 48 rail), adapting default vertical insets to content; explicit padding/minimum heights and larger text can grow it; above-avatar capsule at least 38 tall with 14 × 9 padding; leading 22, a circle (`leadingCornerRadius` half its size) as far from the start as from the top and bottom, and 10 gap; regular glass |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
@@ -214,7 +215,7 @@ haptics flags. Scaffold titles resolve `navigationBarStyle` above theme
 | `minimumSize`, `maximumSize` | Native preset minimum / unbounded visual maximum; hit area at least 44 where possible |
 | `GlassToolbarStyle.textStyle` | 17-point semibold text actions; labels measure their width |
 | `GlassNavigationBarStyle.titleAlignment` | Automatic centers the inline title; explicit leading/trailing remain available |
-| `controlRowHeight`, `contentPadding`, `largeTitleExtent` | Native 44 (48 in system rail) / zero / measured typography |
+| `controlRowHeight`, `contentPadding`, `largeTitleExtent` | 44 for standard bars or 58 for the Duo title row / zero / measured typography |
 | `GlassScaffoldStyle.tabBarMargin`, `tabBarMaxWidth`, `tabBarAlignment` | Bottom horizontal 24, native bottom gap; explicit top/side 12 all around / 440 / center |
 | `bottomBarMargin`, `bottomBarMaxWidth`, `bottomBarAlignment` | Native bottom gap or 8 above tabs / unbounded / center |
 
