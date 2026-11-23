@@ -261,6 +261,7 @@ PrismTheme(
 ```
 
 - Resolution order: **local widget `style` > `PrismThemeData` > native default**.
+- Typography: labels and titles use native iOS sizes and weights in your app's font. A custom `ThemeData.fontFamily` or Cupertino text theme font is picked up automatically; set `PrismThemeData.textStyle` to choose the font, size or weight for every Prism label, or a component's `textStyle` for one widget.
 - Use `PrismColors.of(context)` for the adaptive light/dark semantic palette.
 - Low-level building blocks (`PrismOptics`, `PrismLensStyle`, `PrismPressable`, `PrismSelection`, `PrismEdgeBlur`, `PrismEdgeFade`, `PrismPresence`, `PrismSystemChrome`, `PrismTabReselection`) live in `package:liquid_prism/primitives.dart`.
 

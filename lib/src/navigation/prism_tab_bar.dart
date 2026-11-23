@@ -26,6 +26,7 @@ import 'package:liquid_prism/src/rendering/surface.dart';
 import 'package:liquid_prism/src/rendering/tab_content_lens.dart';
 import 'package:liquid_prism/src/theme/foreground.dart';
 import 'package:liquid_prism/src/theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 /// A destination with a label, icons, and optional badge.
 @immutable
@@ -631,9 +632,9 @@ class _PrismTabBarState extends State<PrismTabBar>
         style.labelBehavior ??
         (vertical ? PrismTabLabelBehavior.never : PrismTabLabelBehavior.always);
     final iconSize = style.iconSize ?? 25;
-    final textStyle = const TextStyle(
-      fontSize: 10,
-      height: 1.2,
+    final textStyle = prismTextStyle(
+      context,
+      const TextStyle(fontSize: 10, height: 1.2),
     ).merge(style.labelStyle);
     final textHeight =
         MediaQuery.textScalerOf(context).scale(textStyle.fontSize ?? 10) *
@@ -652,8 +653,8 @@ class _PrismTabBarState extends State<PrismTabBar>
         style.selectionShape ?? lensStyle.shape ?? PrismShape.capsule;
     var contentWidth = iconSize;
     if (labels != PrismTabLabelBehavior.never) {
-      final effectiveStyle = DefaultTextStyle.of(context).style.merge(
-        textStyle.copyWith(fontWeight: textStyle.fontWeight ?? FontWeight.w500),
+      final effectiveStyle = textStyle.copyWith(
+        fontWeight: textStyle.fontWeight ?? FontWeight.w500,
       );
       final painter = TextPainter(
         textDirection: Directionality.of(context),

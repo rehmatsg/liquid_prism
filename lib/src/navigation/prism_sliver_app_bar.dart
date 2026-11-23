@@ -132,6 +132,7 @@ class PrismSliverAppBar extends StatelessWidget {
     );
     final colors = PrismColors.of(context);
     final titleStyle = prismNavigationTitleTypography(
+      context,
       large: false,
       rail: rail,
       hasSubtitle: subtitle != null,
@@ -139,6 +140,7 @@ class PrismSliverAppBar extends StatelessWidget {
       override: titles.compactStyle,
     );
     final largeTitleStyle = prismNavigationTitleTypography(
+      context,
       large: true,
       rail: rail && largeInRow,
       hasSubtitle: subtitle != null,
@@ -177,11 +179,13 @@ class PrismSliverAppBar extends StatelessWidget {
             ],
           );
     final subtitleStyle = prismNavigationSubtitleTypography(
+      context,
       large: false,
       color: colors.secondaryLabel,
       override: navigation.subtitleStyle,
     );
     final largeSubtitleStyle = prismNavigationSubtitleTypography(
+      context,
       large: true,
       color: colors.secondaryLabel,
       override: navigation.largeSubtitleStyle,

@@ -30,6 +30,34 @@ See [all style fields and defaults](style_reference.md),
 [customization](customization.md) for precedence and [motion/lenses](motion_and_lenses.md)
 for the advanced controls. Search typography belongs in `PrismSearchStyle.textStyle`.
 
+### Typography
+
+Every Prism label and title resolves its text style in the same order: native
+iOS metrics, then the app font, then `PrismThemeData.textStyle`, then the
+component style's text style, then the local `style`.
+
+- The app font is the family from `ThemeData.textTheme.bodyMedium` under a
+  Material theme, or from `CupertinoThemeData.textTheme.textStyle` otherwise.
+  The system San Francisco families leave the native faces untouched.
+- Labels do not inherit the ambient `DefaultTextStyle`, so they render correctly
+  without a `Material` ancestor.
+- Sizes and weights stay native unless a theme or style sets them.
+
+```dart
+PrismTheme(
+  data: const PrismThemeData(
+    textStyle: TextStyle(fontFamily: 'Inter'),
+    button: PrismButtonStyle(
+      textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    ),
+  ),
+  child: app,
+)
+```
+
+On a prominent button, a local `PrismButtonStyle.tintColor` wins over
+`destructive`, and `destructive` wins over a tint set in the theme.
+
 ## Surfaces
 
 ```dart

@@ -46,7 +46,7 @@ refracted foreground. Generic optical dispersion is a separate setting.
 | `glass`, `optics`, `blur`, `motion`, `shape` | Component overrides of surface/theme settings |
 | `padding` | Standard/menu: horizontal 20, vertical 15, matching the native large button's 50.3-point height with a 17-point label; icon: 12 all sides |
 | `minimumSize` | Standard/menu: no added minimum; icon: 48×48 |
-| `textStyle` | 17-point regular, merged with surrounding text style |
+| `textStyle` | 17-point regular in the app font, merged over `PrismThemeData.textStyle` |
 | `iconSize` | Ambient icon size |
 | `foregroundColor` | Semantic tint; prominent defaults white |
 | `tintColor` | Material tint override; prominent uses the theme accent by default |

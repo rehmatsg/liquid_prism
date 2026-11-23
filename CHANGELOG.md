@@ -14,6 +14,9 @@
 ### Fixes & Improvements
 
 - Implement `operator ==` and `hashCode` on `PrismThemeData` and every immutable style, optics, motion, badge, tab, toolbar, and menu data class, fixing spurious `PrismTheme` descendant rebuilds.
+- Resolve every label and title through one typography chain: native metrics, the app font, `PrismThemeData.textStyle`, the component text style, then the local style. Buttons, segments and tabs no longer inherit the ambient `DefaultTextStyle`, so they render correctly without a `Material` ancestor, and toolbar labels, titles, subtitles, search text, sidebar rows and badges now follow a custom app font.
+- Add `PrismThemeData.textStyle` as the shared base for all Prism typography.
+- Keep destructive prominent buttons red when the theme sets `PrismButtonStyle.tintColor`; a local tint still wins.
 - Reorganize `lib/src/` and `test/` into domain modules (`core`, `theme`, `rendering`, `controls`, `navigation`, `menu`) and move research probes, specs, and benchmarks into `research/`.
 - Enable strict static analysis (`strict-casts`, `strict-inference`, `strict-raw-types`, `--fatal-infos`) across both the package and `example/`.
 - Upgrade CI to run iOS SwiftPM unit tests, CocoaPods podspec validation, and Conventional Commit PR checks, and automate releases with Release Please.

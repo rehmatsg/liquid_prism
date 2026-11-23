@@ -7,6 +7,7 @@ import 'package:liquid_prism/src/core/prism_badge.dart';
 import 'package:liquid_prism/src/menu/menu.dart';
 import 'package:liquid_prism/src/navigation/prism_toolbar_style.dart';
 import 'package:liquid_prism/src/theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 /// Scaffold region occupied by toolbar content.
 enum PrismToolbarPlacement {
@@ -281,9 +282,12 @@ List<PrismToolbarContent> prismToolbarAt(
 ];
 
 @internal
-TextStyle prismToolbarTextStyle(PrismToolbarStyle style) => const TextStyle(
-  fontSize: 17,
-  fontWeight: FontWeight.w600,
+TextStyle prismToolbarTextStyle(
+  BuildContext context,
+  PrismToolbarStyle style,
+) => prismTextStyle(
+  context,
+  const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
 ).merge(style.textStyle);
 
 @internal
@@ -301,7 +305,10 @@ double prismToolbarItemExtent(
     return lone ? math.max<double>(height - inset * 2, 0) : 38;
   }
   final painter = TextPainter(
-    text: TextSpan(text: item.label, style: prismToolbarTextStyle(style)),
+    text: TextSpan(
+      text: item.label,
+      style: prismToolbarTextStyle(context, style),
+    ),
     textDirection: Directionality.of(context),
     textScaler: MediaQuery.textScalerOf(context),
     maxLines: 1,

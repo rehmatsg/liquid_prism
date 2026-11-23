@@ -921,8 +921,10 @@ class _PrismToolbarGroupState extends State<_ToolbarCapsule>
                             child:
                                 item.icon ??
                                 DefaultTextStyle(
-                                  style: prismToolbarTextStyle(appearance)
-                                      .copyWith(color: color),
+                                  style: prismToolbarTextStyle(
+                                    context,
+                                    appearance,
+                                  ).copyWith(color: color),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   child: Text(item.label),

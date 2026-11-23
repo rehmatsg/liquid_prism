@@ -672,6 +672,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
     final colors = PrismColors.of(context);
     final hasSubtitle = widget.subtitle != null;
     final titleStyle = prismNavigationTitleTypography(
+      context,
       large: false,
       rail: rail,
       hasSubtitle: hasSubtitle,
@@ -679,6 +680,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
       override: titles.compactStyle,
     );
     final largeTitleStyle = prismNavigationTitleTypography(
+      context,
       large: true,
       rail: rail && largeInRow,
       hasSubtitle: hasSubtitle,
@@ -686,11 +688,13 @@ class _PrismScaffoldState extends State<PrismScaffold>
       override: titles.largeStyle,
     );
     final subtitleStyle = prismNavigationSubtitleTypography(
+      context,
       large: false,
       color: colors.secondaryLabel,
       override: navigation.subtitleStyle,
     );
     final largeSubtitleStyle = prismNavigationSubtitleTypography(
+      context,
       large: true,
       color: colors.secondaryLabel,
       override: navigation.largeSubtitleStyle,

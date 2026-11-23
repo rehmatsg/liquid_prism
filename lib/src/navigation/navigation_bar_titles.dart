@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import 'package:liquid_prism/src/navigation/prism_navigation_bar_style.dart';
 import 'package:liquid_prism/src/navigation/prism_title.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 @internal
 class PrismNavigationTitles {
@@ -49,31 +50,39 @@ class PrismNavigationTitles {
 }
 
 @internal
-TextStyle prismNavigationTitleTypography({
+TextStyle prismNavigationTitleTypography(
+  BuildContext context, {
   required bool large,
   required bool rail,
   required bool hasSubtitle,
   required Color color,
   TextStyle? override,
-}) => TextStyle(
-  fontFamily: large ? 'CupertinoSystemDisplay' : 'CupertinoSystemText',
-  fontSize: large
-      ? (rail ? (hasSubtitle ? 22 : 28) : 34)
-      : (hasSubtitle ? 15 : 17),
-  fontWeight: large ? FontWeight.w700 : FontWeight.w600,
-  letterSpacing: large ? (rail ? 0 : .38) : (hasSubtitle ? -.23 : -.41),
-  color: color,
+}) => prismTextStyle(
+  context,
+  TextStyle(
+    fontFamily: large ? 'CupertinoSystemDisplay' : 'CupertinoSystemText',
+    fontSize: large
+        ? (rail ? (hasSubtitle ? 22 : 28) : 34)
+        : (hasSubtitle ? 15 : 17),
+    fontWeight: large ? FontWeight.w700 : FontWeight.w600,
+    letterSpacing: large ? (rail ? 0 : .38) : (hasSubtitle ? -.23 : -.41),
+    color: color,
+  ),
 ).merge(override);
 
 @internal
-TextStyle prismNavigationSubtitleTypography({
+TextStyle prismNavigationSubtitleTypography(
+  BuildContext context, {
   required bool large,
   required Color color,
   TextStyle? override,
-}) => TextStyle(
-  fontSize: large ? 11 : 12,
-  fontWeight: large ? FontWeight.w500 : null,
-  color: color,
+}) => prismTextStyle(
+  context,
+  TextStyle(
+    fontSize: large ? 11 : 12,
+    fontWeight: large ? FontWeight.w500 : null,
+    color: color,
+  ),
 ).merge(override);
 
 @internal

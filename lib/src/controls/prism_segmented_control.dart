@@ -9,6 +9,7 @@ import 'package:liquid_prism/src/core/prism_lens_style.dart';
 import 'package:liquid_prism/src/core/prism_motion.dart';
 import 'package:liquid_prism/src/rendering/tab_content_lens.dart';
 import 'package:liquid_prism/src/theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 /// A parent-controlled segmented selection with a sliding glass lens.
 class PrismSegmentedControl<T extends Object> extends StatelessWidget {
@@ -89,12 +90,10 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
       var widest = 0.0;
       var tallest = 0.0;
       for (final child in children.values) {
-        final base = DefaultTextStyle.of(context).style.merge(
-          TextStyle(
-            fontSize: 13 * scale,
-            fontWeight: FontWeight.w500,
-          ).merge(appearance.labelStyle),
-        );
+        final base = prismTextStyle(
+          context,
+          TextStyle(fontSize: 13 * scale, fontWeight: FontWeight.w500),
+        ).merge(appearance.labelStyle);
         final span = switch (child) {
           Text(:final data, :final textSpan, :final style) => TextSpan(
             text: data,
@@ -286,12 +285,15 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
                                     child: Center(
                                       child: DefaultTextStyle.merge(
                                         style:
-                                            TextStyle(
-                                                  fontSize: 13 * scale,
-                                                  fontWeight:
-                                                      i == visualSelection
-                                                      ? FontWeight.w500
-                                                      : FontWeight.w400,
+                                            prismTextStyle(
+                                                  context,
+                                                  TextStyle(
+                                                    fontSize: 13 * scale,
+                                                    fontWeight:
+                                                        i == visualSelection
+                                                        ? FontWeight.w500
+                                                        : FontWeight.w400,
+                                                  ),
                                                 )
                                                 .merge(appearance.labelStyle)
                                                 .copyWith(

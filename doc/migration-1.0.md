@@ -78,6 +78,12 @@ All `LiquidMenu*` types and unprefixed menu enums are now `Prism*`:
 - `MenuElementState`, `MenuElementSize`, `SymbolWeight`, `SymbolScale`, `SymbolRenderingMode` -> `PrismMenuElementState`, `PrismMenuElementSize`, `PrismSymbolWeight`, `PrismSymbolScale`, `PrismSymbolRenderingMode`
 - `LiquidMenuElement`, `LiquidMenuPointAnchor`, `LiquidMenuRectAnchor`, `LiquidMenuSfSymbol`, `LiquidMenuImage`, `LiquidMenuPresented`, `LiquidMenuDismissed`, `LiquidMenuActionEvent`, `LiquidMenuTrigger`, `LiquidMenuAnchorMode` -> the same names with `LiquidMenu` replaced by `PrismMenu`
 
+## Typography
+
+- Button, segmented control and tab labels no longer inherit the ambient `DefaultTextStyle`. To style them, set `PrismThemeData.textStyle`, the component style's text style, or the local `style`.
+- All labels and titles now adopt a custom app font from the Material or Cupertino theme. Set `PrismThemeData.textStyle` to pin a different one.
+- A `PrismButtonStyle.tintColor` set in the theme no longer recolors destructive buttons.
+
 ## Equality and merging
 
 - Menu elements, icons, anchors and events, and `PrismToolbarItem`, `PrismToolbarGroup` and `PrismToolbarSpacer`, now compare by value as well. All `PrismMenuDivider` instances are equal, and comparing a `PrismMenuImage` compares its bytes.

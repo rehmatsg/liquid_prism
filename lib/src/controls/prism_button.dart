@@ -12,6 +12,7 @@ import 'package:liquid_prism/src/menu/menus.dart';
 import 'package:liquid_prism/src/rendering/recipe.dart';
 import 'package:liquid_prism/src/rendering/surface.dart';
 import 'package:liquid_prism/src/theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 export 'prism_button_style.dart' show PrismButtonVariant;
 
@@ -272,8 +273,10 @@ class _PrismButtonState extends State<PrismButton> {
     final themedForeground =
         theme.button?.foregroundColor ?? theme.button?.textStyle?.color;
     final base = appearance.glass ?? theme.glass ?? PrismGlass.regular;
-    final material = appearance.tintColor != null
-        ? base.tint(appearance.tintColor)
+    final themedTint = widget.destructive ? null : theme.button?.tintColor;
+    final tintColor = local?.tintColor ?? themedTint;
+    final material = tintColor != null
+        ? base.tint(tintColor)
         : prominent && base.tintColor == null
         ? base.tint(widget.destructive ? colors.red : tint)
         : base;
@@ -347,7 +350,7 @@ class _PrismButtonState extends State<PrismButton> {
               disabledProminent:
                   !enabled &&
                   prominent &&
-                  appearance.tintColor == null &&
+                  tintColor == null &&
                   base.tintColor == null,
               child: Padding(
                 padding:
@@ -357,9 +360,12 @@ class _PrismButtonState extends State<PrismButton> {
                   heightFactor: 1,
                   alignment: alignment,
                   child: DefaultTextStyle.merge(
-                    style: TextStyle(
-                      fontSize: metrics.fontSize,
-                      fontWeight: FontWeight.w400,
+                    style: prismTextStyle(
+                      context,
+                      TextStyle(
+                        fontSize: metrics.fontSize,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ).merge(appearance.textStyle).copyWith(color: foreground),
                     child: IconTheme.merge(
                       data: IconThemeData(color: foreground, size: iconSize),

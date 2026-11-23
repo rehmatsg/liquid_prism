@@ -29,6 +29,7 @@ class PrismThemeData {
     this.materialBrightness,
     this.tint,
     this.foregroundColor,
+    this.textStyle,
     this.glass,
     this.optics,
     this.blur,
@@ -77,6 +78,9 @@ class PrismThemeData {
 
   /// Literal accent foreground color for controls and selected tabs.
   final Color? foregroundColor;
+
+  /// Base typography merged under every Prism label and title style.
+  final TextStyle? textStyle;
 
   /// Default glass material recipe.
   final PrismGlass? glass;
@@ -148,6 +152,7 @@ class PrismThemeData {
     Brightness? materialBrightness,
     Color? tint,
     Color? foregroundColor,
+    TextStyle? textStyle,
     PrismGlass? glass,
     PrismOptics? optics,
     double? blur,
@@ -175,6 +180,7 @@ class PrismThemeData {
     materialBrightness: materialBrightness ?? this.materialBrightness,
     tint: tint ?? this.tint,
     foregroundColor: foregroundColor ?? this.foregroundColor,
+    textStyle: textStyle ?? this.textStyle,
     glass: glass ?? this.glass,
     optics: optics ?? this.optics,
     blur: blur ?? this.blur,
@@ -205,6 +211,7 @@ class PrismThemeData {
     materialBrightness: other.materialBrightness ?? materialBrightness,
     tint: other.tint ?? tint,
     foregroundColor: other.foregroundColor ?? foregroundColor,
+    textStyle: textStyle?.merge(other.textStyle) ?? other.textStyle,
     glass: other.glass ?? glass,
     optics: other.optics ?? optics,
     blur: other.blur ?? blur,
@@ -269,6 +276,7 @@ class PrismThemeData {
           other.materialBrightness == materialBrightness &&
           other.tint == tint &&
           other.foregroundColor == foregroundColor &&
+          other.textStyle == textStyle &&
           other.glass == glass &&
           other.optics == optics &&
           other.blur == blur &&
@@ -298,6 +306,7 @@ class PrismThemeData {
     materialBrightness,
     tint,
     foregroundColor,
+    textStyle,
     glass,
     optics,
     blur,

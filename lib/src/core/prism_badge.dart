@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:liquid_prism/src/core/prism_colors.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 /// Badge indicator displayed on a tab or toolbar item.
 @immutable
@@ -108,11 +109,14 @@ class PrismBadgeView extends StatelessWidget {
                   text,
                   maxLines: 1,
                   softWrap: false,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    height: 14.33 / 12,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFFFFFFF),
+                  style: prismTextStyle(
+                    context,
+                    const TextStyle(
+                      fontSize: 12,
+                      height: 14.33 / 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFFFFFFF),
+                    ),
                   ).merge(textStyle),
                 ),
         ),

@@ -12,6 +12,7 @@ import 'package:liquid_prism/src/rendering/chrome_material.dart';
 import 'package:liquid_prism/src/rendering/prism_transition.dart';
 import 'package:liquid_prism/src/rendering/recipe.dart';
 import 'package:liquid_prism/src/theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 /// Wraps the search capsule without remounting the editor.
 typedef PrismSearchFieldBuilder = Widget Function(
@@ -269,9 +270,12 @@ class _PrismSearchFieldState extends State<PrismSearchField>
   Widget build(BuildContext context) {
     final colors = PrismTheme.colorsOf(context);
     final appearance = _appearance;
-    final style = TextStyle(
-      fontSize: 17,
-      color: widget.enabled ? colors.label : colors.disabledLabel,
+    final style = prismTextStyle(
+      context,
+      TextStyle(
+        fontSize: 17,
+        color: widget.enabled ? colors.label : colors.disabledLabel,
+      ),
     ).merge(appearance.textStyle);
     final height = math.max(
       appearance.height ?? 48.0,

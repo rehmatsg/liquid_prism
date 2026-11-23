@@ -10,6 +10,7 @@ import 'package:liquid_prism/src/core/prism_glass.dart';
 import 'package:liquid_prism/src/core/prism_haptics.dart';
 import 'package:liquid_prism/src/navigation/prism_tab_bar.dart';
 import 'package:liquid_prism/src/theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/typography.dart';
 
 /// Preferred floating dock or sidebar placement for scaffold tabs.
 enum PrismTabBarPlacement {
@@ -268,14 +269,17 @@ class PrismSidebar extends StatelessWidget {
                         tab.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: selected
-                              ? FontWeight.w500
-                              : FontWeight.w400,
-                          color: onSelected == null
-                              ? colors.disabledLabel
-                              : colors.label,
+                        style: prismTextStyle(
+                          context,
+                          TextStyle(
+                            fontSize: 17,
+                            fontWeight: selected
+                                ? FontWeight.w500
+                                : FontWeight.w400,
+                            color: onSelected == null
+                                ? colors.disabledLabel
+                                : colors.label,
+                          ),
                         ),
                       ),
                     ),
