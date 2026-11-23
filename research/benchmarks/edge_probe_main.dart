@@ -5,14 +5,14 @@ import 'dart:io';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-/// Flutter twin of `tool/native_edge_sampling_probe`: the same black/white
-/// band scenes, fixed in screen coordinates, under the scaffold's soft scroll
-/// edge. Steps through every scene and hands each one to
-/// `tool/native_edge_sampling_probe/run_flutter_ios.sh` through files in the
-/// app's Documents/edge_probe folder (`current` <-> `ack`).
+/// Flutter twin of `research/probes/native_edge_sampling_probe`: the same
+/// black/white band scenes, fixed in screen coordinates, under the scaffold's
+/// soft scroll edge. Steps through every scene and hands each one to
+/// `research/probes/native_edge_sampling_probe/run_flutter_ios.sh` through
+/// files in the app's Documents/edge_probe folder (`current` <-> `ack`).
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(
     const CupertinoApp(
       debugShowCheckedModeBanner: false,
@@ -173,16 +173,16 @@ class _ProbeState extends State<_Probe> {
   Widget build(BuildContext context) {
     final scene = _scenes[_index];
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final style = GlassScrollEdgeStyle(
-      variant: GlassScrollEdgeVariant.soft,
+    final style = PrismScrollEdgeStyle(
+      variant: PrismScrollEdgeVariant.soft,
       haze: scene.style == 'nohaze' ? 0 : null,
     );
     // The effect boxes match native's strips on the folded iPhone Duo (top
     // 120 pt, bottom 108.3 pt); the effect reaches defaultExtension past them.
-    const reach = GlassScrollEdgeStyle.defaultExtension;
+    const reach = PrismScrollEdgeStyle.defaultExtension;
     const white = Color(0xFFFFFFFF);
     final on = scene.style != 'off';
-    return LiquidPrismTheme(
+    return PrismTheme(
       brightness: Brightness.light,
       child: ColoredBox(
         color: white,
@@ -200,11 +200,7 @@ class _ProbeState extends State<_Probe> {
                 left: 0,
                 right: 0,
                 height: 120 - reach,
-                child: LiquidPrismScrollEdge(
-                  progress: 1,
-                  color: white,
-                  style: style,
-                ),
+                child: PrismScrollEdge(progress: 1, color: white, style: style),
               ),
             if (on)
               Positioned(
@@ -212,8 +208,8 @@ class _ProbeState extends State<_Probe> {
                 left: 0,
                 right: 0,
                 height: 108.33 - reach,
-                child: LiquidPrismScrollEdge(
-                  edge: GlassEdge.bottom,
+                child: PrismScrollEdge(
+                  edge: PrismEdge.bottom,
                   progress: 1,
                   color: white,
                   style: style,

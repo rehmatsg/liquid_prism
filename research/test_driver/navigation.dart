@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:liquid_prism/liquid_prism.dart';
-import 'package:liquid_prism/src/glass_transition.dart'
-    show GlassContentPresence;
+import 'package:liquid_prism/src/rendering/prism_transition.dart'
+    show PrismContentPresence;
 
 Future<void> main() async {
   final key = GlobalKey<NavigationFixtureState>();
@@ -52,7 +52,7 @@ Future<void> main() async {
       });
     },
   );
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(NavigationFixture(key: key));
 }
 
@@ -71,11 +71,10 @@ class NavigationFixtureState extends State<NavigationFixture> {
       rtl = false,
       fixedInsets = false;
   double textScale = 1;
-  GlassToolbarMinimizationBehavior behavior =
-      GlassToolbarMinimizationBehavior.never;
-  GlassToolbarMinimizationRestoration restoration =
-      GlassToolbarMinimizationRestoration.automatic;
-  GlassTitleAlignment alignment = GlassTitleAlignment.center;
+  PrismMinimizationBehavior behavior = PrismMinimizationBehavior.never;
+  PrismMinimizationRestoration restoration =
+      PrismMinimizationRestoration.automatic;
+  PrismTitleAlignment alignment = PrismTitleAlignment.center;
   int taps = 0, revision = 0;
 
   void configure(Map<String, dynamic> request) {
@@ -86,13 +85,13 @@ class NavigationFixtureState extends State<NavigationFixture> {
       rtl = request['rtl'] as bool? ?? false;
       fixedInsets = request['fixedInsets'] as bool? ?? false;
       textScale = (request['textScale'] as num?)?.toDouble() ?? 1;
-      behavior = GlassToolbarMinimizationBehavior.values.byName(
+      behavior = PrismMinimizationBehavior.values.byName(
         request['behavior'] as String? ?? 'never',
       );
-      restoration = GlassToolbarMinimizationRestoration.values.byName(
+      restoration = PrismMinimizationRestoration.values.byName(
         request['restoration'] as String? ?? 'automatic',
       );
-      alignment = GlassTitleAlignment.values.byName(
+      alignment = PrismTitleAlignment.values.byName(
         request['alignment'] as String? ?? 'center',
       );
       revision++;
@@ -110,7 +109,7 @@ class NavigationFixtureState extends State<NavigationFixture> {
         Offset.zero & box.size,
       );
       final presence = context
-          .findAncestorWidgetOfExactType<GlassContentPresence>();
+          .findAncestorWidgetOfExactType<PrismContentPresence>();
       return {
         'frame': [rect.left, rect.top, rect.width, rect.height],
         'opacity': presence?.presence.clamp(0.0, 1.0) ?? 1,
@@ -139,7 +138,7 @@ class NavigationFixtureState extends State<NavigationFixture> {
     ),
     home: Builder(
       builder: (context) {
-        final style = GlassNavigationBarStyle(
+        final style = PrismNavigationBarStyle(
           titleStyle: const TextStyle(
             fontFamily: 'CupertinoSystemText',
             letterSpacing: -.41,
@@ -151,19 +150,19 @@ class NavigationFixtureState extends State<NavigationFixture> {
           titleAlignment: alignment,
           minimizationBehavior: behavior,
           minimizationRestoration: restoration,
-          minimizationSafeAreaAdjustment: fixedInsets
-              ? GlassToolbarMinimizationSafeAreaAdjustment.disabled
-              : GlassToolbarMinimizationSafeAreaAdjustment.automatic,
+          minimizationSafeArea: fixedInsets
+              ? PrismMinimizationSafeArea.disabled
+              : PrismMinimizationSafeArea.automatic,
         );
         final title = Text('Library', key: inlineKey);
         final largeTitle = large ? Text('Library', key: largeKey) : null;
-        final back = LiquidPrismBackButton(
+        final back = PrismBackButton(
           key: backKey,
           icon: const Icon(CupertinoIcons.chevron_left),
           onPressed: () => taps++,
         );
         final toolbar = [
-          GlassToolbarItem(
+          PrismToolbarItem(
             icon: const Icon(CupertinoIcons.ellipsis),
             label: 'More',
             onPressed: () => taps++,
@@ -199,7 +198,7 @@ class NavigationFixtureState extends State<NavigationFixture> {
                     ? CustomScrollView(
                         controller: scroll,
                         slivers: [
-                          LiquidPrismSliverAppBar(
+                          PrismSliverAppBar(
                             title: title,
                             largeTitle: largeTitle,
                             leading: back,
@@ -209,7 +208,7 @@ class NavigationFixtureState extends State<NavigationFixture> {
                           rows,
                         ],
                       )
-                    : LiquidPrismScaffold(
+                    : PrismScaffold(
                         title: title,
                         largeTitle: largeTitle,
                         leading: back,

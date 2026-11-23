@@ -6,7 +6,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 /// group below so a sliver app bar's capsules share the effect's captures.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(
     const CupertinoApp(
       debugShowCheckedModeBanner: false,
@@ -45,23 +45,23 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
     final brightness = _dark ? Brightness.dark : Brightness.light;
     return CupertinoTheme(
       data: CupertinoThemeData(brightness: brightness),
-      child: LiquidPrismTheme(
+      child: PrismTheme(
         brightness: brightness,
         child: Builder(
           builder: (context) {
-            final colors = GlassColors.of(context);
+            final colors = PrismColors.of(context);
             final toolbar = [
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.moon_stars),
                 label: 'Appearance',
                 onPressed: () => setState(() => _dark = !_dark),
               ),
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.rectangle_stack),
                 label: _sliver ? 'Scaffold bar' : 'Sliver bar',
                 onPressed: () => setState(() => _sliver = !_sliver),
               ),
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: Icon(
                   _hard
                       ? CupertinoIcons.rectangle_compress_vertical
@@ -71,10 +71,10 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                 onPressed: () => setState(() => _hard = !_hard),
               ),
             ];
-            final edgeStyle = GlassScrollEdgeStyle(
+            final edgeStyle = PrismScrollEdgeStyle(
               variant: _hard
-                  ? GlassScrollEdgeVariant.hard
-                  : GlassScrollEdgeVariant.soft,
+                  ? PrismScrollEdgeVariant.hard
+                  : PrismScrollEdgeVariant.soft,
             );
             final content = Builder(
               builder: (context) => _Rows(
@@ -94,7 +94,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                       body: content,
                       controller: _scroll,
                     )
-                  : LiquidPrismScaffold(
+                  : PrismScaffold(
                       backgroundColor: _background,
                       scrollEdgeStyle: edgeStyle,
                       // A hard-edged bar carries its tabs inside the effect.
@@ -108,7 +108,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                                   16,
                                   8,
                                 ),
-                                child: LiquidPrismSegmentedControl<int>(
+                                child: PrismSegmentedControl<int>(
                                   label: 'Section',
                                   selectedValue: _tab,
                                   onValueChanged: (value) =>
@@ -122,10 +122,10 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                               ),
                             )
                           : null,
-                      leading: LiquidPrismToolbarGroup(
-                        size: GlassToolbarSize.navigation,
+                      leading: PrismToolbar.group(
+                        size: PrismToolbarSize.navigation,
                         items: [
-                          GlassToolbarItem(
+                          PrismToolbarItem(
                             icon: const Icon(CupertinoIcons.chevron_back),
                             label: 'Back',
                             onPressed: () {},
@@ -133,7 +133,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                         ],
                       ),
                       toolbar: [
-                        GlassToolbarItem(
+                        PrismToolbarItem(
                           icon: Icon(
                             _extra
                                 ? CupertinoIcons.minus_circle
@@ -143,7 +143,7 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
                           onPressed: () => setState(() => _extra = !_extra),
                         ),
                         if (_extra)
-                          GlassToolbarItem(
+                          PrismToolbarItem(
                             icon: const Icon(CupertinoIcons.star),
                             label: 'Favorite',
                             onPressed: () {},
@@ -163,13 +163,13 @@ class _ScrollEdgeDemoState extends State<ScrollEdgeDemo> {
     );
   }
 
-  Widget _tabBar() => LiquidPrismTabBar(
+  Widget _tabBar() => PrismTabBar(
     selectedIndex: _tab,
     onSelected: (index) => setState(() => _tab = index),
     tabs: const [
-      LiquidPrismTab(icon: Icon(CupertinoIcons.house), label: 'Home'),
-      LiquidPrismTab(icon: Icon(CupertinoIcons.search), label: 'Search'),
-      LiquidPrismTab(icon: Icon(CupertinoIcons.person), label: 'You'),
+      PrismTab(icon: Icon(CupertinoIcons.house), label: 'Home'),
+      PrismTab(icon: Icon(CupertinoIcons.search), label: 'Search'),
+      PrismTab(icon: Icon(CupertinoIcons.person), label: 'You'),
     ],
   );
 }
@@ -190,17 +190,17 @@ class _SliverPage extends StatelessWidget {
   final Color background;
   final bool extra;
   final VoidCallback onToggle;
-  final List<GlassToolbarItem> toolbar;
+  final List<PrismToolbarItem> toolbar;
   final Widget tabBar;
   final Widget body;
 
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
-    return LiquidPrismScaffold(
+    return PrismScaffold(
       backgroundColor: background,
       tabBar: tabBar,
-      body: LiquidPrismGroup(
+      body: PrismGroup(
         child: CustomScrollView(
           controller: controller,
           slivers: [
@@ -211,18 +211,18 @@ class _SliverPage extends StatelessWidget {
                 builder: (context, scrollOffset) => Stack(
                   fit: StackFit.expand,
                   children: [
-                    LiquidPrismScrollEdge(
-                      progress: LiquidPrismScrollEdge.progressFor(scrollOffset),
+                    PrismScrollEdge(
+                      progress: PrismScrollEdge.progressFor(scrollOffset),
                       color: background,
                     ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(16, top, 16, 0),
                       child: Row(
                         children: [
-                          LiquidPrismToolbarGroup(
-                            size: GlassToolbarSize.navigation,
+                          PrismToolbar.group(
+                            size: PrismToolbarSize.navigation,
                             items: [
-                              GlassToolbarItem(
+                              PrismToolbarItem(
                                 icon: const Icon(CupertinoIcons.chevron_back),
                                 label: 'Back',
                                 onPressed: () {},
@@ -237,22 +237,22 @@ class _SliverPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          LiquidPrismToolbar(
-                            size: GlassToolbarSize.navigation,
+                          PrismToolbar(
+                            size: PrismToolbarSize.navigation,
                             content: [
-                              GlassToolbarGroup(
+                              PrismToolbarGroup(
                                 items: [
                                   if (extra)
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       icon: const Icon(CupertinoIcons.star),
                                       label: 'Favorite',
                                       onPressed: () {},
                                     ),
                                 ],
                               ),
-                              GlassToolbarGroup(
+                              PrismToolbarGroup(
                                 items: [
-                                  GlassToolbarItem(
+                                  PrismToolbarItem(
                                     icon: Icon(
                                       extra
                                           ? CupertinoIcons.minus_circle
@@ -324,7 +324,7 @@ class _ScrollOffsetReader extends StatelessWidget {
 
 class _Rows extends StatelessWidget {
   const _Rows({required this.colors, required this.top});
-  final GlassColors colors;
+  final PrismColors colors;
   final double top;
 
   @override

@@ -54,7 +54,7 @@ Future<void> main() async {
   try {
     await driver.tap(find.bySemanticsLabel('Studio'));
     final slider = find.descendant(
-      of: find.byType('LiquidPrismSlider'),
+      of: find.byType('PrismSlider'),
       matching: find.bySemanticsLabel('Frost'),
       firstMatchOnly: true,
     );
@@ -102,7 +102,7 @@ Future<void> main() async {
         await pause(600);
 
         final segments = find.descendant(
-          of: find.byType('LiquidPrismSegmentedControl<int>'),
+          of: find.byType('PrismSegmentedControl<int>'),
           matching: find.bySemanticsLabel('Artwork'),
           firstMatchOnly: true,
         );

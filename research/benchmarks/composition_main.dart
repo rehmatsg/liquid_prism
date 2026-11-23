@@ -3,11 +3,11 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(const CompositionExample());
 }
 
-/// Run with `flutter run -t lib/composition_main.dart`.
+/// Run with `flutter run -t benchmarks/composition_main.dart` from `research/`.
 class CompositionExample extends StatefulWidget {
   const CompositionExample({super.key});
   @override
@@ -17,9 +17,9 @@ class CompositionExample extends StatefulWidget {
 class CompositionExampleState extends State<CompositionExample> {
   bool dark = false, rtl = false, fill = false;
   double textScale = 1;
-  GlassTabBarPlacement dock = GlassTabBarPlacement.automatic;
-  GlassControlSize size = GlassControlSize.large;
-  GlassTitleAlignment titleAlignment = GlassTitleAlignment.center;
+  PrismTabBarPlacement dock = PrismTabBarPlacement.automatic;
+  PrismControlSize size = PrismControlSize.large;
+  PrismTitleAlignment titleAlignment = PrismTitleAlignment.center;
   int tab = 0, saves = 0, favorites = 0;
   final editorFocus = FocusNode();
   final scroll = ScrollController();
@@ -29,8 +29,8 @@ class CompositionExampleState extends State<CompositionExample> {
     bool? rtl,
     bool? fill,
     double? textScale,
-    GlassTabBarPlacement? dock,
-    GlassControlSize? size,
+    PrismTabBarPlacement? dock,
+    PrismControlSize? size,
   }) => setState(() {
     this.dark = dark ?? this.dark;
     this.rtl = rtl ?? this.rtl;
@@ -50,14 +50,14 @@ class CompositionExampleState extends State<CompositionExample> {
   @override
   Widget build(BuildContext context) {
     final brightness = dark ? Brightness.dark : Brightness.light;
-    final colors = GlassColors(brightness);
+    final colors = PrismColors(brightness);
     return CupertinoApp(
       debugShowCheckedModeBanner: false,
       theme: CupertinoThemeData(
         brightness: brightness,
         primaryColor: colors.blue,
       ),
-      home: LiquidPrismTheme(
+      home: PrismTheme(
         brightness: brightness,
         child: Builder(
           builder: (context) => MediaQuery(
@@ -65,17 +65,17 @@ class CompositionExampleState extends State<CompositionExample> {
                 .copyWith(textScaler: TextScaler.linear(textScale)),
             child: Directionality(
               textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-              child: LiquidPrismScaffold(
+              child: PrismScaffold(
                 backgroundColor: dark
                     ? const Color(0xFF000000)
                     : const Color(0xFFF2F2F7),
                 title: const Text('Composition'),
-                navigationBarStyle: GlassNavigationBarStyle(
+                navigationBarStyle: PrismNavigationBarStyle(
                   titleAlignment: titleAlignment,
                 ),
                 toolbar: [
-                  GlassToolbarItem(
-                    placement: GlassToolbarPlacement.topLeading,
+                  PrismToolbarItem(
+                    placement: PrismToolbarPlacement.topLeading,
                     icon: const Icon(CupertinoIcons.xmark),
                     label: 'Reset',
                     onPressed: () => setState(() {
@@ -83,28 +83,28 @@ class CompositionExampleState extends State<CompositionExample> {
                       favorites = 0;
                     }),
                   ),
-                  GlassToolbarItem(
+                  PrismToolbarItem(
                     label: 'Save',
                     onPressed: () => setState(() => saves++),
                   ),
-                  GlassToolbarGroup(
-                    placement: GlassToolbarPlacement.bottomLeading,
+                  PrismToolbarGroup(
+                    placement: PrismToolbarPlacement.bottomLeading,
                     items: [
-                      GlassToolbarItem(
+                      PrismToolbarItem(
                         icon: const Icon(CupertinoIcons.arrow_uturn_left),
                         label: 'Undo',
                         onPressed: () => setState(() => saves = 0),
                       ),
-                      GlassToolbarItem(
+                      PrismToolbarItem(
                         icon: const Icon(CupertinoIcons.arrow_uturn_right),
                         label: 'Redo',
                         onPressed: () => setState(() => saves++),
                       ),
                     ],
                   ),
-                  GlassToolbarItem.custom(
-                    placement: GlassToolbarPlacement.bottomTrailing,
-                    child: LiquidPrismButton.icon(
+                  PrismToolbarItem.custom(
+                    placement: PrismToolbarPlacement.bottomTrailing,
+                    child: PrismButton.icon(
                       icon: const Icon(CupertinoIcons.heart),
                       label: 'Favorite',
                       key: const ValueKey('composition-favorite'),
@@ -113,32 +113,29 @@ class CompositionExampleState extends State<CompositionExample> {
                   ),
                 ],
                 tabBarPlacement: dock,
-                style: const GlassScaffoldStyle(
+                style: const PrismScaffoldStyle(
                   tabBarMaxWidth: 520,
                   bottomBarMargin: EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
                 ),
-                tabBar: LiquidPrismTabBar(
+                tabBar: PrismTabBar(
                   key: const ValueKey('composition-tabs'),
                   selectedIndex: tab,
                   onSelected: (value) => setState(() => tab = value),
-                  style: GlassTabBarStyle(
+                  style: PrismTabBarStyle(
                     sizing: fill
-                        ? GlassTabBarSizing.fill
-                        : GlassTabBarSizing.compact,
+                        ? PrismTabBarSizing.fill
+                        : PrismTabBarSizing.compact,
                   ),
                   tabs: const [
-                    LiquidPrismTab(
+                    PrismTab(
                       icon: Icon(CupertinoIcons.square_grid_2x2),
                       label: 'Layout',
                     ),
-                    LiquidPrismTab(
+                    PrismTab(
                       icon: Icon(CupertinoIcons.paintbrush),
                       label: 'Style',
                     ),
-                    LiquidPrismTab(
-                      icon: Icon(CupertinoIcons.doc),
-                      label: 'Content',
-                    ),
+                    PrismTab(icon: Icon(CupertinoIcons.doc), label: 'Content'),
                   ],
                 ),
                 scrollController: scroll,
@@ -164,19 +161,19 @@ class CompositionExampleState extends State<CompositionExample> {
                         const SizedBox(height: 24),
                         _choices(
                           'Tab dock',
-                          GlassTabBarPlacement.values,
+                          PrismTabBarPlacement.values,
                           dock,
                           (value) => configure(dock: value),
                         ),
                         _choices(
                           'Title alignment',
-                          GlassTitleAlignment.values,
+                          PrismTitleAlignment.values,
                           titleAlignment,
                           (value) => setState(() => titleAlignment = value),
                         ),
                         _choices(
                           'Button size',
-                          GlassControlSize.values,
+                          PrismControlSize.values,
                           size,
                           (value) => configure(size: value),
                         ),
@@ -196,15 +193,15 @@ class CompositionExampleState extends State<CompositionExample> {
                           (value) => configure(fill: value),
                         ),
                         const SizedBox(height: 20),
-                        LiquidPrismButton(
+                        PrismButton(
                           label: 'Upload',
                           icon: const Icon(CupertinoIcons.cloud_upload),
                           onPressed: () => setState(() => saves++),
-                          variant: GlassButtonVariant.prominent,
-                          style: GlassButtonStyle(
+                          variant: PrismButtonVariant.prominent,
+                          style: PrismButtonStyle(
                             size: size,
-                            sizing: GlassButtonSizing.fill,
-                            labelPlacement: GlassLabelPlacement.trailing,
+                            sizing: PrismButtonSizing.fill,
+                            labelPlacement: PrismLabelPlacement.trailing,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -241,7 +238,7 @@ class CompositionExampleState extends State<CompositionExample> {
         child: Row(
           children: [
             Expanded(child: Text(label)),
-            LiquidPrismSwitch(value: value, label: label, onChanged: onChanged),
+            PrismSwitch(value: value, label: label, onChanged: onChanged),
           ],
         ),
       );
@@ -266,12 +263,12 @@ class CompositionExampleState extends State<CompositionExample> {
           runSpacing: 4,
           children: [
             for (final value in values)
-              LiquidPrismButton(
+              PrismButton(
                 label: value.name,
-                size: GlassControlSize.small,
+                size: PrismControlSize.small,
                 variant: value == current
-                    ? GlassButtonVariant.prominent
-                    : GlassButtonVariant.regular,
+                    ? PrismButtonVariant.prominent
+                    : PrismButtonVariant.regular,
                 onPressed: () => onChanged(value),
               ),
           ],

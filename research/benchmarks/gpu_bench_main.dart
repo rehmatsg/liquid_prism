@@ -2,7 +2,7 @@
 // is rendered offscreen as fast as the GPU accepts it, then read back so the
 // clock stops only when the GPU has finished. No vsync, no thermal drift.
 //
-//   tool/gpu_bench/run.py            (builds, runs and tabulates)
+//   research/probes/gpu_bench/run.py (builds, runs and tabulates)
 //
 // GPU_BENCH_SCENES: comma list of scenario names (default: all).
 // GPU_BENCH_FRAMES: frames per timed round (default 300).
@@ -40,22 +40,21 @@ final _scenarios = <_Scenario>[
 
 Widget _glass(double w, double h, {double? radius, bool button = false}) {
   final shape = radius == null
-      ? GlassShape.capsule
-      : GlassShape.rect(cornerRadius: radius);
+      ? PrismShape.capsule
+      : PrismShape.rect(cornerRadius: radius);
   final content = SizedBox(
     width: w,
     height: h,
     child: const Center(child: Text('Glass')),
   );
   return button
-      ? LiquidPrismButton(
+      ? PrismButton(
           label: 'button',
-          padding: EdgeInsets.zero,
-          shape: shape,
+          style: PrismButtonStyle(padding: EdgeInsets.zero, shape: shape),
           onPressed: () {},
           child: content,
         )
-      : LiquidPrism(shape: shape, child: content);
+      : PrismSurface(shape: shape, child: content);
 }
 
 Widget _grid(
@@ -155,27 +154,24 @@ class _App extends StatelessWidget {
       return CupertinoApp(
         debugShowCheckedModeBanner: false,
         theme: CupertinoThemeData(brightness: brightness),
-        builder: (context, child) => LiquidPrismTheme(
-          data: LiquidPrismThemeData(
+        builder: (context, child) => PrismTheme(
+          data: PrismThemeData(
             brightness: brightness,
-            glass: Glass.regular,
+            glass: PrismGlass.regular,
           ),
           child: child!,
         ),
         home: chrome
-            ? LiquidPrismScaffold(
+            ? PrismScaffold(
                 backgroundColor: background,
-                tabBar: LiquidPrismTabBar(
+                tabBar: PrismTabBar(
                   tabs: const [
-                    LiquidPrismTab(
-                      label: 'Home',
-                      icon: Icon(CupertinoIcons.house),
-                    ),
-                    LiquidPrismTab(
+                    PrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+                    PrismTab(
                       label: 'Search',
                       icon: Icon(CupertinoIcons.search),
                     ),
-                    LiquidPrismTab(
+                    PrismTab(
                       label: 'Saved',
                       icon: Icon(CupertinoIcons.bookmark),
                     ),
@@ -194,9 +190,11 @@ class _App extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             children: [
-                              LiquidPrismButton(
+                              PrismButton(
                                 label: 'Back',
-                                padding: const EdgeInsets.all(12),
+                                style: const PrismButtonStyle(
+                                  padding: EdgeInsets.all(12),
+                                ),
                                 onPressed: () {},
                                 child: const Icon(
                                   CupertinoIcons.chevron_back,
@@ -204,15 +202,15 @@ class _App extends StatelessWidget {
                                 ),
                               ),
                               const Spacer(),
-                              LiquidPrismToolbarGroup(
-                                size: GlassToolbarSize.navigation,
+                              PrismToolbar.group(
+                                size: PrismToolbarSize.navigation,
                                 items: [
                                   for (final icon in [
                                     CupertinoIcons.star,
                                     CupertinoIcons.share,
                                     CupertinoIcons.ellipsis,
                                   ])
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       label: 'Item',
                                       icon: Icon(icon),
                                       onPressed: () {},
@@ -274,7 +272,7 @@ Future<(double, double)> _measure(int frames) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(const _App());
   final only = Platform.environment['GPU_BENCH_SCENES']?.split(',');
   final frames = int.parse(Platform.environment['GPU_BENCH_FRAMES'] ?? '300');

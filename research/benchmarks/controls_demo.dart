@@ -15,7 +15,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
   int _segment = 0;
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     return DefaultTextStyle(
       style: TextStyle(color: colors.label, fontSize: 17),
       child: Stack(
@@ -45,7 +45,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
                 spacing: 28,
                 children: [
                   if (!widget.standalone)
-                    LiquidPrismButton(
+                    PrismButton(
                       label: 'Back',
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Back'),
@@ -58,7 +58,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
                     'Switch',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  LiquidPrismSwitch(
+                  PrismSwitch(
                     key: const ValueKey('switch'),
                     label: 'Switch',
                     value: _enabled,
@@ -70,7 +70,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
                   ),
                   SizedBox(
                     width: 300,
-                    child: LiquidPrismSlider(
+                    child: PrismSlider(
                       key: const ValueKey('slider'),
                       label: 'Slider',
                       value: _value,
@@ -83,7 +83,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
                   ),
                   SizedBox(
                     width: 300,
-                    child: LiquidPrismSegmentedControl<int>(
+                    child: PrismSegmentedControl<int>(
                       key: const ValueKey('segments'),
                       label: 'Segmented',
                       selectedValue: _segment,
@@ -102,7 +102,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
                   ),
                   const Row(
                     children: [
-                      LiquidPrismSwitch(
+                      PrismSwitch(
                         value: true,
                         onChanged: null,
                         label: 'Disabled switch',
@@ -110,7 +110,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
                       SizedBox(width: 8),
                       SizedBox(
                         width: 180,
-                        child: LiquidPrismSlider(
+                        child: PrismSlider(
                           value: .4,
                           onChanged: null,
                           label: 'Disabled slider',
@@ -120,7 +120,7 @@ class _ControlsDemoState extends State<ControlsDemo> {
                   ),
                   const SizedBox(
                     width: 300,
-                    child: LiquidPrismSegmentedControl<int>(
+                    child: PrismSegmentedControl<int>(
                       selectedValue: 1,
                       onValueChanged: null,
                       label: 'Disabled segments',

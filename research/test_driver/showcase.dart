@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/gestures.dart';
 import 'package:liquid_prism/liquid_prism.dart';
-import 'package:liquid_prism/src/recipe.dart' show GlassRole;
-import 'package:liquid_prism/src/system_chrome.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart' show PrismRole;
+import 'package:liquid_prism/src/navigation/prism_system_chrome.dart';
+import 'package:liquid_prism/src/rendering/surface.dart' show RawPrismSurface;
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:liquid_prism_example/main.dart' as app;
 import 'package:liquid_prism_example/showcase/app.dart' as showcase;
@@ -40,7 +41,7 @@ Future<void> main() async {
       if (request['op'] == 'system-chrome') {
         final chrome = SystemChromeListener.instance.value.value;
         return jsonEncode({
-          'glassTint': LiquidPrismSystemChrome.deviceGlassTintAmount.value,
+          'glassTint': PrismSystemChrome.deviceGlassTintAmount.value,
           'reduceTransparency':
               SystemChromeListener.instance.reduceTransparency.value,
           'edge': chrome?.verticalBarEdge?.name,
@@ -152,11 +153,11 @@ Future<void> main() async {
             );
             final frame = [rect.left, rect.top, rect.width, rect.height];
             String? name;
-            if (widget is LiquidPrismSwitch) name = widget.label;
-            if (widget is LiquidPrismSlider) name = widget.label;
-            if (widget is LiquidPrismSegmentedControl) name = widget.label;
-            if (widget is LiquidPrismButton) name = widget.label;
-            if (widget is LiquidPrismTabBar) {
+            if (widget is PrismSwitch) name = widget.label;
+            if (widget is PrismSlider) name = widget.label;
+            if (widget is PrismSegmentedControl) name = widget.label;
+            if (widget is PrismButton) name = widget.label;
+            if (widget is PrismTabBar) {
               name = widget.key == const ValueKey('showcase-navigation')
                   ? 'showcase-navigation'
                   : 'component-tabs';
@@ -183,13 +184,13 @@ Future<void> main() async {
               geometry[name] = frame;
               if (name == request['panel']) scrollTarget = element;
             }
-            if (widget is LiquidPrism) {
+            if (widget is RawPrismSurface) {
               // The compact bar may sit inside a tight parent. Its housing,
               // rather than that parent's bounds, is the actual touch surface.
               // ignore: invalid_use_of_internal_member
-              if (widget.role == GlassRole.tabBar) {
+              if (widget.role == PrismRole.tabBar) {
                 element.visitAncestorElements((ancestor) {
-                  if (ancestor.widget is LiquidPrismTabBar) {
+                  if (ancestor.widget is PrismTabBar) {
                     final navigation =
                         ancestor.widget.key ==
                         const ValueKey('showcase-navigation');
@@ -205,9 +206,9 @@ Future<void> main() async {
               String? owner;
               element.visitAncestorElements((ancestor) {
                 final w = ancestor.widget;
-                if (w is LiquidPrismSwitch) owner = w.label;
-                if (w is LiquidPrismSlider) owner = w.label;
-                if (w is LiquidPrismSegmentedControl) owner = w.label;
+                if (w is PrismSwitch) owner = w.label;
+                if (w is PrismSlider) owner = w.label;
+                if (w is PrismSegmentedControl) owner = w.label;
                 return owner == null;
               });
               glass.add({
@@ -241,8 +242,8 @@ Future<void> main() async {
       }
       if (request['op'] == 'menu-state') {
         return jsonEncode({
-          'native': await liquidMenus.supportsNativeMenu,
-          'presented': liquidMenus.isPresented,
+          'native': await prismMenus.supportsNativeMenu,
+          'presented': prismMenus.isPresented,
         });
       }
       if (request['op'] == 'text') {

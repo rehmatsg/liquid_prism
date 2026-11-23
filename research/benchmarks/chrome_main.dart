@@ -5,7 +5,7 @@ import 'chrome_demo.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(
     const CupertinoApp(
       debugShowCheckedModeBanner: false,

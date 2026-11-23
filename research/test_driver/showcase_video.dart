@@ -120,7 +120,7 @@ Future<void> main() async {
       await component('Switches', () async {
         await driver.tap(
           find.descendant(
-            of: find.byType('LiquidPrismSwitch'),
+            of: find.byType('PrismSwitch'),
             matching: find.bySemanticsLabel('Let it glow'),
             firstMatchOnly: true,
           ),

@@ -58,7 +58,7 @@ Future<void> main() async {
       return 'ok';
     },
   );
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(_Defaults(key: key));
 }
 
@@ -91,15 +91,15 @@ class _DefaultsState extends State<_Defaults> {
   @override
   Widget build(BuildContext context) {
     final brightness = dark ? Brightness.dark : Brightness.light;
-    final colors = GlassColors(brightness);
+    final colors = PrismColors(brightness);
     return CupertinoApp(
       debugShowCheckedModeBanner: false,
       theme: CupertinoThemeData(
         brightness: brightness,
         primaryColor: colors.blue,
       ),
-      home: LiquidPrismTheme(
-        data: LiquidPrismThemeData(
+      home: PrismTheme(
+        data: PrismThemeData(
           brightness: brightness,
           tint: colors.blue,
           glassTint: tint,
@@ -121,8 +121,8 @@ class _DefaultsState extends State<_Defaults> {
               height: height,
               child: child,
             );
-            Widget surface(String text, Glass glass, GlassShape shape) =>
-                LiquidPrism(
+            Widget surface(String text, PrismGlass glass, PrismShape shape) =>
+                PrismSurface(
                   glass: glass,
                   shape: shape,
                   child: Center(
@@ -147,14 +147,14 @@ class _DefaultsState extends State<_Defaults> {
                   140,
                   150,
                   48,
-                  surface('Regular', Glass.regular, GlassShape.capsule),
+                  surface('Regular', PrismGlass.regular, PrismShape.capsule),
                 ),
                 at(
                   center * 2 - 105,
                   140,
                   150,
                   48,
-                  surface('Clear', Glass.clear, GlassShape.capsule),
+                  surface('Clear', PrismGlass.clear, PrismShape.capsule),
                 ),
                 at(
                   105,
@@ -163,8 +163,8 @@ class _DefaultsState extends State<_Defaults> {
                   96,
                   surface(
                     'Surface',
-                    Glass.regular,
-                    const GlassShape.rect(cornerRadius: 28),
+                    PrismGlass.regular,
+                    const PrismShape.rect(cornerRadius: 28),
                   ),
                 ),
                 at(
@@ -174,8 +174,8 @@ class _DefaultsState extends State<_Defaults> {
                   96,
                   surface(
                     'Tinted',
-                    Glass.regular.tint(colors.blue.withValues(alpha: .3)),
-                    const GlassShape.rect(cornerRadius: 28),
+                    PrismGlass.regular.tint(colors.blue.withValues(alpha: .3)),
+                    const PrismShape.rect(cornerRadius: 28),
                   ),
                 ),
                 Positioned(
@@ -184,7 +184,7 @@ class _DefaultsState extends State<_Defaults> {
                   width: 210,
                   height: 60,
                   child: Center(
-                    child: LiquidPrismButton(
+                    child: PrismButton(
                       label: 'Glass',
                       onPressed: disabled ? null : () {},
                       child: const Text('Glass'),
@@ -197,9 +197,9 @@ class _DefaultsState extends State<_Defaults> {
                   width: 210,
                   height: 60,
                   child: Center(
-                    child: LiquidPrismButton(
+                    child: PrismButton(
                       label: 'Prominent',
-                      variant: GlassButtonVariant.prominent,
+                      variant: PrismButtonVariant.prominent,
                       onPressed: disabled ? null : () {},
                       child: const Text('Prominent'),
                     ),
@@ -210,7 +210,7 @@ class _DefaultsState extends State<_Defaults> {
                   430,
                   63,
                   44,
-                  LiquidPrismSwitch(
+                  PrismSwitch(
                     label: 'Off',
                     value: off,
                     onChanged: disabled ? null : (v) => setState(() => off = v),
@@ -221,7 +221,7 @@ class _DefaultsState extends State<_Defaults> {
                   430,
                   63,
                   44,
-                  LiquidPrismSwitch(
+                  PrismSwitch(
                     label: 'On',
                     value: on,
                     onChanged: disabled ? null : (v) => setState(() => on = v),
@@ -232,7 +232,7 @@ class _DefaultsState extends State<_Defaults> {
                   510,
                   342,
                   44,
-                  LiquidPrismSlider(
+                  PrismSlider(
                     label: 'slider',
                     value: slider,
                     onChanged: disabled
@@ -245,7 +245,7 @@ class _DefaultsState extends State<_Defaults> {
                   590,
                   342,
                   44,
-                  LiquidPrismSegmentedControl<int>(
+                  PrismSegmentedControl<int>(
                     label: 'Segments',
                     selectedValue: segment,
                     onValueChanged: disabled
@@ -263,28 +263,28 @@ class _DefaultsState extends State<_Defaults> {
                   670,
                   342,
                   44,
-                  const LiquidPrismSearchField(placeholder: 'Search'),
+                  const PrismSearchField(placeholder: 'Search'),
                 ),
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 21,
                   child: Center(
-                    child: LiquidPrismTabBar(
+                    child: PrismTabBar(
                       selectedIndex: tab,
                       onSelected: disabled
                           ? null
                           : (v) => setState(() => tab = v),
                       tabs: const [
-                        LiquidPrismTab(
+                        PrismTab(
                           label: 'Home',
                           icon: Icon(CupertinoIcons.house_fill),
                         ),
-                        LiquidPrismTab(
+                        PrismTab(
                           label: 'Search',
                           icon: Icon(CupertinoIcons.search),
                         ),
-                        LiquidPrismTab(
+                        PrismTab(
                           label: 'Profile',
                           icon: Icon(CupertinoIcons.person_fill),
                         ),

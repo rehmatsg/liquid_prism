@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_driver/driver_extension.dart';
 import 'package:liquid_prism/liquid_prism.dart';
-import 'package:liquid_prism_example/composition_main.dart';
+
+import '../benchmarks/composition_main.dart';
 
 Future<void> main() async {
   final key = GlobalKey<CompositionExampleState>();
@@ -26,10 +27,10 @@ Future<void> main() async {
           textScale: (request['textScale'] as num?)?.toDouble(),
           dock: request['dock'] == null
               ? null
-              : GlassTabBarPlacement.values.byName(request['dock'] as String),
+              : PrismTabBarPlacement.values.byName(request['dock'] as String),
           size: request['size'] == null
               ? null
-              : GlassControlSize.values.byName(request['size'] as String),
+              : PrismControlSize.values.byName(request['size'] as String),
         );
         state.editorFocus.unfocus();
         await WidgetsBinding.instance.endOfFrame;
@@ -115,6 +116,6 @@ Future<void> main() async {
       return 'ok';
     },
   );
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(CompositionExample(key: key));
 }

@@ -1,6 +1,6 @@
-// Glass parity harness (research only; see tool/glass_parity/README.md).
+// Glass parity harness (research only; see probes/glass_parity/README.md).
 //
-//   flutter build ios --simulator -t lib/parity_main.dart
+//   flutter build ios --simulator -t benchmarks/parity_main.dart
 //
 // The screen is split into two columns of a whole number of physical pixels.
 // Both show the same backdrop (the right column is the left one translated by
@@ -8,7 +8,7 @@
 // package defaults; the right column has SwiftUI `glassEffect(.regular)` at
 // the same local rects, drawn by ParityChannel (ios/Runner/AppDelegate.swift)
 // in a hosting view above the Flutter view. A code strip in the bottom-left
-// corner makes every screenshot self-describing; tool/glass_parity/analyze.py
+// corner makes every screenshot self-describing; probes/glass_parity/analyze.py
 // decodes it.
 //
 // Launch arguments (read natively, so `simctl launch`, XCUITest and devicectl
@@ -35,6 +35,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 
 const _channel = MethodChannel('liquid_prism/parity');
 
@@ -94,8 +95,8 @@ final _layouts = <String, _Layout>{
   ),
 };
 
-GlassShape _glassShape(_Shape s) =>
-    s.capsule ? GlassShape.capsule : GlassShape.rect(cornerRadius: s.radius);
+PrismShape _glassShape(_Shape s) =>
+    s.capsule ? PrismShape.capsule : PrismShape.rect(cornerRadius: s.radius);
 
 /// The exact outline both glasses use: Liquid Prism's continuous-corner path.
 Path _outline(_Shape s) =>
@@ -163,7 +164,7 @@ final _patterns = _definitions.keys.toList();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   final info = Map<String, Object?>.from(
     await _channel.invokeMethod<Map<Object?, Object?>>('info') ?? const {},
   );
@@ -235,15 +236,14 @@ class _ParityAppState extends State<_ParityApp> {
 
   bool get _dark => _frames[_frame].$1;
   int get _pattern => _frames[_frame].$2;
-  double? get _flutterAmount =>
-      LiquidPrismSystemChrome.deviceGlassTintAmount.value;
+  double? get _flutterAmount => PrismSystemChrome.deviceGlassTintAmount.value;
 
   @override
   void initState() {
     super.initState();
     _nativeAmount = (widget.info['amount'] as num?)?.toDouble();
     _epochAmount = _nativeAmount;
-    LiquidPrismSystemChrome.deviceGlassTintAmount.addListener(_rebuild);
+    PrismSystemChrome.deviceGlassTintAmount.addListener(_rebuild);
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'amountChanged') {
         final args = call.arguments as Map;
@@ -270,7 +270,7 @@ class _ParityAppState extends State<_ParityApp> {
 
   @override
   void dispose() {
-    LiquidPrismSystemChrome.deviceGlassTintAmount.removeListener(_rebuild);
+    PrismSystemChrome.deviceGlassTintAmount.removeListener(_rebuild);
     _poll?.cancel();
     super.dispose();
   }
@@ -502,7 +502,7 @@ class _ParityAppState extends State<_ParityApp> {
               for (final s in _shapes)
                 Positioned.fromRect(
                   rect: s.rect,
-                  child: LiquidPrism(shape: _glassShape(s)),
+                  child: PrismSurface(shape: _glassShape(s)),
                 ),
               Positioned(
                 left: _stripLeft,
@@ -574,7 +574,7 @@ class _ParityAppState extends State<_ParityApp> {
           'left column, physical pixels [left, top, width, height]; '
           'the native shape is the same rect shifted right by colPx',
       'outline':
-          'Flutter: GlassShape.capsule / GlassShape.rect(cornerRadius) '
+          'Flutter: PrismShape.capsule / PrismShape.rect(cornerRadius) '
           '(RoundedSuperellipseBorder, continuous corners). Native: SwiftUI '
           'Capsule(style: .continuous) / RoundedRectangle(cornerRadius:, '
           'style: .continuous).',
@@ -585,7 +585,7 @@ class _ParityAppState extends State<_ParityApp> {
       'pixelCentres': 'local point x = (px + 0.5) / dpr',
       'strip':
           '16 x 8 cells of 5 pt, left 8 pt, bottom 40 pt; see '
-          'tool/glass_parity/README.md',
+          'probes/glass_parity/README.md',
       'layouts': layouts,
       'patterns': [
         for (final (i, name) in _patterns.indexed)
@@ -759,7 +759,7 @@ Uint8List? _photoCache;
 (int, int)? _photoSize;
 
 /// One column of [name] at physical resolution. Coordinates are local points
-/// at pixel centres; tool/glass_parity/analyze.py mirrors these definitions.
+/// at pixel centres; probes/glass_parity/analyze.py mirrors these definitions.
 Uint8List _pixels(
   String name,
   List<_Shape> shapes,

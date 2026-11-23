@@ -24,11 +24,11 @@ class _ChromeDemoState extends State<ChromeDemo> {
     data: CupertinoThemeData(
       brightness: _dark ? Brightness.dark : Brightness.light,
     ),
-    child: LiquidPrismTheme(
+    child: PrismTheme(
       brightness: _dark ? Brightness.dark : Brightness.light,
       child: Builder(
         builder: (context) {
-          final colors = GlassColors.of(context);
+          final colors = PrismColors.of(context);
           return DefaultTextStyle(
             style: TextStyle(color: colors.label, fontSize: 17),
             child: Stack(
@@ -69,11 +69,13 @@ class _ChromeDemoState extends State<ChromeDemo> {
                             child: Row(
                               children: [
                                 if (!widget.standalone)
-                                  LiquidPrismButton(
+                                  PrismButton(
                                     label: 'Back',
                                     onPressed: () =>
                                         Navigator.of(context).pop(),
-                                    padding: const EdgeInsets.all(12),
+                                    style: const PrismButtonStyle(
+                                      padding: EdgeInsets.all(12),
+                                    ),
                                     child: const Icon(
                                       CupertinoIcons.chevron_back,
                                       size: 20,
@@ -88,25 +90,25 @@ class _ChromeDemoState extends State<ChromeDemo> {
                                     ),
                                   ),
                                 ),
-                                LiquidPrismToolbarGroup(
+                                PrismToolbar.group(
                                   key: const ValueKey('navigation-toolbar'),
-                                  size: GlassToolbarSize.navigation,
+                                  size: PrismToolbarSize.navigation,
                                   items: [
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       key: const ValueKey('favorite'),
                                       label: 'Favorite',
                                       icon: const Icon(CupertinoIcons.star),
                                       width: 42 + 1 / 3,
                                       onPressed: _action,
                                     ),
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       key: const ValueKey('share'),
                                       label: 'Share',
                                       icon: const Icon(CupertinoIcons.share),
                                       width: 38 + 2 / 3,
                                       onPressed: _action,
                                     ),
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       key: const ValueKey('more'),
                                       label: 'More',
                                       icon: const Icon(CupertinoIcons.ellipsis),
@@ -139,7 +141,7 @@ class _ChromeDemoState extends State<ChromeDemo> {
                                     const SizedBox(height: 24),
                                     Text('Actions: $_actions'),
                                     const SizedBox(height: 24),
-                                    LiquidPrismButton(
+                                    PrismButton(
                                       key: const ValueKey('appearance'),
                                       label: 'Switch appearance',
                                       onPressed: () =>
@@ -159,10 +161,10 @@ class _ChromeDemoState extends State<ChromeDemo> {
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Row(
                               children: [
-                                LiquidPrismToolbarGroup(
+                                PrismToolbar.group(
                                   key: const ValueKey('bottom-toolbar'),
                                   items: [
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       key: const ValueKey('previous'),
                                       label: 'Previous',
                                       icon: const Icon(
@@ -170,7 +172,7 @@ class _ChromeDemoState extends State<ChromeDemo> {
                                       ),
                                       onPressed: _action,
                                     ),
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       key: const ValueKey('next'),
                                       label: 'Next',
                                       icon: const Icon(
@@ -181,10 +183,10 @@ class _ChromeDemoState extends State<ChromeDemo> {
                                   ],
                                 ),
                                 const Spacer(),
-                                LiquidPrismToolbarGroup(
+                                PrismToolbar.group(
                                   key: const ValueKey('compose-toolbar'),
                                   items: [
-                                    GlassToolbarItem(
+                                    PrismToolbarItem(
                                       key: const ValueKey('compose'),
                                       label: 'Compose',
                                       icon: const Icon(
@@ -198,10 +200,10 @@ class _ChromeDemoState extends State<ChromeDemo> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          LiquidPrismSearchField(
+                          PrismSearchField(
                             key: const ValueKey('search-field'),
                             controller: _query,
-                            restingInset: 20,
+                            style: const PrismSearchStyle(restingInset: 20),
                           ),
                         ],
                       ),

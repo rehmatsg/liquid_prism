@@ -1,5 +1,5 @@
 // Sustained-load benchmark with scripted, real gestures. One build per renderer:
-//   flutter run --profile -t lib/bench_main.dart --dart-define=MODE=prism
+//   flutter run --profile -t benchmarks/bench_main.dart --dart-define=MODE=prism
 // MODE: none | prism | prismnoscale | prismnoblur | chrome | lge | lgeblur.
 // DURATION: seconds of scripted use. `chrome` is the app-chrome layout: a
 // scaffold with tab bar, toolbar group, round button and search field.
@@ -46,7 +46,7 @@ bool _running = !bool.fromEnvironment('IDLE');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   await LiquidGlassShaders.ensureLoaded();
   await _channel.invokeMethod<void>('setup', {'brightness': 0.5});
   runApp(const _BenchApp());
@@ -68,10 +68,10 @@ class _BenchApp extends StatelessWidget {
     navigatorKey: _navigator,
     debugShowCheckedModeBanner: false,
     theme: const CupertinoThemeData(brightness: Brightness.dark),
-    builder: (context, child) => LiquidPrismTheme(
-      data: const LiquidPrismThemeData(
+    builder: (context, child) => PrismTheme(
+      data: const PrismThemeData(
         brightness: Brightness.dark,
-        glass: Glass.regular,
+        glass: PrismGlass.regular,
       ),
       child: DefaultTextStyle(
         style: const TextStyle(color: Color(0xFFFFFFFF), fontSize: 16),
@@ -175,14 +175,14 @@ class _ChromeFeedPageState extends State<_ChromeFeedPage> {
 
   @override
   Widget build(BuildContext context) {
-    return LiquidPrismScaffold(
+    return PrismScaffold(
       backgroundColor: const Color(0xFF000000),
-      tabBar: LiquidPrismTabBar(
+      tabBar: PrismTabBar(
         tabs: const [
-          LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
-          LiquidPrismTab(label: 'Search', icon: Icon(CupertinoIcons.search)),
-          LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
-          LiquidPrismTab(label: 'Profile', icon: Icon(CupertinoIcons.person)),
+          PrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+          PrismTab(label: 'Search', icon: Icon(CupertinoIcons.search)),
+          PrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+          PrismTab(label: 'Profile', icon: Icon(CupertinoIcons.person)),
         ],
         selectedIndex: _tab,
         onSelected: (index) => setState(() => _tab = index),
@@ -203,10 +203,12 @@ class _ChromeFeedPageState extends State<_ChromeFeedPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      LiquidPrismButton(
+                      PrismButton(
                         key: _openKey,
                         label: 'Open details',
-                        padding: const EdgeInsets.all(12),
+                        style: const PrismButtonStyle(
+                          padding: EdgeInsets.all(12),
+                        ),
                         onPressed: () => Navigator.of(context).push(
                           CupertinoPageRoute<void>(
                             builder: (_) => const _DetailPage(),
@@ -218,22 +220,22 @@ class _ChromeFeedPageState extends State<_ChromeFeedPage> {
                         ),
                       ),
                       const Spacer(),
-                      LiquidPrismToolbarGroup(
-                        size: GlassToolbarSize.navigation,
+                      PrismToolbar.group(
+                        size: PrismToolbarSize.navigation,
                         items: [
-                          GlassToolbarItem(
+                          PrismToolbarItem(
                             key: _buttonKeys[0],
                             label: 'Favorite',
                             icon: const Icon(CupertinoIcons.star),
                             onPressed: () {},
                           ),
-                          GlassToolbarItem(
+                          PrismToolbarItem(
                             key: _buttonKeys[1],
                             label: 'Share',
                             icon: const Icon(CupertinoIcons.share),
                             onPressed: () {},
                           ),
-                          GlassToolbarItem(
+                          PrismToolbarItem(
                             key: _buttonKeys[2],
                             label: 'More',
                             icon: const Icon(CupertinoIcons.ellipsis),
@@ -245,7 +247,10 @@ class _ChromeFeedPageState extends State<_ChromeFeedPage> {
                   ),
                 ),
                 const Spacer(),
-                LiquidPrismSearchField(controller: _query, restingInset: 20),
+                PrismSearchField(
+                  controller: _query,
+                  style: const PrismSearchStyle(restingInset: 20),
+                ),
                 const SizedBox(height: 12),
               ],
             ),
@@ -256,9 +261,9 @@ class _ChromeFeedPageState extends State<_ChromeFeedPage> {
                 Positioned(left: offset.dx, top: offset.dy, child: child!),
             child: GestureDetector(
               onPanUpdate: (d) => _puck.value += d.delta,
-              child: LiquidPrism(
-                glass: Glass.clear,
-                shape: GlassShape.capsule,
+              child: PrismSurface(
+                glass: PrismGlass.clear,
+                shape: PrismShape.capsule,
                 child: const SizedBox(
                   width: 120,
                   height: 52,
@@ -332,7 +337,7 @@ Widget _surface(double w, double h, double r, Widget child) {
     child: Center(child: child),
   );
   return switch (_mode) {
-    'prism' || 'prismnoscale' || 'prismnoblur' => LiquidPrism(
+    'prism' || 'prismnoscale' || 'prismnoblur' => PrismSurface(
       shape: _prismShape(w, h, r),
       blur: _mode == 'prismnoblur' ? 0 : null,
       child: content,
@@ -355,14 +360,18 @@ Widget _button(
     child: Center(child: child),
   );
   return switch (_mode) {
-    'prism' || 'prismnoscale' || 'prismnoblur' => LiquidPrismButton(
+    'prism' || 'prismnoscale' || 'prismnoblur' => PrismButton(
       key: key,
-      blur: _mode == 'prismnoblur' ? 0 : null,
-      // Isolates the cost of the press scale transform on backdrop filters.
-      motion: _mode == 'prismnoscale' ? const GlassMotion(pressScale: 1) : null,
+      style: PrismButtonStyle(
+        blur: _mode == 'prismnoblur' ? 0 : null,
+        // Isolates the cost of the press scale transform on backdrop filters.
+        motion: _mode == 'prismnoscale'
+            ? const PrismMotion(pressScale: 1)
+            : null,
+        padding: EdgeInsets.zero,
+        shape: _prismShape(w, h, h / 2),
+      ),
       label: 'button',
-      padding: EdgeInsets.zero,
-      shape: _prismShape(w, h, h / 2),
       onPressed: onTap ?? () {},
       child: content,
     ),
@@ -383,11 +392,11 @@ Widget _button(
   };
 }
 
-GlassShape _prismShape(double w, double h, double r) => w == h
-    ? GlassShape.circle
+PrismShape _prismShape(double w, double h, double r) => w == h
+    ? PrismShape.circle
     : r * 2 >= h
-    ? GlassShape.capsule
-    : GlassShape.rect(cornerRadius: r);
+    ? PrismShape.capsule
+    : PrismShape.rect(cornerRadius: r);
 
 LiquidGlassStyle _lgeStyle(double r) => LiquidGlassStyle(
   shape: LiquidGlassShape.continuousRoundedRectangle(cornerRadius: r),

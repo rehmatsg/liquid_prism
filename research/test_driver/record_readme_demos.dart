@@ -38,9 +38,9 @@ Future<void> main() async {
       Future<void>.delayed(Duration(milliseconds: ms));
 
   Future<Map<String, double>> stage() async {
-    final res =
-        jsonDecode(await driver.requestData(jsonEncode({'op': 'stage'})))
-            as Map<String, Object?>;
+    final res = jsonDecode(
+      await driver.requestData(jsonEncode({'op': 'stage'})),
+    ) as Map<String, Object?>;
     return {
       for (final e in res.entries) e.key: (e.value! as num).toDouble(),
     };

@@ -12,7 +12,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 /// down, lifting its pill so the tab foreground lens runs.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(const TransformFixtureApp());
 }
 
@@ -182,15 +182,15 @@ class _TransformFixtureState extends State<TransformFixture>
                   ),
                   const Spacer(),
                   _Outlined(
-                    child: LiquidPrismToolbarGroup(
-                      size: GlassToolbarSize.navigation,
+                    child: PrismToolbar.group(
+                      size: PrismToolbarSize.navigation,
                       items: [
-                        GlassToolbarItem(
+                        PrismToolbarItem(
                           label: 'Favorite',
                           icon: const Icon(CupertinoIcons.star),
                           onPressed: () {},
                         ),
-                        GlassToolbarItem(
+                        PrismToolbarItem(
                           label: 'More',
                           icon: const Icon(CupertinoIcons.ellipsis),
                           onPressed: () {},
@@ -203,8 +203,8 @@ class _TransformFixtureState extends State<TransformFixture>
             ),
             const Spacer(),
             const _Outlined(
-              child: LiquidPrism(
-                shape: GlassShape.capsule,
+              child: PrismSurface(
+                shape: PrismShape.capsule,
                 child: SizedBox(
                   width: 220,
                   height: 64,
@@ -214,8 +214,8 @@ class _TransformFixtureState extends State<TransformFixture>
             ),
             const SizedBox(height: 24),
             const _Outlined(
-              child: LiquidPrism(
-                shape: GlassShape.rect(cornerRadius: 24),
+              child: PrismSurface(
+                shape: PrismShape.rect(cornerRadius: 24),
                 child: SizedBox(
                   width: 260,
                   height: 90,
@@ -225,20 +225,20 @@ class _TransformFixtureState extends State<TransformFixture>
             ),
             const Spacer(),
             _Outlined(
-              child: LiquidPrismTabBar(
+              child: PrismTabBar(
                 key: _tabBar,
                 selectedIndex: _tab,
                 onSelected: (index) => setState(() => _tab = index),
                 tabs: const [
-                  LiquidPrismTab(
+                  PrismTab(
                     label: 'Explore',
                     icon: Icon(CupertinoIcons.sparkles),
                   ),
-                  LiquidPrismTab(
+                  PrismTab(
                     label: 'Studio',
                     icon: Icon(CupertinoIcons.slider_horizontal_3),
                   ),
-                  LiquidPrismTab(
+                  PrismTab(
                     label: 'Library',
                     icon: Icon(CupertinoIcons.square_grid_2x2),
                   ),

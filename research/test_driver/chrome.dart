@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/gestures.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
-import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 import 'package:flutter_driver/driver_extension.dart';
 
-import 'package:liquid_prism_example/chrome_main.dart' as demo;
+import '../benchmarks/chrome_main.dart' as demo;
 
 Future<void> main() async {
   var last = Offset.zero;
@@ -52,7 +52,7 @@ Future<void> main() async {
               result[name] = [a.dx, a.dy, b.dx - a.dx, b.dy - a.dy];
             }
           }
-          if (widget is LiquidPrismPressable &&
+          if (widget is PrismPressable &&
               (widget.label == 'Clear search' ||
                   widget.label == 'Cancel search')) {
             final box = element.findRenderObject() as RenderBox;

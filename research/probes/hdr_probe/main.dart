@@ -1,4 +1,4 @@
-// Research entry point; run from example/ with -t ../tool/hdr_probe/main.dart.
+// Research entry point; run from research/ with -t probes/hdr_probe/main.dart.
 // ignore_for_file: avoid_print
 import 'dart:async';
 import 'dart:convert';
@@ -58,7 +58,7 @@ Widget? _label(bool dark, int index) => _stress
 
 Widget _pair(bool dark, bool clear, {required bool native}) {
   final measured = !native && !dark && !clear;
-  final glass = clear ? Glass.clear : Glass.regular;
+  final glass = clear ? PrismGlass.clear : PrismGlass.regular;
   final row = Row(
     key: (native ? _nativeRows : _prism)[(dark, clear)],
     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -71,7 +71,7 @@ Widget _pair(bool dark, bool clear, {required bool native}) {
         height: 44,
         child: native
             ? null
-            : LiquidPrism(glass: glass, child: _label(dark, 0)),
+            : PrismSurface(glass: glass, child: _label(dark, 0)),
       ),
       SizedBox(
         key: measured ? _capsule : null,
@@ -79,17 +79,17 @@ Widget _pair(bool dark, bool clear, {required bool native}) {
         height: 44,
         child: native
             ? null
-            : LiquidPrism(glass: glass, child: _label(dark, 1)),
+            : PrismSurface(glass: glass, child: _label(dark, 1)),
       ),
     ],
   );
   return native || const bool.fromEnvironment('PRISM_UNGROUPED')
       ? row
-      : LiquidPrismGroup(child: row);
+      : PrismGroup(child: row);
 }
 
 Widget _column(bool dark) => Expanded(
-  child: LiquidPrismTheme(
+  child: PrismTheme(
     brightness: dark ? Brightness.dark : Brightness.light,
     child: Column(
       children: [
@@ -303,9 +303,9 @@ Rect _rect(GlobalKey key) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload(enableHDR: _hdrEnabled);
+  await Prism.initialize(enableHDR: _hdrEnabled);
   final program = await ui.FragmentProgram.fromAsset(
-    '../tool/hdr_probe/probe.frag',
+    'probes/hdr_probe/probe.frag',
   );
   runApp(
     Directionality(
@@ -357,7 +357,7 @@ Future<void> main() async {
   await _readback(program);
   if (const bool.fromEnvironment('PRISM_HDR_CYCLE')) {
     for (final enabled in [false, true]) {
-      await LiquidPrism.preload(enableHDR: enabled);
+      await Prism.initialize(enableHDR: enabled);
       _hdrEnabled = enabled;
       await Future<void>.delayed(const Duration(seconds: 2));
       _log('HDR_PROBE cycle enabled=$enabled');

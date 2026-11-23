@@ -4,7 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_driver/driver_extension.dart';
 
-import 'package:liquid_prism_example/controls_main.dart' as demo;
+import '../benchmarks/controls_main.dart' as demo;
 
 import 'package:liquid_prism/liquid_prism.dart';
 
@@ -20,15 +20,13 @@ Future<void> main() async {
         result['state'] = state;
         void visit(Element element) {
           final widget = element.widget;
-          if (widget is LiquidPrismSwitch &&
-              widget.key == const ValueKey('switch')) {
+          if (widget is PrismSwitch && widget.key == const ValueKey('switch')) {
             state['switch'] = widget.value;
           }
-          if (widget is LiquidPrismSlider &&
-              widget.key == const ValueKey('slider')) {
+          if (widget is PrismSlider && widget.key == const ValueKey('slider')) {
             state['slider'] = widget.value;
           }
-          if (widget is LiquidPrismSegmentedControl<int> &&
+          if (widget is PrismSegmentedControl<int> &&
               widget.key == const ValueKey('segments')) {
             state['segments'] = widget.selectedValue;
           }
