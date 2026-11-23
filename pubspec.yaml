@@ -10,10 +10,6 @@ topics:
   - animation
   - ios
 
-platforms:
-  android:
-  ios:
-
 environment:
   sdk: ^3.14.0
   flutter: ">=3.50.0"
