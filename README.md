@@ -31,7 +31,7 @@ Upgrading from `0.x`? See the [1.0 migration guide](doc/migration-1.0.md) and [C
 
 ## Your first glass surface
 
-![Regular frosted PrismSurface refracting over a colorful backdrop](assets/demos/surface.gif)
+https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271
 
 ```dart
 import 'package:liquid_prism/liquid_prism.dart';
@@ -77,7 +77,7 @@ Choose a material with `PrismGlass.regular`, `PrismGlass.clear`, or `PrismGlass.
 
 ### Clear glass
 
-![Clear PrismSurface showing sharp rim refraction](assets/demos/clear.gif)
+https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a
 
 ```dart
 PrismSurface(
@@ -89,7 +89,7 @@ PrismSurface(
 
 ### Glass shapes
 
-![Rounded rectangle, circle, and capsule PrismSurface shapes with interactive press feedback](assets/demos/shapes.gif)
+https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170
 
 ```dart
 Wrap(
@@ -141,7 +141,7 @@ All controls are parent-owned: a null callback disables every input path, and co
 
 ### Switch
 
-![PrismSwitch lifting into a stretched clear glass lens](assets/demos/switch.gif)
+https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c
 
 ```dart
 PrismSwitch(
@@ -154,7 +154,7 @@ PrismSwitch(
 
 ### Slider
 
-![PrismSlider with expanding held glass knob and continuous endpoint fill blend](assets/demos/slider.gif)
+https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106
 
 ```dart
 PrismSlider(
@@ -171,7 +171,7 @@ PrismSlider(
 
 Compact by default; pass `PrismTabBarStyle(sizing: PrismTabBarSizing.fill)` for full-width navigation.
 
-![PrismTabBar gliding a lifted glass pill with chromatic rim fringe and live foreground refraction](assets/demos/tabbar.gif)
+https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142
 
 ```dart
 PrismTabBar(
