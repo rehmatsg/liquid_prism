@@ -44,7 +44,7 @@ enum HDRProbe {
   }
 }
 
-/// Research only, for lib/parity_main.dart (tool/glass_parity): SwiftUI
+/// Research only, for benchmarks/parity_main.dart (probes/glass_parity): SwiftUI
 /// `glassEffect(.regular)` shapes in a non-interactive hosting view above the
 /// Flutter view, so native glass samples Flutter's backdrop. Also reads the
 /// device glass tint amount through private UIKit API and dumps the native
@@ -58,7 +58,7 @@ enum ParityChannel {
   private static let everyImage = UnsafeMutableRawPointer(bitPattern: -2)
 
   /// `UIViewGlassGetTintAmount` returns an NSNumber (see
-  /// tool/native_dispersion_probe's TintSweep.swift).
+  /// probes/native_dispersion_probe's TintSweep.swift).
   static var amount: NSNumber? {
     guard let pointer = dlsym(everyImage, "UIViewGlassGetTintAmount") else { return nil }
     let getter = unsafeBitCast(pointer, to: (@convention(c) () -> Unmanaged<AnyObject>?).self)
@@ -174,7 +174,7 @@ enum ParityChannel {
   }
 
   /// Writes every native glass layer's filters (inputs discovered from the
-  /// filter's keyed archive, as tool/native_dispersion_probe's Extractor.m).
+  /// filter's keyed archive, as probes/native_dispersion_probe's Extractor.m).
   private static func dump(name: String, slot: String = "main") -> String? {
     guard let view = (slot == "main" ? host : probeHosts[slot])?.view, let window else { return nil }
     var layers: [[String: Any]] = []
@@ -255,7 +255,7 @@ private struct ParityGlass: View {
   }
 }
 
-/// Device telemetry for lib/bench_main.dart: keeps the screen awake at a fixed
+/// Device telemetry for benchmarks/bench_main.dart: keeps the screen awake at a fixed
 /// brightness and reports thermal state, battery and process CPU time.
 enum BenchChannel {
   static func register(_ messenger: FlutterBinaryMessenger) {
