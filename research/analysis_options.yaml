@@ -1,0 +1,13 @@
+include: package:flutter_lints/flutter.yaml
+
+formatter:
+  trailing_commas: preserve
+
+analyzer:
+  errors:
+    # Research drivers inspect renderer internals (roles, presence, chrome).
+    invalid_use_of_internal_member: ignore
+  exclude:
+    - build/**
+    - ios/**
+    - macos/**
