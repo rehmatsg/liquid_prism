@@ -31,7 +31,7 @@ Upgrading from `0.x`? See the [1.0 migration guide](doc/migration-1.0.md) and [C
 
 ## Your first glass surface
 
-https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271
+https://github.com/user-attachments/assets/219dc3e0-f48d-4790-a473-492f5849f47e
 
 ```dart
 import 'package:liquid_prism/liquid_prism.dart';
@@ -77,7 +77,7 @@ Choose a material with `PrismGlass.regular`, `PrismGlass.clear`, or `PrismGlass.
 
 ### Clear glass
 
-https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a
+https://github.com/user-attachments/assets/85cbce99-ef16-45bc-b7dd-5014bcd28693
 
 ```dart
 PrismSurface(
@@ -89,7 +89,7 @@ PrismSurface(
 
 ### Glass shapes
 
-https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170
+https://github.com/user-attachments/assets/3d5205f0-d5e5-4270-ad90-b41d4b5e4b76
 
 ```dart
 Wrap(
@@ -141,7 +141,7 @@ All controls are parent-owned: a null callback disables every input path, and co
 
 ### Switch
 
-https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c
+https://github.com/user-attachments/assets/3b8dfa3b-2480-46bb-b416-392e9d0e6c64
 
 ```dart
 PrismSwitch(
@@ -154,7 +154,7 @@ PrismSwitch(
 
 ### Slider
 
-https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106
+https://github.com/user-attachments/assets/badff0e6-90bf-4fbb-b891-3efd8cc090b8
 
 ```dart
 PrismSlider(
@@ -171,7 +171,7 @@ PrismSlider(
 
 Compact by default; pass `PrismTabBarStyle(sizing: PrismTabBarSizing.fill)` for full-width navigation.
 
-https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142
+https://github.com/user-attachments/assets/011a4e2a-59ce-4b0a-aca2-baa88c515383
 
 ```dart
 PrismTabBar(
