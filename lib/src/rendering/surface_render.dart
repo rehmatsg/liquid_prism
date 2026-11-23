@@ -766,9 +766,12 @@ class PrismFrostLayer extends ContainerLayer {
 
   Rect bounds = Rect.zero;
 
-  void addFill(ui.SceneBuilder builder, Rect bounds) {
-    final outer = bounds.inflate(1);
-    final middle = outer.center.dx;
+  void addFill(ui.SceneBuilder builder, Rect bounds, Matrix4 toDevice) {
+    final aligned = pixelAlignedInterior(bounds, toDevice);
+    final outer = aligned ?? bounds.inflate(1);
+    final middle = aligned == null
+        ? outer.center.dx
+        : pixelAlignedSplit(outer.center.dx, toDevice);
     for (var i = 0; i < 2; i++) {
       builder.pushClipRect(
         i == 0
@@ -833,7 +836,7 @@ class PrismFrostLayer extends ContainerLayer {
       configureFill(sigma, PrismFillShare.keyFor(owner, this, sigma));
     }
     addChildrenToScene(builder);
-    if (sigma != null) addFill(builder, bounds);
+    if (sigma != null) addFill(builder, bounds, compositedTransform(this));
   }
 }
 

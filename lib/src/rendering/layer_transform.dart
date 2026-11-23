@@ -83,3 +83,36 @@ bool transformedAfterRaster({
   }
   return false;
 }
+
+/// Shrinks [rect] to the whole device pixels it covers under [toDevice].
+@internal
+Rect? pixelAlignedInterior(Rect rect, Matrix4 toDevice) {
+  final m = toDevice.storage;
+  if (m[1] != 0 || m[4] != 0 || m[3] != 0 || m[7] != 0 || m[15] != 1) {
+    return null;
+  }
+  final sx = m[0];
+  final sy = m[5];
+  if (sx <= 0 || sy <= 0) return null;
+  const slack = 1e-3;
+  final left = (rect.left * sx + m[12] - slack).ceilToDouble();
+  final top = (rect.top * sy + m[13] - slack).ceilToDouble();
+  final right = (rect.right * sx + m[12] + slack).floorToDouble();
+  final bottom = (rect.bottom * sy + m[13] + slack).floorToDouble();
+  if (right <= left || bottom <= top) return null;
+  return Rect.fromLTRB(
+    (left - m[12]) / sx,
+    (top - m[13]) / sy,
+    (right - m[12]) / sx,
+    (bottom - m[13]) / sy,
+  );
+}
+
+/// Moves a vertical split at [x] onto the nearest device pixel boundary.
+@internal
+double pixelAlignedSplit(double x, Matrix4 toDevice) {
+  final m = toDevice.storage;
+  final sx = m[0];
+  if (m[1] != 0 || m[4] != 0 || sx <= 0) return x;
+  return ((x * sx + m[12]).roundToDouble() - m[12]) / sx;
+}

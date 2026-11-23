@@ -355,6 +355,7 @@ class PrismGroupData {
     }
     builder.addPicture(Offset.zero, _sharedShadows!);
     var joined = false;
+    final toDevice = compositedTransform(host.shadowLayer!);
     for (final entry in transforms.entries) {
       final member = entry.key;
       final frost = member.frostLayer;
@@ -376,7 +377,7 @@ class PrismGroupData {
           PrismFillShare.keyFor(member, host.shadowLayer!, sigma, join: joined),
         );
         joined = true;
-        frost.addFill(builder, contour.getBounds());
+        frost.addFill(builder, contour.getBounds(), toDevice);
       }
       builder.pop();
       for (final _ in memberClips) {
