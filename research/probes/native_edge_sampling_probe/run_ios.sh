@@ -4,7 +4,7 @@
 # layer dump and meta.json into $1 (default: _research/edge_sampling/ios-<ts>).
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
-root=$(cd "$here/../.." && pwd)
+root=$(cd "$here/../../.." && pwd)
 : "${SIM:?set SIM to a booted iOS simulator UDID}"
 out=${1:-"$root/_research/edge_sampling/ios-$(date +%Y%m%d-%H%M%S)"}
 build="$here/build/ios"

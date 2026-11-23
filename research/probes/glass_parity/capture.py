@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Captures example/lib/parity_main.dart screenshots (see README.md).
+"""Captures research/benchmarks/parity_main.dart screenshots (see README.md).
 
   capture.py sim      --udid <sim> [--amounts 0,0.25,0.5,0.75,1] [--build]
   capture.py device   --udid <phone> [--mode sweep|settings|watch] [--build]
@@ -23,9 +23,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-EXAMPLE = ROOT / "example"
-PROBE = ROOT / "tool" / "native_dispersion_probe"
+ROOT = Path(__file__).resolve().parents[3]
+APP = ROOT / "research"
+PROBE = ROOT / "research" / "probes" / "native_dispersion_probe"
 BUNDLE = "dev.rehmatsg.liquidPrismExample"
 TEAM = "9C3Z7YY9BP"
 
@@ -53,10 +53,10 @@ def amounts(args) -> list[str]:
 
 def build(kind: str) -> Path:
     if kind == "sim":
-        run(["flutter", "build", "ios", "--simulator", "-t", "lib/parity_main.dart"], cwd=EXAMPLE)
-        return EXAMPLE / "build/ios/iphonesimulator/Runner.app"
-    run(["flutter", "build", "ios", "--release", "-t", "lib/parity_main.dart"], cwd=EXAMPLE)
-    return EXAMPLE / "build/ios/iphoneos/Runner.app"
+        run(["flutter", "build", "ios", "--simulator", "-t", "benchmarks/parity_main.dart"], cwd=APP)
+        return APP / "build/ios/iphonesimulator/Runner.app"
+    run(["flutter", "build", "ios", "--release", "-t", "benchmarks/parity_main.dart"], cwd=APP)
+    return APP / "build/ios/iphoneos/Runner.app"
 
 
 # --------------------------------------------------------------------------
@@ -84,7 +84,7 @@ def capture_sim(args) -> Path:
     out = out_dir(args, "sim")
     udid = args.udid
     if args.build or args.install:
-        app = build("sim") if args.build else EXAMPLE / "build/ios/iphonesimulator/Runner.app"
+        app = build("sim") if args.build else APP / "build/ios/iphonesimulator/Runner.app"
         run(["xcrun", "simctl", "install", udid, str(app)])
     first = True
     for appearance in args.appearances.split(",") if args.per_appearance else [args.appearances]:
@@ -154,7 +154,7 @@ def xcuitest(args, kind: str, device: bool) -> Path:
     out = out_dir(args, kind)
     udid = args.udid
     if device and (args.build or args.install):
-        app = build("device") if args.build else EXAMPLE / "build/ios/iphoneos/Runner.app"
+        app = build("device") if args.build else APP / "build/ios/iphoneos/Runner.app"
         run(["xcrun", "devicectl", "device", "install", "app", "--device", udid, str(app)])
     run(["xcodegen", "generate", "--spec", "project.yml"], cwd=PROBE, capture_output=True)
     test = {"sweep": "testSweep", "settings": "testSettings", "watch": "testWatch"}[args.mode]

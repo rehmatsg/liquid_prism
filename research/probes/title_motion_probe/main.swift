@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Run with `swift tool/title_motion_probe/main.swift` on macOS 14 or later.
+// Run with `swift research/probes/title_motion_probe/main.swift` on macOS 14 or later.
 // These are public Spring samples, not measurements of a system title transition.
 let candidates: [(String, Spring)] = [
     ("current", Spring(duration: 0.45, bounce: 0.3)),

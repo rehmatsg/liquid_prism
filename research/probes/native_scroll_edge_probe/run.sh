@@ -2,7 +2,7 @@
 # Builds the probe, runs variants on a simulator, screenshots each state the
 # moment the app writes its extraction marker, then copies the app's JSON and
 # images to OUT.
-#   tool/native_scroll_edge_probe/run.sh <simulator-udid> <OUT> [testSoftLight ...]
+#   research/probes/native_scroll_edge_probe/run.sh <simulator-udid> <OUT> [testSoftLight ...]
 set -euo pipefail
 UDID=$1; OUT=$(mkdir -p "$2" && cd "$2" && pwd); shift 2
 cd "$(dirname "$0")"

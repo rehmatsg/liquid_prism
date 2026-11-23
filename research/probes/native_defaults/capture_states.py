@@ -25,7 +25,7 @@ def main():
         "xcodebuild",
         "test-without-building",
         "-project",
-        "tool/native_dispersion_probe/DispersionSpecs.xcodeproj",
+        "research/probes/native_dispersion_probe/DispersionSpecs.xcodeproj",
         "-scheme",
         "DispersionSpecs",
         "-destination",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compact native control captures without deriving constants from pixels.
 
-Usage: python3 tool/extract_controls_spec.py _research/control_specs/raw
+Usage: python3 research/probes/extract_controls_spec.py _research/control_specs/raw
 Raw directories: specs/ (UIView/runtime), layers/ (CALayer), motion/ (display-link).
 """
 import hashlib
@@ -10,7 +10,7 @@ from pathlib import Path
 import sys
 
 root = Path(sys.argv[1])
-output = Path(__file__).resolve().parents[1] / 'doc/native_controls_spec.json'
+output = Path(__file__).resolve().parents[1] / 'specs/native_controls_spec.json'
 
 def read(folder, name):
     return json.loads((root / folder / name).read_text())

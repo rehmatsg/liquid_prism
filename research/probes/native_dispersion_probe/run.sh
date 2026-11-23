@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the dispersion probe, runs tests on one simulator, screenshots the rest
 # state and each held state when the app writes its marker, then copies dumps.
-#   tool/native_dispersion_probe/run.sh <simulator-udid> <OUT> [testControlsVDark ...]
+#   research/probes/native_dispersion_probe/run.sh <simulator-udid> <OUT> [testControlsVDark ...]
 set -euo pipefail
 UDID=$1; OUT=$(mkdir -p "$2" && cd "$2" && pwd); shift 2
 cd "$(dirname "$0")"

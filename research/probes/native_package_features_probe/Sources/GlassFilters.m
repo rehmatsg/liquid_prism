@@ -2,7 +2,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 #import <math.h>
-// Research only (copied from tool/native_dispersion_probe/Sources/Extractor.m):
+// Research only (copied from research/probes/native_dispersion_probe/Sources/Extractor.m):
 // records every layer's filters and all their input keys, for the --glass
 // clear-outline fixture. Writes Documents/extracted/<name>.json.
 static id Safe(id o, NSString *k){ @try { return [o valueForKey:k]; } @catch(NSException *e){ return nil; } }

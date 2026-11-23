@@ -2,7 +2,8 @@
 """Compare matched native/defaults captures along the regular capsule's top rim.
 
 Run with a native capture directory and one or more Flutter capture directories.
-Images must be from tool/native_defaults and example/test_driver/native_defaults.
+Images must be from research/probes/native_defaults and
+research/test_driver/native_defaults.
 """
 import argparse
 from pathlib import Path

@@ -4,7 +4,7 @@
 # ///
 """Measure HDR circle highlights from a decoded RGBA Float32 capture.
 
-uv run tool/hdr_probe/measure.py RAW --width W --height H --circle CX CY R --out PREFIX
+uv run research/probes/hdr_probe/measure.py RAW --width W --height H --circle CX CY R --out PREFIX
 Use analyze.swift --raw RAW IMAGE.heic first. Coordinates are pixel edges;
 samples are bilinear at pixel centres. Radius is a fitted contour, not a
 recovered native layout value. SDR white is sampled at (200,120).

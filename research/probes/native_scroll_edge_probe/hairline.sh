@@ -2,7 +2,7 @@
 # Hard edge hairline probe: builds the app, launches it directly per variant
 # (no UI test), screenshots each state when the app writes its marker, then
 # copies the JSON out.
-#   tool/native_scroll_edge_probe/hairline.sh <simulator-udid> <OUT> ["--light" "--light --bottom" ...]
+#   research/probes/native_scroll_edge_probe/hairline.sh <simulator-udid> <OUT> ["--light" "--light --bottom" ...]
 set -euo pipefail
 UDID=$1; OUT=$(mkdir -p "$2" && cd "$2" && pwd); shift 2
 cd "$(dirname "$0")"

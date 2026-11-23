@@ -4,7 +4,7 @@
 # ///
 """Compare the dark contour in a paired devicectl SDR capture, not HDR luminance.
 
-uv run tool/hdr_probe/compare.py IMAGE.png --log RUN.log
+uv run research/probes/hdr_probe/compare.py IMAGE.png --log RUN.log
 """
 import argparse
 import json

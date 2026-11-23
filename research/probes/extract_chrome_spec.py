@@ -7,7 +7,7 @@ import re
 import sys
 
 root = Path(sys.argv[1])
-out = Path(__file__).resolve().parents[1] / 'doc/native_chrome_spec.json'
+out = Path(__file__).resolve().parents[1] / 'specs/native_chrome_spec.json'
 used = set()
 
 

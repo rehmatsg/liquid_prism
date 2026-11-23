@@ -1,7 +1,7 @@
 import XCTest
 
-/// Drives example/lib/parity_main.dart (bundle dev.rehmatsg.liquidPrismExample)
-/// for tool/glass_parity. Each frame the app announces "ready <seq> ..." on the
+/// Drives research/benchmarks/parity_main.dart (bundle dev.rehmatsg.liquidPrismExample)
+/// for research/probes/glass_parity. Each frame the app announces "ready <seq> ..." on the
 /// accessibility element `parity-status`; the test screenshots it (XCTest
 /// attachment) and taps to advance until "done <seq> ...". Screenshots are
 /// self-describing through the app's code strip.

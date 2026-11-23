@@ -1,7 +1,7 @@
 # /// script
 # dependencies = ["numpy", "scipy"]
 # ///
-"""Fit native presentation traces. Run: uv run tool/fit_navigation_titles.py <directory>."""
+"""Fit native presentation traces. Run: uv run research/probes/fit_navigation_titles.py <directory>."""
 
 import argparse
 import json

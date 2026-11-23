@@ -4,10 +4,10 @@
 # ///
 """Native-vs-Flutter error numbers from parity screenshots (see README.md).
 
-  uv run tool/glass_parity/analyze.py <dir-or-png>... [--out <dir>]
+  uv run research/probes/glass_parity/analyze.py <dir-or-png>... [--out <dir>]
 
 Every screenshot is decoded on its own through the code strip painted by
-example/lib/parity_main.dart; folders are searched recursively for *.png and
+research/benchmarks/parity_main.dart; folders are searched recursively for *.png and
 for filters-*.json dumps. Writes cases.csv, summary.csv, report.json,
 report.html and crops/ to --out (default: <first input>/report).
 """
@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 # Strip pattern index -> name, as parity_main.dart's _definitions (and each
 # run's geometry.json). Patterns without a dedicated metric get the generic
 # interior error only.
@@ -279,7 +279,7 @@ SPEC_KEYS = [
 
 
 def filter_rows(paths):
-    spec = json.loads((ROOT / "doc" / "native_defaults_spec.json").read_text())["measured"]
+    spec = json.loads((ROOT / "research" / "specs" / "native_defaults_spec.json").read_text())["measured"]
     rows = []
     for path in sorted(paths):
         d = json.loads(path.read_text())
@@ -538,7 +538,7 @@ img{image-rendering:pixelated;max-width:100%}small{color:var(--muted)}
         short = [k.replace("inputBlurFill", "fill").replace("inputFaceColorMatrix", "face").replace("input", "")
                  for k in keys]
         parts.append("<h2>Native glassBackground inputs</h2><p><small>One row per dump and shape size; "
-                     "spec = doc/native_defaults_spec.json measured (only at 0, .25, .5, .75, 1).</small></p><table><tr>"
+                     "spec = research/specs/native_defaults_spec.json measured (only at 0, .25, .5, .75, 1).</small></p><table><tr>"
                      "<th>style</th><th>tint</th><th>size</th>" + "".join(f"<th>{e(s)}</th>" for s in short)
                      + "<th>spec</th><th class=l>file</th></tr>")
         seen = set()

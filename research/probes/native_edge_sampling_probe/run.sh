@@ -4,7 +4,7 @@
 # The terminal needs Screen Recording permission for window captures.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
-root=$(cd "$here/../.." && pwd)
+root=$(cd "$here/../../.." && pwd)
 out=${1:-"$root/_research/edge_sampling/$(date +%Y%m%d-%H%M%S)"}
 build="$here/build"
 app="$build/EdgeProbe.app"

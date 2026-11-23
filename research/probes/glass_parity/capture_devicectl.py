@@ -4,7 +4,7 @@
 # ///
 """Device capture without XCTest: devicectl launch + devicectl screenshots.
 
-  uv run tool/glass_parity/capture_devicectl.py --udid <phone> --out <dir> \
+  uv run research/probes/glass_parity/capture_devicectl.py --udid <phone> --out <dir> \
       [--amounts 0,0.5,1] [--patterns vedge,black] [--appearances light,dark] \
       [--layout default|ladder] [--dwell 2.5] [--install <Runner.app>]
 
