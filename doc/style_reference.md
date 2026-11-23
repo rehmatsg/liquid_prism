@@ -103,8 +103,9 @@ width for its continuous endpoint blend, even when the held knob grows or flexes
 `refractContent`, `contentRefraction` and `contentDepth` default to true / 14 /
 11.2 for the held selection's foreground lens.
 
-The glass variant defaults to track 48, selection 40, inset 4 and 15-point
-regular labels, measured from a segmented picker in an iOS toolbar.
+The glass variant defaults to track 44, selection 36, inset 4 and 15-point
+regular labels, after a segmented picker in an iOS navigation toolbar. Use
+track 48 and selection 40 in 48-point bars.
 
 Segments divide final width equally. `foregroundColor` overrides both label states;
 `selectedForegroundColor` applies only to the resting selected label. Child text

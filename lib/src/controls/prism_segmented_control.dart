@@ -62,8 +62,8 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
     final glass = appearance.variant == PrismSegmentedVariant.glass;
     final fontSize = (glass ? 15.0 : 13.0) * scale;
     final tracking = glass ? -.23 * scale : null;
-    var trackHeight = (appearance.trackHeight ?? (glass ? 48 : 32)) * scale;
-    var thumbHeight = (appearance.thumbHeight ?? (glass ? 40 : 28)) * scale;
+    var trackHeight = (appearance.trackHeight ?? (glass ? 44 : 32)) * scale;
+    var thumbHeight = (appearance.thumbHeight ?? (glass ? 36 : 28)) * scale;
     final inset = (appearance.selectionInset ?? (glass ? 4 : 2)) * scale;
     var hitHeight = math.max<double>(
       glass ? math.max(44, trackHeight) : 44,

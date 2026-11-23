@@ -268,11 +268,12 @@ PrismSegmentedControl<String>(
 )
 ```
 
-The track becomes a glass capsule 48 points tall, the resting selection a tinted
-pill inset 4 points, and labels 15-point regular in the label color for both
+The track becomes a glass capsule 44 points tall, the height of a navigation
+toolbar capsule, the resting selection a tinted pill inset 4 points, and labels 15-point regular in the label color for both
 states. Holding the selection lifts it into the same lens the tab bar uses.
 Gestures, semantics, sizing and every other style field work as in the plain
-variant. Set `glass` to choose the track material, and set the variant in
+variant. In a 48-point bar, such as a bottom toolbar or the iPhone Duo rail, set
+`trackHeight: 48` and `thumbHeight: 40`. Set `glass` to choose the track material, and set the variant in
 `PrismThemeData.segmentedControl` to apply it app-wide.
 
 A touch on the selected segment grabs the selection: it claims the pointer,
