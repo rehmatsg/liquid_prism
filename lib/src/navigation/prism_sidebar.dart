@@ -2,18 +2,35 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show internal;
 import 'package:flutter/widgets.dart';
-
-import '../controls/prism_button.dart';
-import '../controls/prism_button_style.dart';
-import '../core/prism_badge.dart';
-import '../core/prism_colors.dart';
-import '../core/prism_glass.dart';
-import '../core/prism_haptics.dart';
-import '../theme/prism_theme.dart';
-import 'prism_tab_bar.dart';
+import 'package:liquid_prism/src/controls/prism_button.dart';
+import 'package:liquid_prism/src/controls/prism_button_style.dart';
+import 'package:liquid_prism/src/core/prism_badge.dart';
+import 'package:liquid_prism/src/core/prism_colors.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_haptics.dart';
+import 'package:liquid_prism/src/navigation/prism_tab_bar.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Preferred floating dock or sidebar placement for scaffold tabs.
-enum PrismTabBarPlacement { automatic, bottom, top, leading, trailing, sidebar }
+enum PrismTabBarPlacement {
+  /// Chooses the tab placement from context.
+  automatic,
+
+  /// Places tabs in the bottom dock.
+  bottom,
+
+  /// Places tabs at the top.
+  top,
+
+  /// Places tabs along the leading edge.
+  leading,
+
+  /// Places tabs along the trailing edge.
+  trailing,
+
+  /// Places tabs in the sidebar.
+  sidebar,
+}
 
 @internal
 abstract final class NativeSidebar {
@@ -70,7 +87,7 @@ abstract final class NativeSidebar {
 @internal
 class PrismSidebar extends StatelessWidget {
   /// Creates a sidebar using the supplied tab bar's selection contract.
-  const PrismSidebar({
+  const new({
     super.key,
     required this.tabBar,
     required this.top,
@@ -274,7 +291,7 @@ class PrismSidebar extends StatelessWidget {
 }
 
 class _SelectionPainter extends CustomPainter {
-  const _SelectionPainter(this.fill);
+  const new(this.fill);
   final (Color, BlendMode) fill;
 
   @override
@@ -299,11 +316,7 @@ class _SelectionPainter extends CustomPainter {
 @internal
 class SidebarToggle extends StatelessWidget {
   /// Creates a sidebar visibility control.
-  const SidebarToggle({
-    super.key,
-    required this.label,
-    required this.onPressed,
-  });
+  const new({super.key, required this.label, required this.onPressed});
 
   /// Accessible label, also displayed when an icon is omitted.
   final String label;
@@ -337,7 +350,7 @@ class SidebarToggle extends StatelessWidget {
 }
 
 class _SidebarGlyph extends CustomPainter {
-  const _SidebarGlyph(this.color);
+  const new(this.color);
   final Color color;
 
   @override

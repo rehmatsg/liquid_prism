@@ -5,75 +5,75 @@ import 'package:material_ui/material_ui.dart';
 void main() {
   for (final rtl in [false, true]) {
     for (final hard in [false, true]) {
-      testWidgets(
-        'titles collapse with accessory, ${rtl ? 'RTL' : 'LTR'}, ${hard ? 'hard' : 'soft'} edge',
-        (tester) async {
-          final semantics = tester.ensureSemantics();
-          final scroll = ScrollController();
-          addTearDown(scroll.dispose);
-          await tester.pumpWidget(
-            MaterialApp(
-              home: Directionality(
-                textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-                child: PrismScaffold(
-                  title: const Text('Inline'),
-                  largeTitle: const Text('Large'),
-                  navigationBarStyle: const PrismNavigationBarStyle(
-                    revealExtent: 80,
+      testWidgets('titles collapse with accessory, '
+          '${rtl ? 'RTL' : 'LTR'}, ${hard ? 'hard' : 'soft'} edge', (
+        tester,
+      ) async {
+        final semantics = tester.ensureSemantics();
+        final scroll = ScrollController();
+        addTearDown(scroll.dispose);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Directionality(
+              textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+              child: PrismScaffold(
+                title: const Text('Inline'),
+                largeTitle: const Text('Large'),
+                navigationBarStyle: const PrismNavigationBarStyle(
+                  revealExtent: 80,
+                ),
+                leading: const SizedBox(width: 44, height: 44),
+                toolbar: [
+                  PrismToolbarItem(
+                    icon: const Icon(Icons.mail),
+                    label: 'Mail',
+                    onPressed: () {},
                   ),
-                  leading: const SizedBox(width: 44, height: 44),
-                  toolbar: [
-                    PrismToolbarItem(
-                      icon: const Icon(Icons.mail),
-                      label: 'Mail',
-                      onPressed: () {},
-                    ),
-                  ],
-                  accessory: const PreferredSize(
-                    preferredSize: Size.fromHeight(32),
-                    child: SizedBox(key: Key('accessory')),
-                  ),
-                  scrollEdgeStyle: PrismScrollEdgeStyle(
-                    variant: hard
-                        ? PrismScrollEdgeVariant.hard
-                        : PrismScrollEdgeVariant.soft,
-                  ),
-                  body: ListView(
-                    controller: scroll,
-                    children: const [SizedBox(height: 2000)],
-                  ),
+                ],
+                accessory: const PreferredSize(
+                  preferredSize: Size.fromHeight(32),
+                  child: SizedBox(key: Key('accessory')),
+                ),
+                scrollEdgeStyle: PrismScrollEdgeStyle(
+                  variant: hard
+                      ? PrismScrollEdgeVariant.hard
+                      : PrismScrollEdgeVariant.soft,
+                ),
+                body: ListView(
+                  controller: scroll,
+                  children: const [SizedBox(height: 2000)],
                 ),
               ),
             ),
-          );
-          await tester.pumpAndSettle();
-          expect(find.semantics.byLabel('Large'), findsOne);
-          expect(find.semantics.byLabel('Inline'), findsNothing);
-          final expanded = tester
-              .getTopLeft(find.byKey(const Key('accessory')))
-              .dy;
-          final largeRect = tester.getRect(find.text('Large'));
-          if (rtl) {
-            expect(largeRect.right, closeTo(800 - 16, 1));
-          } else {
-            expect(largeRect.left, 16);
-          }
-          scroll.jumpTo(100);
-          await tester.pumpAndSettle();
-          expect(find.semantics.byLabel('Inline'), findsOne);
-          expect(find.semantics.byLabel('Large'), findsNothing);
-          expect(
-            tester.getTopLeft(find.byKey(const Key('accessory'))).dy,
-            lessThan(expanded),
-          );
-          expect(
-            tester.getSemantics(find.bySemanticsLabel('Inline')),
-            matchesSemantics(label: 'Inline', isHeader: true),
-          );
-          expect(tester.takeException(), isNull);
-          semantics.dispose();
-        },
-      );
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.semantics.byLabel('Large'), findsOne);
+        expect(find.semantics.byLabel('Inline'), findsNothing);
+        final expanded = tester
+            .getTopLeft(find.byKey(const Key('accessory')))
+            .dy;
+        final largeRect = tester.getRect(find.text('Large'));
+        if (rtl) {
+          expect(largeRect.right, closeTo(800 - 16, 1));
+        } else {
+          expect(largeRect.left, 16);
+        }
+        scroll.jumpTo(100);
+        await tester.pumpAndSettle();
+        expect(find.semantics.byLabel('Inline'), findsOne);
+        expect(find.semantics.byLabel('Large'), findsNothing);
+        expect(
+          tester.getTopLeft(find.byKey(const Key('accessory'))).dy,
+          lessThan(expanded),
+        );
+        expect(
+          tester.getSemantics(find.bySemanticsLabel('Inline')),
+          matchesSemantics(label: 'Inline', isHeader: true),
+        );
+        expect(tester.takeException(), isNull);
+        semantics.dispose();
+      });
     }
   }
   testWidgets(

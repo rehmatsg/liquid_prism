@@ -1,8 +1,8 @@
 import 'dart:async' show FutureOr;
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show immutable, listEquals;
 
-import 'menu_icon.dart';
+import 'package:liquid_prism/src/menu/menu_icon.dart';
 
 /// The checkmark state of a menu row.
 enum PrismMenuElementState {
@@ -34,19 +34,20 @@ enum PrismMenuElementSize {
 /// An action, separator, section, submenu, or deferred menu element.
 sealed class PrismMenuElement {
   /// Creates a PrismMenuElement.
-  const PrismMenuElement();
+  const new();
 
   /// Serializes native wire fields.
   Map<String, Object?> toMap();
 }
 
 /// A selectable menu row with an optional result and callback.
+@immutable
 final class PrismMenuAction<T> extends PrismMenuElement {
   /// Creates a PrismMenuAction.
-  const PrismMenuAction({
+  const new({
+    required this.title,
     this.id,
     this.value,
-    required this.title,
     this.icon,
     this.state = .off,
     this.destructive = false,
@@ -143,9 +144,10 @@ final class PrismMenuAction<T> extends PrismMenuElement {
 }
 
 /// A separator between adjacent menu groups.
+@immutable
 final class PrismMenuDivider extends PrismMenuElement {
   /// Creates a PrismMenuDivider.
-  const PrismMenuDivider();
+  const new();
 
   /// Whether another value has the same type and fields.
   @override
@@ -163,9 +165,10 @@ final class PrismMenuDivider extends PrismMenuElement {
 }
 
 /// An inline group of menu elements with an optional header.
+@immutable
 final class PrismMenuSection extends PrismMenuElement {
   /// Creates a PrismMenuSection.
-  const PrismMenuSection({
+  const new({
     this.title = '',
     this.icon,
     this.children = const [],
@@ -234,9 +237,10 @@ final class PrismMenuSection extends PrismMenuElement {
 }
 
 /// A nested menu presented as a navigable row.
+@immutable
 final class PrismSubmenu extends PrismMenuElement {
   /// Creates a PrismSubmenu.
-  const PrismSubmenu({
+  const new({
     required this.title,
     this.icon,
     this.children = const [],
@@ -305,9 +309,10 @@ final class PrismSubmenu extends PrismMenuElement {
 }
 
 /// Menu elements loaded when the native menu requests them.
+@immutable
 final class PrismMenuDeferred extends PrismMenuElement {
   /// Creates a PrismMenuDeferred.
-  const PrismMenuDeferred({this.id, required this.loader});
+  const new({required this.loader, this.id});
 
   /// The stable wire identifier, minted automatically when omitted.
   final String? id;

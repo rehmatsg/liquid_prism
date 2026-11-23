@@ -21,11 +21,9 @@ void main() {
   });
 
   testWidgets('tapPoint anchor mode presents at the tap point', (t) async {
-    final menu = const PrismMenu(
-      children: [PrismMenuAction<Object?>(title: 'A')],
-    );
+    const menu = PrismMenu(children: [PrismMenuAction<Object?>(title: 'A')]);
     await t.pumpWidget(
-      Directionality(
+      const Directionality(
         textDirection: .ltr,
         child: Center(
           child: SizedBox(
@@ -34,7 +32,7 @@ void main() {
             child: PrismMenuRegion(
               menu: menu,
               anchor: .tapPoint,
-              child: const Text('trigger'),
+              child: Text('trigger'),
             ),
           ),
         ),
@@ -55,21 +53,15 @@ void main() {
   testWidgets('default (triggerRect) anchor sends the region bounds', (
     t,
   ) async {
-    final menu = const PrismMenu(
-      children: [PrismMenuAction<Object?>(title: 'A')],
-    );
+    const menu = PrismMenu(children: [PrismMenuAction<Object?>(title: 'A')]);
     await t.pumpWidget(
-      Directionality(
+      const Directionality(
         textDirection: .ltr,
         child: Align(
           alignment: .topLeft,
           child: PrismMenuRegion(
             menu: menu,
-            child: const SizedBox(
-              width: 100,
-              height: 40,
-              child: Text('trigger'),
-            ),
+            child: SizedBox(width: 100, height: 40, child: Text('trigger')),
           ),
         ),
       ),
@@ -87,9 +79,7 @@ void main() {
   testWidgets('builder mode: the child drives show; pointer still anchors', (
     t,
   ) async {
-    final menu = const PrismMenu(
-      children: [PrismMenuAction<Object?>(title: 'A')],
-    );
+    const menu = PrismMenu(children: [PrismMenuAction<Object?>(title: 'A')]);
     await t.pumpWidget(
       Directionality(
         textDirection: .ltr,
@@ -113,7 +103,7 @@ void main() {
 
   testWidgets('onSelected is called after dismissal with the value', (t) async {
     Object? reported;
-    final menu = const PrismMenu(
+    const menu = PrismMenu(
       children: [PrismMenuAction<Object?>(title: 'A', value: 'alpha')],
     );
     await t.pumpWidget(
@@ -131,25 +121,24 @@ void main() {
     await t.pump();
     final menuId = platform.shows.single.menuId;
     final actionId =
-        ((platform.shows.single.menu['items'] as List).single as Map)['id']
+        ((platform.shows.single.menu['items']! as List).single as Map)['id']
             as String;
-    platform.emit(PrismMenuActionEvent(menuId: menuId, actionId: actionId));
-    platform.emit(PrismMenuDismissed(menuId: menuId));
+    platform
+      ..emit(PrismMenuActionEvent(menuId: menuId, actionId: actionId))
+      ..emit(PrismMenuDismissed(menuId: menuId));
     await t.pump();
     expect(reported, 'alpha');
   });
 
   testWidgets('long-press trigger opens on long press, not tap', (t) async {
-    final menu = const PrismMenu(
-      children: [PrismMenuAction<Object?>(title: 'A')],
-    );
+    const menu = PrismMenu(children: [PrismMenuAction<Object?>(title: 'A')]);
     await t.pumpWidget(
-      Directionality(
+      const Directionality(
         textDirection: .ltr,
         child: PrismMenuRegion(
           menu: menu,
           trigger: .longPress,
-          child: const SizedBox(width: 100, height: 40, child: Text('trigger')),
+          child: SizedBox(width: 100, height: 40, child: Text('trigger')),
         ),
       ),
     );

@@ -2,13 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
 
-/// Geometry and glass overrides for [PrismTitle].
+/// Geometry and glass overrides for `PrismTitle`.
 @immutable
 final class PrismTitleStyle {
   /// Creates a partial title capsule style override.
-  const PrismTitleStyle({
+  const new({
     this.avatarSize,
     this.avatarOverlap,
     this.leadingSize,
@@ -17,11 +17,23 @@ final class PrismTitleStyle {
     this.padding,
     this.minHeight,
     this.glass,
-  }) : assert(avatarSize == null || avatarSize >= 0),
-       assert(avatarOverlap == null || avatarOverlap >= 0),
-       assert(leadingSize == null || leadingSize >= 0),
-       assert(leadingCornerRadius == null || leadingCornerRadius >= 0),
-       assert(minHeight == null || minHeight >= 0);
+  }) : assert(
+         avatarSize == null || avatarSize >= 0,
+         'avatarSize must be >= 0.',
+       ),
+       assert(
+         avatarOverlap == null || avatarOverlap >= 0,
+         'avatarOverlap must be >= 0.',
+       ),
+       assert(
+         leadingSize == null || leadingSize >= 0,
+         'leadingSize must be >= 0.',
+       ),
+       assert(
+         leadingCornerRadius == null || leadingCornerRadius >= 0,
+         'leadingCornerRadius must be >= 0.',
+       ),
+       assert(minHeight == null || minHeight >= 0, 'minHeight must be >= 0.');
 
   /// Side length of the square avatar slot.
   final double? avatarSize;
@@ -47,10 +59,10 @@ final class PrismTitleStyle {
   /// Surface glass recipe for the capsule.
   final PrismGlass? glass;
 
-  static const double _avatarSize = 64.0;
-  static const double _avatarOverlap = 6.0;
-  static const double _leadingSize = 22.0;
-  static const double _minHeight = 38.0;
+  static const double _avatarSize = 64;
+  static const double _avatarOverlap = 6;
+  static const double _leadingSize = 22;
+  static const double _minHeight = 38;
   static const EdgeInsetsDirectional _leadingPadding =
       EdgeInsetsDirectional.fromSTEB(11, 11, 10, 11);
   static const EdgeInsets _padding = EdgeInsets.symmetric(
@@ -67,7 +79,7 @@ final class PrismTitleStyle {
   /// Effective inline leading slot size.
   double get resolvedLeadingSize => leadingSize ?? _leadingSize;
 
-  /// Effective inline leading corner radius, capped to half [resolvedLeadingSize].
+  /// Effective corner radius, capped to half [resolvedLeadingSize].
   double get resolvedLeadingCornerRadius {
     final half = resolvedLeadingSize / 2;
     return math.min(leadingCornerRadius ?? half, half);

@@ -1,4 +1,4 @@
-/// Liquid glass surfaces, interactive controls, adaptive chrome, and native iOS popup menus for Flutter.
+/// Liquid glass surfaces, controls, adaptive chrome, and native iOS menus.
 library;
 
 export 'src/controls/prism_button.dart' show PrismButton;

@@ -3,23 +3,22 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_glass.dart';
-import '../core/prism_haptics.dart';
-import '../menu/menu.dart';
-import '../menu/menus.dart';
-import '../rendering/recipe.dart';
-import '../rendering/surface.dart';
-import '../theme/prism_theme.dart';
-import 'prism_button_style.dart';
-import 'prism_pressable.dart';
+import 'package:liquid_prism/src/controls/prism_button_style.dart';
+import 'package:liquid_prism/src/controls/prism_pressable.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_haptics.dart';
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/menu/menus.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/surface.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 export 'prism_button_style.dart' show PrismButtonVariant;
 
 /// A glass action with text, icons, loading, and native menus.
 class PrismButton extends StatefulWidget {
   /// Creates a glass action with generated or custom content.
-  const PrismButton({
+  const new({
     super.key,
     required this.onPressed,
     required this.label,
@@ -40,14 +39,20 @@ class PrismButton extends StatefulWidget {
     this.autofocus = false,
     this.onFocusChange,
     this.mouseCursor,
-  }) : assert(child == null || icon == null),
-       assert(child == null || trailingIcon == null),
+  }) : assert(
+         child == null || icon == null,
+         'Child and icon are mutually exclusive.',
+       ),
+       assert(
+         child == null || trailingIcon == null,
+         'Child and trailingIcon are mutually exclusive.',
+       ),
        _iconOnly = false,
        menu = null,
        onMenuSelected = null;
 
   /// Creates an icon-only action with an accessible label.
-  const PrismButton.icon({
+  const new icon({
     super.key,
     required this.onPressed,
     required Widget this.icon,
@@ -73,7 +78,7 @@ class PrismButton extends StatefulWidget {
        onMenuSelected = null;
 
   /// Creates a button that owns native menu activation.
-  const PrismButton.menu({
+  const new menu({
     super.key,
     required PrismMenu this.menu,
     required this.label,
@@ -93,8 +98,14 @@ class PrismButton extends StatefulWidget {
     this.autofocus = false,
     this.onFocusChange,
     this.mouseCursor,
-  }) : assert(child == null || icon == null),
-       assert(child == null || trailingIcon == null),
+  }) : assert(
+         child == null || icon == null,
+         'Child and icon are mutually exclusive.',
+       ),
+       assert(
+         child == null || trailingIcon == null,
+         'Child and trailingIcon are mutually exclusive.',
+       ),
        _iconOnly = false,
        onPressed = null,
        onLongPress = null,
@@ -110,8 +121,14 @@ class PrismButton extends StatefulWidget {
   /// Visible label and default accessible name.
   final String label;
 
-  /// Custom content or generated leading and trailing icons.
-  final Widget? child, icon, trailingIcon;
+  /// Custom content replacing the generated label and icons.
+  final Widget? child;
+
+  /// Leading icon for generated content.
+  final Widget? icon;
+
+  /// Trailing icon for generated content.
+  final Widget? trailingIcon;
 
   /// Whether the button can activate.
   final bool enabled;
@@ -410,7 +427,7 @@ class _PrismButtonState extends State<PrismButton> {
 }
 
 class _PrismActivityIndicator extends StatefulWidget {
-  const _PrismActivityIndicator({required this.size});
+  const new({required this.size});
 
   final double size;
 
@@ -448,7 +465,7 @@ class _PrismActivityIndicatorState extends State<_PrismActivityIndicator>
 }
 
 class _SpokesPainter extends CustomPainter {
-  _SpokesPainter(this.progress, this.color) : super(repaint: progress);
+  new(this.progress, this.color) : super(repaint: progress);
 
   final Animation<double> progress;
   final Color color;
@@ -465,14 +482,15 @@ class _SpokesPainter extends CustomPainter {
     for (var i = 0; i < _count; i++) {
       final age = (head - i) % _count;
       paint.color = color.withValues(alpha: color.a * (1 - age / _count * .8));
-      canvas.save();
-      canvas.rotate(i * 2 * math.pi / _count);
-      canvas.drawLine(
-        Offset(0, -radius * .45),
-        Offset(0, -radius + paint.strokeWidth / 2),
-        paint,
-      );
-      canvas.restore();
+      canvas
+        ..save()
+        ..rotate(i * 2 * math.pi / _count)
+        ..drawLine(
+          Offset(0, -radius * .45),
+          Offset(0, -radius + paint.strokeWidth / 2),
+          paint,
+        )
+        ..restore();
     }
   }
 
@@ -482,21 +500,26 @@ class _SpokesPainter extends CustomPainter {
 }
 
 class _ButtonMetrics {
-  const _ButtonMetrics(
+  const new(
     this.fontSize,
     this.horizontal,
     this.vertical,
     this.iconSize,
     this.iconExtent,
   );
-  final double fontSize, horizontal, vertical, iconSize, iconExtent;
-  static _ButtonMetrics resolve(PrismControlSize size) => switch (size) {
+  factory resolve(PrismControlSize size) => switch (size) {
     PrismControlSize.mini ||
     PrismControlSize.small => const _ButtonMetrics(15, 10, 5, 16, 28),
     PrismControlSize.regular => const _ButtonMetrics(17, 12, 7, 18, 32),
     PrismControlSize.large ||
     PrismControlSize.extraLarge => const _ButtonMetrics(17, 20, 15, 24, 48),
   };
+
+  final double fontSize;
+  final double horizontal;
+  final double vertical;
+  final double iconSize;
+  final double iconExtent;
   EdgeInsets padding(bool iconOnly) => iconOnly
       ? EdgeInsets.all((iconExtent - iconSize) / 2)
       : EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical);

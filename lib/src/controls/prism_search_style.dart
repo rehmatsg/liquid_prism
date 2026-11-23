@@ -1,17 +1,23 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_motion.dart';
-import '../core/prism_optics.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
 
 /// Visibility behavior for a search field's cancel button.
-enum PrismSearchCancelVisibility { focused, always }
+enum PrismSearchCancelVisibility {
+  /// Shows the cancel button while the editor has focus.
+  focused,
 
-/// Visual and layout overrides for [PrismSearchField].
+  /// Shows the cancel button regardless of focus.
+  always,
+}
+
+/// Visual and layout overrides for `PrismSearchField`.
 @immutable
 class PrismSearchStyle {
   /// Creates a partial search field style override.
-  const PrismSearchStyle({
+  const new({
     this.height,
     this.restingInset,
     this.showCancelButton,
@@ -34,13 +40,28 @@ class PrismSearchStyle {
     this.blur,
     this.focusSpring,
     this.cancelSpring,
-  }) : assert(height == null || height >= 44),
-       assert(restingInset == null || restingInset >= 0),
-       assert(iconSize == null || iconSize > 0),
-       assert(clearWidth == null || clearWidth > 0),
-       assert(cancelWidth == null || cancelWidth >= 44),
-       assert(cancelSpacing == null || cancelSpacing >= 0),
-       assert(blur == null || (blur >= 0 && blur <= 12));
+  }) : assert(height == null || height >= 44, 'Height must be at least 44.'),
+       assert(
+         restingInset == null || restingInset >= 0,
+         'Resting inset must be non-negative.',
+       ),
+       assert(iconSize == null || iconSize > 0, 'Icon size must be positive.'),
+       assert(
+         clearWidth == null || clearWidth > 0,
+         'Clear width must be positive.',
+       ),
+       assert(
+         cancelWidth == null || cancelWidth >= 44,
+         'Cancel width must be at least 44.',
+       ),
+       assert(
+         cancelSpacing == null || cancelSpacing >= 0,
+         'Cancel spacing must be non-negative.',
+       ),
+       assert(
+         blur == null || (blur >= 0 && blur <= 12),
+         'Blur must be between 0 and 12.',
+       );
 
   /// Capsule height in logical pixels.
   final double? height;

@@ -258,67 +258,66 @@ void main() {
       );
     }
 
-    testWidgets(
-      'only the visible title handles taps, focus and semantics, sliver $sliver',
-      (tester) async {
-        phone(tester);
-        final semantics = tester.ensureSemantics();
-        final scroll = ScrollController(),
-            inlineFocus = FocusNode(),
-            largeFocus = FocusNode();
-        addTearDown(scroll.dispose);
-        addTearDown(inlineFocus.dispose);
-        addTearDown(largeFocus.dispose);
-        var inlineTaps = 0, largeTaps = 0;
-        await tester.pumpWidget(
-          _page(
-            sliver: sliver,
-            scroll: scroll,
-            title: PrismButton(
-              label: 'Inline action',
-              focusNode: inlineFocus,
-              onPressed: () => inlineTaps++,
-            ),
-            largeTitle: PrismButton(
-              label: 'Large action',
-              focusNode: largeFocus,
-              onPressed: () => largeTaps++,
-            ),
+    testWidgets('only the visible title handles taps, focus '
+        'and semantics, sliver $sliver', (tester) async {
+      phone(tester);
+      final semantics = tester.ensureSemantics();
+      final scroll = ScrollController();
+      final inlineFocus = FocusNode();
+      final largeFocus = FocusNode();
+      addTearDown(scroll.dispose);
+      addTearDown(inlineFocus.dispose);
+      addTearDown(largeFocus.dispose);
+      var inlineTaps = 0;
+      var largeTaps = 0;
+      await tester.pumpWidget(
+        _page(
+          sliver: sliver,
+          scroll: scroll,
+          title: PrismButton(
+            label: 'Inline action',
+            focusNode: inlineFocus,
+            onPressed: () => inlineTaps++,
           ),
-        );
-        await tester.pumpAndSettle();
-        expect(inlineFocus.canRequestFocus, isFalse);
-        expect(largeFocus.canRequestFocus, isTrue);
-        expect(find.semantics.byLabel('Inline action'), findsNothing);
-        await tester.tapAt(tester.getCenter(find.text('Inline action')));
-        expect(inlineTaps, 0);
-        await tester.tap(find.text('Large action'));
-        await tester.pumpAndSettle();
-        expect(largeTaps, 1);
-        largeFocus.requestFocus();
-        await tester.pump();
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pumpAndSettle();
-        expect(largeTaps, 2);
+          largeTitle: PrismButton(
+            label: 'Large action',
+            focusNode: largeFocus,
+            onPressed: () => largeTaps++,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(inlineFocus.canRequestFocus, isFalse);
+      expect(largeFocus.canRequestFocus, isTrue);
+      expect(find.semantics.byLabel('Inline action'), findsNothing);
+      await tester.tapAt(tester.getCenter(find.text('Inline action')));
+      expect(inlineTaps, 0);
+      await tester.tap(find.text('Large action'));
+      await tester.pumpAndSettle();
+      expect(largeTaps, 1);
+      largeFocus.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(largeTaps, 2);
 
-        scroll.jumpTo(150);
-        await tester.pumpAndSettle();
-        expect(largeFocus.canRequestFocus, isFalse);
-        expect(largeFocus.hasFocus, isFalse);
-        expect(inlineFocus.canRequestFocus, isTrue);
-        expect(find.semantics.byLabel('Large action'), findsNothing);
-        await tester.tap(find.text('Inline action'));
-        await tester.pumpAndSettle();
-        expect(inlineTaps, 1);
-        inlineFocus.requestFocus();
-        await tester.pump();
-        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-        await tester.pumpAndSettle();
-        expect(inlineTaps, 2);
-        expect(largeTaps, 2);
-        expect(tester.takeException(), isNull);
-        semantics.dispose();
-      },
-    );
+      scroll.jumpTo(150);
+      await tester.pumpAndSettle();
+      expect(largeFocus.canRequestFocus, isFalse);
+      expect(largeFocus.hasFocus, isFalse);
+      expect(inlineFocus.canRequestFocus, isTrue);
+      expect(find.semantics.byLabel('Large action'), findsNothing);
+      await tester.tap(find.text('Inline action'));
+      await tester.pumpAndSettle();
+      expect(inlineTaps, 1);
+      inlineFocus.requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(inlineTaps, 2);
+      expect(largeTaps, 2);
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+    });
   }
 }

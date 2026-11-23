@@ -44,12 +44,12 @@ void main() {
   }
 
   Widget app({
+    required ScrollController controller,
     bool scrollEdge = true,
     bool withTitle = true,
     Widget? leading,
     List<PrismToolbarItem> toolbar = const [],
     Color? background = const Color(0xFF101010),
-    required ScrollController controller,
   }) => CupertinoApp(
     debugShowCheckedModeBanner: false,
     home: PrismScaffold(

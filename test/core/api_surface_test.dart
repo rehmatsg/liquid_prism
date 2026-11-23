@@ -30,8 +30,13 @@ void main() {
 
   test('PrismSurface public constructor exposes no internal parameters', () {
     final source = File('lib/src/rendering/surface.dart').readAsStringSync();
-    final constructor = RegExp(r'const PrismSurface\(\{([\s\S]*?)\}\);')
-        .firstMatch(source);
+    final start = source.indexOf('class PrismSurface');
+    final end = source.indexOf('class RawPrismSurface');
+    expect(start, greaterThanOrEqualTo(0));
+    expect(end, greaterThan(start));
+    final block = source.substring(start, end);
+    final constructor = RegExp(r'const (?:PrismSurface|new)\(\{([\s\S]*?)\}\);')
+        .firstMatch(block);
     expect(constructor, isNotNull);
     final parameters = constructor!.group(1)!;
     for (final forbidden in const [

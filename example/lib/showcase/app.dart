@@ -1,15 +1,16 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/primitives.dart';
+import 'package:liquid_prism_example/showcase/component_page.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/pages.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 import 'package:material_ui/material_ui.dart' show DefaultMaterialLocalizations;
 
-import 'component_page.dart';
-import 'model.dart';
-import 'pages.dart';
-import 'widgets.dart';
-
+/// The interactive Liquid Prism component showcase.
 class PrismExample extends StatefulWidget {
-  const PrismExample({super.key});
+  /// Creates a [PrismExample].
+  const new({super.key});
   @override
   State<PrismExample> createState() => _PrismExampleState();
 }
@@ -71,18 +72,32 @@ class _PrismExampleState extends State<PrismExample> {
   );
 }
 
-enum ShowcaseTab { explore, studio, library }
+/// The top-level destinations in the showcase.
+enum ShowcaseTab {
+  /// Featured demonstrations and entry points.
+  explore,
 
+  /// Appearance and optics customization controls.
+  studio,
+
+  /// The searchable collection of component demonstrations.
+  library,
+}
+
+/// The showcase shell with shared controls and tab navigation.
 class ShowcaseHome extends StatefulWidget {
-  const ShowcaseHome({super.key, required this.model});
+  /// Creates a [ShowcaseHome].
+  const new({super.key, required this.model});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
   @override
   State<ShowcaseHome> createState() => _ShowcaseHomeState();
 }
 
 class _ShowcaseHomeState extends State<ShowcaseHome> {
-  var tab = ShowcaseTab.explore;
-  final scroll = {
+  ShowcaseTab tab = ShowcaseTab.explore;
+  final Map<ShowcaseTab, ScrollController> scroll = {
     for (final tab in ShowcaseTab.values) tab: ScrollController(),
   };
   final search = TextEditingController();
@@ -169,6 +184,7 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
   );
 }
 
+/// Builds toolbar actions for appearance and artwork selection.
 List<PrismToolbarItem> appearanceActions(ShowcaseModel model) => [
   PrismToolbarItem(
     icon: Icon(model.dark ? CupertinoIcons.sun_max : CupertinoIcons.moon),

@@ -1,8 +1,10 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
+/// A conversation demonstrating animated title compositions.
 class ConversationPage extends StatefulWidget {
-  const ConversationPage({super.key});
+  /// Creates a [ConversationPage].
+  const new({super.key});
 
   @override
   State<ConversationPage> createState() => _ConversationPageState();
@@ -94,7 +96,7 @@ class _ConversationPageState extends State<ConversationPage> {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.color, required this.initial});
+  const new({required this.color, required this.initial});
   final Color color;
   final String initial;
 

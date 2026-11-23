@@ -1,21 +1,36 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_lens_style.dart';
-import '../core/prism_motion.dart';
-import '../core/prism_optics.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
 
 /// Visibility behavior for tab labels.
-enum PrismTabLabelBehavior { always, selected, never }
+enum PrismTabLabelBehavior {
+  /// Shows labels for every tab.
+  always,
 
-/// Main-axis sizing behavior for [PrismTabBar].
-enum PrismTabBarSizing { compact, fill }
+  /// Shows only the selected tab label.
+  selected,
 
-/// Layout, typography, color, and lens overrides for [PrismTabBar].
+  /// Hides all tab labels.
+  never,
+}
+
+/// Main-axis sizing behavior for `PrismTabBar`.
+enum PrismTabBarSizing {
+  /// Sizes the bar to fit its tabs.
+  compact,
+
+  /// Fills the available main-axis extent.
+  fill,
+}
+
+/// Layout, typography, color, and lens overrides for `PrismTabBar`.
 @immutable
 class PrismTabBarStyle {
   /// Creates a partial tab bar style override.
-  const PrismTabBarStyle({
+  const new({
     this.glass,
     this.optics,
     this.blur,
@@ -42,21 +57,36 @@ class PrismTabBarStyle {
     this.contentRefraction,
     this.contentDepth,
     this.rimRefraction,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(height == null || height >= 44),
-       assert(iconSize == null || iconSize > 0),
+  }) : assert(
+         blur == null || (blur >= 0 && blur <= 12),
+         'blur must be >= 0 and <= 12.',
+       ),
+       assert(height == null || height >= 44, 'height must be >= 44.'),
+       assert(iconSize == null || iconSize > 0, 'iconSize must be > 0.'),
        assert(
          selectionBlur == null || (selectionBlur >= 0 && selectionBlur <= 12),
+         'selectionBlur must be >= 0 and <= 12.',
        ),
-       assert(minimumTabWidth == null || minimumTabWidth > 0),
-       assert(labelPadding == null || labelPadding >= 0),
+       assert(
+         minimumTabWidth == null || minimumTabWidth > 0,
+         'minimumTabWidth must be > 0.',
+       ),
+       assert(
+         labelPadding == null || labelPadding >= 0,
+         'labelPadding must be >= 0.',
+       ),
        assert(
          contentRefraction == null ||
              (contentRefraction >= 0 && contentRefraction <= 64),
+         'contentRefraction must be >= 0 and <= 64.',
        ),
-       assert(contentDepth == null || contentDepth > 0),
+       assert(
+         contentDepth == null || contentDepth > 0,
+         'contentDepth must be > 0.',
+       ),
        assert(
          rimRefraction == null || (rimRefraction >= 0 && rimRefraction <= 2),
+         'rimRefraction must be >= 0 and <= 2.',
        );
 
   /// Housing surface glass recipe.

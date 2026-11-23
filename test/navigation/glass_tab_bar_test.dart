@@ -113,20 +113,26 @@ Finder _tab(String name) => find.byWidgetPredicate(
 Rect _pill(WidgetTester tester) => tester.getRect(find.byType(PrismSelection));
 
 class _TabHarness extends StatefulWidget {
-  const _TabHarness({super.key, this.scrollable = false});
+  const new({super.key, this.scrollable = false});
   final bool scrollable;
   @override
   State<_TabHarness> createState() => _TabHarnessState();
 }
 
 class _TabHarnessState extends State<_TabHarness> {
-  final barKey = GlobalKey();
+  final GlobalKey<State<StatefulWidget>> barKey = GlobalKey();
   final scroll = ScrollController();
   final requests = <int>[];
-  int selected = 0, count = 3;
-  bool accept = true, enabled = true, reduced = false, rtl = false;
-  bool show = true, reparent = false;
-  double width = 360, textScale = 1;
+  int selected = 0;
+  int count = 3;
+  bool accept = true;
+  bool enabled = true;
+  bool reduced = false;
+  bool rtl = false;
+  bool show = true;
+  bool reparent = false;
+  double width = 360;
+  double textScale = 1;
   PrismMotion? motion;
   PrismThemeData theme = const PrismThemeData();
   PrismTabBarStyle style = const PrismTabBarStyle(
@@ -283,7 +289,8 @@ void _motionTests() {
     final finger = await tester.startGesture(start);
     await tester.pumpAndSettle();
     final held = _pill(tester).size;
-    var widest = held.width, shortest = held.height;
+    var widest = held.width;
+    var shortest = held.height;
     for (var i = 1; i <= 10; i++) {
       await finger.moveTo(start + Offset(16.0 * i, 0));
       await tester.pump(const Duration(milliseconds: 16));
@@ -311,11 +318,12 @@ void _motionTests() {
   ) async {
     final state = await _mountTabs(tester);
     state.update(() {
-      state.width = 274;
-      state.style = const PrismTabBarStyle(
-        haptics: false,
-        sizing: PrismTabBarSizing.fill,
-      );
+      state
+        ..width = 274
+        ..style = const PrismTabBarStyle(
+          haptics: false,
+          sizing: PrismTabBarSizing.fill,
+        );
     });
     await tester.pump();
     expect(_pill(tester).size, const Size(94, 54));
@@ -368,11 +376,12 @@ void _motionTests() {
     (tester) async {
       final state = await _mountTabs(tester);
       state.update(() {
-        state.width = 360;
-        state.style = const PrismTabBarStyle(
-          haptics: false,
-          sizing: PrismTabBarSizing.fill,
-        );
+        state
+          ..width = 360
+          ..style = const PrismTabBarStyle(
+            haptics: false,
+            sizing: PrismTabBarSizing.fill,
+          );
       });
       await tester.pump();
       final gesture = await tester.startGesture(
@@ -406,11 +415,12 @@ void _motionTests() {
   ) async {
     final state = await _mountTabs(tester);
     state.update(() {
-      state.width = 274;
-      state.style = const PrismTabBarStyle(
-        haptics: false,
-        sizing: PrismTabBarSizing.fill,
-      );
+      state
+        ..width = 274
+        ..style = const PrismTabBarStyle(
+          haptics: false,
+          sizing: PrismTabBarSizing.fill,
+        );
     });
     await tester.pump();
     final gesture = await tester.startGesture(
@@ -483,76 +493,73 @@ void _motionTests() {
     await tester.pumpAndSettle();
     expect(_pill(tester).center.dx, tester.getCenter(_tab('Gallery')).dx);
   });
-  testWidgets(
-    'controlled requests reconcile rejection and interrupt a moving pill without jumping',
-    (tester) async {
-      final state = await _mountTabs(tester);
-      final initial = _pill(tester);
-      state.update(() => state.accept = false);
-      await tester.pump();
-      await tester.tap(_tab('Settings'));
-      await tester.pumpAndSettle();
-      expect(state.requests, [2]);
-      expect(_pill(tester), initial);
-      _expectSelected(tester, 0);
-      state.update(() => state.accept = true);
-      await tester.pump();
-      await tester.tap(_tab('Settings'));
-      await tester.pump();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 60));
-      final moving = _pill(tester).center.dx;
-      expect(moving, greaterThan(initial.center.dx));
-      expect(moving, lessThan(tester.getCenter(_tab('Settings')).dx));
-      state.update(() => state.selected = 1);
-      await tester.pump();
-      expect(_pill(tester).center.dx, closeTo(moving, .001));
-      await tester.pumpAndSettle();
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
-      expect(state.requests, [2, 2]);
-      await tester.tap(_tab('Favorites'));
-      await tester.pumpAndSettle();
-      expect(state.requests, [2, 2, 1]);
-    },
-  );
+  testWidgets('controlled requests reconcile rejection and '
+      'interrupt a moving pill without jumping', (tester) async {
+    final state = await _mountTabs(tester);
+    final initial = _pill(tester);
+    state.update(() => state.accept = false);
+    await tester.pump();
+    await tester.tap(_tab('Settings'));
+    await tester.pumpAndSettle();
+    expect(state.requests, [2]);
+    expect(_pill(tester), initial);
+    _expectSelected(tester, 0);
+    state.update(() => state.accept = true);
+    await tester.pump();
+    await tester.tap(_tab('Settings'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    final moving = _pill(tester).center.dx;
+    expect(moving, greaterThan(initial.center.dx));
+    expect(moving, lessThan(tester.getCenter(_tab('Settings')).dx));
+    state.update(() => state.selected = 1);
+    await tester.pump();
+    expect(_pill(tester).center.dx, closeTo(moving, .001));
+    await tester.pumpAndSettle();
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
+    expect(state.requests, [2, 2]);
+    await tester.tap(_tab('Favorites'));
+    await tester.pumpAndSettle();
+    expect(state.requests, [2, 2, 1]);
+  });
 
-  testWidgets(
-    'drag previews without selecting and commits the projected tab under the finger on release',
-    (tester) async {
-      final state = await _mountTabs(tester);
-      state.update(() => state.motion = const PrismMotion(dragProjection: 0));
-      await tester.pump();
-      final origin = _pill(tester).center.dx;
-      final pointer = await tester.startGesture(
-        tester.getCenter(_tab('Favorites')),
-      );
-      await pointer.moveBy(const Offset(30, 0));
-      await pointer.moveBy(const Offset(65, 0));
+  testWidgets('drag previews without selecting and commits '
+      'the projected tab under the finger on release', (tester) async {
+    final state = await _mountTabs(tester);
+    state.update(() => state.motion = const PrismMotion(dragProjection: 0));
+    await tester.pump();
+    final origin = _pill(tester).center.dx;
+    final pointer = await tester.startGesture(
+      tester.getCenter(_tab('Favorites')),
+    );
+    await pointer.moveBy(const Offset(30, 0));
+    await pointer.moveBy(const Offset(65, 0));
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(_pill(tester).center.dx, greaterThan(origin + 40));
-      expect(state.requests, isEmpty);
-      _expectSelected(tester, 0);
-      await pointer.up();
-      await tester.pumpAndSettle();
-      expect(state.requests, [2]);
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
-      state.update(() {
-        state.selected = 0;
-        state.motion = const PrismMotion();
-      });
-      await tester.pumpAndSettle();
-      await tester.flingFrom(
-        tester.getCenter(_tab('Gallery')),
-        const Offset(50, 0),
-        1800,
-      );
-      await tester.pumpAndSettle();
-      expect(state.requests, [2, 2]);
-      _expectSelected(tester, 2);
-    },
-  );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(_pill(tester).center.dx, greaterThan(origin + 40));
+    expect(state.requests, isEmpty);
+    _expectSelected(tester, 0);
+    await pointer.up();
+    await tester.pumpAndSettle();
+    expect(state.requests, [2]);
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
+    state.update(() {
+      state
+        ..selected = 0
+        ..motion = const PrismMotion();
+    });
+    await tester.pumpAndSettle();
+    await tester.flingFrom(
+      tester.getCenter(_tab('Gallery')),
+      const Offset(50, 0),
+      1800,
+    );
+    await tester.pumpAndSettle();
+    expect(state.requests, [2, 2]);
+    _expectSelected(tester, 2);
+  });
 
   testWidgets(
     'RTL pointer keyboard and semantic actions follow visible order once',
@@ -596,7 +603,8 @@ void _motionTests() {
         state.requests.sublist(3),
         [1, 1],
         reason:
-            'Arrow selection was Favorites but focus stayed on ${_names[focusedTab]}',
+            'Arrow selection was Favorites but focus '
+            'stayed on ${_names[focusedTab]}',
       );
       tester.semantics.tap(find.semantics.byLabel('Settings'));
       await tester.pumpAndSettle();
@@ -623,8 +631,9 @@ void _motionTests() {
     (tester) async {
       final state = await _mountTabs(tester);
       state.update(() {
-        state.width = 240;
-        state.textScale = 2;
+        state
+          ..width = 240
+          ..textScale = 2;
       });
       await tester.pump();
       for (final behavior in PrismTabLabelBehavior.values) {
@@ -737,85 +746,81 @@ void _motionTests() {
     },
   );
 
-  testWidgets(
-    'Reduce Motion changes stop spring scaling but keep direct drag and immediate settlement',
-    (tester) async {
-      final state = await _mountTabs(tester);
-      final restingWidth = _pill(tester).width;
-      final pointer = await tester.startGesture(
-        tester.getCenter(_tab('Gallery')),
-      );
-      await tester.pumpAndSettle();
-      expect(_pill(tester).width, greaterThan(restingWidth));
-      state.update(() => state.reduced = true);
-      await tester.pump();
-      expect(_pill(tester).width, restingWidth);
-      await pointer.moveBy(const Offset(30, 0));
-      await pointer.moveBy(const Offset(70, 0));
-      await tester.pump();
-      expect(
-        _pill(tester).center.dx,
-        greaterThan(tester.getCenter(_tab('Gallery')).dx + 50),
-      );
-      expect(state.requests, isEmpty);
-      await pointer.up();
-      await tester.pump();
-      expect(state.requests, [1]);
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
-      final settled = _pill(tester);
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(_pill(tester), settled);
-      expect(tester.binding.transientCallbackCount, 0);
-    },
-  );
+  testWidgets('Reduce Motion changes stop spring scaling '
+      'but keep direct drag and immediate settlement', (tester) async {
+    final state = await _mountTabs(tester);
+    final restingWidth = _pill(tester).width;
+    final pointer = await tester.startGesture(
+      tester.getCenter(_tab('Gallery')),
+    );
+    await tester.pumpAndSettle();
+    expect(_pill(tester).width, greaterThan(restingWidth));
+    state.update(() => state.reduced = true);
+    await tester.pump();
+    expect(_pill(tester).width, restingWidth);
+    await pointer.moveBy(const Offset(30, 0));
+    await pointer.moveBy(const Offset(70, 0));
+    await tester.pump();
+    expect(
+      _pill(tester).center.dx,
+      greaterThan(tester.getCenter(_tab('Gallery')).dx + 50),
+    );
+    expect(state.requests, isEmpty);
+    await pointer.up();
+    await tester.pump();
+    expect(state.requests, [1]);
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
+    final settled = _pill(tester);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(_pill(tester), settled);
+    expect(tester.binding.transientCallbackCount, 0);
+  });
 
-  testWidgets(
-    'a contact owns the drag against an ancestor scroll; overlapping pointers cancel',
-    (tester) async {
-      final state = await _mountTabs(tester, scrollable: true);
-      final restingWidth = _pill(tester).width;
+  testWidgets('a contact owns the drag against an ancestor '
+      'scroll; overlapping pointers cancel', (tester) async {
+    final state = await _mountTabs(tester, scrollable: true);
+    final restingWidth = _pill(tester).width;
 
-      var pointer = await tester.startGesture(
-        tester.getCenter(_tab('Favorites')),
-      );
-      await pointer.moveBy(const Offset(0, -40));
-      await pointer.moveBy(const Offset(0, -30));
-      await tester.pumpAndSettle();
-      expect(state.scroll.offset, 0);
-      expect(_pill(tester).width, greaterThan(restingWidth));
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
-      await pointer.up();
-      await tester.pumpAndSettle();
-      expect(state.requests, [1]);
+    var pointer = await tester.startGesture(
+      tester.getCenter(_tab('Favorites')),
+    );
+    await pointer.moveBy(const Offset(0, -40));
+    await pointer.moveBy(const Offset(0, -30));
+    await tester.pumpAndSettle();
+    expect(state.scroll.offset, 0);
+    expect(_pill(tester).width, greaterThan(restingWidth));
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Favorites')).dx);
+    await pointer.up();
+    await tester.pumpAndSettle();
+    expect(state.requests, [1]);
 
-      await tester.dragFrom(const Offset(20, 400), const Offset(0, -120));
-      await tester.pumpAndSettle();
-      expect(state.scroll.offset, greaterThan(0));
-      state.scroll.jumpTo(0);
-      state.update(() {
-        state.selected = 0;
-        state.requests.clear();
-      });
-      await tester.pumpAndSettle();
-      pointer = await tester.startGesture(
-        tester.getCenter(_tab('Gallery')),
-        pointer: 1,
-      );
-      await pointer.moveBy(const Offset(50, 0));
-      final second = await tester.startGesture(
-        tester.getCenter(_tab('Settings')),
-        pointer: 2,
-      );
-      await tester.pumpAndSettle();
-      await pointer.up();
-      await second.up();
-      await tester.pumpAndSettle();
-      expect(state.requests, isEmpty);
-      await tester.tap(_tab('Favorites'));
-      await tester.pumpAndSettle();
-      expect(state.requests, [1]);
-    },
-  );
+    await tester.dragFrom(const Offset(20, 400), const Offset(0, -120));
+    await tester.pumpAndSettle();
+    expect(state.scroll.offset, greaterThan(0));
+    state.scroll.jumpTo(0);
+    state.update(() {
+      state.selected = 0;
+      state.requests.clear();
+    });
+    await tester.pumpAndSettle();
+    pointer = await tester.startGesture(
+      tester.getCenter(_tab('Gallery')),
+      pointer: 1,
+    );
+    await pointer.moveBy(const Offset(50, 0));
+    final second = await tester.startGesture(
+      tester.getCenter(_tab('Settings')),
+      pointer: 2,
+    );
+    await tester.pumpAndSettle();
+    await pointer.up();
+    await second.up();
+    await tester.pumpAndSettle();
+    expect(state.requests, isEmpty);
+    await tester.tap(_tab('Favorites'));
+    await tester.pumpAndSettle();
+    expect(state.requests, [1]);
+  });
 
   for (final degrees in [30.0, 60.0]) {
     testWidgets(
@@ -880,48 +885,46 @@ void _motionTests() {
     expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
   });
 
-  testWidgets(
-    'disabled contacts and external updates reject stale commits across reenabling',
-    (tester) async {
-      final state = await _mountTabs(tester);
-      for (final beganDisabled in [false, true]) {
-        state.update(() => state.enabled = !beganDisabled);
-        await tester.pump();
-        final first = await tester.startGesture(
-          tester.getCenter(_tab('Gallery')),
-          pointer: 1,
-        );
-        if (!beganDisabled) {
-          state.update(() => state.enabled = false);
-          await tester.pump();
-        }
-        state.update(() => state.enabled = true);
-        await tester.pump();
-        final second = await tester.startGesture(
-          tester.getCenter(_tab('Settings')),
-          pointer: 2,
-        );
-        await first.up();
-        await second.up();
-        await tester.pumpAndSettle();
-        expect(state.requests, isEmpty);
-      }
-      final pointer = await tester.startGesture(
+  testWidgets('disabled contacts and external updates '
+      'reject stale commits across reenabling', (tester) async {
+    final state = await _mountTabs(tester);
+    for (final beganDisabled in [false, true]) {
+      state.update(() => state.enabled = !beganDisabled);
+      await tester.pump();
+      final first = await tester.startGesture(
         tester.getCenter(_tab('Gallery')),
+        pointer: 1,
       );
-      await pointer.moveBy(const Offset(60, 0));
+      if (!beganDisabled) {
+        state.update(() => state.enabled = false);
+        await tester.pump();
+      }
+      state.update(() => state.enabled = true);
       await tester.pump();
-      state.update(() => state.selected = 2);
-      await tester.pump();
-      await pointer.up();
+      final second = await tester.startGesture(
+        tester.getCenter(_tab('Settings')),
+        pointer: 2,
+      );
+      await first.up();
+      await second.up();
       await tester.pumpAndSettle();
       expect(state.requests, isEmpty);
-      expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
-      await tester.tap(_tab('Favorites'));
-      await tester.pumpAndSettle();
-      expect(state.requests, [1]);
-    },
-  );
+    }
+    final pointer = await tester.startGesture(
+      tester.getCenter(_tab('Gallery')),
+    );
+    await pointer.moveBy(const Offset(60, 0));
+    await tester.pump();
+    state.update(() => state.selected = 2);
+    await tester.pump();
+    await pointer.up();
+    await tester.pumpAndSettle();
+    expect(state.requests, isEmpty);
+    expect(_pill(tester).center.dx, tester.getCenter(_tab('Settings')).dx);
+    await tester.tap(_tab('Favorites'));
+    await tester.pumpAndSettle();
+    expect(state.requests, [1]);
+  });
 
   testWidgets(
     'resize reparent and removal cancel a held drag without later actions',
@@ -1048,7 +1051,7 @@ void _motionTests() {
 }
 
 class _StatefulIcon extends StatefulWidget {
-  const _StatefulIcon({required this.onCreate});
+  const new({required this.onCreate});
   final VoidCallback onCreate;
   @override
   State<_StatefulIcon> createState() => _StatefulIconState();

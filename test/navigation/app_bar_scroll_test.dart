@@ -84,7 +84,8 @@ void main() {
         addTearDown(tester.view.reset);
         final scroll = ScrollController();
         addTearDown(scroll.dispose);
-        var backTaps = 0, actionTaps = 0;
+        var backTaps = 0;
+        var actionTaps = 0;
         const backKey = Key('rail back');
         await tester.pumpWidget(
           CupertinoApp(
@@ -151,254 +152,254 @@ void main() {
     }
   });
 
-  testWidgets(
-    'automatic rail minimization reveals titled scaffold bars when reversing away from the content edge',
-    (tester) async {
-      final semantics = tester.ensureSemantics();
-      const never = PrismNavigationBarStyle(
-        minimizationBehavior: PrismMinimizationBehavior.never,
-      );
-      final trailingOnly = Semantics(
-        label: 'Edit',
-        child: const SizedBox(width: 44, height: 44),
-      );
-      final railItem = PrismToolbarItem(
-        label: 'Rail action',
-        icon: const Icon(CupertinoIcons.ellipsis),
-        onPressed: () {},
-      );
+  testWidgets('automatic rail minimization reveals titled '
+      'scaffold bars when reversing away from the content edge', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    const never = PrismNavigationBarStyle(
+      minimizationBehavior: PrismMinimizationBehavior.never,
+    );
+    final trailingOnly = Semantics(
+      label: 'Edit',
+      child: const SizedBox(width: 44, height: 44),
+    );
+    final railItem = PrismToolbarItem(
+      label: 'Rail action',
+      icon: const Icon(CupertinoIcons.ellipsis),
+      onPressed: () {},
+    );
 
-      for (final (name, rail, hides, reveals, page)
-          in <
-            (String, bool, bool, bool, PrismScaffold Function(ScrollController))
-          >[
-            (
-              'rail title',
-              true,
-              true,
-              true,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'rail title with top-trailing items in the rail',
-              true,
-              true,
-              true,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                toolbar: [railItem],
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'edge restoration leaves automatic minimization alone',
-              true,
-              true,
-              true,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                navigationBarStyle: const PrismNavigationBarStyle(
-                  minimizationRestoration:
-                      PrismMinimizationRestoration.atScrollEdge,
-                ),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'explicit scroll-away behavior',
-              true,
-              true,
-              false,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                navigationBarStyle: const PrismNavigationBarStyle(
-                  minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
-                  minimizationRestoration:
-                      PrismMinimizationRestoration.atScrollEdge,
-                ),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'phone title',
-              false,
-              false,
-              false,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'explicit never',
-              true,
-              false,
-              false,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                navigationBarStyle: never,
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'a trailing widget in the top bar',
-              true,
-              true,
-              true,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                trailing: const SizedBox(width: 44, height: 44),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'a large title',
-              true,
-              true,
-              true,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                largeTitle: const Text('Large'),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'a custom header reveals at its threshold and stays pinned',
-              true,
-              false,
-              false,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                header: const SizedBox(height: 120),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'a sheet',
-              true,
-              true,
-              true,
-              (scroll) => PrismScaffold(
-                title: const Text('Inline'),
-                sheet: true,
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-            (
-              'no title, only a trailing widget',
-              true,
-              false,
-              false,
-              (scroll) => PrismScaffold(
-                trailing: trailingOnly,
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-
-            (
-              'no title, a trailing widget and explicit onScrollDown',
-              true,
-              true,
-              false,
-              (scroll) => PrismScaffold(
-                trailing: trailingOnly,
-                navigationBarStyle: const PrismNavigationBarStyle(
-                  minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
-                  minimizationRestoration:
-                      PrismMinimizationRestoration.atScrollEdge,
-                ),
-                scrollController: scroll,
-                slivers: rows(),
-              ),
-            ),
-          ]) {
-        await tester.pumpWidget(const SizedBox.shrink());
-        final padding = rail
-            ? const FakeViewPadding(left: 84, bottom: 34)
-            : const FakeViewPadding(top: 62, bottom: 34);
-        tester.view
-          ..devicePixelRatio = 1
-          ..physicalSize = rail ? const Size(466, 678) : const Size(402, 874)
-          ..padding = padding
-          ..viewPadding = padding;
-        addTearDown(tester.view.reset);
-        final scroll = ScrollController();
-        addTearDown(scroll.dispose);
-        final scaffold = page(scroll);
-        await tester.pumpWidget(CupertinoApp(home: scaffold));
-        await tester.pumpAndSettle();
-        void barShown(bool shown, double offset) => expect(
-          find.semantics.byLabel(
-            scaffold.largeTitle != null
-                ? 'Large'
-                : scaffold.title == null
-                ? 'Edit'
-                : 'Inline',
-          ),
-          shown ? findsOneWidget : findsNothing,
-          reason: '$name at $offset',
-        );
-
-        if (scaffold.header != null) {
-          barShown(false, 0);
-          scroll.jumpTo(119);
-          await tester.pumpAndSettle();
-          barShown(false, 119);
-          scroll.jumpTo(121);
-          await tester.pumpAndSettle();
-          barShown(true, 121);
-        } else {
-          barShown(true, 0);
-        }
-        scroll.jumpTo(300);
-        await tester.pumpAndSettle();
-        barShown(!hides, 300);
-        scroll.jumpTo(240);
-        await tester.pumpAndSettle();
-        barShown(!hides || reveals, 240);
-        if (scaffold.largeTitle == null && scaffold.header == null) {
-          scroll.jumpTo(0);
-          await tester.pumpAndSettle();
-          barShown(true, 0);
-        }
-        expect(tester.takeException(), isNull);
-      }
-
-      await tester.pumpWidget(const SizedBox.shrink());
-      final scroll = ScrollController();
-      addTearDown(scroll.dispose);
-      await tester.pumpWidget(
-        CupertinoApp(
-          home: PrismTheme(
-            data: const PrismThemeData(navigationBar: never),
-            child: PrismScaffold(
+    for (final (name, rail, hides, reveals, page)
+        in <
+          (String, bool, bool, bool, PrismScaffold Function(ScrollController))
+        >[
+          (
+            'rail title',
+            true,
+            true,
+            true,
+            (scroll) => PrismScaffold(
               title: const Text('Inline'),
               scrollController: scroll,
               slivers: rows(),
             ),
           ),
+          (
+            'rail title with top-trailing items in the rail',
+            true,
+            true,
+            true,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              toolbar: [railItem],
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'edge restoration leaves automatic minimization alone',
+            true,
+            true,
+            true,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              navigationBarStyle: const PrismNavigationBarStyle(
+                minimizationRestoration:
+                    PrismMinimizationRestoration.atScrollEdge,
+              ),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'explicit scroll-away behavior',
+            true,
+            true,
+            false,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              navigationBarStyle: const PrismNavigationBarStyle(
+                minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
+                minimizationRestoration:
+                    PrismMinimizationRestoration.atScrollEdge,
+              ),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'phone title',
+            false,
+            false,
+            false,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'explicit never',
+            true,
+            false,
+            false,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              navigationBarStyle: never,
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'a trailing widget in the top bar',
+            true,
+            true,
+            true,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              trailing: const SizedBox(width: 44, height: 44),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'a large title',
+            true,
+            true,
+            true,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              largeTitle: const Text('Large'),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'a custom header reveals at its threshold and stays pinned',
+            true,
+            false,
+            false,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              header: const SizedBox(height: 120),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'a sheet',
+            true,
+            true,
+            true,
+            (scroll) => PrismScaffold(
+              title: const Text('Inline'),
+              sheet: true,
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+          (
+            'no title, only a trailing widget',
+            true,
+            false,
+            false,
+            (scroll) => PrismScaffold(
+              trailing: trailingOnly,
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+
+          (
+            'no title, a trailing widget and explicit onScrollDown',
+            true,
+            true,
+            false,
+            (scroll) => PrismScaffold(
+              trailing: trailingOnly,
+              navigationBarStyle: const PrismNavigationBarStyle(
+                minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
+                minimizationRestoration:
+                    PrismMinimizationRestoration.atScrollEdge,
+              ),
+              scrollController: scroll,
+              slivers: rows(),
+            ),
+          ),
+        ]) {
+      await tester.pumpWidget(const SizedBox.shrink());
+      final padding = rail
+          ? const FakeViewPadding(left: 84, bottom: 34)
+          : const FakeViewPadding(top: 62, bottom: 34);
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = rail ? const Size(466, 678) : const Size(402, 874)
+        ..padding = padding
+        ..viewPadding = padding;
+      addTearDown(tester.view.reset);
+      final scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      final scaffold = page(scroll);
+      await tester.pumpWidget(CupertinoApp(home: scaffold));
+      await tester.pumpAndSettle();
+      void barShown(bool shown, double offset) => expect(
+        find.semantics.byLabel(
+          scaffold.largeTitle != null
+              ? 'Large'
+              : scaffold.title == null
+              ? 'Edit'
+              : 'Inline',
         ),
+        shown ? findsOneWidget : findsNothing,
+        reason: '$name at $offset',
       );
+
+      if (scaffold.header != null) {
+        barShown(false, 0);
+        scroll.jumpTo(119);
+        await tester.pumpAndSettle();
+        barShown(false, 119);
+        scroll.jumpTo(121);
+        await tester.pumpAndSettle();
+        barShown(true, 121);
+      } else {
+        barShown(true, 0);
+      }
       scroll.jumpTo(300);
       await tester.pumpAndSettle();
-      expect(find.semantics.byLabel('Inline'), findsOneWidget);
-      semantics.dispose();
-    },
-  );
+      barShown(!hides, 300);
+      scroll.jumpTo(240);
+      await tester.pumpAndSettle();
+      barShown(!hides || reveals, 240);
+      if (scaffold.largeTitle == null && scaffold.header == null) {
+        scroll.jumpTo(0);
+        await tester.pumpAndSettle();
+        barShown(true, 0);
+      }
+      expect(tester.takeException(), isNull);
+    }
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    final scroll = ScrollController();
+    addTearDown(scroll.dispose);
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: PrismTheme(
+          data: const PrismThemeData(navigationBar: never),
+          child: PrismScaffold(
+            title: const Text('Inline'),
+            scrollController: scroll,
+            slivers: rows(),
+          ),
+        ),
+      ),
+    );
+    scroll.jumpTo(300);
+    await tester.pumpAndSettle();
+    expect(find.semantics.byLabel('Inline'), findsOneWidget);
+    semantics.dispose();
+  });
 
   for (final dock in [PrismTabBarPlacement.top, PrismTabBarPlacement.bottom]) {
     testWidgets('only integrated top tabs minimize with the bar, $dock', (
@@ -441,7 +442,7 @@ void main() {
       tester.view.physicalSize = const Size(874, 402);
       tester.view.viewInsets = const FakeViewPadding(bottom: 180);
       await tester.pumpAndSettle();
-      tester.view.viewInsets = const FakeViewPadding();
+      tester.view.viewInsets = FakeViewPadding.zero;
       await tester.pumpAndSettle();
       scroll.jumpTo(0);
       await tester.pumpAndSettle();
@@ -451,129 +452,128 @@ void main() {
     });
   }
   for (final sliver in [false, true]) {
-    testWidgets(
-      'compact title lifecycle follows scroll-away and reveal modes, sliver $sliver',
-      (tester) async {
-        phone(tester);
-        final semantics = tester.ensureSemantics();
-        try {
-          for (final header in sliver ? [false] : [false, true]) {
-            for (final away in [true, false]) {
-              await tester.pumpWidget(const SizedBox.shrink());
-              final scroll = ScrollController();
-              final focus = FocusNode();
-              addTearDown(scroll.dispose);
-              addTearDown(focus.dispose);
-              var builds = 0, taps = 0;
-              const compactKey = Key('deferred compact title');
-              Widget subject({bool sticky = false}) => page(
-                sliver: sliver,
-                scroll: scroll,
-                large: !header,
-                header: header
-                    ? const SizedBox(height: 60, child: Text('Page heading'))
-                    : null,
-                title: Builder(
-                  builder: (_) {
-                    builds++;
-                    return PrismButton(
-                      key: compactKey,
-                      label: 'Deferred compact',
-                      focusNode: focus,
-                      onPressed: () => taps++,
-                    );
-                  },
-                ),
-                style: PrismNavigationBarStyle(
-                  minimizationBehavior: sticky
-                      ? PrismMinimizationBehavior.never
-                      : PrismMinimizationBehavior.onScrollDown,
-                  minimizationRestoration: away
-                      ? PrismMinimizationRestoration.atScrollEdge
-                      : PrismMinimizationRestoration.automatic,
-                ),
-              );
-              Future<void> hidden() async {
-                if (away) {
-                  expect(builds, 0);
-                  expect(find.byKey(compactKey), findsNothing);
-                } else {
-                  expect(find.byKey(compactKey), findsOneWidget);
-                  final opacity = tester
-                      .widgetList<Opacity>(
-                        find.ancestor(
-                          of: find.byKey(compactKey),
-                          matching: find.byType(Opacity),
-                        ),
-                      )
-                      .fold(1.0, (value, widget) => value * widget.opacity);
-                  expect(opacity, 0);
-                  expect(
-                    find.semantics.byLabel('Deferred compact'),
-                    findsNothing,
+    testWidgets('compact title lifecycle follows scroll-away '
+        'and reveal modes, sliver $sliver', (tester) async {
+      phone(tester);
+      final semantics = tester.ensureSemantics();
+      try {
+        for (final header in sliver ? [false] : [false, true]) {
+          for (final away in [true, false]) {
+            await tester.pumpWidget(const SizedBox.shrink());
+            final scroll = ScrollController();
+            final focus = FocusNode();
+            addTearDown(scroll.dispose);
+            addTearDown(focus.dispose);
+            var builds = 0;
+            var taps = 0;
+            const compactKey = Key('deferred compact title');
+            Widget subject({bool sticky = false}) => page(
+              sliver: sliver,
+              scroll: scroll,
+              large: !header,
+              header: header
+                  ? const SizedBox(height: 60, child: Text('Page heading'))
+                  : null,
+              title: Builder(
+                builder: (_) {
+                  builds++;
+                  return PrismButton(
+                    key: compactKey,
+                    label: 'Deferred compact',
+                    focusNode: focus,
+                    onPressed: () => taps++,
                   );
-                  expect(focus.canRequestFocus, isFalse);
-                  final before = taps;
-                  await tester.tapAt(tester.getCenter(find.byKey(compactKey)));
-                  await tester.pumpAndSettle();
-                  expect(taps, before);
-                }
-              }
-
-              await tester.pumpWidget(subject());
-              await tester.pumpAndSettle();
-              await hidden();
-              final retained = away
-                  ? null
-                  : tester.element(find.byKey(compactKey));
-              for (final offset in [8.0, 30.0, 80.0, 160.0]) {
-                scroll.jumpTo(offset);
-                await tester.pumpAndSettle();
-                await hidden();
-              }
-              scroll.jumpTo(155);
-              await tester.pumpAndSettle();
+                },
+              ),
+              style: PrismNavigationBarStyle(
+                minimizationBehavior: sticky
+                    ? PrismMinimizationBehavior.never
+                    : PrismMinimizationBehavior.onScrollDown,
+                minimizationRestoration: away
+                    ? PrismMinimizationRestoration.atScrollEdge
+                    : PrismMinimizationRestoration.automatic,
+              ),
+            );
+            Future<void> hidden() async {
               if (away) {
-                await hidden();
+                expect(builds, 0);
+                expect(find.byKey(compactKey), findsNothing);
               } else {
-                expect(tester.element(find.byKey(compactKey)), same(retained));
+                expect(find.byKey(compactKey), findsOneWidget);
+                final opacity = tester
+                    .widgetList<Opacity>(
+                      find.ancestor(
+                        of: find.byKey(compactKey),
+                        matching: find.byType(Opacity),
+                      ),
+                    )
+                    .fold<double>(1, (value, widget) => value * widget.opacity);
+                expect(opacity, 0);
                 expect(
                   find.semantics.byLabel('Deferred compact'),
-                  findsOneWidget,
+                  findsNothing,
                 );
-                expect(focus.canRequestFocus, isTrue);
-                focus.requestFocus();
-                await tester.pump();
-                await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+                expect(focus.canRequestFocus, isFalse);
+                final before = taps;
+                await tester.tapAt(tester.getCenter(find.byKey(compactKey)));
                 await tester.pumpAndSettle();
-                expect(taps, 1);
-                scroll.jumpTo(80);
-                await tester.pumpAndSettle();
-                await tester.tap(find.byKey(compactKey));
-                await tester.pumpAndSettle();
-                expect(taps, 2);
-                scroll.jumpTo(220);
-                await tester.pumpAndSettle();
-                await hidden();
-                expect(tester.element(find.byKey(compactKey)), same(retained));
+                expect(taps, before);
               }
-              scroll.jumpTo(0);
+            }
+
+            await tester.pumpWidget(subject());
+            await tester.pumpAndSettle();
+            await hidden();
+            final retained = away
+                ? null
+                : tester.element(find.byKey(compactKey));
+            for (final offset in [8.0, 30.0, 80.0, 160.0]) {
+              scroll.jumpTo(offset);
               await tester.pumpAndSettle();
               await hidden();
-              scroll.jumpTo(300);
-              await tester.pumpAndSettle();
-              await tester.pumpWidget(subject(sticky: true));
-              await tester.pumpAndSettle();
-              expect(builds, greaterThan(0));
-              expect(find.byKey(compactKey), findsOneWidget);
-              expect(tester.takeException(), isNull);
             }
+            scroll.jumpTo(155);
+            await tester.pumpAndSettle();
+            if (away) {
+              await hidden();
+            } else {
+              expect(tester.element(find.byKey(compactKey)), same(retained));
+              expect(
+                find.semantics.byLabel('Deferred compact'),
+                findsOneWidget,
+              );
+              expect(focus.canRequestFocus, isTrue);
+              focus.requestFocus();
+              await tester.pump();
+              await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+              await tester.pumpAndSettle();
+              expect(taps, 1);
+              scroll.jumpTo(80);
+              await tester.pumpAndSettle();
+              await tester.tap(find.byKey(compactKey));
+              await tester.pumpAndSettle();
+              expect(taps, 2);
+              scroll.jumpTo(220);
+              await tester.pumpAndSettle();
+              await hidden();
+              expect(tester.element(find.byKey(compactKey)), same(retained));
+            }
+            scroll.jumpTo(0);
+            await tester.pumpAndSettle();
+            await hidden();
+            scroll.jumpTo(300);
+            await tester.pumpAndSettle();
+            await tester.pumpWidget(subject(sticky: true));
+            await tester.pumpAndSettle();
+            expect(builds, greaterThan(0));
+            expect(find.byKey(compactKey), findsOneWidget);
+            expect(tester.takeException(), isNull);
           }
-        } finally {
-          semantics.dispose();
         }
-      },
-    );
+      } finally {
+        semantics.dispose();
+      }
+    });
 
     testWidgets(
       'default minimization keeps content motion continuous, sliver $sliver',
@@ -812,47 +812,46 @@ void main() {
       },
     );
 
-    testWidgets(
-      'explicit zero overrides inherited scroll threshold and spacing, sliver $sliver',
-      (tester) async {
-        phone(tester);
-        final scroll = ScrollController();
-        addTearDown(scroll.dispose);
-        await tester.pumpWidget(
-          PrismTheme(
-            data: const PrismThemeData(
-              navigationBar: PrismNavigationBarStyle(
-                minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
-                minimizationThreshold: 40,
-                contentSpacing: 20,
-              ),
-            ),
-            child: page(
-              sliver: sliver,
-              scroll: scroll,
-              scrollEdge: false,
-              style: const PrismNavigationBarStyle(
-                minimizationThreshold: 0,
-                contentSpacing: 0,
-              ),
+    testWidgets('explicit zero overrides inherited scroll '
+        'threshold and spacing, sliver $sliver', (tester) async {
+      phone(tester);
+      final scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      await tester.pumpWidget(
+        PrismTheme(
+          data: const PrismThemeData(
+            navigationBar: PrismNavigationBarStyle(
+              minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
+              minimizationThreshold: 40,
+              contentSpacing: 20,
             ),
           ),
-        );
-        await tester.pumpAndSettle();
-        final top = tester.getTopLeft(find.text('Back')).dy;
-        expect(tester.getTopLeft(find.byKey(const ValueKey('row0'))).dy, 106);
-        scroll.jumpTo(5);
-        await tester.pumpAndSettle();
-        expect(tester.getTopLeft(find.text('Back')).dy, closeTo(top - 5, .01));
-      },
-    );
+          child: page(
+            sliver: sliver,
+            scroll: scroll,
+            scrollEdge: false,
+            style: const PrismNavigationBarStyle(
+              minimizationThreshold: 0,
+              contentSpacing: 0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final top = tester.getTopLeft(find.text('Back')).dy;
+      expect(tester.getTopLeft(find.byKey(const ValueKey('row0'))).dy, 106);
+      scroll.jumpTo(5);
+      await tester.pumpAndSettle();
+      expect(tester.getTopLeft(find.text('Back')).dy, closeTo(top - 5, .01));
+    });
 
     testWidgets(
       'minimizes the whole bar and restores on reversal, sliver $sliver',
       (tester) async {
         phone(tester);
         final semantics = tester.ensureSemantics();
-        final scroll = ScrollController(), focus = FocusNode();
+        final scroll = ScrollController();
+        final focus = FocusNode();
         addTearDown(scroll.dispose);
         addTearDown(focus.dispose);
         await tester.pumpWidget(

@@ -4,26 +4,25 @@ import 'dart:math' as math;
 import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoIcons;
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/widgets.dart';
-
-import '../controls/prism_pressable.dart';
-import '../core/prism_badge.dart';
-import '../core/prism_colors.dart';
-import '../core/prism_glass.dart';
-import '../core/prism_motion.dart';
-import '../menu/menus.dart';
-import '../rendering/chrome_material.dart';
-import '../rendering/prism_transition.dart';
-import '../rendering/recipe.dart';
-import '../theme/foreground.dart';
-import '../theme/prism_theme.dart';
-import 'prism_toolbar_content.dart';
-import 'prism_toolbar_style.dart';
-import 'scaffold/chrome_placement.dart';
+import 'package:liquid_prism/src/controls/prism_pressable.dart';
+import 'package:liquid_prism/src/core/prism_badge.dart';
+import 'package:liquid_prism/src/core/prism_colors.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/menu/menus.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_content.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_style.dart';
+import 'package:liquid_prism/src/navigation/scaffold/chrome_placement.dart';
+import 'package:liquid_prism/src/rendering/chrome_material.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/theme/foreground.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// A navigation capsule that pops the current route by default.
 class PrismBackButton extends StatelessWidget {
   /// Creates a back or close navigation button.
-  const PrismBackButton({
+  const new({
     super.key,
     this.close = false,
     this.icon,
@@ -90,7 +89,7 @@ class PrismBackButton extends StatelessWidget {
 /// Typed toolbar content arranged in animated glass capsules.
 class PrismToolbar extends StatefulWidget {
   /// Creates a toolbar from typed content.
-  const PrismToolbar({
+  const new({
     super.key,
     required this.content,
     this.axis,
@@ -99,7 +98,7 @@ class PrismToolbar extends StatefulWidget {
   }) : items = null;
 
   /// Creates a single capsule with animated item insertion and removal.
-  const PrismToolbar.group({
+  const new group({
     super.key,
     required List<PrismToolbarItem> this.items,
     this.axis,
@@ -107,7 +106,7 @@ class PrismToolbar extends StatefulWidget {
     this.style,
   }) : content = const [];
 
-  /// Items displayed in a single capsule when constructed with [PrismToolbar.group].
+  /// Items displayed in a capsule when using [PrismToolbar.group].
   final List<PrismToolbarItem>? items;
 
   /// Ordered toolbar content.
@@ -127,7 +126,7 @@ class PrismToolbar extends StatefulWidget {
 }
 
 class _ToolbarGroupPresenceOwner extends InheritedWidget {
-  const _ToolbarGroupPresenceOwner({required this.group, required super.child});
+  const new({required this.group, required super.child});
   final Widget group;
   @override
   bool updateShouldNotify(_ToolbarGroupPresenceOwner oldWidget) =>
@@ -137,7 +136,8 @@ class _ToolbarGroupPresenceOwner extends InheritedWidget {
 class _PrismToolbarState extends State<PrismToolbar>
     with TickerProviderStateMixin {
   final _presence = <RetargetablePrismSpring>[];
-  bool _synced = false, _regrouping = false;
+  bool _synced = false;
+  bool _regrouping = false;
 
   PrismToolbarStyle get _appearance =>
       (PrismTheme.of(context).toolbar ?? const PrismToolbarStyle()).merge(
@@ -285,7 +285,7 @@ class _PrismToolbarState extends State<PrismToolbar>
             before = 0;
             continue;
           }
-          Widget group = switch (entry) {
+          var group = switch (entry) {
             PrismToolbarGroup(:final items, :final style) => _ToolbarCapsule(
               key: entry.key,
               items: items,
@@ -380,13 +380,7 @@ class _PrismToolbarState extends State<PrismToolbar>
 }
 
 class _ToolbarCapsule extends StatefulWidget {
-  const _ToolbarCapsule({
-    super.key,
-    required this.items,
-    this.size,
-    this.style,
-    this.axis,
-  });
+  const new({super.key, required this.items, this.size, this.style, this.axis});
   final List<PrismToolbarItem> items;
   final PrismToolbarSize? size;
   final PrismToolbarStyle? style;
@@ -398,7 +392,7 @@ class _ToolbarCapsule extends StatefulWidget {
 }
 
 class _ToolbarEntry {
-  _ToolbarEntry(this.key, this.item, this.presence);
+  new(this.key, this.item, this.presence);
   final Key key;
   PrismToolbarItem item;
   final RetargetablePrismSpring presence;
@@ -412,7 +406,8 @@ class _PrismToolbarGroupState extends State<_ToolbarCapsule>
   final _entries = <_ToolbarEntry>[];
   bool _synced = false;
 
-  bool? _fixedRight, _fixedBottom;
+  bool? _fixedRight;
+  bool? _fixedBottom;
   Rect? _lastRect;
   bool _observing = false;
 
@@ -579,7 +574,8 @@ class _PrismToolbarGroupState extends State<_ToolbarCapsule>
   Widget build(BuildContext context) {
     final vertical =
         (widget.axis ?? PrismChrome.maybeOf(context)?.axis) == Axis.vertical;
-    final theme = PrismTheme.of(context), colors = PrismColors.of(context);
+    final theme = PrismTheme.of(context);
+    final colors = PrismColors.of(context);
     final appearance = _appearance;
     final placement = widget.size ?? appearance.size ?? PrismToolbarSize.bottom;
     final navigation = placement == PrismToolbarSize.navigation;
@@ -628,7 +624,8 @@ class _PrismToolbarGroupState extends State<_ToolbarCapsule>
         final badged = _entries.any((entry) => entry.item.badge != null);
         var position = 0;
         for (final entry in _entries) {
-          final double left, right;
+          final double left;
+          final double right;
           if (entry.leaving) {
             left = right = gap / 2;
           } else {
@@ -851,7 +848,7 @@ class _PrismToolbarGroupState extends State<_ToolbarCapsule>
   ) {
     final item = entry.item;
     final extent = entry.width + left + right;
-    Widget cell = item.child != null
+    var cell = item.child != null
         ? SizedBox(
             width: vertical ? height : extent,
             height: vertical ? extent : height,

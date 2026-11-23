@@ -64,7 +64,9 @@ void main() {
         expect(
           contentFilters.where((filter) => filter.enabled),
           isEmpty,
-          reason: 'explicit zero blur must survive the parent-owned materialization',
+          reason:
+              'explicit zero blur must survive the '
+              'parent-owned materialization',
         );
         await tester.pumpAndSettle();
       }
@@ -125,12 +127,16 @@ void main() {
         expect(
           presences,
           findsOneWidget,
-          reason: 'the group must not multiply two independent materialization fades',
+          reason:
+              'the group must not multiply two independent '
+              'materialization fades',
         );
         expect(
           PrismPresence.of(tester.element(glass)),
           inExclusiveRange(0, 1),
-          reason: 'a newly mounted group must materialize rather than appear opaque',
+          reason:
+              'a newly mounted group must materialize '
+              'rather than appear opaque',
         );
         final rect = tester.getRect(glass).deflate(.01);
         for (final clip

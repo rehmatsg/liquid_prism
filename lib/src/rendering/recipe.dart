@@ -3,9 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_optics.dart';
-import '../theme/native_colors.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/theme/native_colors.dart';
 
 /// Stable role identifiers consumed by the optical shaders.
 @internal
@@ -21,7 +21,7 @@ enum PrismRole {
   sliderLens(9),
   controlLensUnminified(10);
 
-  const PrismRole(this.shaderId);
+  new(this.shaderId);
 
   /// Explicit role value in the shader ABI.
   final double shaderId;
@@ -67,14 +67,14 @@ abstract final class GlassTint {
 @immutable
 @internal
 final class FrostPass {
-  const FrostPass(
-    this.sigma, [
+  const new(
+    this.sigma, {
     this.opacity = 1,
     this.blendMode = BlendMode.srcOver,
     this.depthFade = false,
-  ]) : fill = false;
+  }) : fill = false;
 
-  const FrostPass.fill(
+  const new fill(
     this.sigma, [
     this.opacity = 1,
     this.blendMode = BlendMode.srcOver,
@@ -92,7 +92,12 @@ final class FrostPass {
 
   FrostPass scaled(double factor) => fill
       ? FrostPass.fill(sigma, opacity * factor, blendMode)
-      : FrostPass(sigma * factor, opacity, blendMode, depthFade);
+      : FrostPass(
+          sigma * factor,
+          opacity: opacity,
+          blendMode: blendMode,
+          depthFade: depthFade,
+        );
 
   @override
   bool operator ==(Object other) =>
@@ -132,7 +137,7 @@ final class FrostPass {
       final normal = GlassTint.sample(GlassTint.regularNormal, tint);
       if (normal >= 1) return [FrostPass.fill(fill)];
       return [
-        FrostPass(frost, 1, BlendMode.srcOver, true),
+        FrostPass(frost, depthFade: true),
         FrostPass.fill(
           fill,
           GlassTint.sample(GlassTint.regularLighten, tint),
@@ -171,12 +176,12 @@ final class FrostPass {
 @immutable
 @internal
 final class PrismRecipe {
-  const PrismRecipe(
+  const new(
     this.kind,
     this.dark,
     this.role,
     this.tintMatrix,
-    this.tintAlpha, [
+    this.tintAlpha, {
     this.presence = 1,
     this.lensRim = 0,
     this.chromaticSplit = 0,
@@ -186,7 +191,69 @@ final class PrismRecipe {
     this.faceGray = 1,
     this.tintAmount = GlassTint.standard,
     this.shadow = true,
-  ]);
+  });
+
+  factory resolve(
+    PrismGlass glass,
+    Brightness brightness,
+    PrismRole role, {
+    required bool customOptics,
+    bool disabledProminent = false,
+  }) {
+    final dark = brightness == Brightness.dark;
+    final tint = glass.tintColor;
+    final rgb = tint == null ? 0 : tint.toARGB32() & 0xFFFFFF;
+    final disabledScale = dark ? .3086487948894501 : .30867475271224976;
+    final disabledBias = dark ? .31474554538726807 : .285163551568985;
+    final matrix = disabledProminent
+        ? <double>[
+            disabledScale,
+            0,
+            0,
+            disabledBias,
+            0,
+            disabledScale,
+            0,
+            disabledBias,
+            0,
+            0,
+            disabledScale,
+            disabledBias,
+          ]
+        : nativeTintMatrices[(
+            glass.variant == PrismGlassVariant.clear,
+            dark,
+            rgb,
+          )];
+    final fallback = <double>[
+      for (final component in [tint?.r ?? 0, tint?.g ?? 0, tint?.b ?? 0]) ...[
+        0.12 * (1 - component) * 0.2126,
+        0.12 * (1 - component) * 0.7152,
+        0.12 * (1 - component) * 0.0722,
+        component * 0.94,
+      ],
+    ];
+    final materialKind = glass.variant == PrismGlassVariant.clear ? 2.0 : 1.0;
+    final kind = switch (role) {
+      PrismRole.toolbar || PrismRole.searchField => materialKind,
+      PrismRole.controlThumb ||
+      PrismRole.segmentLens ||
+      PrismRole.tabLens ||
+      PrismRole.sliderLens ||
+      PrismRole.controlLensUnminified => 3.0,
+      _ => customOptics ? 0.0 : materialKind,
+    };
+    return PrismRecipe(
+      kind,
+      dark,
+      role,
+      matrix ?? fallback,
+      disabledProminent
+          ? (dark ? .3499999940395355 : .44999998807907104)
+          : tint?.a ?? 0,
+    );
+  }
+
   final double kind;
   final bool dark;
   final PrismRole role;
@@ -262,15 +329,15 @@ final class PrismRecipe {
     role,
     tintMatrix,
     tintAlpha,
-    presence ?? this.presence,
-    lensRim ?? this.lensRim,
-    chromaticSplit ?? this.chromaticSplit,
-    chromaticBand ?? this.chromaticBand,
-    underlay ?? this.underlay,
-    faceFill ?? this.faceFill,
-    faceGray ?? this.faceGray,
-    tintAmount ?? this.tintAmount,
-    shadow ?? this.shadow,
+    presence: presence ?? this.presence,
+    lensRim: lensRim ?? this.lensRim,
+    chromaticSplit: chromaticSplit ?? this.chromaticSplit,
+    chromaticBand: chromaticBand ?? this.chromaticBand,
+    underlay: underlay ?? this.underlay,
+    faceFill: faceFill ?? this.faceFill,
+    faceGray: faceGray ?? this.faceGray,
+    tintAmount: tintAmount ?? this.tintAmount,
+    shadow: shadow ?? this.shadow,
   );
 
   PrismRecipe withTint(double tint) => _copyWith(
@@ -301,69 +368,9 @@ final class PrismRecipe {
       (shadow && kind != 3 && !(kind == 2 && role == PrismRole.surface)
           ? 1
           : 0);
-  static PrismRecipe resolve(
-    PrismGlass glass,
-    Brightness brightness,
-    PrismRole role, {
-    required bool customOptics,
-    bool disabledProminent = false,
-  }) {
-    final dark = brightness == Brightness.dark;
-    final tint = glass.tintColor;
-    final rgb = tint == null ? 0 : tint.toARGB32() & 0xFFFFFF;
-    final disabledScale = dark ? .3086487948894501 : .30867475271224976;
-    final disabledBias = dark ? .31474554538726807 : .285163551568985;
-    final matrix = disabledProminent
-        ? <double>[
-            disabledScale,
-            0,
-            0,
-            disabledBias,
-            0,
-            disabledScale,
-            0,
-            disabledBias,
-            0,
-            0,
-            disabledScale,
-            disabledBias,
-          ]
-        : nativeTintMatrices[(
-            glass.variant == PrismGlassVariant.clear,
-            dark,
-            rgb,
-          )];
-    final fallback = <double>[
-      for (final component in [tint?.r ?? 0, tint?.g ?? 0, tint?.b ?? 0]) ...[
-        0.12 * (1 - component) * 0.2126,
-        0.12 * (1 - component) * 0.7152,
-        0.12 * (1 - component) * 0.0722,
-        component * 0.94,
-      ],
-    ];
-    final materialKind = glass.variant == PrismGlassVariant.clear ? 2.0 : 1.0;
-    final kind = switch (role) {
-      PrismRole.toolbar || PrismRole.searchField => materialKind,
-      PrismRole.controlThumb ||
-      PrismRole.segmentLens ||
-      PrismRole.tabLens ||
-      PrismRole.sliderLens ||
-      PrismRole.controlLensUnminified => 3.0,
-      _ => customOptics ? 0.0 : materialKind,
-    };
-    return PrismRecipe(
-      kind,
-      dark,
-      role,
-      matrix ?? fallback,
-      disabledProminent
-          ? (dark ? .3499999940395355 : .44999998807907104)
-          : tint?.a ?? 0,
-    );
-  }
 
   static const double regularFrost = FrostPass.regularBaseSigma;
-  static const double blurFillFrost = 12.0;
+  static const double blurFillFrost = 12;
 
   PrismOptics optics(double radius) => kind == 2
       ? PrismOptics.clear.copyWith(
@@ -386,7 +393,7 @@ final class PrismRecipe {
         );
   List<double> get uniforms => [
     kind,
-    dark ? 1 : 0,
+    if (dark) 1 else 0,
     role.shaderId,
     tintAlpha,
     ...tintMatrix,
@@ -406,7 +413,7 @@ final class PrismRecipe {
         : 1 + NativeGlassDepth.lightGain * NativeGlassDepth.amount(extent);
     return [
       faceFill,
-      kind == 0 ? 0 : NativeGlassShadow.ringOpacity * shadowStrength,
+      if (kind == 0) 0 else NativeGlassShadow.ringOpacity * shadowStrength,
       limit,
       faceGray,
     ];
@@ -440,7 +447,16 @@ abstract final class NativeGlassDepth {
 @immutable
 @internal
 final class NativeGlassShadow {
-  const NativeGlassShadow(this.radius, this.opacity);
+  const new(this.radius, this.opacity);
+  factory resolve(double extent, {required bool dark}) {
+    final progress = ((extent - 64) / 96).clamp(0.0, 1.0);
+    const smallOpacity = 0.03999999910593033;
+    final largeOpacity = dark ? 0.6000000238418579 : 0.4000000059604645;
+    return NativeGlassShadow(
+      4 + 20 * progress,
+      smallOpacity + (largeOpacity - smallOpacity) * progress,
+    );
+  }
   final double radius;
   final double opacity;
   static const NativeGlassShadow control = NativeGlassShadow(
@@ -448,9 +464,9 @@ final class NativeGlassShadow {
     0.03999999910593033,
   );
   static const double colorAlpha = 0.30000001192092896;
-  static const double offset = 8.0;
-  static const double ringWidth = 4.0;
-  static const double ringRadius = 5.0;
+  static const double offset = 8;
+  static const double ringWidth = 4;
+  static const double ringRadius = 5;
   static const double ringOpacity = 0.05999999865889549;
 
   @override
@@ -462,14 +478,4 @@ final class NativeGlassShadow {
 
   @override
   int get hashCode => Object.hash(radius, opacity);
-
-  factory NativeGlassShadow.resolve(double extent, {required bool dark}) {
-    final progress = ((extent - 64) / 96).clamp(0.0, 1.0);
-    const smallOpacity = 0.03999999910593033;
-    final largeOpacity = dark ? 0.6000000238418579 : 0.4000000059604645;
-    return NativeGlassShadow(
-      4 + 20 * progress,
-      smallOpacity + (largeOpacity - smallOpacity) * progress,
-    );
-  }
 }

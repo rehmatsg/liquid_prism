@@ -25,7 +25,9 @@ void main() {
           null,
         ),
       );
-      var enabled = true, value = false, slider = .5;
+      var enabled = true;
+      var value = false;
+      var slider = .5;
       late StateSetter update;
       await tester.pumpWidget(
         MaterialApp(

@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/primitives.dart';
 
-const _contentKey = ValueKey('pressable-content');
+const ValueKey<String> _contentKey = ValueKey('pressable-content');
 
 Widget _harness({
   required VoidCallback? onPressed,
@@ -220,7 +220,8 @@ void main() {
   testWidgets('a long press wins over the tap and needs an action', (
     tester,
   ) async {
-    var taps = 0, holds = 0;
+    var taps = 0;
+    var holds = 0;
     await tester.pumpWidget(
       _harness(onPressed: () => taps++, onLongPress: () => holds++),
     );

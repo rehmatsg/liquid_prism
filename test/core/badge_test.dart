@@ -51,7 +51,9 @@ void main() {
       expect(
         opacity,
         closeTo(progress, .001),
-        reason: 'a badge outside the glass child must follow the same materialization progress',
+        reason:
+            'a badge outside the glass child must follow '
+            'the same materialization progress',
       );
       await tester.pumpAndSettle();
     }
@@ -99,7 +101,9 @@ void main() {
           expect(
             trailing,
             closeTo(edge, .01),
-            reason: 'long counts must expand inward rather than beyond the rail safe edge',
+            reason:
+                'long counts must expand inward rather than '
+                'beyond the rail safe edge',
           );
         }
       }
@@ -176,7 +180,7 @@ void main() {
           if (badge.count != null) {
             countHeight = rect.height;
           } else {
-            expect(rect.height, countHeight!);
+            expect(rect.height, countHeight);
             final anchor = Offset(
               direction == TextDirection.ltr
                   ? group.right - rect.center.dx

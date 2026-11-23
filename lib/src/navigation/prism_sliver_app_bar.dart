@@ -1,31 +1,30 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_colors.dart';
-import '../core/prism_motion.dart';
-import '../rendering/glass_group.dart';
-import '../rendering/prism_transition.dart';
-import '../theme/prism_theme.dart';
-import 'navigation_bar_minimization.dart';
-import 'navigation_bar_titles.dart';
-import 'navigation_title_motion.dart';
-import 'prism_navigation_bar_style.dart';
-import 'prism_scroll_edge.dart';
-import 'prism_scroll_edge_style.dart';
-import 'prism_system_chrome.dart';
-import 'prism_title.dart';
-import 'prism_title_style.dart';
-import 'prism_toolbar.dart';
-import 'prism_toolbar_content.dart';
-import 'prism_toolbar_style.dart';
-import 'scaffold/chrome_placement.dart';
-import 'scaffold/prism_scaffold.dart';
+import 'package:liquid_prism/src/core/prism_colors.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/navigation/navigation_bar_minimization.dart';
+import 'package:liquid_prism/src/navigation/navigation_bar_titles.dart';
+import 'package:liquid_prism/src/navigation/navigation_title_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_navigation_bar_style.dart';
+import 'package:liquid_prism/src/navigation/prism_scroll_edge.dart';
+import 'package:liquid_prism/src/navigation/prism_scroll_edge_style.dart';
+import 'package:liquid_prism/src/navigation/prism_system_chrome.dart';
+import 'package:liquid_prism/src/navigation/prism_title.dart';
+import 'package:liquid_prism/src/navigation/prism_title_style.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_content.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_style.dart';
+import 'package:liquid_prism/src/navigation/scaffold/chrome_placement.dart';
+import 'package:liquid_prism/src/navigation/scaffold/prism_scaffold.dart';
+import 'package:liquid_prism/src/rendering/glass_group.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Scroll-aware navigation chrome for a custom sliver scroll view.
 class PrismSliverAppBar extends StatelessWidget {
   /// Creates adaptive navigation chrome within a sliver scroll view.
-  const PrismSliverAppBar({
+  const new({
     super.key,
     this.title,
     this.largeTitle,
@@ -158,13 +157,13 @@ class PrismSliverAppBar extends StatelessWidget {
         (sheet
             ? 16.0
             : corner == null || rail
-            ? math.max(media.padding.top, 24.0)
+            ? math.max(media.padding.top, 24)
             : 24.0) +
         insets.top;
     final bottom = prismBottomToolbarContent(toolbar);
     final accessoryHeight =
         (accessory?.preferredSize.height ?? 0) + (bottom.isEmpty ? 0 : 48);
-    final Widget? barAccessory = bottom.isEmpty
+    final barAccessory = bottom.isEmpty
         ? accessory
         : Column(
             mainAxisSize: MainAxisSize.min,
@@ -336,14 +335,15 @@ class PrismSliverAppBar extends StatelessWidget {
 }
 
 class _MinimizingSliverBar extends StatefulWidget {
-  const _MinimizingSliverBar({
+  const new({
     required this.style,
     required this.collapseExtent,
     required this.extent,
     required this.builder,
   });
   final PrismNavigationBarStyle style;
-  final double collapseExtent, extent;
+  final double collapseExtent;
+  final double extent;
   final Widget Function(Animation<double> minimization, bool revealed) builder;
 
   @override
@@ -405,7 +405,7 @@ class _MinimizingSliverBarState extends State<_MinimizingSliverBar>
 }
 
 class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverBarDelegate({
+  new({
     required this.bar,
     required this.minimization,
     required this.revealed,
@@ -437,16 +437,30 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
   final bool revealed;
   final PrismSliverAppBar bar;
   final Animation<double> minimization;
-  final Widget? leading, inlineTitle, expandedTitle, compactTitle, accessory;
-  final bool largeInRow, rail;
+  final Widget? leading;
+  final Widget? inlineTitle;
+  final Widget? expandedTitle;
+  final Widget? compactTitle;
+  final Widget? accessory;
+  final bool largeInRow;
+  final bool rail;
   final double clearance;
   final EdgeInsets insets;
-  final TextStyle titleStyle, largeTitleStyle;
-  final TextStyle subtitleStyle, largeSubtitleStyle;
+  final TextStyle titleStyle;
+  final TextStyle largeTitleStyle;
+  final TextStyle subtitleStyle;
+  final TextStyle largeSubtitleStyle;
   final PrismNavigationBarStyle navigation;
-  final double top, barRow, largeRow, lead, largeTitleTop, accessoryHeight;
+  final double top;
+  final double barRow;
+  final double largeRow;
+  final double lead;
+  final double largeTitleTop;
+  final double accessoryHeight;
   @override
-  final double minExtent, maxExtent;
+  final double minExtent;
+  @override
+  final double maxExtent;
   final double titleCollapseExtent;
 
   @override
@@ -488,7 +502,7 @@ class _SliverBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _SliverBar extends StatefulWidget {
-  const _SliverBar({required this.delegate, required this.shrinkOffset});
+  const new({required this.delegate, required this.shrinkOffset});
   final _SliverBarDelegate delegate;
   final double shrinkOffset;
 
@@ -497,7 +511,7 @@ class _SliverBar extends StatefulWidget {
 }
 
 class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
-  final _sharedTitleKey = GlobalKey();
+  final GlobalKey<State<StatefulWidget>> _sharedTitleKey = GlobalKey();
   late final _largeFade = RetargetablePrismSpring(vsync: this);
   late final _inlineFade = RetargetablePrismSpring(vsync: this);
   bool _collapsed = false;
@@ -579,7 +593,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
     final start = position.hasContentDimensions
         ? position.minScrollExtent
         : 0.0;
-    _scrolled.value = math.max(
+    _scrolled.value = math.max<double>(
       0,
       position.pixels - start - _d.titleCollapseExtent,
     );
@@ -889,7 +903,7 @@ class _SliverBarState extends State<_SliverBar> with TickerProviderStateMixin {
 enum _Slot { edge, leading, actions, trailing, title, largeTitle, accessory }
 
 class _SliverBarLayout extends MultiChildLayoutDelegate {
-  _SliverBarLayout({
+  new({
     required this.textDirection,
     required this.titleAlignment,
     required this.largeTitleAlignment,
@@ -908,13 +922,21 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
     required this.edgeInset,
   });
   final TextDirection textDirection;
-  final PrismTitleAlignment titleAlignment, largeTitleAlignment;
+  final PrismTitleAlignment titleAlignment;
+  final PrismTitleAlignment largeTitleAlignment;
   final EdgeInsets insets;
-  final double top, barRow, largeRow, shrink, accessoryHeight, gutter, gap;
+  final double top;
+  final double barRow;
+  final double largeRow;
+  final double shrink;
+  final double accessoryHeight;
+  final double gutter;
+  final double gap;
 
   final double safeTop;
 
-  final double lead, largeTitleTop;
+  final double lead;
+  final double largeTitleTop;
 
   final double edgeFrame;
 
@@ -927,10 +949,12 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
   @override
   void performLayout(Size size) {
     final rtl = textDirection == TextDirection.rtl;
-    final largeHeight = math.max(0.0, lead + largeRow - shrink);
+    final largeHeight = math.max<double>(0, lead + largeRow - shrink);
     double centred(Size child) => top + (barRow - child.height) / 2;
-    final leftInset = insets.left, rightInset = insets.right;
-    var leadingEnd = leftInset, trailingStart = size.width - rightInset;
+    final leftInset = insets.left;
+    final rightInset = insets.right;
+    var leadingEnd = leftInset;
+    var trailingStart = size.width - rightInset;
 
     if (hasChild(_Slot.edge)) {
       layoutChild(
@@ -938,7 +962,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         BoxConstraints.tight(
           Size(
             size.width,
-            math.max(
+            math.max<double>(
               0,
               (accessoryHeight > 0
                       ? math.max(safeTop, top + barRow + largeHeight)
@@ -991,7 +1015,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
                 _edge;
       final child = layoutChild(
         _Slot.leading,
-        BoxConstraints.loose(Size(math.max(0, room), size.height)),
+        BoxConstraints.loose(Size(math.max<double>(0, room), size.height)),
       );
       final x = rtl
           ? size.width - rightInset - _edge - child.width
@@ -1013,8 +1037,8 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
         size.width - rightInset - gutter,
         trailingStart - (trailingStart < size.width ? gap : 0),
       );
-      final centeredWidth = math.max(
-        0.0,
+      final centeredWidth = math.max<double>(
+        0,
         2.0 * math.min(centre - left, right - centre),
       );
       final title = layoutChild(
@@ -1023,7 +1047,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
           Size(
             titleAlignment == PrismTitleAlignment.center
                 ? centeredWidth
-                : math.max(0.0, right - left),
+                : math.max<double>(0, right - left),
             barRow,
           ),
         ),
@@ -1044,7 +1068,7 @@ class _SliverBarLayout extends MultiChildLayoutDelegate {
       final child = layoutChild(
         _Slot.largeTitle,
         BoxConstraints(
-          maxWidth: math.max(
+          maxWidth: math.max<double>(
             0,
             size.width - leftInset - rightInset - 2 * gutter,
           ),

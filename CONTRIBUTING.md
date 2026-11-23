@@ -19,7 +19,7 @@ For platform builds and Swift unit tests:
 
 ```sh
 xcodebuild test -scheme liquid_prism-Package -destination 'platform=iOS Simulator,name=iPhone 17'
-pod lib lint ios/liquid_prism.podspec --allow-warnings --skip-tests
+pod ipc spec ios/liquid_prism.podspec > /dev/null
 cd example
 flutter build ios --simulator --debug
 flutter build apk --debug

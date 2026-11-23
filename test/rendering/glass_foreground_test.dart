@@ -258,7 +258,9 @@ Future<void> _verifyForeground(WidgetTester tester) async {
       expect(
         brightBackdrop[foreground],
         pixels[foreground],
-        reason: 'The resting foreground palette remains independent of the backdrop',
+        reason:
+            'The resting foreground palette remains '
+            'independent of the backdrop',
       );
     }
     const customTint = Color(0xFF804020);
@@ -290,7 +292,9 @@ Future<void> _verifyForeground(WidgetTester tester) async {
     expect(
       await pixelsAt(tester, imageKey, foregroundPoints),
       translucent,
-      reason: 'Translucent tint retains the same pixels as an explicit source color',
+      reason:
+          'Translucent tint retains the same pixels as '
+          'an explicit source color',
     );
     await render(selectedIndex: 1);
     final customPoint = tester.getCenter(find.byKey(customIconKey)) - origin;
@@ -311,7 +315,7 @@ Future<void> _verifyForeground(WidgetTester tester) async {
 }
 
 class _ThemeAwareIcon extends StatefulWidget {
-  const _ThemeAwareIcon({super.key, required this.onCreate});
+  const new({super.key, required this.onCreate});
   final VoidCallback onCreate;
   @override
   State<_ThemeAwareIcon> createState() => _ThemeAwareIconState();

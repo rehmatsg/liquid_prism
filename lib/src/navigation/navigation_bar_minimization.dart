@@ -4,9 +4,8 @@ import 'package:flutter/foundation.dart' show internal;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
-
-import '../rendering/prism_transition.dart';
-import 'prism_navigation_bar_style.dart';
+import 'package:liquid_prism/src/navigation/prism_navigation_bar_style.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
 
 @internal
 PrismNavigationBarStyle resolveNavigationMinimization(
@@ -34,23 +33,25 @@ PrismNavigationBarStyle resolveNavigationMinimization(
 
 @internal
 class NavigationBarMinimization {
-  NavigationBarMinimization({required TickerProvider vsync})
+  new({required TickerProvider vsync})
     : progress = AnimationController(vsync: vsync);
 
   final AnimationController progress;
 
   double get distance => progress.value * _extent;
 
-  final revealed = ValueNotifier(false);
+  final ValueNotifier<bool> revealed = ValueNotifier(false);
   PrismMinimizationBehavior _behavior = PrismMinimizationBehavior.never;
   PrismMinimizationRestoration _restoration =
       PrismMinimizationRestoration.automatic;
-  double _pixels = 0,
-      _collapseExtent = 0,
-      _extent = 1,
-      _threshold = 40 / 3,
-      _hidden = 0;
-  bool _scheduled = false, _disposed = false, _revealed = false;
+  double _pixels = 0;
+  double _collapseExtent = 0;
+  double _extent = 1;
+  double _threshold = 40 / 3;
+  double _hidden = 0;
+  bool _scheduled = false;
+  bool _disposed = false;
+  bool _revealed = false;
 
   void configure(
     PrismNavigationBarStyle style, {
@@ -80,7 +81,7 @@ class NavigationBarMinimization {
 
   void setExtent(double extent) {
     final fraction = _hidden / _extent;
-    _extent = math.max(1.0, extent);
+    _extent = math.max<double>(1, extent);
     _hidden = fraction * _extent;
   }
 
@@ -93,7 +94,7 @@ class NavigationBarMinimization {
         )
         .toDouble();
     final delta =
-        math.max(0.0, pixels - _collapseExtent - _threshold) -
+        math.max<double>(0, pixels - _collapseExtent - _threshold) -
         math.max(0.0, _pixels - _collapseExtent - _threshold);
     _pixels = pixels;
     if (dimensionsChanged && pixels != 0) return;
@@ -113,7 +114,7 @@ class NavigationBarMinimization {
         } else {
           _hidden = math.min(
             _hidden,
-            math.max(0.0, pixels - _collapseExtent - _threshold),
+            math.max<double>(0, pixels - _collapseExtent - _threshold),
           );
         }
         if (_hidden >= _extent) _revealed = false;
@@ -151,11 +152,11 @@ class NavigationBarMinimization {
 
 @internal
 class NavigationBarPresence extends StatelessWidget {
-  const NavigationBarPresence({
+  const new({
     super.key,
     required this.progress,
-    this.fades = true,
     required this.child,
+    this.fades = true,
   });
   final Animation<double> progress;
   final bool fades;
@@ -192,7 +193,7 @@ class NavigationBarPresence extends StatelessWidget {
 }
 
 class _BarVisibility extends SingleChildRenderObjectWidget {
-  const _BarVisibility({required this.hidden, required super.child});
+  const new({required this.hidden, required super.child});
   final bool hidden;
 
   @override
@@ -209,8 +210,9 @@ class _BarVisibility extends SingleChildRenderObjectWidget {
 }
 
 class _RenderBarVisibility extends RenderProxyBox {
-  _RenderBarVisibility(this._hidden);
+  new(this._hidden);
   bool _hidden;
+  bool get hidden => _hidden;
   set hidden(bool value) {
     if (_hidden == value) return;
     _hidden = value;

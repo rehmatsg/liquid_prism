@@ -4,21 +4,53 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-import '../theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Component that emitted a haptic event.
-enum PrismHapticComponent { tabBar, switchControl, slider, refresh, button }
+enum PrismHapticComponent {
+  /// A tab bar selection control.
+  tabBar,
+
+  /// A toggle switch.
+  switchControl,
+
+  /// A continuous slider control.
+  slider,
+
+  /// A pull-to-refresh control.
+  refresh,
+
+  /// An action button.
+  button,
+}
 
 /// Semantic kind of haptic feedback event.
 enum PrismHapticKind {
+  /// A selection changed.
   selectionChange,
+
+  /// A switch toggled.
   toggle,
+
+  /// A control reached its limit.
   limitReached,
+
+  /// A long press was recognized.
   longPress,
+
+  /// A refresh pull began.
   refreshPulled,
+
+  /// A refresh pull crossed the activation threshold.
   refreshArmed,
+
+  /// A refresh completed successfully.
   refreshSucceeded,
+
+  /// A refresh failed.
   refreshFailed,
+
+  /// A refresh pull was released.
   refreshReleased,
 }
 
@@ -26,7 +58,7 @@ enum PrismHapticKind {
 @immutable
 final class PrismHapticEvent {
   /// Creates a haptic event for [component] and [kind].
-  const PrismHapticEvent(this.component, this.kind);
+  const new(this.component, this.kind);
 
   /// Originating component.
   final PrismHapticComponent component;
@@ -49,7 +81,7 @@ final class PrismHapticEvent {
 @immutable
 final class PrismHaptics {
   /// Creates a haptic feedback handler.
-  const PrismHaptics(this.onFeedback);
+  const new(this.onFeedback);
 
   /// Callback invoked when a component crosses a haptic boundary.
   final void Function(BuildContext context, PrismHapticEvent event) onFeedback;

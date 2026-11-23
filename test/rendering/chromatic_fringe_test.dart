@@ -313,7 +313,8 @@ void main() {
             final data = (await image.toByteData())!;
             final bytes = data.buffer.asUint8List();
             double centroid(int y, int channel) {
-              var weighted = 0.0, sum = 0.0;
+              var weighted = 0.0;
+              var sum = 0.0;
               for (var x = 0; x < 64; x++) {
                 final value = bytes[(y * 64 + x) * 4 + channel];
                 weighted += x * value;

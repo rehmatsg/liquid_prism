@@ -1,26 +1,65 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_motion.dart';
-import '../core/prism_optics.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
 
-/// Material treatment for [PrismButton].
-enum PrismButtonVariant { regular, prominent }
+/// Material treatment for `PrismButton`.
+enum PrismButtonVariant {
+  /// Standard glass treatment.
+  regular,
+
+  /// Prominent tinted glass treatment.
+  prominent,
+}
 
 /// Standard control size presets.
-enum PrismControlSize { mini, small, regular, large, extraLarge }
+enum PrismControlSize {
+  /// Smallest control preset.
+  mini,
 
-/// Horizontal sizing behavior for [PrismButton].
-enum PrismButtonSizing { intrinsic, fill }
+  /// Small control preset.
+  small,
+
+  /// Standard control preset.
+  regular,
+
+  /// Large control preset.
+  large,
+
+  /// Largest control preset.
+  extraLarge,
+}
+
+/// Horizontal sizing behavior for `PrismButton`.
+enum PrismButtonSizing {
+  /// Sizes the button to its content.
+  intrinsic,
+
+  /// Fills the available width.
+  fill,
+}
 
 /// Label placement relative to a button icon.
-enum PrismLabelPlacement { leading, trailing, above, below }
+enum PrismLabelPlacement {
+  /// Places the label before the icon.
+  leading,
 
-/// Reusable visual and layout overrides for [PrismButton].
+  /// Places the label after the icon.
+  trailing,
+
+  /// Places the label above the icon.
+  above,
+
+  /// Places the label below the icon.
+  below,
+}
+
+/// Reusable visual and layout overrides for `PrismButton`.
 @immutable
 class PrismButtonStyle {
   /// Creates a partial button style override.
-  const PrismButtonStyle({
+  const new({
     this.variant,
     this.size,
     this.sizing,
@@ -40,9 +79,12 @@ class PrismButtonStyle {
     this.foregroundColor,
     this.tintColor,
     this.loadingIndicator,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(iconSize == null || iconSize > 0),
-       assert(spacing == null || spacing >= 0);
+  }) : assert(
+         blur == null || (blur >= 0 && blur <= 12),
+         'Blur must be between 0 and 12.',
+       ),
+       assert(iconSize == null || iconSize > 0, 'Icon size must be positive.'),
+       assert(spacing == null || spacing >= 0, 'Spacing must be non-negative.');
 
   /// Material treatment override.
   final PrismButtonVariant? variant;

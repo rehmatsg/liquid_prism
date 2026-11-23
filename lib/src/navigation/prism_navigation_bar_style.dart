@@ -1,28 +1,79 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_motion.dart';
-import 'prism_title_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_title_style.dart';
 
 /// Placement and typography mode for a navigation bar title.
-enum PrismTitleDisplayMode { automatic, inline, inlineLarge, large }
+enum PrismTitleDisplayMode {
+  /// Chooses the title display mode from context.
+  automatic,
+
+  /// Displays the title in the control row.
+  inline,
+
+  /// Displays a large title in the control row.
+  inlineLarge,
+
+  /// Displays an expanded large title.
+  large,
+}
 
 /// Horizontal alignment for a navigation bar title.
-enum PrismTitleAlignment { automatic, leading, center, trailing }
+enum PrismTitleAlignment {
+  /// Chooses the title alignment from context.
+  automatic,
+
+  /// Aligns the title to the leading edge.
+  leading,
+
+  /// Centers the title horizontally.
+  center,
+
+  /// Aligns the title to the trailing edge.
+  trailing,
+}
 
 /// Scroll-driven minimization behavior for a navigation bar.
-enum PrismMinimizationBehavior { automatic, never, onScrollDown, onScrollUp }
+enum PrismMinimizationBehavior {
+  /// Chooses minimization behavior from context.
+  automatic,
+
+  /// Keeps the navigation bar expanded.
+  never,
+
+  /// Minimizes while scrolling down.
+  onScrollDown,
+
+  /// Minimizes while scrolling up.
+  onScrollUp,
+}
 
 /// Restoration policy for a minimized navigation bar.
-enum PrismMinimizationRestoration { automatic, atScrollEdge }
+enum PrismMinimizationRestoration {
+  /// Uses automatic bar restoration.
+  automatic,
+
+  /// Restores the bar at the scroll edge.
+  atScrollEdge,
+}
 
 /// Safe-area inset behavior while a navigation bar minimizes.
-enum PrismMinimizationSafeArea { automatic, enabled, disabled }
+enum PrismMinimizationSafeArea {
+  /// Chooses safe-area adjustment from context.
+  automatic,
+
+  /// Adjusts safe-area clearance during minimization.
+  enabled,
+
+  /// Preserves safe-area clearance during minimization.
+  disabled,
+}
 
 /// Typography, layout, and minimization overrides for navigation bars.
 @immutable
 class PrismNavigationBarStyle {
   /// Creates a partial navigation bar style override.
-  const PrismNavigationBarStyle({
+  const new({
     this.titleStyle,
     this.titleDisplayMode,
     this.titleAlignment,
@@ -47,13 +98,31 @@ class PrismNavigationBarStyle {
     this.largeTitleFadeDuration,
     this.largeTitleFadeCurve,
     this.titleCapsule,
-  }) : assert(gutter == null || gutter >= 0),
-       assert(controlGap == null || controlGap >= 0),
-       assert(contentSpacing == null || contentSpacing >= 0),
-       assert(revealExtent == null || revealExtent >= 0),
-       assert(controlRowHeight == null || controlRowHeight >= 44),
-       assert(largeTitleExtent == null || largeTitleExtent >= 0),
-       assert(minimizationThreshold == null || minimizationThreshold >= 0);
+  }) : assert(gutter == null || gutter >= 0, 'gutter must be >= 0.'),
+       assert(
+         controlGap == null || controlGap >= 0,
+         'controlGap must be >= 0.',
+       ),
+       assert(
+         contentSpacing == null || contentSpacing >= 0,
+         'contentSpacing must be >= 0.',
+       ),
+       assert(
+         revealExtent == null || revealExtent >= 0,
+         'revealExtent must be >= 0.',
+       ),
+       assert(
+         controlRowHeight == null || controlRowHeight >= 44,
+         'controlRowHeight must be >= 44.',
+       ),
+       assert(
+         largeTitleExtent == null || largeTitleExtent >= 0,
+         'largeTitleExtent must be >= 0.',
+       ),
+       assert(
+         minimizationThreshold == null || minimizationThreshold >= 0,
+         'minimizationThreshold must be >= 0.',
+       );
 
   /// Default reveal spring for inline titles.
   static const PrismSpring titleSpring = PrismSpring.physical(
@@ -134,7 +203,7 @@ class PrismNavigationBarStyle {
   /// Curve of the large title fade transition.
   final Curve? largeTitleFadeCurve;
 
-  /// Geometry and glass overrides for [PrismTitle] capsules in this bar.
+  /// Geometry and glass overrides for `PrismTitle` capsules in this bar.
   final PrismTitleStyle? titleCapsule;
 
   /// Returns a copy with specified fields replaced.

@@ -2,7 +2,7 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'scaffold_slivers_test.dart' show phone, rows, rectOf;
+import 'scaffold_slivers_test.dart' show phone, rectOf, rows;
 
 class _Tabs extends SliverPersistentHeaderDelegate {
   @override
@@ -41,7 +41,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      final barBottom = 62 + 44 + PrismScaffold.topBarClearance;
+      const barBottom = 62 + 44 + PrismScaffold.topBarClearance;
       expect(rectOf(tester, 'tabs').top, barBottom + 80 + (header ? 120 : 0));
       controller.jumpTo(600);
       await tester.pumpAndSettle();

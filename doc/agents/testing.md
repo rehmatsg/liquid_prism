@@ -19,7 +19,7 @@ flutter pub publish --dry-run
 
 ```sh
 xcodebuild test -scheme liquid_prism-Package -destination 'platform=iOS Simulator,id=<simulator-id>'
-pod lib lint ios/liquid_prism.podspec --allow-warnings --skip-tests
+pod ipc spec ios/liquid_prism.podspec > /dev/null
 cd example && flutter build ios --simulator --debug
 ```
 

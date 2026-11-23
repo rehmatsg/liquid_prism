@@ -1,18 +1,24 @@
 import 'package:flutter/widgets.dart';
 
-/// Chrome dock placement and sizing overrides for [PrismScaffold].
+/// Chrome dock placement and sizing overrides for `PrismScaffold`.
 @immutable
 class PrismScaffoldStyle {
   /// Creates a partial scaffold style override.
-  const PrismScaffoldStyle({
+  const new({
     this.tabBarAlignment,
     this.tabBarMargin,
     this.tabBarMaxWidth,
     this.bottomBarAlignment,
     this.bottomBarMargin,
     this.bottomBarMaxWidth,
-  }) : assert(tabBarMaxWidth == null || tabBarMaxWidth > 0),
-       assert(bottomBarMaxWidth == null || bottomBarMaxWidth > 0);
+  }) : assert(
+         tabBarMaxWidth == null || tabBarMaxWidth > 0,
+         'tabBarMaxWidth must be > 0.',
+       ),
+       assert(
+         bottomBarMaxWidth == null || bottomBarMaxWidth > 0,
+         'bottomBarMaxWidth must be > 0.',
+       );
 
   /// Cross-axis alignment within the tab bar dock.
   final AlignmentGeometry? tabBarAlignment;

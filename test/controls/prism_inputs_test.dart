@@ -139,100 +139,100 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-  testWidgets(
-    'switch impacts follow toggles and drag boundaries without release duplicates',
-    (tester) async {
-      final impacts = <Object?>[];
-      final messenger = tester.binding.defaultBinaryMessenger;
-      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+  testWidgets('switch impacts follow toggles and drag '
+      'boundaries without release duplicates', (tester) async {
+    final impacts = <Object?>[];
+    final messenger = tester.binding.defaultBinaryMessenger
+      ..setMockMethodCallHandler(SystemChannels.platform, (call) async {
         if (call.method == 'HapticFeedback.vibrate') {
           impacts.add(call.arguments);
         }
         return null;
       });
-      addTearDown(
-        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
-      );
-      var value = false, enabled = true, haptics = true;
-      late StateSetter update;
-      await tester.pumpWidget(
-        host(
-          StatefulBuilder(
-            builder: (context, setState) {
-              update = setState;
-              return PrismSwitch(
-                value: value,
-                label: 'Power',
-                onChanged: enabled
-                    ? (next) => setState(() => value = next)
-                    : null,
-                style: PrismSwitchStyle(haptics: haptics),
-              );
-            },
-          ),
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    var value = false;
+    var enabled = true;
+    var haptics = true;
+    late StateSetter update;
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return PrismSwitch(
+              value: value,
+              label: 'Power',
+              onChanged: enabled
+                  ? (next) => setState(() => value = next)
+                  : null,
+              style: PrismSwitchStyle(haptics: haptics),
+            );
+          },
         ),
-      );
-      final control = find.byType(PrismSwitch);
-      await tester.tap(control);
-      await tester.pumpAndSettle();
-      expect(value, isTrue);
-      expect(impacts, ['HapticFeedbackType.lightImpact']);
-      await tester.sendKeyEvent(LogicalKeyboardKey.end);
-      await tester.pumpAndSettle();
-      expect(impacts, hasLength(1), reason: 'An unchanged state is silent.');
-      await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pumpAndSettle();
-      tester.semantics.tap(find.semantics.byLabel('Power'));
-      await tester.pumpAndSettle();
-      expect(impacts, hasLength(3));
+      ),
+    );
+    final control = find.byType(PrismSwitch);
+    await tester.tap(control);
+    await tester.pumpAndSettle();
+    expect(value, isTrue);
+    expect(impacts, ['HapticFeedbackType.lightImpact']);
+    await tester.sendKeyEvent(LogicalKeyboardKey.end);
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(1), reason: 'An unchanged state is silent.');
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pumpAndSettle();
+    tester.semantics.tap(find.semantics.byLabel('Power'));
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(3));
 
-      update(() => value = false);
-      await tester.pumpAndSettle();
-      expect(impacts, hasLength(3), reason: 'External updates are silent.');
-      final start = tester.getCenter(control);
-      final drag = await tester.startGesture(start);
-      await drag.moveTo(start + const Offset(40, 0));
-      await tester.pump();
-      expect(impacts, hasLength(4));
-      await drag.moveTo(start + const Offset(45, 0));
-      await tester.pump();
-      expect(impacts, hasLength(4));
-      await drag.moveTo(start);
-      await tester.pump();
-      expect(impacts, hasLength(5));
-      await drag.up();
-      await tester.pumpAndSettle();
-      expect(value, isFalse);
-      expect(impacts, hasLength(5));
+    update(() => value = false);
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(3), reason: 'External updates are silent.');
+    final start = tester.getCenter(control);
+    final drag = await tester.startGesture(start);
+    await drag.moveTo(start + const Offset(40, 0));
+    await tester.pump();
+    expect(impacts, hasLength(4));
+    await drag.moveTo(start + const Offset(45, 0));
+    await tester.pump();
+    expect(impacts, hasLength(4));
+    await drag.moveTo(start);
+    await tester.pump();
+    expect(impacts, hasLength(5));
+    await drag.up();
+    await tester.pumpAndSettle();
+    expect(value, isFalse);
+    expect(impacts, hasLength(5));
 
-      final held = await tester.startGesture(start);
-      await tester.pumpAndSettle();
-      await held.cancel();
-      await tester.pumpAndSettle();
-      expect(impacts, hasLength(5));
-      update(() => enabled = false);
-      await tester.pumpAndSettle();
-      await tester.tap(control);
-      await tester.pumpAndSettle();
-      expect(impacts, hasLength(5));
-      update(() {
-        enabled = true;
-        haptics = false;
-      });
-      await tester.pumpAndSettle();
-      await tester.tap(control);
-      await tester.pumpAndSettle();
-      expect(value, isTrue);
-      expect(impacts, hasLength(5));
-      expect(impacts.toSet(), {'HapticFeedbackType.lightImpact'});
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
-  );
+    final held = await tester.startGesture(start);
+    await tester.pumpAndSettle();
+    await held.cancel();
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(5));
+    update(() => enabled = false);
+    await tester.pumpAndSettle();
+    await tester.tap(control);
+    await tester.pumpAndSettle();
+    expect(impacts, hasLength(5));
+    update(() {
+      enabled = true;
+      haptics = false;
+    });
+    await tester.pumpAndSettle();
+    await tester.tap(control);
+    await tester.pumpAndSettle();
+    expect(value, isTrue);
+    expect(impacts, hasLength(5));
+    expect(impacts.toSet(), {'HapticFeedbackType.lightImpact'});
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('switch tap, drag, controlled rejection and keyboard', (
     tester,
   ) async {
-    var value = false, accept = true;
+    var value = false;
+    var accept = true;
     var changes = 0;
     await tester.pumpWidget(
       host(
@@ -275,7 +275,8 @@ void main() {
     tester,
   ) async {
     var value = 14.0;
-    final starts = <double>[], ends = <double>[];
+    final starts = <double>[];
+    final ends = <double>[];
     Widget build(bool rtl) => host(
       StatefulBuilder(
         builder: (context, setState) => PrismSlider(
@@ -436,7 +437,8 @@ void main() {
   testWidgets('segmented tabs commit once on release and expose selection', (
     tester,
   ) async {
-    var value = 0, changes = 0;
+    var value = 0;
+    var changes = 0;
     await tester.pumpWidget(
       host(
         StatefulBuilder(
@@ -537,17 +539,18 @@ void main() {
     tester,
   ) async {
     final impacts = <Object?>[];
-    final messenger = tester.binding.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'HapticFeedback.vibrate') {
-        impacts.add(call.arguments);
-      }
-      return null;
-    });
+    final messenger = tester.binding.defaultBinaryMessenger
+      ..setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          impacts.add(call.arguments);
+        }
+        return null;
+      });
     addTearDown(
       () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
     );
-    var value = 50.0, accept = true;
+    var value = 50.0;
+    var accept = true;
     bool? haptics;
     PrismSliderStyle? themeStyle;
     late StateSetter update;
@@ -675,11 +678,13 @@ void main() {
 
   testWidgets('theme slider haptics false is respected', (tester) async {
     final impacts = <Object?>[];
-    final messenger = tester.binding.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'HapticFeedback.vibrate') impacts.add(call.arguments);
-      return null;
-    });
+    final messenger = tester.binding.defaultBinaryMessenger
+      ..setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          impacts.add(call.arguments);
+        }
+        return null;
+      });
     addTearDown(
       () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
     );

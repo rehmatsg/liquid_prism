@@ -2,16 +2,15 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show internal;
 import 'package:flutter/widgets.dart';
-
-import '../controls/prism_pressable.dart';
-import '../core/prism_glass.dart';
-import '../core/prism_motion.dart';
-import '../rendering/glass_group.dart';
-import '../rendering/prism_transition.dart';
-import '../rendering/recipe.dart';
-import '../rendering/surface.dart';
-import '../theme/prism_theme.dart';
-import 'prism_title_style.dart';
+import 'package:liquid_prism/src/controls/prism_pressable.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_title_style.dart';
+import 'package:liquid_prism/src/rendering/glass_group.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/surface.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 @internal
 const titleCompositionSpring = PrismSpring(
@@ -21,7 +20,7 @@ const titleCompositionSpring = PrismSpring(
 
 @internal
 class PrismTitleLayout extends InheritedWidget {
-  const PrismTitleLayout({
+  const new({
     super.key,
     required this.subtitle,
     required this.style,
@@ -43,7 +42,7 @@ class PrismTitleLayout extends InheritedWidget {
 /// A navigation title capsule with optional inline leading content and avatar.
 class PrismTitle extends StatefulWidget {
   /// Creates a title capsule with optional leading content and avatar.
-  const PrismTitle({
+  const new({
     super.key,
     required this.child,
     this.leading,
@@ -93,7 +92,7 @@ class PrismTitle extends StatefulWidget {
         ) +
         (title.avatar == null
             ? 0
-            : math.max(
+            : math.max<double>(
                 0,
                 style.resolvedAvatarSize - style.resolvedAvatarOverlap,
               ));
@@ -228,7 +227,7 @@ class _PrismTitleState extends State<PrismTitle> with TickerProviderStateMixin {
       inline,
     )!;
     final content = SizedBox(
-      height: math.max(0, height - inset.vertical),
+      height: math.max<double>(0, height - inset.vertical),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -292,7 +291,7 @@ class _PrismTitleState extends State<PrismTitle> with TickerProviderStateMixin {
             ),
           );
     final avatar = _avatar;
-    final aboveExtent = math.max(0.0, _above.value);
+    final aboveExtent = math.max<double>(0, _above.value);
     final size = resolved.resolvedAvatarSize;
     final overlap = math.min(resolved.resolvedAvatarOverlap, size);
     return PrismGroupMembers(
@@ -314,8 +313,8 @@ class _PrismTitleState extends State<PrismTitle> with TickerProviderStateMixin {
                         0.0,
                         1.0,
                       );
-                      final dimension = math.max(
-                        0.0,
+                      final dimension = math.max<double>(
+                        0,
                         size +
                             (resolved.resolvedLeadingSize - size) * placement,
                       );
@@ -416,14 +415,14 @@ _titleMetrics(
     if (style.padding == null) {
       final vertical = math.min(
         padding.top,
-        math.max(0.0, (controlHeight - textHeight) / 2),
+        math.max<double>(0, (controlHeight - textHeight) / 2),
       );
       padding = padding.copyWith(top: vertical, bottom: vertical);
     }
     if (style.leadingPadding == null) {
       final vertical = math.min(
         around.top,
-        math.max(0.0, (controlHeight - style.resolvedLeadingSize) / 2),
+        math.max<double>(0, (controlHeight - style.resolvedLeadingSize) / 2),
       );
       around = around.copyWith(top: vertical, bottom: vertical);
     }

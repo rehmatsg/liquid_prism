@@ -65,67 +65,62 @@ void main() {
     },
   );
 
-  testWidgets(
-    'membership changes and GlobalKey reparent retain child state and semantics',
-    (tester) async {
-      final member = GlobalKey<_CounterState>();
-      final imageKey = GlobalKey();
-      Widget harness(bool moved, bool extra) => glassHarness(
-        imageKey: imageKey,
-        child: Row(
-          children: [
-            for (var group = 0; group < 2; group++)
-              Expanded(
-                child: PrismGroup(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (extra) const Text('Sibling'),
-                      if (group == (moved ? 1 : 0))
-                        Semantics(
-                          container: true,
-                          child: _Counter(key: member),
-                        ),
-                    ],
-                  ),
+  testWidgets('membership changes and GlobalKey reparent '
+      'retain child state and semantics', (tester) async {
+    final member = GlobalKey<_CounterState>();
+    final imageKey = GlobalKey();
+    Widget harness({required bool moved, required bool extra}) => glassHarness(
+      imageKey: imageKey,
+      child: Row(
+        children: [
+          for (var group = 0; group < 2; group++)
+            Expanded(
+              child: PrismGroup(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (extra) const Text('Sibling'),
+                    if (group == (moved ? 1 : 0))
+                      Semantics(container: true, child: _Counter(key: member)),
+                  ],
                 ),
               ),
-          ],
-        ),
-      );
-      await tester.pumpWidget(harness(false, false));
+            ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(harness(moved: false, extra: false));
 
-      await tester.tap(find.byType(PrismButton));
-      await tester.pumpAndSettle();
-      expect(find.text('1 tap'), findsOneWidget);
-      await tester.pumpWidget(harness(true, true));
-      expect(find.text('1 tap'), findsOneWidget);
-      tester.semantics.tap(find.semantics.byLabel('Counter'));
-      await tester.pump();
-      expect(find.text('2 tap'), findsOneWidget);
-      expect(
-        tester
-            .getSemantics(find.bySemanticsLabel('Counter'))
-            .flagsCollection
-            .isEnabled,
-        ui.Tristate.isTrue,
-      );
-      await tester.pumpWidget(harness(false, false));
-      expect(find.text('2 tap'), findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-      expect(tester.takeException(), isNull);
-    },
-  );
+    await tester.tap(find.byType(PrismButton));
+    await tester.pumpAndSettle();
+    expect(find.text('1 tap'), findsOneWidget);
+    await tester.pumpWidget(harness(moved: true, extra: true));
+    expect(find.text('1 tap'), findsOneWidget);
+    tester.semantics.tap(find.semantics.byLabel('Counter'));
+    await tester.pump();
+    expect(find.text('2 tap'), findsOneWidget);
+    expect(
+      tester
+          .getSemantics(find.bySemanticsLabel('Counter'))
+          .flagsCollection
+          .isEnabled,
+      ui.Tristate.isTrue,
+    );
+    await tester.pumpWidget(harness(moved: false, extra: false));
+    expect(find.text('2 tap'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _Counter extends StatefulWidget {
-  const _Counter({super.key});
+  const new({super.key});
   @override
   State<_Counter> createState() => _CounterState();
 }
 
 class _CounterState extends State<_Counter> {
-  var taps = 0;
+  int taps = 0;
   @override
   Widget build(BuildContext context) => PrismButton(
     label: 'Counter',

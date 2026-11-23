@@ -1,12 +1,11 @@
+import 'package:liquid_prism/src/menu/menu_event.dart';
+import 'package:liquid_prism/src/menu/menu_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-
-import 'menu_event.dart';
-import 'menu_method_channel.dart';
 
 /// Defines the native menu bridge and deferred resolution contract.
 abstract class PrismMenuPlatform extends PlatformInterface {
   /// Creates a PrismMenuPlatform.
-  PrismMenuPlatform() : super(token: _token);
+  new() : super(token: _token);
 
   static final Object _token = Object();
 

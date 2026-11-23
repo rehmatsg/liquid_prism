@@ -2,18 +2,20 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_glass.dart';
-import '../core/prism_lens_style.dart';
-import '../rendering/recipe.dart';
-import '../theme/prism_theme.dart';
-import 'control_lens.dart';
+import 'package:liquid_prism/src/controls/control_lens.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Captured native control geometry and spring defaults.
 @internal
 abstract final class NativeControl {
   /// Native resting small-control thumb dimensions.
-  static const thumbWidth = 37.0, thumbHeight = 24.0;
+  static const thumbWidth = 37.0;
+
+  /// Native resting small-control thumb dimensions.
+  static const thumbHeight = 24.0;
 
   /// Native slider thumb enlargement while held.
   static const thumbHeldScale = 1.55;
@@ -26,38 +28,38 @@ abstract final class NativeControl {
       );
 
   /// Native switch travel spring.
-  static final switchTravel = spring(300, 1);
+  static final SpringDescription switchTravel = spring(300, 1);
 
   /// Native minimum switch tap-lift duration.
   static const switchHangTime = Duration(milliseconds: 220);
 
   /// Native slider settling spring.
-  static final sliderTravel = spring(400, .8);
+  static final SpringDescription sliderTravel = spring(400, .8);
 
   /// Native slider tracking spring.
-  static final sliderTracking = spring(400, 1);
+  static final SpringDescription sliderTracking = spring(400, 1);
 
   /// Native small-control lift spring.
-  static final smallLift = spring(270, .625);
+  static final SpringDescription smallLift = spring(270, .625);
 
   /// Native small-control release spring.
-  static final smallRelease = spring(500, .7);
+  static final SpringDescription smallRelease = spring(500, .7);
 
   /// Native segmented selection travel spring.
-  static final segmentTravel = spring(400, .85);
+  static final SpringDescription segmentTravel = spring(400, .85);
 
   /// Native segmented selection tracking spring.
-  static final segmentTracking = spring(200, .85);
+  static final SpringDescription segmentTracking = spring(200, .85);
 
   /// Native large-selection lift spring.
-  static final largeLift = spring(250, 1);
+  static final SpringDescription largeLift = spring(250, 1);
 }
 
 /// Dissolves a resting fill into the shared lifted lens.
 @internal
 class ControlThumb extends StatelessWidget {
   /// Creates a resting thumb that lifts into glass.
-  const ControlThumb({
+  const new({
     super.key,
     required this.lift,
     this.small = true,
@@ -70,8 +72,14 @@ class ControlThumb extends StatelessWidget {
   /// Normalized lift progress.
   final double lift;
 
-  /// Lens family, resting shadow, and underlying-content minification.
-  final bool small, restingShadow, minifyUnderlay;
+  /// Whether to use the small lens family.
+  final bool small;
+
+  /// Whether to paint a shadow under the resting thumb.
+  final bool restingShadow;
+
+  /// Whether to minify content under the lifted lens.
+  final bool minifyUnderlay;
 
   /// Resting thumb fill override.
   final Color? color;
@@ -102,7 +110,7 @@ class ControlThumb extends StatelessWidget {
 @internal
 class ControlTrack extends StatelessWidget {
   /// Creates a clipped control track.
-  const ControlTrack({
+  const new({
     super.key,
     required this.color,
     this.child,
@@ -128,11 +136,7 @@ class ControlTrack extends StatelessWidget {
 @internal
 class ControlDisabled extends StatelessWidget {
   /// Creates a disabled-alpha wrapper.
-  const ControlDisabled({
-    super.key,
-    required this.enabled,
-    required this.child,
-  });
+  const new({super.key, required this.enabled, required this.child});
 
   /// Whether to paint the child at full alpha.
   final bool enabled;

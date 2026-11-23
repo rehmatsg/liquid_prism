@@ -1,12 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_motion.dart';
-import '../rendering/edge_blur.dart';
-import '../rendering/edge_fade.dart';
-import '../theme/prism_theme.dart';
-import 'prism_scroll_edge_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_scroll_edge_style.dart';
+import 'package:liquid_prism/src/rendering/edge_blur.dart';
+import 'package:liquid_prism/src/rendering/edge_fade.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 @internal
 PrismScrollEdgeStyle navigationScrollEdgeStyle(
@@ -23,7 +22,7 @@ PrismScrollEdgeStyle navigationScrollEdgeStyle(
 /// Progressive blur and fade beneath navigation chrome or scroll edges.
 class PrismScrollEdge extends StatelessWidget {
   /// Creates a progress-driven navigation scroll-edge effect.
-  const PrismScrollEdge({
+  const new({
     super.key,
     required this.progress,
     this.edge = PrismEdge.top,
@@ -32,7 +31,7 @@ class PrismScrollEdge extends StatelessWidget {
   }) : _fade = null;
 
   /// Fades a scroll view at edges with content beyond the viewport.
-  const PrismScrollEdge.fade({
+  const new fade({
     super.key,
     required Widget child,
     this.color,
@@ -58,11 +57,14 @@ class PrismScrollEdge extends StatelessWidget {
          fadeOpacity: fadeOpacity,
          plateau: plateau,
        ),
-       assert(extent >= 0),
-       assert(endExtent == null || endExtent >= 0),
-       assert(sigma >= 0),
-       assert(fadeOpacity >= 0 && fadeOpacity <= 1),
-       assert(plateau >= 0 && plateau < 1);
+       assert(extent >= 0, 'extent must be >= 0.'),
+       assert(endExtent == null || endExtent >= 0, 'endExtent must be >= 0.'),
+       assert(sigma >= 0, 'sigma must be >= 0.'),
+       assert(
+         fadeOpacity >= 0 && fadeOpacity <= 1,
+         'fadeOpacity must be >= 0 and <= 1.',
+       ),
+       assert(plateau >= 0 && plateau < 1, 'plateau must be >= 0 and < 1.');
 
   final ({
     Widget child,
@@ -217,7 +219,7 @@ class PrismScrollEdge extends StatelessWidget {
 }
 
 class _PrismScrollFade extends StatefulWidget {
-  const _PrismScrollFade({
+  const new({
     required this.child,
     this.color,
     this.extent = 56,
@@ -229,11 +231,14 @@ class _PrismScrollFade extends StatefulWidget {
     this.fadeOpacity = 1,
     this.plateau = 0,
     this.style,
-  }) : assert(extent >= 0),
-       assert(endExtent == null || endExtent >= 0),
-       assert(sigma >= 0),
-       assert(fadeOpacity >= 0 && fadeOpacity <= 1),
-       assert(plateau >= 0 && plateau < 1);
+  }) : assert(extent >= 0, 'extent must be >= 0.'),
+       assert(endExtent == null || endExtent >= 0, 'endExtent must be >= 0.'),
+       assert(sigma >= 0, 'sigma must be >= 0.'),
+       assert(
+         fadeOpacity >= 0 && fadeOpacity <= 1,
+         'fadeOpacity must be >= 0 and <= 1.',
+       ),
+       assert(plateau >= 0 && plateau < 1, 'plateau must be >= 0 and < 1.');
 
   final Widget child;
 
@@ -276,7 +281,8 @@ class __PrismScrollFadeState extends State<_PrismScrollFade>
     with TickerProviderStateMixin {
   late final _start = RetargetablePrismSpring(vsync: this);
   late final _end = RetargetablePrismSpring(vsync: this);
-  bool _wantStart = false, _wantEnd = false;
+  bool _wantStart = false;
+  bool _wantEnd = false;
 
   bool _initialised = false;
 
@@ -366,7 +372,7 @@ class __PrismScrollFadeState extends State<_PrismScrollFade>
 
 @internal
 class ScrollEdgeProgressBuilder extends StatefulWidget {
-  const ScrollEdgeProgressBuilder({
+  const new({
     super.key,
     required this.listenable,
     required this.progress,

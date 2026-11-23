@@ -1,10 +1,14 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// A demo of a navigation bar inside a custom scroll view.
 class SliverBarPage extends StatefulWidget {
-  const SliverBarPage({super.key, this.scrollEdge = true});
+  /// Creates a [SliverBarPage].
+  const new({super.key, this.scrollEdge = true});
+
+  /// Whether the demo enables the scroll-edge effect.
   final bool scrollEdge;
 
   @override

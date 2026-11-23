@@ -2,7 +2,7 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/primitives.dart';
 
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
 const _subjects = [
   ('Maya Chen', 'Coffee on Saturday?', 'The café by the park at ten works.'),
@@ -31,8 +31,12 @@ String _anchorLabel(Rect? island) => island == null
           '(${island.width.round()}×${island.height.round()} at '
           '${island.left.round()}, ${island.top.round()}).';
 
+/// A mail feed demonstrating refresh states and header placement.
 class RefreshFeedPage extends StatefulWidget {
-  const RefreshFeedPage({super.key, this.compact = true});
+  /// Creates a [RefreshFeedPage].
+  const new({super.key, this.compact = true});
+
+  /// Whether the feed starts with a compact header.
   final bool compact;
 
   @override
@@ -40,10 +44,10 @@ class RefreshFeedPage extends StatefulWidget {
 }
 
 class _RefreshFeedPageState extends State<RefreshFeedPage> {
-  final _messages = [for (var i = 11; i >= 0; i--) i];
+  final List<int> _messages = [for (var i = 11; i >= 0; i--) i];
   var _unread = 0;
   var _slow = false;
-  late var _compact = widget.compact;
+  late bool _compact = widget.compact;
   var _fail = false;
   final _controller = PrismRefreshController();
 
@@ -107,7 +111,9 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
             child: ValueListenableBuilder<Rect?>(
               valueListenable: PrismSystemChrome.dynamicIsland,
               builder: (context, island, _) => Text(
-                'Pull down to check for mail. ${_compact ? 'The indicator appears below this compact header.' : _anchorLabel(island)} '
+                'Pull down to check for mail. '
+                '${_compact ? 'The indicator appears below this compact '
+                          'header.' : _anchorLabel(island)} '
                 '${_unread == 0 ? '' : '$_unread new since you arrived.'}',
                 key: const ValueKey('refresh-caption'),
                 style: TextStyle(
@@ -144,7 +150,7 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
 }
 
 class _MessageRow extends StatelessWidget {
-  const _MessageRow({
+  const new({
     super.key,
     required this.sender,
     required this.subject,
@@ -152,7 +158,9 @@ class _MessageRow extends StatelessWidget {
     required this.tint,
     required this.unread,
   });
-  final String sender, subject, preview;
+  final String sender;
+  final String subject;
+  final String preview;
   final Color tint;
   final bool unread;
 
@@ -230,8 +238,10 @@ class _MessageRow extends StatelessWidget {
   }
 }
 
+/// A gallery of pull-to-refresh layouts and appearances.
 class RefreshGalleryPage extends StatefulWidget {
-  const RefreshGalleryPage({super.key});
+  /// Creates a [RefreshGalleryPage].
+  const new({super.key});
 
   @override
   State<RefreshGalleryPage> createState() => _RefreshGalleryPageState();

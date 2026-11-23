@@ -40,7 +40,10 @@ List<double> superellipseUniforms(Size size, double radius) {
       ..add(math.pow(c, pRight).toDouble())
       ..add(math.pow(s, pRight).toDouble());
   }
-  assert(values.length == superellipseUniformCount);
+  assert(
+    values.length == superellipseUniformCount,
+    'superellipse uniform count must match the shader ABI',
+  );
   return values;
 }
 

@@ -2,19 +2,18 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_glass.dart';
-import '../core/prism_haptics.dart';
-import '../core/prism_motion.dart';
-import '../theme/prism_theme.dart';
-import 'control_interaction.dart';
-import 'control_material.dart';
-import 'prism_slider_style.dart';
+import 'package:liquid_prism/src/controls/control_interaction.dart';
+import 'package:liquid_prism/src/controls/control_material.dart';
+import 'package:liquid_prism/src/controls/prism_slider_style.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_haptics.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// A parent-controlled slider with continuous endpoint fill blending.
 class PrismSlider extends StatelessWidget {
   /// Creates a controlled slider over an inclusive numeric range.
-  const PrismSlider({
+  const new({
     super.key,
     required this.value,
     required this.onChanged,
@@ -26,18 +25,36 @@ class PrismSlider extends StatelessWidget {
     this.label,
     this.semanticFormatterCallback,
     this.style,
-  }) : assert(min <= max),
-       assert(value >= min && value <= max),
-       assert(divisions == null || divisions > 0);
+  }) : assert(min <= max, 'Min must not exceed max.'),
+       assert(
+         value >= min && value <= max,
+         'Value must be within min and max.',
+       ),
+       assert(
+         divisions == null || divisions > 0,
+         'Divisions must be positive.',
+       );
 
-  /// Parent-owned value and inclusive numeric range.
-  final double value, min, max;
+  /// Parent-owned value within the inclusive slider range.
+  final double value;
+
+  /// Inclusive lower bound of the slider range.
+  final double min;
+
+  /// Inclusive upper bound of the slider range.
+  final double max;
 
   /// Number of equal value divisions; null enables continuous input.
   final int? divisions;
 
-  /// Value proposals and input-phase callbacks in the actual numeric range.
-  final ValueChanged<double>? onChanged, onChangeStart, onChangeEnd;
+  /// Proposes a value; null disables all input.
+  final ValueChanged<double>? onChanged;
+
+  /// Called when user input starts.
+  final ValueChanged<double>? onChangeStart;
+
+  /// Called when user input ends.
+  final ValueChanged<double>? onChangeEnd;
 
   /// Accessible name for the slider.
   final String? label;
@@ -56,15 +73,22 @@ class PrismSlider extends StatelessWidget {
       appearance.motion,
     );
     final scale = appearance.scale ?? 1;
-    final hitHeight = math.max(44.0, (appearance.hitHeight ?? 44) * scale);
+    final hitHeight = math.max<double>(
+      44,
+      (appearance.hitHeight ?? 44) * scale,
+    );
     final trackHeight = (appearance.trackHeight ?? 6) * scale;
     final desiredThumb = (appearance.thumbSize ?? const Size(37, 24)) * scale;
-    assert(desiredThumb.width > 0 && desiredThumb.height > 0);
+    assert(
+      desiredThumb.width > 0 && desiredThumb.height > 0,
+      'Thumb dimensions must be positive.',
+    );
     final heldScale = appearance.heldScale ?? 1.55;
     final colors = PrismTheme.colorsOf(context);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final enabled = onChanged != null && max > min;
     final feedback = appearance.haptics ?? true;
+    final semanticRange = max == min ? 1 : max - min;
     double actual(double fraction) => min + fraction * (max - min);
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -90,7 +114,7 @@ class PrismSlider extends StatelessWidget {
                 : (v) => semanticFormatterCallback!(actual(v)),
             semanticValue:
                 semanticFormatterCallback?.call(value) ??
-                '${(((value - min) / (max == min ? 1 : max - min)) * 100).round()}%',
+                '${((value - min) / semanticRange * 100).round()}%',
             onChanged: enabled ? (v) => onChanged!(actual(v)) : null,
             onChangeStart: onChangeStart == null
                 ? null
@@ -120,12 +144,12 @@ class PrismSlider extends StatelessWidget {
             releaseSpring:
                 timing.release?.description ?? NativeControl.smallRelease,
             hangTime: timing.minimumLiftDuration ?? Duration.zero,
-            grabExtent: math.max(22.0, thumb.width * heldScale / 2),
+            grabExtent: math.max(22, thumb.width * heldScale / 2),
             builder: (context, position, lift, stretch, activate) {
               final p = position.clamp(0.0, 1.0);
               final x = center + travel * (rtl ? 1 - p : p);
-              final thumbWidth = thumb.width * (1 + (heldScale - 1) * lift),
-                  thumbHeight = thumb.height * (1 + (heldScale - 1) * lift);
+              final thumbWidth = thumb.width * (1 + (heldScale - 1) * lift);
+              final thumbHeight = thumb.height * (1 + (heldScale - 1) * lift);
               final edgeBlend =
                   ((.02 - p) / .02).clamp(0.0, 1.0) +
                   ((p - .98) / .02).clamp(0.0, 1.0);

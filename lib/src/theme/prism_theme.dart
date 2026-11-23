@@ -1,29 +1,29 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import '../controls/prism_button_style.dart';
-import '../controls/prism_search_style.dart';
-import '../controls/prism_segmented_style.dart';
-import '../controls/prism_slider_style.dart';
-import '../controls/prism_switch_style.dart';
-import '../core/prism_colors.dart';
-import '../core/prism_glass.dart';
-import '../core/prism_haptics.dart';
-import '../core/prism_lens_style.dart';
-import '../core/prism_motion.dart';
-import '../core/prism_optics.dart';
-import '../navigation/prism_navigation_bar_style.dart';
-import '../navigation/prism_scaffold_style.dart';
-import '../navigation/prism_scroll_edge_style.dart';
-import '../navigation/prism_tab_bar_style.dart';
-import '../navigation/prism_toolbar_style.dart';
-import '../rendering/prism_transition.dart';
+import 'package:liquid_prism/src/controls/prism_button_style.dart';
+import 'package:liquid_prism/src/controls/prism_search_style.dart';
+import 'package:liquid_prism/src/controls/prism_segmented_style.dart';
+import 'package:liquid_prism/src/controls/prism_slider_style.dart';
+import 'package:liquid_prism/src/controls/prism_switch_style.dart';
+import 'package:liquid_prism/src/core/prism_colors.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_haptics.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/navigation/prism_navigation_bar_style.dart';
+import 'package:liquid_prism/src/navigation/prism_scaffold_style.dart';
+import 'package:liquid_prism/src/navigation/prism_scroll_edge_style.dart';
+import 'package:liquid_prism/src/navigation/prism_tab_bar_style.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_style.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
 
 /// App-wide glass, motion, and component style defaults.
 @immutable
 class PrismThemeData {
   /// Creates theme defaults; null fields inherit or fall back to native values.
-  const PrismThemeData({
+  const new({
     this.haptics,
     this.brightness,
     this.materialBrightness,
@@ -50,9 +50,18 @@ class PrismThemeData {
     this.controlMotion,
     this.transition,
     this.scrollEdge,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(refraction == null || refraction >= 0),
-       assert(glassTint == null || (glassTint >= 0 && glassTint <= 1));
+  }) : assert(
+         blur == null || (blur >= 0 && blur <= 12),
+         'blur must be between 0 and 12.',
+       ),
+       assert(
+         refraction == null || refraction >= 0,
+         'refraction must be non-negative.',
+       ),
+       assert(
+         glassTint == null || (glassTint >= 0 && glassTint <= 1),
+         'glassTint must be between 0 and 1.',
+       );
 
   /// Custom haptic feedback hook.
   final PrismHaptics? haptics;
@@ -316,13 +325,13 @@ class PrismThemeData {
 /// Provides [PrismThemeData] defaults to descendant Prism widgets.
 class PrismTheme extends StatelessWidget {
   /// Creates a theme scope; set [inherit] to false to reset ancestor values.
-  const PrismTheme({
+  const new({
+    required this.child,
     super.key,
     this.brightness,
     this.tint,
     this.data = const PrismThemeData(),
     this.inherit = true,
-    required this.child,
   });
 
   /// Optional brightness override merged above [data].
@@ -381,7 +390,7 @@ class PrismTheme extends StatelessWidget {
 }
 
 class _PrismThemeScope extends InheritedWidget {
-  const _PrismThemeScope({required this.data, required super.child});
+  const new({required this.data, required super.child});
 
   final PrismThemeData data;
 

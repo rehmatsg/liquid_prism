@@ -2,12 +2,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 /// Material recipes supported by [PrismGlass].
-enum PrismGlassVariant { regular, clear, identity }
+enum PrismGlassVariant {
+  /// Adaptive frosted glass.
+  regular,
+
+  /// Clear glass with minimal frost.
+  clear,
+
+  /// Pass-through material that draws only its child.
+  identity,
+}
 
 /// Composable glass material configuration.
 @immutable
 final class PrismGlass {
-  const PrismGlass._(this.variant, this.tintColor, this.isInteractive);
+  const new _(this.variant, this.tintColor, this.isInteractive);
 
   /// Standard adaptive frosted glass.
   static const PrismGlass regular = PrismGlass._(
@@ -62,20 +71,26 @@ final class PrismGlass {
 @immutable
 final class PrismShape {
   /// Continuous superellipse rounded rectangle.
-  const PrismShape.rect({double cornerRadius = 24})
+  const new rect({double cornerRadius = 24})
     : radius = cornerRadius,
       isCircle = false,
       isSmooth = true,
-      assert(cornerRadius >= 0 && cornerRadius <= 10000);
+      assert(
+        cornerRadius >= 0 && cornerRadius <= 10000,
+        'cornerRadius must be between 0 and 10000.',
+      );
 
-  const PrismShape._(this.radius, this.isCircle) : isSmooth = false;
+  const new _(this.radius, this.isCircle) : isSmooth = false;
 
   /// Circular-arc rounded rectangle.
-  const PrismShape.roundedRect({double cornerRadius = 24})
+  const new roundedRect({double cornerRadius = 24})
     : radius = cornerRadius,
       isCircle = false,
       isSmooth = false,
-      assert(cornerRadius >= 0 && cornerRadius <= 10000);
+      assert(
+        cornerRadius >= 0 && cornerRadius <= 10000,
+        'cornerRadius must be between 0 and 10000.',
+      );
 
   /// Continuous capsule with radius clamped to half the shortest side.
   static const PrismShape capsule = PrismShape.rect(cornerRadius: 10000);
@@ -92,6 +107,7 @@ final class PrismShape {
   /// Whether this shape uses continuous superellipse corners.
   final bool isSmooth;
 
+  /// Corner radius clamped to half the shortest side of [size].
   @internal
   double effectiveRadius(Size size) =>
       radius.clamp(0, size.shortestSide / 2).toDouble();
@@ -130,7 +146,7 @@ final class PrismShape {
 
 @internal
 class PrismShapeClipper extends CustomClipper<Path> {
-  const PrismShapeClipper(this.shape);
+  const new(this.shape);
 
   final PrismShape shape;
 

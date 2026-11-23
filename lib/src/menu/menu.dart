@@ -1,12 +1,13 @@
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show immutable, listEquals;
 
-import 'menu_elements.dart';
-import 'menu_icon.dart';
+import 'package:liquid_prism/src/menu/menu_elements.dart';
+import 'package:liquid_prism/src/menu/menu_icon.dart';
 
 /// A native popup menu with ordered child elements.
+@immutable
 final class PrismMenu {
   /// Creates a PrismMenu.
-  const PrismMenu({
+  const new({
     this.title = '',
     this.image,
     this.identifier,

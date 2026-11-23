@@ -8,7 +8,7 @@ import 'package:flutter/widgets.dart';
 @internal
 class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
   /// Creates the shared control gesture recognizer.
-  ControlGestureRecognizer({super.debugOwner, super.supportedDevices});
+  new({super.debugOwner, super.supportedDevices});
 
   /// Main axis used to map drag velocity.
   Axis axis = Axis.horizontal;
@@ -38,8 +38,11 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
 
   int? _pointer;
   PointerDeviceKind _kind = PointerDeviceKind.touch;
-  Offset _downGlobal = Offset.zero, _downLocal = Offset.zero;
-  bool _claimed = true, _dragging = false, _movedOff = false;
+  Offset _downGlobal = Offset.zero;
+  Offset _downLocal = Offset.zero;
+  bool _claimed = true;
+  bool _dragging = false;
+  bool _movedOff = false;
   VelocityTracker? _velocity;
 
   double get _slop => computeHitSlop(_kind, gestureSettings);
@@ -261,7 +264,7 @@ class ControlGestureRecognizer extends OneSequenceGestureRecognizer {
 @internal
 class ControlGestureDetector extends StatelessWidget {
   /// Creates the single gesture owner for a control.
-  const ControlGestureDetector({
+  const new({
     super.key,
     required this.enabled,
     required this.child,

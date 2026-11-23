@@ -1,16 +1,19 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// An embedded demo of navigation, badges, and tab actions.
 class PackageFeaturesDemo extends StatefulWidget {
-  const PackageFeaturesDemo({super.key});
+  /// Creates a [PackageFeaturesDemo].
+  const new({super.key});
   @override
   State<PackageFeaturesDemo> createState() => _PackageFeaturesDemoState();
 }
 
 class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
-  int tab = 0, segment = 0;
+  int tab = 0;
+  int segment = 0;
   String? held;
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -70,7 +73,8 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
               child: Text(
                 held == null
                     ? 'Scroll to collapse the title. Hold a tab for its action.'
-                    : 'Held $held; selection remains ${['Inbox', 'Saved'][tab]}.',
+                    : 'Held $held; selection remains '
+                          '${['Inbox', 'Saved'][tab]}.',
               ),
             ),
             Center(

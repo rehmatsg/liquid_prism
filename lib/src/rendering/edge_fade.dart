@@ -3,9 +3,16 @@ import 'package:flutter/widgets.dart';
 
 /// Edge of a rectangular box in local coordinates.
 enum PrismEdge {
+  /// Top edge of the box.
   top,
+
+  /// Bottom edge of the box.
   bottom,
+
+  /// Left edge of the box.
   left,
+
+  /// Right edge of the box.
   right;
 
   /// Whether this edge runs horizontally along the top or bottom.
@@ -18,13 +25,13 @@ enum PrismEdge {
 /// Smoothstep easing curve used by edge fades and edge blurs.
 class PrismFadeCurve extends Curve {
   /// Creates a smoothstep fade curve.
-  const PrismFadeCurve();
+  const new();
 
   @override
   double transformInternal(double t) => t * t * (3 - 2 * t);
 }
 
-/// Smoothstep edge fade gradients aligned with [PrismEdgeBlur].
+/// Smoothstep edge fade gradients aligned with progressive edge blurs.
 abstract final class PrismEdgeFade {
   /// Shared smoothstep curve sampled by edge fades.
   static const Curve curve = PrismFadeCurve();
@@ -68,6 +75,7 @@ abstract final class PrismEdgeFade {
     );
   }
 
+  /// Creates an edge fade shader for the supplied bounds.
   @internal
   static Shader shader({
     required Color color,

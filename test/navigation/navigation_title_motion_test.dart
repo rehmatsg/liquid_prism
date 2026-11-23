@@ -19,37 +19,35 @@ void main() {
     File('test/fixtures/navigation_title_motion.json').readAsStringSync(),
   ) as Map<String, Object?>;
   for (final sliver in [false, true]) {
-    testWidgets(
-      'zero reveal distance waits for scroll, custom fade timing works, sliver $sliver',
-      (tester) async {
-        phone(tester);
-        final scroll = ScrollController();
-        addTearDown(scroll.dispose);
-        await tester.pumpWidget(
-          page(
-            sliver: sliver,
-            scroll: scroll,
-            large: true,
-            style: const PrismNavigationBarStyle(
-              revealExtent: 0,
-              largeTitleFadeDuration: Duration(milliseconds: 400),
-              largeTitleFadeCurve: Curves.linear,
-            ),
+    testWidgets('zero reveal distance waits for scroll, '
+        'custom fade timing works, sliver $sliver', (tester) async {
+      phone(tester);
+      final scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      await tester.pumpWidget(
+        page(
+          sliver: sliver,
+          scroll: scroll,
+          large: true,
+          style: const PrismNavigationBarStyle(
+            revealExtent: 0,
+            largeTitleFadeDuration: Duration(milliseconds: 400),
+            largeTitleFadeCurve: Curves.linear,
           ),
-        );
-        await tester.pumpAndSettle();
-        expect(opacityOf(tester, 'Large'), 1);
-        expect(opacityOf(tester, 'Inline'), 0);
-        scroll.jumpTo(1);
-        await tester.pump();
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-        expect(opacityOf(tester, 'Large'), closeTo(.75, .001));
-        await tester.pumpAndSettle();
-        expect(opacityOf(tester, 'Inline'), 1);
-        expect(tester.takeException(), isNull);
-      },
-    );
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(opacityOf(tester, 'Large'), 1);
+      expect(opacityOf(tester, 'Inline'), 0);
+      scroll.jumpTo(1);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(opacityOf(tester, 'Large'), closeTo(.75, .001));
+      await tester.pumpAndSettle();
+      expect(opacityOf(tester, 'Inline'), 1);
+      expect(tester.takeException(), isNull);
+    });
     testWidgets('native title opacity trajectories, sliver $sliver', (
       tester,
     ) async {
@@ -74,12 +72,12 @@ void main() {
         for (final point
             in (transitions[direction]! as List<Object?>)
                 .cast<Map<String, Object?>>()) {
-          final ms = point['ms'] as int;
+          final ms = point['ms']! as int;
           await tester.pump(Duration(milliseconds: ms - elapsed));
           elapsed = ms;
           expect(
             opacityOf(tester, 'Inline'),
-            closeTo(point['opacity'] as num, .015),
+            closeTo(point['opacity']! as num, .015),
             reason: '$direction at $ms ms vs native presentation trace',
           );
           if (ms == 50) {

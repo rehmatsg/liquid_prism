@@ -1,15 +1,14 @@
 import 'dart:async';
 
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/menu/menu_anchor.dart';
+import 'package:liquid_prism/src/menu/menu_elements.dart';
+import 'package:liquid_prism/src/menu/menu_icon.dart';
 import 'package:material_ui/material_ui.dart';
-
-import 'menu.dart';
-import 'menu_anchor.dart';
-import 'menu_elements.dart';
-import 'menu_icon.dart';
 
 /// Presents menu models with Flutter when native menus are unavailable.
 final class FallbackMenu {
-  FallbackMenu._();
+  new _();
 
   /// Presents a menu and completes with the first selected value on dismissal.
   static Future<Object?> show(
@@ -53,12 +52,12 @@ final class FallbackMenu {
     switch (selected) {
       case _SubmenuJump(:final submenu):
         if (!context.mounted) return null;
-        return _present(
+        return await _present(
           context,
           PrismMenu(children: submenu.children),
           position,
         );
-      case PrismMenuAction<Object?> action:
+      case final PrismMenuAction<Object?> action:
         action.onSelected?.call();
         return action.value;
       default:
@@ -80,24 +79,24 @@ final class FallbackMenu {
     final entries = <PopupMenuEntry<Object?>>[];
     for (final element in children) {
       switch (element) {
-        case PrismMenuAction<Object?> action:
+        case final PrismMenuAction<Object?> action:
           if (action.hidden) break;
           entries.add(_actionEntry(theme, action));
         case PrismMenuDivider():
           if (entries.isNotEmpty) entries.add(const PopupMenuDivider());
-        case PrismMenuSection section:
+        case final PrismMenuSection section:
           if (entries.isNotEmpty) entries.add(const PopupMenuDivider());
           if (section.title.isNotEmpty) {
             entries.add(_headerEntry(theme, section.title));
           }
           entries.addAll(await _entriesWithTheme(theme, section.children));
-        case PrismSubmenu submenu:
+        case final PrismSubmenu submenu:
           entries.add(_submenuEntry(theme, submenu));
-        case PrismMenuDeferred deferred:
+        case final PrismMenuDeferred deferred:
           try {
             final resolved = await deferred.loader();
             entries.addAll(await _entriesWithTheme(theme, resolved));
-          } catch (_) {}
+          } on Object catch (_) {}
       }
     }
     return entries;
@@ -158,12 +157,12 @@ final class FallbackMenu {
 }
 
 final class _SubmenuJump {
-  const _SubmenuJump(this.submenu);
+  const new(this.submenu);
   final PrismSubmenu submenu;
 }
 
 final class _FallbackIcon extends StatelessWidget {
-  const _FallbackIcon({required this.icon, this.color});
+  const new({required this.icon, this.color});
 
   final PrismMenuIcon icon;
   final Color? color;

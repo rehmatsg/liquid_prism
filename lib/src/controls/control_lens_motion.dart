@@ -4,13 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/physics.dart';
 
-import '../core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
 
 /// Drives lens deformation from pointer velocity.
 @internal
 class ControlLensMotion {
   /// Creates velocity-driven lens deformation.
-  ControlLensMotion(this.onStretch, {this.settings});
+  new(this.onStretch, {this.settings});
 
   /// Reads current deformation settings.
   final PrismControlMotion Function()? settings;
@@ -18,7 +18,8 @@ class ControlLensMotion {
   /// Receives deformation targets and velocity impulses.
   final void Function(double target, double impulse) onStretch;
   Duration? _lastTime;
-  double _lastX = 0, _target = 0;
+  double _lastX = 0;
+  double _target = 0;
   Timer? _idle;
   double _speed = 0;
 

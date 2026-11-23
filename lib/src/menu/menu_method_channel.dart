@@ -1,12 +1,12 @@
 import 'package:flutter/services.dart';
 
-import 'menu_event.dart';
-import 'menu_platform_interface.dart';
+import 'package:liquid_prism/src/menu/menu_event.dart';
+import 'package:liquid_prism/src/menu/menu_platform_interface.dart';
 
 /// Implements the native menu method and event channels.
 class MethodChannelPrismMenu extends PrismMenuPlatform {
   /// Creates a MethodChannelPrismMenu.
-  MethodChannelPrismMenu() {
+  new() {
     methodChannel.setMethodCallHandler(_handleNativeCall);
   }
 
@@ -77,7 +77,7 @@ class MethodChannelPrismMenu extends PrismMenuPlatform {
   Stream<PrismMenuEvent> get events => _events ??= _eventChannel
       .receiveBroadcastStream()
       .map(
-        (Object? e) => e is Map<Object?, Object?>
+        (e) => e is Map<Object?, Object?>
             ? PrismMenuEvent.fromMap(e.cast<Object?, Object?>())
             : null,
       )
@@ -92,7 +92,7 @@ class MethodChannelPrismMenu extends PrismMenuPlatform {
       final id = args['id'] as String? ?? '';
       final resolver = deferredResolver;
       if (resolver == null) return const <Object?>[];
-      return resolver(menuId, id);
+      return await resolver(menuId, id);
     }
     return null;
   }

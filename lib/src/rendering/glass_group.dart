@@ -5,17 +5,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-import 'layer_transform.dart';
-import 'prism.dart';
-import 'prism_display.dart';
-import 'recipe.dart';
-import 'superellipse.dart';
-import 'surface_render.dart';
+import 'package:liquid_prism/src/rendering/layer_transform.dart';
+import 'package:liquid_prism/src/rendering/prism.dart';
+import 'package:liquid_prism/src/rendering/prism_display.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/superellipse.dart';
+import 'package:liquid_prism/src/rendering/surface_render.dart';
 
 /// Shares compatible backdrop captures and optical passes between surfaces.
 class PrismGroup extends StatefulWidget {
   /// Creates a group whose members sample the same background.
-  const PrismGroup({super.key, required this.child});
+  const new({super.key, required this.child});
 
   /// Content containing surfaces that share the background.
   final Widget child;
@@ -48,7 +48,7 @@ class _PrismGroupState extends State<PrismGroup> {
 
 @internal
 class PrismGroupHost extends StatefulWidget {
-  const PrismGroupHost({super.key, required this.child});
+  const new({super.key, required this.child});
   final Widget child;
   @override
   State<PrismGroupHost> createState() => _PrismGroupHostState();
@@ -78,7 +78,7 @@ class _PrismGroupHostState extends State<PrismGroupHost> {
 }
 
 class _PrismGroupHostScope extends InheritedWidget {
-  const _PrismGroupHostScope({required this.data, required super.child});
+  const new({required this.data, required super.child});
   final PrismGroupData data;
   @override
   bool updateShouldNotify(_PrismGroupHostScope oldWidget) =>
@@ -87,7 +87,7 @@ class _PrismGroupHostScope extends InheritedWidget {
 
 @internal
 class PrismGroupMembers extends StatelessWidget {
-  const PrismGroupMembers({super.key, required this.child});
+  const new({super.key, required this.child});
   final Widget child;
   @override
   Widget build(BuildContext context) {
@@ -100,7 +100,7 @@ class PrismGroupMembers extends StatelessWidget {
 
 @internal
 class PrismGroupScope extends InheritedWidget {
-  const PrismGroupScope({super.key, required this.data, required super.child});
+  const new({super.key, required this.data, required super.child});
   final PrismGroupData data;
   static PrismGroupData? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<PrismGroupScope>()?.data;
@@ -109,7 +109,7 @@ class PrismGroupScope extends InheritedWidget {
 }
 
 class _PrismGroupRenderWidget extends SingleChildRenderObjectWidget {
-  const _PrismGroupRenderWidget({required this.data, required super.child});
+  const new({required this.data, required super.child});
   final PrismGroupData data;
   @override
   RenderObject createRenderObject(BuildContext context) =>
@@ -117,15 +117,15 @@ class _PrismGroupRenderWidget extends SingleChildRenderObjectWidget {
 }
 
 class _RenderPrismGroup extends RenderProxyBox {
-  _RenderPrismGroup(this.data);
+  new(this.data);
   final PrismGroupData data;
   final _layer = LayerHandle<PrismGroupLayer>();
   @override
   bool get alwaysNeedsCompositing => true;
   @override
   void paint(PaintingContext context, Offset offset) {
-    final layer = _layer.layer ??= PrismGroupLayer(data, this);
-    layer.offset = offset;
+    final layer = (_layer.layer ??= PrismGroupLayer(data, this))
+      ..offset = offset;
     context.pushLayer(layer, super.paint, offset);
   }
 
@@ -138,7 +138,7 @@ class _RenderPrismGroup extends RenderProxyBox {
 
 @internal
 class PrismGroupLayer extends ContainerLayer {
-  PrismGroupLayer(this.data, this.renderBox);
+  new(this.data, this.renderBox);
   final PrismGroupData data;
   final RenderBox renderBox;
   Offset offset = Offset.zero;
@@ -165,8 +165,9 @@ class PrismGroupLayer extends ContainerLayer {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder)..translate(offset.dx, offset.dy);
     for (final entry in transforms.entries) {
-      canvas.save();
-      canvas.transform(entry.value.storage);
+      canvas
+        ..save()
+        ..transform(entry.value.storage);
       PrismExteriorShadow(
         entry.key.shape,
         strength: entry.key.recipe.shadowStrength,
@@ -197,7 +198,7 @@ class PrismGroupLayer extends ContainerLayer {
 
 @internal
 class PrismBatch {
-  PrismBatch() : shader = PrismShaderCache.batchProgram!.fragmentShader() {
+  new() : shader = PrismShaderCache.batchProgram!.fragmentShader() {
     shader.setImageSampler(
       0,
       PrismShaderCache.linearSampler!,
@@ -211,7 +212,7 @@ class PrismBatch {
 }
 
 class _PrismGroupGeometry {
-  _PrismGroupGeometry({
+  new({
     required this.transform,
     required this.bounds,
     required this.painted,
@@ -219,15 +220,7 @@ class _PrismGroupGeometry {
     required this.footprint,
     required this.aligned,
   });
-
-  final Matrix4 transform;
-  final Rect bounds;
-  final Rect painted;
-  final Rect sampled;
-  final Rect footprint;
-  final bool aligned;
-
-  factory _PrismGroupGeometry.measure(RenderPrismSurface member) {
+  factory measure(RenderPrismSurface member) {
     final transform = member.glassTransform();
     final rect = member.shape.rect(member.size);
     final globalRect = MatrixUtils.transformRect(transform, rect);
@@ -272,6 +265,13 @@ class _PrismGroupGeometry {
       aligned: aligned,
     );
   }
+
+  final Matrix4 transform;
+  final Rect bounds;
+  final Rect painted;
+  final Rect sampled;
+  final Rect footprint;
+  final bool aligned;
 
   bool isNear(_PrismGroupGeometry other) =>
       footprint.overlaps(other.bounds) || other.footprint.overlaps(bounds);
@@ -341,9 +341,7 @@ class PrismGroupData {
       final canvas = Canvas(recorder);
       for (final entry in transforms.entries) {
         canvas.save();
-        for (final clip in clips[entry.key]!) {
-          canvas.clipPath(clip);
-        }
+        clips[entry.key]!.forEach(canvas.clipPath);
         canvas.transform(entry.value.storage);
         PrismExteriorShadow(
           entry.key.shape,
@@ -366,10 +364,7 @@ class PrismGroupData {
       final contour = member.shape
           .path(member.size)
           .transform(entry.value.storage);
-      final memberClips = clips[member]!;
-      for (final clip in memberClips) {
-        builder.pushClipPath(clip);
-      }
+      final memberClips = clips[member]!..forEach(builder.pushClipPath);
       builder.pushClipPath(contour);
       if (blur != null) {
         frost.configureBlur(blur, frostKey);
@@ -573,6 +568,7 @@ bool _pixelAlignedRect(Rect rect, double pixelRatio) {
   return true;
 }
 
+/// Packs bounds and surface values for one batched lens.
 @visibleForTesting
 List<double> batchLensUniforms(Rect bounds, double dpr, List<double> scalar) =>
     [
@@ -584,8 +580,10 @@ List<double> batchLensUniforms(Rect bounds, double dpr, List<double> scalar) =>
       ...scalar.skip(46 + superellipseUniformCount).take(20),
     ];
 
+/// Number of scalar uniforms reserved for each batched lens.
 @visibleForTesting
 const int batchLensStride = 68;
 
+/// Maximum number of lenses supported by one shader batch.
 @visibleForTesting
 const int batchMaxLenses = 15;

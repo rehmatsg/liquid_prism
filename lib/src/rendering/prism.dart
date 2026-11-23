@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import 'prism_display.dart';
+import 'package:liquid_prism/src/rendering/prism_display.dart';
 
 /// Entry point for renderer capabilities and shader initialization.
 abstract final class Prism {
@@ -61,12 +61,12 @@ abstract final class PrismShaderCache {
 
   static Future<void> ensureLoaded({bool? enableHDR}) async {
     if (Prism.isShaderSupported) await PrismDisplay.configure(enableHDR);
-    if (_loading != null) return _loading!;
+    if (_loading != null) return await _loading!;
     if (!Prism.isShaderSupported ||
         (_program != null && _linearSampler != null)) {
       return;
     }
-    return _loading ??= _load();
+    await (_loading ??= _load());
   }
 
   static Future<void> _load() async {
@@ -89,14 +89,14 @@ abstract final class PrismShaderCache {
         _batchProgram = await ui.FragmentProgram.fromAsset(
           'packages/liquid_prism/shaders/glass_batch.frag',
         );
-      } catch (error) {
+      } on Object catch (error) {
         debugPrint('RawPrismSurface: shared optical pass unavailable: $error');
       }
       try {
         _edgeProgram ??= await ui.FragmentProgram.fromAsset(
           'packages/liquid_prism/shaders/edge_blur.frag',
         );
-      } catch (error) {
+      } on Object catch (error) {
         debugPrint('RawPrismSurface: edge blur unavailable: $error');
       }
     } finally {

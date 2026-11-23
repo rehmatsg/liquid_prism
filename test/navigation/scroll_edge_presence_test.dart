@@ -8,110 +8,108 @@ import 'scaffold_slivers_test.dart' show phone, rows;
 
 void main() {
   for (final sliver in [false, true]) {
-    testWidgets(
-      'initial downward scrolling does not flash the full header edge, sliver $sliver',
-      (tester) async {
-        phone(tester);
-        const modes = {
-          'sticky': PrismNavigationBarStyle(
-            minimizationBehavior: PrismMinimizationBehavior.never,
-          ),
-          'away': PrismNavigationBarStyle(
-            minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
-            minimizationRestoration: PrismMinimizationRestoration.atScrollEdge,
-          ),
-          'reveal': PrismNavigationBarStyle(
-            minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
-          ),
-        };
-        for (final mode in modes.entries) {
-          for (final accessory in [false, true]) {
-            await tester.pumpWidget(const SizedBox.shrink());
-            final controller = ScrollController();
-            addTearDown(controller.dispose);
-            await tester.pumpWidget(
-              scrolling.page(
-                sliver: sliver,
-                scroll: controller,
-                style: mode.value,
-                accessory: accessory
-                    ? const PreferredSize(
-                        preferredSize: Size.fromHeight(36),
-                        child: Text('Pinned accessory'),
-                      )
-                    : null,
-              ),
+    testWidgets('initial downward scrolling does not flash '
+        'the full header edge, sliver $sliver', (tester) async {
+      phone(tester);
+      const modes = {
+        'sticky': PrismNavigationBarStyle(
+          minimizationBehavior: PrismMinimizationBehavior.never,
+        ),
+        'away': PrismNavigationBarStyle(
+          minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
+          minimizationRestoration: PrismMinimizationRestoration.atScrollEdge,
+        ),
+        'reveal': PrismNavigationBarStyle(
+          minimizationBehavior: PrismMinimizationBehavior.onScrollDown,
+        ),
+      };
+      for (final mode in modes.entries) {
+        for (final accessory in [false, true]) {
+          await tester.pumpWidget(const SizedBox.shrink());
+          final controller = ScrollController();
+          addTearDown(controller.dispose);
+          await tester.pumpWidget(
+            scrolling.page(
+              sliver: sliver,
+              scroll: controller,
+              style: mode.value,
+              accessory: accessory
+                  ? const PreferredSize(
+                      preferredSize: Size.fromHeight(36),
+                      child: Text('Pinned accessory'),
+                    )
+                  : null,
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final hidden = sliver ? 'none' : 'compact';
+          void edgeIs(String state) {
+            final reason = '${mode.key} accessory $accessory';
+            final progress = tester
+                .widget<PrismScrollEdge>(find.byType(PrismScrollEdge))
+                .progress;
+            expect(
+              progress,
+              state == 'none' ? 0 : greaterThan(0),
+              reason: reason,
             );
-            await tester.pumpAndSettle();
-
-            final hidden = sliver ? 'none' : 'compact';
-            void edgeIs(String state) {
-              final reason = '${mode.key} accessory $accessory';
-              final progress = tester
-                  .widget<PrismScrollEdge>(find.byType(PrismScrollEdge))
-                  .progress;
-              expect(
-                progress,
-                state == 'none' ? 0 : greaterThan(0),
-                reason: reason,
-              );
-              final blur = find.byType(PrismEdgeBlur);
-              expect(
-                blur,
-                state == 'none' ? findsNothing : findsOneWidget,
-                reason: reason,
-              );
-              if (state == 'none') return;
-              expect(
-                tester.getRect(blur).bottom,
-                state == 'compact' ? 62 : greaterThan(62),
-                reason: '$reason: $state edge',
-              );
-            }
-
-            String shownOr(bool full) => full ? 'full' : hidden;
-            for (final offset in [1.0, 5.0, 8.0, 30.0]) {
-              controller.jumpTo(offset);
-              await tester.pumpAndSettle();
-              edgeIs(shownOr(accessory || mode.key == 'sticky'));
-            }
-            controller.jumpTo(25);
-            await tester.pumpAndSettle();
-            edgeIs(shownOr(accessory || mode.key != 'away'));
-
-            controller.jumpTo(300);
-            await tester.pumpAndSettle();
-            edgeIs(shownOr(accessory || mode.key == 'sticky'));
-
-            controller.jumpTo(295);
-            await tester.pumpAndSettle();
-            if (accessory || mode.key == 'sticky') {
-              edgeIs('full');
-            } else if (sliver) {
-              expect(
-                tester
-                    .widget<PrismScrollEdge>(find.byType(PrismScrollEdge))
-                    .progress,
-                lessThan(.1),
-                reason: '${mode.key}: a small reveal',
-              );
-            } else {
-              edgeIs('compact');
-            }
-            controller.jumpTo(150);
-            await tester.pumpAndSettle();
-            edgeIs(shownOr(accessory || mode.key != 'away'));
-            controller.jumpTo(0);
-            await tester.pumpAndSettle();
-            edgeIs('none');
-            controller.jumpTo(8);
-            await tester.pumpAndSettle();
-            edgeIs(shownOr(accessory || mode.key == 'sticky'));
-            expect(tester.takeException(), isNull);
+            final blur = find.byType(PrismEdgeBlur);
+            expect(
+              blur,
+              state == 'none' ? findsNothing : findsOneWidget,
+              reason: reason,
+            );
+            if (state == 'none') return;
+            expect(
+              tester.getRect(blur).bottom,
+              state == 'compact' ? 62 : greaterThan(62),
+              reason: '$reason: $state edge',
+            );
           }
+
+          String shownOr(bool full) => full ? 'full' : hidden;
+          for (final offset in [1.0, 5.0, 8.0, 30.0]) {
+            controller.jumpTo(offset);
+            await tester.pumpAndSettle();
+            edgeIs(shownOr(accessory || mode.key == 'sticky'));
+          }
+          controller.jumpTo(25);
+          await tester.pumpAndSettle();
+          edgeIs(shownOr(accessory || mode.key != 'away'));
+
+          controller.jumpTo(300);
+          await tester.pumpAndSettle();
+          edgeIs(shownOr(accessory || mode.key == 'sticky'));
+
+          controller.jumpTo(295);
+          await tester.pumpAndSettle();
+          if (accessory || mode.key == 'sticky') {
+            edgeIs('full');
+          } else if (sliver) {
+            expect(
+              tester
+                  .widget<PrismScrollEdge>(find.byType(PrismScrollEdge))
+                  .progress,
+              lessThan(.1),
+              reason: '${mode.key}: a small reveal',
+            );
+          } else {
+            edgeIs('compact');
+          }
+          controller.jumpTo(150);
+          await tester.pumpAndSettle();
+          edgeIs(shownOr(accessory || mode.key != 'away'));
+          controller.jumpTo(0);
+          await tester.pumpAndSettle();
+          edgeIs('none');
+          controller.jumpTo(8);
+          await tester.pumpAndSettle();
+          edgeIs(shownOr(accessory || mode.key == 'sticky'));
+          expect(tester.takeException(), isNull);
         }
-      },
-    );
+      }
+    });
 
     testWidgets(
       'turning the edge on fades it in (${sliver ? 'sliver bar' : 'scaffold'})',
@@ -224,7 +222,7 @@ void main() {
   );
 
   testWidgets(
-    'the bottom edge fades out over a collapsing bar\'s last 16 points',
+    "the bottom edge fades out over a collapsing bar's last 16 points",
     (tester) async {
       phone(tester);
       double? height = 50;

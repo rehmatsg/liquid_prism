@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 @immutable
 class PrismOptics {
   /// Creates an optical configuration in logical pixels.
-  const PrismOptics({
+  const new({
     this.edgeWidth = 16,
     this.refraction = 60,
     this.frost = 1.8,
@@ -19,17 +19,41 @@ class PrismOptics {
     this.reflectionReach = 30,
     this.splay = 0.12,
     this.cornerRadius = 32,
-  }) : assert(edgeWidth > 0 && edgeWidth <= 64),
-       assert(refraction >= 0 && refraction <= 64),
-       assert(frost >= 0 && frost <= 12),
-       assert(dispersion >= 0 && dispersion <= 2),
-       assert(brightness >= -0.5 && brightness <= 0.5),
-       assert(saturation >= 0 && saturation <= 2),
-       assert(light >= 0 && light <= 2),
-       assert(reflection >= 0 && reflection <= 2),
-       assert(reflectionReach >= 0 && reflectionReach <= 80),
-       assert(splay >= 0 && splay <= 1),
-       assert(cornerRadius >= 0 && cornerRadius <= 10000);
+  }) : assert(
+         edgeWidth > 0 && edgeWidth <= 64,
+         'edgeWidth must be in (0, 64].',
+       ),
+       assert(
+         refraction >= 0 && refraction <= 64,
+         'refraction must be between 0 and 64.',
+       ),
+       assert(frost >= 0 && frost <= 12, 'frost must be between 0 and 12.'),
+       assert(
+         dispersion >= 0 && dispersion <= 2,
+         'dispersion must be between 0 and 2.',
+       ),
+       assert(
+         brightness >= -0.5 && brightness <= 0.5,
+         'brightness must be between -0.5 and 0.5.',
+       ),
+       assert(
+         saturation >= 0 && saturation <= 2,
+         'saturation must be between 0 and 2.',
+       ),
+       assert(light >= 0 && light <= 2, 'light must be between 0 and 2.'),
+       assert(
+         reflection >= 0 && reflection <= 2,
+         'reflection must be between 0 and 2.',
+       ),
+       assert(
+         reflectionReach >= 0 && reflectionReach <= 80,
+         'reflectionReach must be between 0 and 80.',
+       ),
+       assert(splay >= 0 && splay <= 1, 'splay must be between 0 and 1.'),
+       assert(
+         cornerRadius >= 0 && cornerRadius <= 10000,
+         'cornerRadius must be between 0 and 10000.',
+       );
 
   /// Clear optical preset.
   static const PrismOptics clear = PrismOptics();

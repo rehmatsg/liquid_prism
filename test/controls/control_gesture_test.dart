@@ -41,7 +41,8 @@ Offset angled(double along, double degrees) =>
 void main() {
   group('slider', () {
     late double value;
-    late List<double> starts, ends;
+    late List<double> starts;
+    late List<double> ends;
     late ScrollController scroll;
     setUp(() {
       value = .4;

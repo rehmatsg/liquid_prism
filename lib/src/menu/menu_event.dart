@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show immutable;
+
 /// A native menu lifecycle or selection event.
 sealed class PrismMenuEvent {
   /// Creates a PrismMenuEvent.
-  const PrismMenuEvent({required this.menuId});
+  const new({required this.menuId});
 
   /// The identifier of the menu associated with this event.
   final String menuId;
@@ -23,9 +25,10 @@ sealed class PrismMenuEvent {
 }
 
 /// Reports that the system began presenting a menu.
+@immutable
 final class PrismMenuPresented extends PrismMenuEvent {
   /// Creates a PrismMenuPresented.
-  const PrismMenuPresented({required super.menuId});
+  const new({required super.menuId});
 
   /// Whether another value has the same type and fields.
   @override
@@ -41,9 +44,10 @@ final class PrismMenuPresented extends PrismMenuEvent {
 }
 
 /// Reports that a menu finished dismissing.
+@immutable
 final class PrismMenuDismissed extends PrismMenuEvent {
   /// Creates a PrismMenuDismissed.
-  const PrismMenuDismissed({required super.menuId});
+  const new({required super.menuId});
 
   /// Whether another value has the same type and fields.
   @override
@@ -59,9 +63,10 @@ final class PrismMenuDismissed extends PrismMenuEvent {
 }
 
 /// Reports a row selection, including repeated selections.
+@immutable
 final class PrismMenuActionEvent extends PrismMenuEvent {
   /// Creates a PrismMenuActionEvent.
-  const PrismMenuActionEvent({required super.menuId, required this.actionId});
+  const new({required super.menuId, required this.actionId});
 
   /// The selected action wire identifier.
   final String actionId;

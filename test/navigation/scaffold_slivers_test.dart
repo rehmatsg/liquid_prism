@@ -185,7 +185,7 @@ void main() {
   });
 
   test('a scaffold takes either a body or slivers', () {
-    expect(() => PrismScaffold(), throwsAssertionError);
+    expect(PrismScaffold.new, throwsAssertionError);
     expect(
       () => PrismScaffold(body: const SizedBox(), slivers: const []),
       throwsAssertionError,

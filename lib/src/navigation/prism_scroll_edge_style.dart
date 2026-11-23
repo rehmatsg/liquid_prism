@@ -1,16 +1,22 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_motion.dart';
-import '../theme/prism_theme.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// How a scroll edge effect terminates at a bar's inner boundary.
-enum PrismScrollEdgeVariant { soft, hard }
+enum PrismScrollEdgeVariant {
+  /// Extends the effect softly beyond the bar.
+  soft,
 
-/// Appearance and timing overrides for [PrismScrollEdge].
+  /// Terminates the effect at the bar boundary.
+  hard,
+}
+
+/// Appearance and timing overrides for `PrismScrollEdge`.
 @immutable
 class PrismScrollEdgeStyle {
   /// Creates a partial scroll edge style override.
-  const PrismScrollEdgeStyle({
+  const new({
     this.variant,
     this.sigma,
     this.falloff,
@@ -23,14 +29,32 @@ class PrismScrollEdgeStyle {
     this.hairline,
     this.revealExtent,
     this.spring,
-  }) : assert(sigma == null || sigma >= 0),
-       assert(falloff == null || falloff >= 0),
-       assert(extension == null || extension >= 0),
-       assert(floor == null || (floor >= 0 && floor <= 1)),
-       assert(fadeOpacity == null || (fadeOpacity >= 0 && fadeOpacity <= 1)),
-       assert(haze == null || haze >= 0),
-       assert(hazeOpacity == null || (hazeOpacity >= 0 && hazeOpacity <= 1)),
-       assert(revealExtent == null || revealExtent > 0);
+  }) : assert(sigma == null || sigma >= 0, 'sigma must be >= 0.'),
+       assert(falloff == null || falloff >= 0, 'falloff must be >= 0.'),
+       assert(extension == null || extension >= 0, 'extension must be >= 0.'),
+       assert(
+         floor == null || (floor >= 0 && floor <= 1),
+         'floor must be >= 0 and <= 1.',
+       ),
+       assert(
+         fadeOpacity == null || (fadeOpacity >= 0 && fadeOpacity <= 1),
+         'fadeOpacity must be >= 0 and <= 1.',
+       ),
+       assert(haze == null || haze >= 0, 'haze must be >= 0.'),
+       assert(
+         hazeOpacity == null || (hazeOpacity >= 0 && hazeOpacity <= 1),
+         'hazeOpacity must be >= 0 and <= 1.',
+       ),
+       assert(
+         revealExtent == null || revealExtent > 0,
+         'revealExtent must be > 0.',
+       );
+
+  /// Resolves the theme style merged with [override].
+  factory resolve(BuildContext context, PrismScrollEdgeStyle? override) =>
+      (PrismTheme.of(context).scrollEdge ?? const PrismScrollEdgeStyle()).merge(
+        override,
+      );
 
   /// Soft or hard edge termination.
   final PrismScrollEdgeVariant? variant;
@@ -113,13 +137,6 @@ class PrismScrollEdgeStyle {
   /// Returns the hairline color for [brightness].
   static Color hairlineColorFor(Brightness brightness) =>
       brightness == Brightness.dark ? darkHairlineColor : hairlineColor;
-
-  /// Resolves the theme style merged with [override].
-  static PrismScrollEdgeStyle resolve(
-    BuildContext context,
-    PrismScrollEdgeStyle? override,
-  ) => (PrismTheme.of(context).scrollEdge ?? const PrismScrollEdgeStyle())
-      .merge(override);
 
   /// Returns a copy with specified fields replaced.
   PrismScrollEdgeStyle copyWith({

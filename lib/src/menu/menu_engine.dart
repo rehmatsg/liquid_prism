@@ -2,20 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:liquid_prism/src/menu/fallback_menu.dart';
+import 'package:liquid_prism/src/menu/ids.dart';
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/menu/menu_anchor.dart';
+import 'package:liquid_prism/src/menu/menu_elements.dart';
+import 'package:liquid_prism/src/menu/menu_event.dart';
+import 'package:liquid_prism/src/menu/menu_platform_interface.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 import 'package:material_ui/material_ui.dart' show Theme;
-
-import '../theme/prism_theme.dart';
-import 'fallback_menu.dart';
-import 'ids.dart';
-import 'menu.dart';
-import 'menu_anchor.dart';
-import 'menu_elements.dart';
-import 'menu_event.dart';
-import 'menu_platform_interface.dart';
 
 /// Owns menu sessions, native events, and fallback presentation.
 final class PrismMenuEngine {
-  PrismMenuEngine._();
+  new _();
 
   /// The shared menu instance.
   static final PrismMenuEngine instance = PrismMenuEngine._();
@@ -42,7 +41,7 @@ final class PrismMenuEngine {
     _handshake = null;
     _nativeSupported = false;
     _current = null;
-    _eventSub?.cancel();
+    unawaited(_eventSub?.cancel());
     _eventSub = null;
   }
 
@@ -53,14 +52,14 @@ final class PrismMenuEngine {
   /// Initializes native capabilities and event routing once.
   Future<void> ensureHandshaken() {
     return _handshake ??= () async {
-      final platform = PrismMenuPlatform.instance;
-      platform.deferredResolver = _resolveDeferred;
+      final platform = PrismMenuPlatform.instance
+        ..deferredResolver = _resolveDeferred;
       try {
         final caps = await platform.handshake(MenuIds.session);
         final capsMap = caps['capabilities'];
         _nativeSupported =
             capsMap is Map<Object?, Object?> && capsMap['nativeMenu'] == true;
-      } catch (_) {
+      } on Object catch (_) {
         _nativeSupported = false;
       }
       if (_nativeSupported) {
@@ -95,16 +94,16 @@ final class PrismMenuEngine {
           session.wireMenu,
           anchor.toMap(),
         );
-      } catch (_) {
+      } on Object catch (_) {
         accepted = false;
       }
       if (accepted) {
-        return session.result.future;
+        return await session.result.future;
       }
       _finishCurrent(null);
     }
     if (!context.mounted) return null;
-    return FallbackMenu.show(context, menu, anchor);
+    return await FallbackMenu.show(context, menu, anchor);
   }
 
   /// Dismisses the current menu, if any.
@@ -112,7 +111,7 @@ final class PrismMenuEngine {
     _finishCurrent(null);
     try {
       await PrismMenuPlatform.instance.dismiss();
-    } catch (_) {}
+    } on Object catch (_) {}
   }
 
   void _finishCurrent(Object? value) {
@@ -132,8 +131,9 @@ final class PrismMenuEngine {
         if (action == null) return;
         action.onSelected?.call();
         if (!session.gotSelection) {
-          session.gotSelection = true;
-          session.selectedValue = action.value;
+          session
+            ..gotSelection = true
+            ..selectedValue = action.value;
         }
       case PrismMenuDismissed():
         _finishCurrent(session.selectedValue);
@@ -154,13 +154,13 @@ final class PrismMenuEngine {
     _MenuSession session,
   ) {
     switch (element) {
-      case PrismMenuAction<Object?> action:
+      case final PrismMenuAction<Object?> action:
         final wireId = action.id ?? MenuIds.mint();
         session.actions[wireId] = action;
         return {...action.toMap(), 'id': wireId};
       case PrismMenuSection() || PrismSubmenu():
         final map = element.toMap();
-        final menu = map['menu'] as Map<String, Object?>;
+        final menu = map['menu']! as Map<String, Object?>;
         final children = switch (element) {
           PrismMenuSection s => s.children,
           PrismSubmenu s => s.children,
@@ -170,7 +170,7 @@ final class PrismMenuEngine {
         return map;
       case PrismMenuDivider():
         return element.toMap();
-      case PrismMenuDeferred deferred:
+      case final PrismMenuDeferred deferred:
         final wireId = deferred.id ?? MenuIds.mint();
         session.deferred[wireId] = deferred.loader;
         return {'type': 'deferred', 'id': wireId};
@@ -188,14 +188,14 @@ final class PrismMenuEngine {
     try {
       final children = await loader();
       return [for (final e in children) _serialize(e, session)];
-    } catch (_) {
+    } on Object catch (_) {
       return const [];
     }
   }
 }
 
 final class _MenuSession {
-  _MenuSession({required this.menuId});
+  new({required this.menuId});
 
   final String menuId;
   final Completer<Object?> result = Completer<Object?>();

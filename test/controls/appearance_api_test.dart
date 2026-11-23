@@ -385,7 +385,7 @@ void main() {
     tester,
   ) async {
     var value = .5;
-    PrismSliderStyle appearance = const PrismSliderStyle(
+    var appearance = const PrismSliderStyle(
       lens: PrismLensStyle(optics: PrismOptics(frost: 3)),
     );
     late StateSetter update;

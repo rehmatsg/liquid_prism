@@ -1,18 +1,24 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_motion.dart';
-import '../core/prism_optics.dart';
-import '../rendering/prism_transition.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
 
 /// Standard toolbar placement presets.
-enum PrismToolbarSize { navigation, bottom }
+enum PrismToolbarSize {
+  /// Uses navigation toolbar sizing.
+  navigation,
+
+  /// Uses bottom toolbar sizing.
+  bottom,
+}
 
 /// Shared toolbar appearance, spacing, and back-button defaults.
 @immutable
 class PrismToolbarStyle {
   /// Creates a partial toolbar style override.
-  const PrismToolbarStyle({
+  const new({
     this.size,
     this.height,
     this.inset,
@@ -36,12 +42,18 @@ class PrismToolbarStyle {
     this.closeIcon,
     this.backIconShift,
     this.backIconMirrors,
-  }) : assert(height == null || height >= 44),
-       assert(inset == null || inset >= 0),
-       assert(spacing == null || spacing >= 0),
-       assert(iconSize == null || iconSize > 0),
-       assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(groupSpacing == null || groupSpacing >= 0);
+  }) : assert(height == null || height >= 44, 'height must be >= 44.'),
+       assert(inset == null || inset >= 0, 'inset must be >= 0.'),
+       assert(spacing == null || spacing >= 0, 'spacing must be >= 0.'),
+       assert(iconSize == null || iconSize > 0, 'iconSize must be > 0.'),
+       assert(
+         blur == null || (blur >= 0 && blur <= 12),
+         'blur must be >= 0 and <= 12.',
+       ),
+       assert(
+         groupSpacing == null || groupSpacing >= 0,
+         'groupSpacing must be >= 0.',
+       );
 
   /// Toolbar sizing preset.
   final PrismToolbarSize? size;
@@ -100,10 +112,10 @@ class PrismToolbarStyle {
   /// Gap between separate capsules in a toolbar.
   final double? groupSpacing;
 
-  /// Custom glyph for [PrismBackButton] in back mode.
+  /// Custom glyph for `PrismBackButton` in back mode.
   final Widget? backIcon;
 
-  /// Custom glyph for [PrismBackButton] in close mode.
+  /// Custom glyph for `PrismBackButton` in close mode.
   final Widget? closeIcon;
 
   /// Optical horizontal shift applied to the back glyph.

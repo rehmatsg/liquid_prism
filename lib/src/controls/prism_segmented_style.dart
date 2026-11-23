@@ -1,17 +1,23 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_lens_style.dart';
-import '../core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
 
-/// Sizing behavior for [PrismSegmentedControl].
-enum PrismSegmentedSizing { fixed, fitLabels }
+/// Sizing behavior for `PrismSegmentedControl`.
+enum PrismSegmentedSizing {
+  /// Uses the preferred width for equal segment slots.
+  fixed,
 
-/// Track, typography, and selection overrides for [PrismSegmentedControl].
+  /// Sizes equal segment slots to fit the widest label.
+  fitLabels,
+}
+
+/// Track, typography, and selection overrides for `PrismSegmentedControl`.
 @immutable
 class PrismSegmentedStyle {
   /// Creates a partial segmented control style override.
-  const PrismSegmentedStyle({
+  const new({
     this.width,
     this.sizing,
     this.labelPadding,
@@ -32,17 +38,33 @@ class PrismSegmentedStyle {
     this.contentRefraction,
     this.contentDepth,
     this.motion,
-  }) : assert(width == null || width > 0),
-       assert(scale == null || scale > 0),
-       assert(hitHeight == null || hitHeight >= 44),
-       assert(trackHeight == null || trackHeight > 0),
-       assert(thumbHeight == null || thumbHeight > 0),
-       assert(selectionInset == null || selectionInset >= 0),
+  }) : assert(width == null || width > 0, 'Width must be positive.'),
+       assert(scale == null || scale > 0, 'Scale must be positive.'),
+       assert(
+         hitHeight == null || hitHeight >= 44,
+         'Hit height must be at least 44.',
+       ),
+       assert(
+         trackHeight == null || trackHeight > 0,
+         'Track height must be positive.',
+       ),
+       assert(
+         thumbHeight == null || thumbHeight > 0,
+         'Thumb height must be positive.',
+       ),
+       assert(
+         selectionInset == null || selectionInset >= 0,
+         'Selection inset must be non-negative.',
+       ),
        assert(
          contentRefraction == null ||
              (contentRefraction >= 0 && contentRefraction <= 64),
+         'Content refraction must be between 0 and 64.',
        ),
-       assert(contentDepth == null || contentDepth > 0);
+       assert(
+         contentDepth == null || contentDepth > 0,
+         'Content depth must be positive.',
+       );
 
   /// Preferred width before scaling.
   final double? width;

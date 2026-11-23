@@ -4,21 +4,27 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_motion.dart';
-import '../theme/prism_theme.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Enter and exit animation mode for [PrismVisibility].
-enum PrismTransition { identity, materialize }
+enum PrismTransition {
+  /// Shows or hides content immediately.
+  identity,
+
+  /// Animates glass presence and lens geometry.
+  materialize,
+}
 
 /// Timing and content blur overrides for [PrismVisibility].
 @immutable
 class PrismTransitionStyle {
   /// Creates a partial transition style override.
-  const PrismTransitionStyle({
-    this.enterSpring,
-    this.exitSpring,
-    this.contentBlur,
-  }) : assert(contentBlur == null || contentBlur >= 0);
+  const new({this.enterSpring, this.exitSpring, this.contentBlur})
+    : assert(
+        contentBlur == null || contentBlur >= 0,
+        'contentBlur must be null or nonnegative',
+      );
 
   /// Spring animating material entry.
   final PrismSpring? enterSpring;
@@ -64,13 +70,13 @@ class PrismTransitionStyle {
 /// Drives glass surface presence from an external [Animation].
 class PrismPresence extends StatefulWidget {
   /// Creates a presence scope driven by [progress] in `[0, 1]`.
-  const PrismPresence({
+  const new({
     super.key,
     required this.progress,
     required this.child,
     this.contentBlur = 4,
     this.materialize = true,
-  }) : assert(contentBlur >= 0);
+  }) : assert(contentBlur >= 0, 'contentBlur must be nonnegative');
 
   /// Presence progress animation clamped to `[0, 1]`.
   final Animation<double> progress;
@@ -88,6 +94,7 @@ class PrismPresence extends StatefulWidget {
   static double of(BuildContext context) =>
       maybeData(context)?.progress.value.clamp(0.0, 1.0) ?? 1;
 
+  /// Returns the nearest inherited presence scope, if any.
   @internal
   static PrismPresenceScope? maybeData(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<PrismPresenceScope>();
@@ -127,7 +134,7 @@ class _PrismPresenceState extends State<PrismPresence> {
 }
 
 class _PresenceProduct extends CompoundAnimation<double> {
-  _PresenceProduct(Animation<double> first, Animation<double> next)
+  new(Animation<double> first, Animation<double> next)
     : super(first: first, next: next);
 
   @override
@@ -136,12 +143,12 @@ class _PresenceProduct extends CompoundAnimation<double> {
 
 @internal
 class PrismPresenceScope extends InheritedNotifier<Animation<double>> {
-  const PrismPresenceScope({
-    super.key,
+  const new({
     required Animation<double> progress,
     required this.contentBlur,
     required this.materialize,
     required super.child,
+    super.key,
   }) : super(notifier: progress);
 
   Animation<double> get progress => notifier!;
@@ -158,7 +165,7 @@ class PrismPresenceScope extends InheritedNotifier<Animation<double>> {
 /// Shows or hides glass content using a live materialize transition.
 class PrismVisibility extends StatefulWidget {
   /// Creates a visibility transition driven by [visible].
-  const PrismVisibility({
+  const new({
     super.key,
     required this.visible,
     required this.child,
@@ -170,13 +177,13 @@ class PrismVisibility extends StatefulWidget {
        materialize = true;
 
   /// Creates a visibility transition driven directly by [progress] in `[0, 1]`.
-  const PrismVisibility.driven({
+  const new driven({
     super.key,
     required Animation<double> this.progress,
     required this.child,
     this.contentBlur = 4,
     this.materialize = true,
-  }) : assert(contentBlur >= 0),
+  }) : assert(contentBlur >= 0, 'contentBlur must be nonnegative'),
        visible = true,
        transition = PrismTransition.materialize,
        style = null,
@@ -197,13 +204,13 @@ class PrismVisibility extends StatefulWidget {
   /// Called when an enter or exit transition settles.
   final VoidCallback? onEnd;
 
-  /// External presence animation when constructed with [PrismVisibility.driven].
+  /// External presence animation for the driven constructor.
   final Animation<double>? progress;
 
-  /// Foreground content blur sigma when constructed with [PrismVisibility.driven].
+  /// Foreground content blur sigma for the driven constructor.
   final double contentBlur;
 
-  /// Whether lens geometry grows when constructed with [PrismVisibility.driven].
+  /// Whether lens geometry grows for the driven constructor.
   final bool materialize;
 
   @override
@@ -324,7 +331,7 @@ class _PrismVisibilityState extends State<PrismVisibility>
 
 @internal
 class PrismContentPresence extends StatelessWidget {
-  const PrismContentPresence({
+  const new({
     super.key,
     required this.presence,
     required this.blur,

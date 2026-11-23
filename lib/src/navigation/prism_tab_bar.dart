@@ -6,33 +6,32 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-
-import '../controls/control_gesture.dart';
-import '../controls/control_lens.dart';
-import '../controls/prism_pressable.dart';
-import '../controls/prism_selection.dart';
-import '../core/prism_badge.dart';
-import '../core/prism_colors.dart';
-import '../core/prism_glass.dart';
-import '../core/prism_haptics.dart';
-import '../core/prism_lens_style.dart';
-import '../core/prism_motion.dart';
-import '../core/prism_optics.dart';
-import '../rendering/recipe.dart';
-import '../rendering/surface.dart';
-import '../rendering/tab_content_lens.dart';
-import '../theme/foreground.dart';
-import '../theme/prism_theme.dart';
-import 'prism_system_chrome.dart';
-import 'prism_tab_bar_style.dart';
-import 'prism_tab_reselection.dart';
-import 'scaffold/chrome_placement.dart';
+import 'package:liquid_prism/src/controls/control_gesture.dart';
+import 'package:liquid_prism/src/controls/control_lens.dart';
+import 'package:liquid_prism/src/controls/prism_pressable.dart';
+import 'package:liquid_prism/src/controls/prism_selection.dart';
+import 'package:liquid_prism/src/core/prism_badge.dart';
+import 'package:liquid_prism/src/core/prism_colors.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_haptics.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/navigation/prism_system_chrome.dart';
+import 'package:liquid_prism/src/navigation/prism_tab_bar_style.dart';
+import 'package:liquid_prism/src/navigation/prism_tab_reselection.dart';
+import 'package:liquid_prism/src/navigation/scaffold/chrome_placement.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/surface.dart';
+import 'package:liquid_prism/src/rendering/tab_content_lens.dart';
+import 'package:liquid_prism/src/theme/foreground.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// A destination with a label, icons, and optional badge.
 @immutable
 final class PrismTab {
   /// Creates a destination descriptor.
-  const PrismTab({
+  const new({
     required this.label,
     required this.icon,
     this.selectedIcon,
@@ -67,7 +66,7 @@ final class PrismTab {
 /// A controlled tab bar with a draggable glass selection lens.
 class PrismTabBar extends StatefulWidget {
   /// Creates a controlled tab bar with component-style appearance.
-  const PrismTabBar({
+  const new({
     super.key,
     required this.tabs,
     required this.selectedIndex,
@@ -75,8 +74,11 @@ class PrismTabBar extends StatefulWidget {
     this.onLongPressed,
     this.axis,
     this.style,
-  }) : assert(tabs.length > 1),
-       assert(selectedIndex >= 0 && selectedIndex < tabs.length);
+  }) : assert(tabs.length > 1, 'At least two tabs are required.'),
+       assert(
+         selectedIndex >= 0 && selectedIndex < tabs.length,
+         'selectedIndex must be within the tabs.',
+       );
 
   /// Ordered tab destinations.
   final List<PrismTab> tabs;
@@ -133,13 +135,20 @@ class _PrismTabBarState extends State<PrismTabBar>
   bool _releaseLensPending = false;
 
   final _window = ValueNotifier<bool>(false);
-  bool _initialized = false, _rtl = false, _reduceMotion = false;
+  bool _initialized = false;
+  bool _rtl = false;
+  bool _reduceMotion = false;
   bool _vertical = false;
-  bool _dragging = false, _cancelled = false, _committing = false;
+  bool _dragging = false;
+  bool _cancelled = false;
+  bool _committing = false;
   int? _pointer;
   final _contacts = <int>{};
 
-  double _slotWidth = 1, _barWidth = 274, _padLeft = 0, _fingerSlot = 0;
+  double _slotWidth = 1;
+  double _barWidth = 274;
+  double _padLeft = 0;
+  double _fingerSlot = 0;
   int _epoch = 0;
   final _focusNodes = <FocusNode>[];
   @override
@@ -247,7 +256,7 @@ class _PrismTabBarState extends State<PrismTabBar>
   );
   static const _liftReach = 32.0;
 
-  static final _glowPrecision = PrismSettle.precision(
+  static final double? _glowPrecision = PrismSettle.precision(
     alphaPerUnit: NativeMotion.glowOpacity * .9 * .2,
   );
 
@@ -258,7 +267,7 @@ class _PrismTabBarState extends State<PrismTabBar>
       return;
     }
     _deformationTarget = target;
-    final distance = ((target - _position.value).abs()).clamp(0.0, 1.0);
+    final distance = (target - _position.value).abs().clamp(0.0, 1.0);
     final travel = distance * _liftFactor;
     final timeScale = _motion.response.inMicroseconds / 400000;
     for (final axis in [(_stretch, false), (_crossStretch, true)]) {
@@ -630,7 +639,7 @@ class _PrismTabBarState extends State<PrismTabBar>
         MediaQuery.textScalerOf(context).scale(textStyle.fontSize ?? 10) *
         (textStyle.height ?? 1.2);
     var height = vertical
-        ? math.max(44.0, iconSize + 8)
+        ? math.max<double>(44, iconSize + 8)
         : math.max(
             style.height ?? 54,
             iconSize +
@@ -652,8 +661,9 @@ class _PrismTabBarState extends State<PrismTabBar>
         maxLines: 1,
       );
       for (final tab in widget.tabs) {
-        painter.text = TextSpan(text: tab.label, style: effectiveStyle);
-        painter.layout();
+        painter
+          ..text = TextSpan(text: tab.label, style: effectiveStyle)
+          ..layout();
         contentWidth = math.max(contentWidth, painter.width);
       }
       painter.dispose();
@@ -663,8 +673,8 @@ class _PrismTabBarState extends State<PrismTabBar>
     }
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final slot = vertical
-        ? math.max(
-            50.0,
+        ? math.max<double>(
+            50,
             iconSize +
                 25 +
                 (labels == PrismTabLabelBehavior.never ? 0 : textHeight + 2),
@@ -1150,7 +1160,7 @@ class _PrismTabBarState extends State<PrismTabBar>
 }
 
 class _LensHalo extends CustomPainter {
-  const _LensHalo(
+  const new(
     this.centre,
     this.diameter,
     this.opacity,
@@ -1159,7 +1169,9 @@ class _LensHalo extends CustomPainter {
     required this.housingScale,
   });
   final Offset centre;
-  final double diameter, opacity, blurRadius;
+  final double diameter;
+  final double opacity;
+  final double blurRadius;
 
   final PrismShape housing;
   final double housingScale;
@@ -1170,16 +1182,17 @@ class _LensHalo extends CustomPainter {
     final expand = Matrix4.translationValues(centreOfBar.dx, centreOfBar.dy, 0)
       ..scaleByDouble(housingScale, housingScale, 1, 1)
       ..translateByDouble(-centreOfBar.dx, -centreOfBar.dy, 0, 1);
-    canvas.save();
-    canvas.clipPath(housing.path(size).transform(expand.storage));
-    canvas.drawCircle(
-      centre,
-      diameter / 2,
-      Paint()
-        ..color = Color.from(alpha: opacity, red: 1, green: 1, blue: 1)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurRadius),
-    );
-    canvas.restore();
+    canvas
+      ..save()
+      ..clipPath(housing.path(size).transform(expand.storage))
+      ..drawCircle(
+        centre,
+        diameter / 2,
+        Paint()
+          ..color = Color.from(alpha: opacity, red: 1, green: 1, blue: 1)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurRadius),
+      )
+      ..restore();
   }
 
   @override
@@ -1192,7 +1205,7 @@ class _LensHalo extends CustomPainter {
       housingScale != old.housingScale;
 }
 
-const _nativeSelectionBlur = 2 * FrostPass.engineSigmaScale;
+const double _nativeSelectionBlur = 2 * FrostPass.engineSigmaScale;
 
 double _selectionBlur(
   BuildContext context, {

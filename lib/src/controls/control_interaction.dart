@@ -3,16 +3,15 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_motion.dart';
-import 'control_gesture.dart';
-import 'control_lens_motion.dart';
+import 'package:liquid_prism/src/controls/control_gesture.dart';
+import 'package:liquid_prism/src/controls/control_lens_motion.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
 
 /// Owns controlled input, cancellation, feedback, and spring momentum.
 @internal
 class ControlInteraction extends StatefulWidget {
   /// Creates the interaction owner for a controlled value.
-  const ControlInteraction({
+  const new({
     super.key,
     required this.value,
     required this.onChanged,
@@ -38,11 +37,20 @@ class ControlInteraction extends StatefulWidget {
     this.motion = const PrismControlMotion(),
   });
 
-  /// Parent-owned normalized value and physical travel distance.
-  final double value, travel;
+  /// Parent-owned normalized value.
+  final double value;
 
-  /// Value proposals and input-phase callbacks.
-  final ValueChanged<double>? onChanged, onChangeStart, onChangeEnd;
+  /// Physical travel distance in logical pixels.
+  final double travel;
+
+  /// Proposes a value; null disables all input.
+  final ValueChanged<double>? onChanged;
+
+  /// Called when user input starts.
+  final ValueChanged<double>? onChangeStart;
+
+  /// Called when user input ends.
+  final ValueChanged<double>? onChangeEnd;
 
   /// Feedback when user input crosses a discrete selection boundary.
   final VoidCallback? onSelectionFeedback;
@@ -63,14 +71,26 @@ class ControlInteraction extends StatefulWidget {
   )
   builder;
 
-  /// Springs for travel, tracking, lift, and release.
-  final SpringDescription spring, trackingSpring, liftSpring, releaseSpring;
+  /// Spring for selection travel.
+  final SpringDescription spring;
+
+  /// Spring for tracking a drag.
+  final SpringDescription trackingSpring;
+
+  /// Spring for lifting the lens.
+  final SpringDescription liftSpring;
+
+  /// Spring for releasing the lens.
+  final SpringDescription releaseSpring;
 
   /// Number of equal normalized value divisions.
   final int? steps;
 
-  /// Whether input toggles or continuously proposes values.
-  final bool toggle, continuous;
+  /// Whether input toggles the value.
+  final bool toggle;
+
+  /// Whether dragging continuously proposes values.
+  final bool continuous;
 
   /// Minimum duration that a contact keeps the lens lifted.
   final Duration hangTime;
@@ -78,8 +98,11 @@ class ControlInteraction extends StatefulWidget {
   /// Half-width of the active grab region; null claims every contact.
   final double? grabExtent;
 
-  /// Accessible name and formatted current value.
-  final String? label, semanticValue;
+  /// Accessible name for the control.
+  final String? label;
+
+  /// Formatted current value for accessibility.
+  final String? semanticValue;
 
   /// Formats normalized accessibility step previews.
   final String Function(double)? semanticFormatter;
@@ -96,7 +119,7 @@ class ControlInteraction extends StatefulWidget {
 }
 
 class _ControlPress extends InheritedWidget {
-  const _ControlPress({required this.value, required super.child});
+  const new({required this.value, required super.child});
   final double? value;
   @override
   bool updateShouldNotify(_ControlPress oldWidget) => value != oldWidget.value;
@@ -125,11 +148,13 @@ class _ControlInteractionState extends State<ControlInteraction>
   final _focus = FocusNode();
   Timer? _release;
   int? _pointer;
-  bool _dragging = false,
-      _reduceMotion = false,
-      _rtl = false,
-      _committing = false;
-  double _downX = 0, _downValue = 0, _candidate = 0;
+  bool _dragging = false;
+  bool _reduceMotion = false;
+  bool _rtl = false;
+  bool _committing = false;
+  double _downX = 0;
+  double _downValue = 0;
+  double _candidate = 0;
   double _feedbackValue = 0;
   double? _lastEmitted;
   bool _unliftPending = false;

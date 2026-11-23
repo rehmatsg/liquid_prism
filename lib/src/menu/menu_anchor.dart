@@ -1,24 +1,27 @@
 import 'dart:ui' show Offset, Rect;
 
+import 'package:flutter/foundation.dart' show immutable;
+
 /// A menu attachment point or rectangle in global coordinates.
 sealed class PrismMenuAnchor {
   /// Creates a PrismMenuAnchor.
-  const PrismMenuAnchor();
+  const new();
 
   /// Creates an anchor at a global point.
-  const factory PrismMenuAnchor.point(Offset position) = PrismMenuPointAnchor;
+  const factory point(Offset position) = PrismMenuPointAnchor;
 
   /// Creates an anchor at global bounds.
-  const factory PrismMenuAnchor.rect(Rect rect) = PrismMenuRectAnchor;
+  const factory rect(Rect rect) = PrismMenuRectAnchor;
 
   /// Serializes native wire fields.
   Map<String, Object?> toMap();
 }
 
 /// Anchors a menu at a global point.
+@immutable
 final class PrismMenuPointAnchor extends PrismMenuAnchor {
   /// Creates a PrismMenuPointAnchor.
-  const PrismMenuPointAnchor(this.position);
+  const new(this.position);
 
   /// The attachment point in global coordinates.
   final Offset position;
@@ -45,9 +48,10 @@ final class PrismMenuPointAnchor extends PrismMenuAnchor {
 }
 
 /// Anchors a menu to global bounds.
+@immutable
 final class PrismMenuRectAnchor extends PrismMenuAnchor {
   /// Creates a PrismMenuRectAnchor.
-  const PrismMenuRectAnchor(this.rect);
+  const new(this.rect);
 
   /// The attachment bounds in global coordinates.
   final Rect rect;

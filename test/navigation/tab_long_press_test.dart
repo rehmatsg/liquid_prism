@@ -8,7 +8,8 @@ void main() {
     'tab hold fires once, cancels selection and settles before release',
     (tester) async {
       final semantics = tester.ensureSemantics();
-      final changes = <int>[], holds = <int>[];
+      final changes = <int>[];
+      final holds = <int>[];
       await tester.pumpWidget(
         MaterialApp(
           home: Center(
@@ -65,7 +66,8 @@ void main() {
   testWidgets(
     'drag, cancel, external update and multitouch suppress tab hold',
     (tester) async {
-      final changes = <int>[], holds = <int>[];
+      final changes = <int>[];
+      final holds = <int>[];
       var selected = 0;
       late StateSetter update;
       await tester.pumpWidget(

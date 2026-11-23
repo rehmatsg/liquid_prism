@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart' show internal;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-import 'prism_navigation_bar_style.dart';
-import 'prism_title.dart';
+import 'package:liquid_prism/src/navigation/prism_navigation_bar_style.dart';
+import 'package:liquid_prism/src/navigation/prism_title.dart';
 
 @internal
 class PrismNavigationTitles {
-  PrismNavigationTitles({
+  new({
     required Widget? title,
     required Widget? largeTitle,
     required PrismNavigationBarStyle style,
@@ -39,8 +39,11 @@ class PrismNavigationTitles {
         : style.largeTitleStyle;
   }
 
-  late final Widget? expanded, largeInRow, compact;
-  late final TextStyle? compactStyle, largeStyle;
+  late final Widget? expanded;
+  late final Widget? largeInRow;
+  late final Widget? compact;
+  late final TextStyle? compactStyle;
+  late final TextStyle? largeStyle;
 
   Widget? get inRow => largeInRow ?? compact;
 }
@@ -245,7 +248,7 @@ CrossAxisAlignment prismTitleCrossAlignment(PrismTitleAlignment alignment) =>
     };
 
 class _FitsRow extends SingleChildRenderObjectWidget {
-  const _FitsRow({required super.child});
+  const new({required super.child});
 
   @override
   RenderObject createRenderObject(BuildContext context) => _RenderFitsRow();

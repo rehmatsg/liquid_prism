@@ -1,16 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_glass.dart';
-import '../core/prism_optics.dart';
-import '../theme/prism_theme.dart';
-import 'recipe.dart';
-import 'surface.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/surface.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Native navigation and search capsule material inputs.
 @internal
 class ChromeMaterial extends StatelessWidget {
-  const ChromeMaterial({
+  const new({
     super.key,
     required this.height,
     required this.role,

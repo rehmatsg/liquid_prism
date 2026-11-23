@@ -2,22 +2,32 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/primitives.dart';
 
-import 'model.dart';
-import 'previews.dart';
-import 'refresh_page.dart';
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/previews.dart';
+import 'package:liquid_prism_example/showcase/refresh_page.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// The showcase landing page with featured component demos.
 class ExplorePage extends StatelessWidget {
-  const ExplorePage({
+  /// Creates an [ExplorePage].
+  const new({
     super.key,
     required this.model,
     required this.open,
     required this.onStudio,
     this.controller,
   });
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
+
+  /// Called to open the selected component demonstration.
   final ValueChanged<ComponentInfo> open;
+
+  /// Called to open the optics studio.
   final VoidCallback onStudio;
+
+  /// The optional controller for the page scroll view.
   final ScrollController? controller;
 
   @override
@@ -93,9 +103,15 @@ class ExplorePage extends StatelessWidget {
   );
 }
 
+/// The artwork banner linking to the optics studio.
 class ExploreHero extends StatelessWidget {
-  const ExploreHero({super.key, required this.model, required this.onStudio});
+  /// Creates an [ExploreHero].
+  const new({super.key, required this.model, required this.onStudio});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
+
+  /// Called to open the optics studio.
   final VoidCallback onStudio;
 
   @override
@@ -183,9 +199,15 @@ class ExploreHero extends StatelessWidget {
   );
 }
 
+/// Controls for customizing showcase appearance and optics.
 class StudioPage extends StatelessWidget {
-  const StudioPage({super.key, required this.model, this.controller});
+  /// Creates a [StudioPage].
+  const new({super.key, required this.model, this.controller});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
+
+  /// The optional controller for the page scroll view.
   final ScrollController? controller;
 
   @override
@@ -306,8 +328,9 @@ class StudioPage extends StatelessWidget {
         InsetSection(
           header: 'Optics',
           footer:
-              'Device settings apply by default. Adjusting these sliders customizes '
-              'the preview; Whole app applies those values throughout.',
+              'Device settings apply by default. Adjusting these sliders '
+              'customizes the preview; Whole app applies those values '
+              'throughout.',
           children: [
             SliderRow(
               title: 'Frost',
@@ -406,8 +429,10 @@ class StudioPage extends StatelessWidget {
   }
 }
 
+/// A searchable library of component demonstrations.
 class LibraryPage extends StatefulWidget {
-  const LibraryPage({
+  /// Creates a [LibraryPage].
+  const new({
     super.key,
     required this.model,
     required this.search,
@@ -415,10 +440,20 @@ class LibraryPage extends StatefulWidget {
     required this.open,
     this.controller,
   });
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
+
+  /// The controller holding the library search query.
   final TextEditingController search;
+
+  /// The focus node for the library search field.
   final FocusNode focus;
+
+  /// Called to open the selected component demonstration.
   final ValueChanged<ComponentInfo> open;
+
+  /// The optional controller for the page scroll view.
   final ScrollController? controller;
   @override
   State<LibraryPage> createState() => _LibraryPageState();
@@ -482,7 +517,8 @@ class _LibraryPageState extends State<LibraryPage> {
         else
           InsetSection(
             header:
-                '${results.length} ${results.length == 1 ? 'component' : 'components'}',
+                '${results.length} '
+                '${results.length == 1 ? 'component' : 'components'}',
             children: [
               for (final info in results)
                 ComponentRow(info: info, onPressed: () => widget.open(info)),
@@ -493,9 +529,15 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 }
 
+/// A library row that opens a component demonstration.
 class ComponentRow extends StatelessWidget {
-  const ComponentRow({super.key, required this.info, required this.onPressed});
+  /// Creates a [ComponentRow].
+  const new({super.key, required this.info, required this.onPressed});
+
+  /// The component metadata displayed on this page.
   final ComponentInfo info;
+
+  /// Called when the user activates this widget.
   final VoidCallback onPressed;
 
   @override
@@ -509,8 +551,10 @@ class ComponentRow extends StatelessWidget {
   );
 }
 
+/// A labeled slider with a formatted value.
 class SliderRow extends StatelessWidget {
-  const SliderRow({
+  /// Creates a [SliderRow].
+  const new({
     super.key,
     required this.title,
     required this.value,
@@ -519,8 +563,23 @@ class SliderRow extends StatelessWidget {
     this.min = 0,
     this.max = 1,
   });
-  final String title, display;
-  final double value, min, max;
+
+  /// The primary text displayed by this widget.
+  final String title;
+
+  /// The formatted slider value shown beside its title.
+  final String display;
+
+  /// The current slider value.
+  final double value;
+
+  /// The minimum slider value.
+  final double min;
+
+  /// The maximum slider value.
+  final double max;
+
+  /// Called with the updated slider value.
   final ValueChanged<double> onChanged;
 
   @override
@@ -550,8 +609,12 @@ class SliderRow extends StatelessWidget {
   );
 }
 
+/// A button that toggles the shared favorite state.
 class FavoriteButton extends StatelessWidget {
-  const FavoriteButton({super.key, required this.model});
+  /// Creates a [FavoriteButton].
+  const new({super.key, required this.model});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
 
   @override

@@ -6,16 +6,28 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// App preference for whether iOS may place bars in a vertical rail.
-enum PrismVerticalBarBehavior { automatic, disabled }
+enum PrismVerticalBarBehavior {
+  /// Allows automatic vertical bar placement.
+  automatic,
+
+  /// Keeps bars horizontal.
+  disabled,
+}
 
 /// UIKit horizontal or vertical size class.
-enum PrismSizeClass { compact, regular }
+enum PrismSizeClass {
+  /// Uses a compact layout size class.
+  compact,
+
+  /// Uses a regular layout size class.
+  regular,
+}
 
 /// Region of the Flutter view reserved by system UI in logical coordinates.
 @immutable
 class PrismReservedRegion {
   /// Creates a reserved region with [frame], [margins], and [active] state.
-  const PrismReservedRegion({
+  const new({
     required this.frame,
     this.margins = EdgeInsets.zero,
     this.active = true,
@@ -53,7 +65,7 @@ class PrismReservedRegion {
 @immutable
 class PrismSystemChromeData {
   /// Creates a system chrome snapshot.
-  const PrismSystemChromeData({
+  const new({
     this.verticalBarEdge,
     this.verticalBarBehavior = PrismVerticalBarBehavior.automatic,
     this.horizontalSizeClass,
@@ -62,7 +74,7 @@ class PrismSystemChromeData {
     this.divisions = const [],
   });
 
-  /// Decodes a `liquid_prism/system_chrome` event payload, or null if unsupported.
+  /// Decodes a system chrome event, or returns null when unsupported.
   static PrismSystemChromeData? fromMap(Map<Object?, Object?> map) {
     if (map['supported'] != true) return null;
     double at(List<Object?> values, int index) =>
@@ -170,10 +182,10 @@ class PrismSystemChromeData {
       'divisions: $divisions)';
 }
 
-/// Publishes [PrismSystemChromeData] and active fold display features to descendants.
+/// Publishes system chrome metrics and active fold display features.
 class PrismSystemChrome extends StatelessWidget {
   /// Creates a system chrome scope around [child].
-  const PrismSystemChrome({super.key, required this.child});
+  const new({super.key, required this.child});
 
   /// Subtree receiving system chrome metrics and fold display features.
   final Widget child;
@@ -194,11 +206,12 @@ class PrismSystemChrome extends StatelessWidget {
   static PrismSystemChromeData? of(BuildContext context) =>
       scopeOf(context)?.chrome ?? listenable.value;
 
+  /// Returns the nearest scope containing system chrome metrics.
   @internal
   static SystemChromeScope? scopeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<SystemChromeScope>();
 
-  /// Live listenable of the centered Dynamic Island frame in logical coordinates.
+  /// Live centered Dynamic Island frame in logical coordinates.
   static ValueListenable<Rect?> get dynamicIsland =>
       SystemChromeListener.instance.island;
 
@@ -242,11 +255,7 @@ class PrismSystemChrome extends StatelessWidget {
 
 @internal
 class SystemChromeScope extends InheritedWidget {
-  const SystemChromeScope({
-    super.key,
-    required this.chrome,
-    required super.child,
-  });
+  const new({super.key, required this.chrome, required super.child});
 
   final PrismSystemChromeData? chrome;
 
@@ -257,7 +266,7 @@ class SystemChromeScope extends InheritedWidget {
 
 @internal
 class SystemChromeListener {
-  SystemChromeListener._();
+  new _();
 
   static final SystemChromeListener instance = SystemChromeListener._();
 
@@ -333,13 +342,13 @@ class SystemChromeListener {
   @visibleForTesting
   Future<void> reset() async {
     _started = false;
-    final subscription = _subscription;
+    final cancellation = _subscription?.cancel();
     _subscription = null;
     _value.value = null;
     _glassTintAmount.value = null;
     _reduceTransparency.value = false;
     _island.value = null;
     _notch.value = null;
-    await subscription?.cancel();
+    await cancellation;
   }
 }

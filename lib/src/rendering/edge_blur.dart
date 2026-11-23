@@ -1,18 +1,19 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-import 'edge_fade.dart';
-import 'layer_transform.dart';
-import 'prism.dart';
+import 'package:liquid_prism/src/rendering/edge_fade.dart';
+import 'package:liquid_prism/src/rendering/layer_transform.dart';
+import 'package:liquid_prism/src/rendering/prism.dart';
 
 @immutable
 /// Immutable progressive blur, haze, and fade settings for one edge.
 class PrismEdgeBlurStrip {
   /// Creates an edge strip with a plateau and progressive falloff.
-  const PrismEdgeBlurStrip({
+  const new({
     required this.edge,
     required this.extent,
     this.sigma = 0,
@@ -24,15 +25,27 @@ class PrismEdgeBlurStrip {
     this.haze = 0,
     this.hazeOpacity = .5,
     this.hazePlateau = .34,
-  }) : assert(extent >= 0),
-       assert(sigma >= 0),
-       assert(plateau >= 0 && plateau < 1),
-       assert(floor >= 0 && floor <= 1),
-       assert(fadeOpacity >= 0 && fadeOpacity <= 1),
-       assert(fadeFloor == null || (fadeFloor >= 0 && fadeFloor <= 1)),
-       assert(haze >= 0),
-       assert(hazeOpacity >= 0 && hazeOpacity <= 1),
-       assert(hazePlateau >= 0 && hazePlateau <= 1);
+  }) : assert(extent >= 0, 'extent must be nonnegative'),
+       assert(sigma >= 0, 'sigma must be nonnegative'),
+       assert(plateau >= 0 && plateau < 1, 'plateau must be in [0, 1)'),
+       assert(floor >= 0 && floor <= 1, 'floor must be in [0, 1]'),
+       assert(
+         fadeOpacity >= 0 && fadeOpacity <= 1,
+         'fadeOpacity must be in [0, 1]',
+       ),
+       assert(
+         fadeFloor == null || (fadeFloor >= 0 && fadeFloor <= 1),
+         'fadeFloor must be null or in [0, 1]',
+       ),
+       assert(haze >= 0, 'haze must be nonnegative'),
+       assert(
+         hazeOpacity >= 0 && hazeOpacity <= 1,
+         'hazeOpacity must be in [0, 1]',
+       ),
+       assert(
+         hazePlateau >= 0 && hazePlateau <= 1,
+         'hazePlateau must be in [0, 1]',
+       );
 
   /// Edge from which the strip extends inward.
   final PrismEdge edge;
@@ -145,7 +158,7 @@ class PrismEdgeBlurStrip {
 /// Progressively blurs and fades opposite edges above its content.
 class PrismEdgeBlur extends StatefulWidget {
   /// Creates an effect with at most two distinct edges on one axis.
-  const PrismEdgeBlur({super.key, required this.edges, this.child});
+  const new({super.key, required this.edges, this.child});
 
   /// Up to two distinct strips on one axis.
   final List<PrismEdgeBlurStrip> edges;
@@ -193,21 +206,25 @@ class _PrismEdgeBlurState extends State<PrismEdgeBlur> {
       return;
     }
     _loading = true;
-    PrismShaderCache.ensureLoaded()
-        .then((_) {
-          if (mounted) setState(() {});
-        })
-        .catchError((Object error, StackTrace stack) {
-          FlutterError.reportError(
-            FlutterErrorDetails(
-              exception: error,
-              stack: stack,
-              library: 'liquid_prism',
-              context: ErrorDescription('while compiling the edge blur shader'),
-            ),
-          );
-        })
-        .whenComplete(() => _loading = false);
+    unawaited(
+      PrismShaderCache.ensureLoaded()
+          .then((_) {
+            if (mounted) setState(() {});
+          })
+          .catchError((Object error, StackTrace stack) {
+            FlutterError.reportError(
+              FlutterErrorDetails(
+                exception: error,
+                stack: stack,
+                library: 'liquid_prism',
+                context: ErrorDescription(
+                  'while compiling the edge blur shader',
+                ),
+              ),
+            );
+          })
+          .whenComplete(() => _loading = false),
+    );
   }
 
   @override
@@ -235,7 +252,7 @@ class _PrismEdgeBlurState extends State<PrismEdgeBlur> {
 }
 
 class _EdgeBlurRenderWidget extends SingleChildRenderObjectWidget {
-  const _EdgeBlurRenderWidget({
+  const new({
     required this.specs,
     required this.program,
     required this.pixelRatio,
@@ -259,7 +276,7 @@ class _EdgeBlurRenderWidget extends SingleChildRenderObjectWidget {
 }
 
 class _EdgePassFilter {
-  _EdgePassFilter(this._shader);
+  new(this._shader);
   final ui.FragmentShader _shader;
   List<double> _values = const [];
   ui.ImageFilter? _filter;
@@ -281,7 +298,7 @@ class _EdgePassFilter {
 }
 
 class _RenderEdgeBlur extends RenderProxyBox {
-  _RenderEdgeBlur(this._specs, this._program, this.pixelRatio);
+  new(this._specs, this._program, this.pixelRatio);
 
   final _contentLayer = LayerHandle<_EdgeContentLayer>();
   final _inputClipLayer = LayerHandle<ClipRectLayer>();
@@ -413,8 +430,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
       super.paint(context, offset);
       return;
     }
-    final content = _contentLayer.layer ??= _EdgeContentLayer();
-    content
+    final content = (_contentLayer.layer ??= _EdgeContentLayer())
       ..blur = this
       ..paintOffset = offset;
     context.pushLayer(content, _paintContent, offset);
@@ -423,8 +439,8 @@ class _RenderEdgeBlur extends RenderProxyBox {
       final strips = _stripPath(_blurs);
       final bounds = strips.getBounds();
       for (var pass = 0; pass < 2; pass++) {
-        final passLayer = _passLayers[pass].layer ??= _EdgePassLayer(pass);
-        passLayer.blur = this;
+        final passLayer = (_passLayers[pass].layer ??= _EdgePassLayer(pass))
+          ..blur = this;
         _stripClipLayers[pass].layer = context.pushClipPath(
           needsCompositing,
           offset,
@@ -451,8 +467,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
     for (final spec in _hazes) {
       final strip = _stripRect(spec);
       if (strip.isEmpty) continue;
-      final haze = _hazeLayers[hazes].layer ??= _EdgeHazeLayer();
-      haze
+      final haze = (_hazeLayers[hazes].layer ??= _EdgeHazeLayer())
         ..blur = this
         ..sigma = spec.haze
         ..bounds = strip.shift(offset);
@@ -478,8 +493,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
     }
     _releaseHazes(from: hazes);
     if (_fades.isNotEmpty) {
-      final fade = _fadeLayer.layer ??= _EdgeFadeLayer();
-      fade
+      final fade = (_fadeLayer.layer ??= _EdgeFadeLayer())
         ..blur = this
         ..offset = offset;
       context.pushLayer(fade, (_, _) {}, offset);
@@ -581,7 +595,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
     canvas.restore();
   }
 
-  static const double _fadeBleed = 1.0;
+  static const double _fadeBleed = 1;
 
   static Rect _overhang(Rect strip, PrismEdge edge) {
     const bleed = _fadeBleed;
@@ -655,8 +669,8 @@ class _RenderEdgeBlur extends RenderProxyBox {
     );
   }
 
-  static const double _screenFrame = 0.0;
-  static const double _textureFrame = 1.0;
+  static const double _screenFrame = 0;
+  static const double _textureFrame = 1;
 
   void _paintHazeWeight(Canvas canvas, PrismEdgeBlurStrip spec) {
     final rect = _stripRect(spec);
@@ -708,7 +722,7 @@ class _RenderEdgeBlur extends RenderProxyBox {
         : (d / det, -b / det, -c / det, a / det);
     return [
       pass.toDouble(),
-      edge.isHorizontal ? 1 : 0,
+      if (edge.isHorizontal) 1 else 0,
       frame,
       size.width,
       size.height,
@@ -803,7 +817,7 @@ class _EdgeContentLayer extends ContainerLayer {
 }
 
 class _EdgePassLayer extends ContainerLayer {
-  _EdgePassLayer(this.pass);
+  new(this.pass);
 
   final int pass;
   _RenderEdgeBlur? blur;

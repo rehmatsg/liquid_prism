@@ -3,19 +3,19 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_lens_style.dart';
-import '../core/prism_optics.dart';
-import '../rendering/prism_transition.dart';
-import '../rendering/recipe.dart';
-import '../rendering/surface.dart';
-import '../theme/prism_theme.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/surface.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Shared resting and lifted optical treatment for control handles.
 @internal
 class ControlLens extends StatelessWidget {
   /// Creates the shared control lens material.
-  const ControlLens({
+  const new({
     super.key,
     required this.lift,
     required this.role,
@@ -24,7 +24,7 @@ class ControlLens extends StatelessWidget {
     this.restingShadow = false,
     this.style,
     this.rim = 0,
-  }) : assert(rim >= 0);
+  }) : assert(rim >= 0, 'Rim must be non-negative.');
 
   /// Normalized lift progress.
   final double lift;
@@ -183,7 +183,7 @@ const _sliderShadowLight = PrismLensStyle(
 );
 
 class _LensShadow extends CustomPainter {
-  const _LensShadow(this.progress, this.shape, this.restingShadow, this.style);
+  const new(this.progress, this.shape, this.restingShadow, this.style);
   final double progress;
   final PrismShape shape;
   final bool restingShadow;
@@ -198,14 +198,15 @@ class _LensShadow extends CustomPainter {
     final ambientReach = style.shadowOffset!.distance + 3 * style.shadowBlur!;
     final ringReach =
         style.ringOffset!.distance + 3 * style.ringBlur! + style.ringWidth!;
-    final extent = math.max(40.0, math.max(ambientReach, ringReach)) * scale;
-    canvas.save();
-    canvas.clipPath(
-      Path()
-        ..fillType = PathFillType.evenOdd
-        ..addRect((Offset.zero & size).inflate(extent))
-        ..addPath(outline, Offset.zero),
-    );
+    final extent = math.max(40, math.max(ambientReach, ringReach)) * scale;
+    canvas
+      ..save()
+      ..clipPath(
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect((Offset.zero & size).inflate(extent))
+          ..addPath(outline, Offset.zero),
+      );
     final contact =
         (restingShadow ? 1 - progress : 0.0) +
         (style.heldContactShadow! ? progress : 0.0);
@@ -218,28 +219,29 @@ class _LensShadow extends CustomPainter {
       );
     }
     if (progress > 0) {
-      canvas.drawPath(
-        outline.shift(style.shadowOffset! * scale),
-        Paint()
-          ..color = const Color(0xFF000000)
-              .withValues(alpha: style.shadowOpacity! * progress)
-          ..maskFilter = MaskFilter.blur(
-            BlurStyle.normal,
-            style.shadowBlur! * scale,
-          ),
-      );
-      canvas.drawPath(
-        outline.shift(style.ringOffset! * scale),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = style.ringWidth! * scale
-          ..color = const Color(0xFF000000)
-              .withValues(alpha: style.ringOpacity! * progress)
-          ..maskFilter = MaskFilter.blur(
-            BlurStyle.normal,
-            style.ringBlur! * scale,
-          ),
-      );
+      canvas
+        ..drawPath(
+          outline.shift(style.shadowOffset! * scale),
+          Paint()
+            ..color = const Color(0xFF000000)
+                .withValues(alpha: style.shadowOpacity! * progress)
+            ..maskFilter = MaskFilter.blur(
+              BlurStyle.normal,
+              style.shadowBlur! * scale,
+            ),
+        )
+        ..drawPath(
+          outline.shift(style.ringOffset! * scale),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = style.ringWidth! * scale
+            ..color = const Color(0xFF000000)
+                .withValues(alpha: style.ringOpacity! * progress)
+            ..maskFilter = MaskFilter.blur(
+              BlurStyle.normal,
+              style.ringBlur! * scale,
+            ),
+        );
     }
     canvas.restore();
   }

@@ -1,4 +1,4 @@
-/// Low-level building blocks for custom optical controls, edge effects, and system chrome integration.
+/// Low-level building blocks for custom optics, edge effects, and chrome.
 library;
 
 export 'src/controls/prism_pressable.dart' show PrismPressable;

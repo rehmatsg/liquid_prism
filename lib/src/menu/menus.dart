@@ -2,18 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
-import 'menu.dart';
-import 'menu_anchor.dart';
-import 'menu_engine.dart';
-import 'menu_event.dart';
-import 'menu_platform_interface.dart';
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/menu/menu_anchor.dart';
+import 'package:liquid_prism/src/menu/menu_engine.dart';
+import 'package:liquid_prism/src/menu/menu_event.dart';
+import 'package:liquid_prism/src/menu/menu_platform_interface.dart';
 
 /// The shared facade for presenting menus.
 const PrismMenus prismMenus = PrismMenus.instance;
 
 /// Presents native iOS menus with a Flutter fallback.
 final class PrismMenus {
-  const PrismMenus._();
+  const new _();
 
   /// The shared menu instance.
   static const PrismMenus instance = PrismMenus._();

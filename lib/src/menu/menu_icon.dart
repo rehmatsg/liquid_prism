@@ -1,21 +1,22 @@
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show immutable, listEquals;
 import 'package:flutter/painting.dart' show Color;
 
 /// An SF Symbol or encoded bitmap used by a menu.
 sealed class PrismMenuIcon {
   /// Creates a PrismMenuIcon.
-  const PrismMenuIcon();
+  const new();
 
   /// Serializes native wire fields.
   Map<String, Object?> toMap();
 }
 
 /// An SF Symbol with optional configuration and palette colors.
+@immutable
 final class PrismMenuSfSymbol extends PrismMenuIcon {
   /// Creates a PrismMenuSfSymbol.
-  const PrismMenuSfSymbol(
+  const new(
     this.name, {
     this.weight,
     this.scale,
@@ -74,9 +75,10 @@ final class PrismMenuSfSymbol extends PrismMenuIcon {
 }
 
 /// Encoded bitmap bytes with optional template tinting.
+@immutable
 final class PrismMenuImage extends PrismMenuIcon {
   /// Creates a bitmap menu icon.
-  const PrismMenuImage(this.bytes, {this.templated = false});
+  const new(this.bytes, {this.templated = false});
 
   /// The encoded image bytes.
   final Uint8List bytes;

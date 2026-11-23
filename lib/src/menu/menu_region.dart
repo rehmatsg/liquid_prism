@@ -1,19 +1,31 @@
 import 'package:flutter/widgets.dart';
 
-import 'menu.dart';
-import 'menu_anchor.dart';
-import 'menu_engine.dart';
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/menu/menu_anchor.dart';
+import 'package:liquid_prism/src/menu/menu_engine.dart';
 
 /// The gesture that opens a menu region.
-enum PrismMenuTrigger { tap, longPress }
+enum PrismMenuTrigger {
+  /// Opens the menu on a tap.
+  tap,
+
+  /// Opens the menu on a long press.
+  longPress,
+}
 
 /// The attachment geometry used by a menu region.
-enum PrismMenuAnchorMode { tapPoint, triggerRect }
+enum PrismMenuAnchorMode {
+  /// Anchors the menu at the last pointer position.
+  tapPoint,
+
+  /// Anchors the menu to the trigger bounds.
+  triggerRect,
+}
 
 /// Opens a menu using a region gesture or an existing child handler.
 final class PrismMenuRegion extends StatefulWidget {
   /// Creates a PrismMenuRegion.
-  const PrismMenuRegion({
+  const new({
     super.key,
     required this.menu,
     required this.child,
@@ -23,7 +35,7 @@ final class PrismMenuRegion extends StatefulWidget {
   }) : builder = null;
 
   /// Creates a region using the child’s existing activation handler.
-  const PrismMenuRegion.builder({
+  const new builder({
     super.key,
     required this.menu,
     required this.builder,

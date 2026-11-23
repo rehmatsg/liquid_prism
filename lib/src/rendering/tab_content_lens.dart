@@ -1,35 +1,35 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_glass.dart';
-import '../theme/prism_theme.dart';
-import 'layer_transform.dart';
-import 'superellipse.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/rendering/layer_transform.dart';
+import 'package:liquid_prism/src/rendering/superellipse.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Selected foreground refraction independent from the backdrop lens.
 @internal
 class ContentLensWindow extends StatefulWidget {
-  const ContentLensWindow({
+  const new({
     super.key,
     required this.lens,
     required this.lift,
     required this.shape,
     required this.refraction,
     required this.depth,
+    required this.child,
     this.wrapper = 0,
     this.chromaticAberration = 0,
     this.chromaticBand = 4.8,
     this.scale = 1,
     this.origin = Offset.zero,
-    required this.child,
   }) : path = null,
        selected = null,
        _selection = false;
 
-  const ContentLensWindow.selection({
+  const new selection({
     super.key,
     required this.path,
     required this.selected,
@@ -38,12 +38,12 @@ class ContentLensWindow extends StatefulWidget {
     required this.shape,
     required this.refraction,
     required this.depth,
+    required this.child,
     this.wrapper = 0,
     this.chromaticAberration = 0,
     this.chromaticBand = 4.8,
     this.scale = 1,
     this.origin = Offset.zero,
-    required this.child,
   }) : _selection = true;
 
   final Path? path;
@@ -51,10 +51,14 @@ class ContentLensWindow extends StatefulWidget {
   final Widget? selected;
   final bool _selection;
   final Rect lens;
-  final double lift, refraction, depth, scale;
+  final double lift;
+  final double refraction;
+  final double depth;
+  final double scale;
 
   final double wrapper;
-  final double chromaticAberration, chromaticBand;
+  final double chromaticAberration;
+  final double chromaticBand;
   final Offset origin;
   final PrismShape shape;
   final Widget child;
@@ -99,7 +103,7 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
   @override
   void initState() {
     super.initState();
-    if (ui.ImageFilter.isShaderFilterSupported) _load();
+    if (ui.ImageFilter.isShaderFilterSupported) unawaited(_load());
   }
 
   Future<void> _load() async {
@@ -178,7 +182,7 @@ class _ContentLensWindowState extends State<ContentLensWindow> {
 enum _WindowRegion { whole, outside, inside }
 
 class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
-  const _SelectionWindowPaint({
+  const new({
     required this.region,
     required this.tone,
     required this.path,
@@ -199,8 +203,13 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
   final double tone;
   final Path? path;
   final Rect lens;
-  final double lift, refraction, depth, wrapper, scale;
-  final double chromaticAberration, chromaticBand;
+  final double lift;
+  final double refraction;
+  final double depth;
+  final double wrapper;
+  final double scale;
+  final double chromaticAberration;
+  final double chromaticBand;
   final Offset origin;
   final PrismShape shape;
   final ui.FragmentShader? shader;
@@ -245,9 +254,10 @@ class _SelectionWindowPaint extends SingleChildRenderObjectWidget {
 }
 
 class _RenderSelectionWindow extends RenderProxyBox {
-  _RenderSelectionWindow(this._region, this._path);
+  new(this._region, this._path);
   _WindowRegion _region;
   Path? _path;
+  _WindowRegion get region => _region;
   set region(_WindowRegion value) {
     if (value == _region) return;
     _region = value;
@@ -255,6 +265,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  Path? get path => _path;
   set path(Path? value) {
     if (identical(value, _path)) return;
     final toggled = (value == null) != (_path == null);
@@ -280,8 +291,12 @@ class _RenderSelectionWindow extends RenderProxyBox {
 
   ui.FragmentShader? _shader;
   Rect _lens = Rect.zero;
-  double _lift = 0, _refraction = 14, _depth = 11.2;
-  double _chromaticAberration = 0, _chromaticBand = 4.8, _tone = 0;
+  double _lift = 0;
+  double _refraction = 14;
+  double _depth = 11.2;
+  double _chromaticAberration = 0;
+  double _chromaticBand = 4.8;
+  double _tone = 0;
   double _wrapper = 0;
   PrismShape _shape = PrismShape.capsule;
   void configure(
@@ -371,7 +386,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
       deviceScale,
       _lift,
       radius,
-      _shape.isSmooth ? 1.0 : 0.0,
+      if (_shape.isSmooth) 1.0 else 0.0,
       ..._contour,
       ...contentLensEffectUniforms(
         refraction: _refraction,
@@ -429,8 +444,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
     Offset offset,
     PaintingContextCallback inner,
   ) {
-    final lens = _warp.layer ??= _ContentLensLayer(this);
-    lens.invalidate();
+    final lens = (_warp.layer ??= _ContentLensLayer(this))..invalidate();
     final layer = lens.filter..offset = offset;
     context.pushLayer(
       lens,
@@ -537,7 +551,7 @@ class _RenderSelectionWindow extends RenderProxyBox {
 }
 
 class _ContentLensLayer extends ContainerLayer {
-  _ContentLensLayer(this.window);
+  new(this.window);
   final _RenderSelectionWindow window;
   final _filter = LayerHandle<ImageFilterLayer>(ImageFilterLayer());
   ImageFilterLayer get filter => _filter.layer!;

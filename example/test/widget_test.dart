@@ -22,8 +22,9 @@ void main() {
           .widget<ShowcaseHome>(find.byType(ShowcaseHome))
           .model;
       model.change(() {
-        model.previewOptics = true;
-        model.frost = 9;
+        model
+          ..previewOptics = true
+          ..frost = 9;
       });
       await tester.pump();
       expect(tester.widget<PrismSurface>(lens).optics?.frost, 9);

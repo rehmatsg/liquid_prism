@@ -4,13 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_motion.dart';
-import '../theme/prism_theme.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Interactive press wrapper with velocity-preserving spring feedback.
 class PrismPressable extends StatefulWidget {
   /// Creates a pressable control that scales its child directly.
-  const PrismPressable({
+  const new({
     super.key,
     required this.child,
     required this.onPressed,
@@ -25,8 +25,8 @@ class PrismPressable extends StatefulWidget {
   }) : _glass = false,
        _feedbackOnly = false;
 
-  /// Creates a pressable control that publishes scale and glow to descendant glass.
-  const PrismPressable.glass({
+  /// Creates a pressable that publishes scale and glow to descendant glass.
+  const new glass({
     super.key,
     required this.child,
     required this.onPressed,
@@ -42,7 +42,7 @@ class PrismPressable extends StatefulWidget {
        _feedbackOnly = false;
 
   /// Creates a visual-only feedback wrapper that leaves gestures to its child.
-  const PrismPressable.feedback({super.key, required this.child, this.motion})
+  const new feedback({super.key, required this.child, this.motion})
     : onPressed = null,
       onLongPress = null,
       label = '',
@@ -199,7 +199,7 @@ class _PrismPressableState extends State<PrismPressable>
     return PrismSettle.precision(pixelsPerUnit: scale * reach * _pixelRatio);
   }
 
-  static const double _badgeReach = 16.0;
+  static const double _badgeReach = 16;
 
   static final double? _glowPrecision = PrismSettle.precision(
     alphaPerUnit: NativeMotion.buttonGlowOpacity * .9 * .2,
@@ -335,11 +335,11 @@ class _PrismPressableState extends State<PrismPressable>
 
 @internal
 class PrismPressFeedback extends InheritedWidget {
-  const PrismPressFeedback({
+  const new({
     super.key,
     required this.progress,
-    this.scale = 1,
     required super.child,
+    this.scale = 1,
   });
 
   final double progress;

@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/src/rendering/layer_transform.dart';
 
-const _boundary = ValueKey('boundary');
+const ValueKey<String> _boundary = ValueKey('boundary');
 
 Widget _coveredPage({required double t, FilterQuality? filterQuality}) =>
     Directionality(
@@ -97,7 +97,8 @@ void main() {
       }
     });
 
-    test('rectangles intersect shapes without leaving the rectangular fast path unnecessarily', () {
+    test('rectangles intersect shapes without leaving '
+        'the rectangular fast path unnecessarily', () {
       final plain = ContainerLayer();
       nest([
         ClipRectLayer(clipRect: const Rect.fromLTWH(40, 10, 30, 50)),
@@ -129,7 +130,8 @@ void main() {
       }
     });
 
-    test('raster boundaries retain inner clips and their own clip but exclude outer clips', () {
+    test('raster boundaries retain inner clips and '
+        'their own clip but exclude outer clips', () {
       const inner = Rect.fromLTWH(50, 50, 100, 100);
       final boundaries = <String, ContainerLayer Function()>{
         'translucent': () => OpacityLayer(alpha: 128),
@@ -167,7 +169,8 @@ void main() {
       }
     });
 
-    test('a singular transform safely clips everything even without shaped ancestry', () {
+    test('a singular transform safely clips everything '
+        'even without shaped ancestry', () {
       final target = ContainerLayer();
       nest([
         TransformLayer(transform: Matrix4.diagonal3Values(0, 0, 1)),

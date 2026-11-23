@@ -8,7 +8,7 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import '../support/rendering.dart';
 
-const _faceKey = ValueKey('control-face');
+const ValueKey<String> _faceKey = ValueKey('control-face');
 const _emptyFace = SizedBox(
   key: _faceKey,
   width: 100,

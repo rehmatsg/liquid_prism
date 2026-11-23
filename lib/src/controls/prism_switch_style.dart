@@ -1,14 +1,14 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_lens_style.dart';
-import '../core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
 
-/// Geometry, colors, and lens overrides for [PrismSwitch].
+/// Geometry, colors, and lens overrides for `PrismSwitch`.
 @immutable
 class PrismSwitchStyle {
   /// Creates a partial switch style override.
-  const PrismSwitchStyle({
+  const new({
     this.scale,
     this.width,
     this.trackHeight,
@@ -23,11 +23,17 @@ class PrismSwitchStyle {
     this.trackShape,
     this.lens,
     this.motion,
-  }) : assert(scale == null || scale > 0),
-       assert(width == null || width > 0),
-       assert(trackHeight == null || trackHeight > 0),
-       assert(hitHeight == null || hitHeight >= 44),
-       assert(inset == null || inset >= 0);
+  }) : assert(scale == null || scale > 0, 'Scale must be positive.'),
+       assert(width == null || width > 0, 'Width must be positive.'),
+       assert(
+         trackHeight == null || trackHeight > 0,
+         'Track height must be positive.',
+       ),
+       assert(
+         hitHeight == null || hitHeight >= 44,
+         'Hit height must be at least 44.',
+       ),
+       assert(inset == null || inset >= 0, 'Inset must be non-negative.');
 
   /// Proportional geometry scale multiplier.
   final double? scale;

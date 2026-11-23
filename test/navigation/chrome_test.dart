@@ -179,7 +179,8 @@ void main() {
   testWidgets(
     'search matches native focus widths; clear/submit/cancel coordinate',
     (tester) async {
-      final controller = TextEditingController(), node = FocusNode();
+      final controller = TextEditingController();
+      final node = FocusNode();
       addTearDown(controller.dispose);
       addTearDown(node.dispose);
       final changes = <String>[];
@@ -261,9 +262,10 @@ void main() {
   testWidgets(
     'search swaps borrowed controllers/focus nodes without disposing them',
     (tester) async {
-      final a = TextEditingController(text: 'First'),
-          b = TextEditingController(text: 'Second');
-      final first = FocusNode(), second = FocusNode();
+      final a = TextEditingController(text: 'First');
+      final b = TextEditingController(text: 'Second');
+      final first = FocusNode();
+      final second = FocusNode();
       addTearDown(a.dispose);
       addTearDown(b.dispose);
       addTearDown(first.dispose);
@@ -435,7 +437,8 @@ void main() {
   testWidgets('search cancel is part of the field tap group', (tester) async {
     final node = FocusNode();
     addTearDown(node.dispose);
-    var outside = 0, cancelled = 0;
+    var outside = 0;
+    var cancelled = 0;
     await tester.pumpWidget(
       harness(
         SizedBox(
@@ -509,7 +512,8 @@ void main() {
   testWidgets('search focus callback ignores rebuilds and node swaps', (
     tester,
   ) async {
-    final first = FocusNode(), second = FocusNode();
+    final first = FocusNode();
+    final second = FocusNode();
     addTearDown(first.dispose);
     addTearDown(second.dispose);
     final changes = <bool>[];

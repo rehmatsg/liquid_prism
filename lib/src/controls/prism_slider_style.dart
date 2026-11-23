@@ -1,14 +1,14 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_lens_style.dart';
-import '../core/prism_motion.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_lens_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
 
-/// Geometry, colors, and thumb overrides for [PrismSlider].
+/// Geometry, colors, and thumb overrides for `PrismSlider`.
 @immutable
 class PrismSliderStyle {
   /// Creates a partial slider style override.
-  const PrismSliderStyle({
+  const new({
     this.width,
     this.scale,
     this.hitHeight,
@@ -22,11 +22,20 @@ class PrismSliderStyle {
     this.lens,
     this.haptics,
     this.motion,
-  }) : assert(width == null || width > 0),
-       assert(scale == null || scale > 0),
-       assert(hitHeight == null || hitHeight >= 44),
-       assert(trackHeight == null || trackHeight > 0),
-       assert(heldScale == null || heldScale >= 1);
+  }) : assert(width == null || width > 0, 'Width must be positive.'),
+       assert(scale == null || scale > 0, 'Scale must be positive.'),
+       assert(
+         hitHeight == null || hitHeight >= 44,
+         'Hit height must be at least 44.',
+       ),
+       assert(
+         trackHeight == null || trackHeight > 0,
+         'Track height must be positive.',
+       ),
+       assert(
+         heldScale == null || heldScale >= 1,
+         'Held scale must be at least 1.',
+       );
 
   /// Preferred width before scaling.
   final double? width;

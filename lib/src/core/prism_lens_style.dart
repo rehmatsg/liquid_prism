@@ -1,13 +1,13 @@
 import 'package:flutter/widgets.dart';
 
-import 'prism_glass.dart';
-import 'prism_optics.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
 
 /// Optics and elevation shared by lifted control handles and selection pills.
 @immutable
 class PrismLensStyle {
   /// Creates a partial lifted-lens style override.
-  const PrismLensStyle({
+  const new({
     this.glass,
     this.optics,
     this.blur,
@@ -29,20 +29,54 @@ class PrismLensStyle {
     this.chromaticBand,
     this.faceBlack,
     this.heldContactShadow,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(rimWidth == null || rimWidth >= 0),
-       assert(rimRefraction == null || rimRefraction >= 0),
-       assert(rimLight == null || rimLight >= 0),
-       assert(chromaticAberration == null || chromaticAberration >= 0),
-       assert(chromaticBand == null || chromaticBand >= 0),
-       assert(faceBlack == null || (faceBlack >= 0 && faceBlack <= 1)),
+  }) : assert(
+         blur == null || (blur >= 0 && blur <= 12),
+         'blur must be between 0 and 12.',
+       ),
+       assert(
+         rimWidth == null || rimWidth >= 0,
+         'rimWidth must be non-negative.',
+       ),
+       assert(
+         rimRefraction == null || rimRefraction >= 0,
+         'rimRefraction must be non-negative.',
+       ),
+       assert(
+         rimLight == null || rimLight >= 0,
+         'rimLight must be non-negative.',
+       ),
+       assert(
+         chromaticAberration == null || chromaticAberration >= 0,
+         'chromaticAberration must be non-negative.',
+       ),
+       assert(
+         chromaticBand == null || chromaticBand >= 0,
+         'chromaticBand must be non-negative.',
+       ),
+       assert(
+         faceBlack == null || (faceBlack >= 0 && faceBlack <= 1),
+         'faceBlack must be between 0 and 1.',
+       ),
        assert(
          shadowOpacity == null || (shadowOpacity >= 0 && shadowOpacity <= 1),
+         'shadowOpacity must be between 0 and 1.',
        ),
-       assert(shadowBlur == null || shadowBlur >= 0),
-       assert(ringOpacity == null || (ringOpacity >= 0 && ringOpacity <= 1)),
-       assert(ringBlur == null || ringBlur >= 0),
-       assert(ringWidth == null || ringWidth >= 0);
+       assert(
+         shadowBlur == null || shadowBlur >= 0,
+         'shadowBlur must be non-negative.',
+       ),
+       assert(
+         ringOpacity == null || (ringOpacity >= 0 && ringOpacity <= 1),
+         'ringOpacity must be between 0 and 1.',
+       ),
+       assert(
+         ringBlur == null || ringBlur >= 0,
+         'ringBlur must be non-negative.',
+       ),
+       assert(
+         ringWidth == null || ringWidth >= 0,
+         'ringWidth must be non-negative.',
+       );
 
   /// Material recipe for the lifted lens.
   final PrismGlass? glass;

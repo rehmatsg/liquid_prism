@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -9,18 +8,18 @@ import 'package:flutter/widgets.dart';
 @immutable
 class PrismSpring {
   /// Creates a spring with [response] duration and [bounce] factor.
-  const PrismSpring({
+  const new({
     this.response = const Duration(milliseconds: 400),
     this.bounce = .15,
   }) : physics = null,
-       assert(bounce >= 0 && bounce < 1);
+       assert(bounce >= 0 && bounce < 1, 'bounce must be in [0, 1).');
 
   /// Creates a spring from explicit physical [physics] parameters.
-  const PrismSpring.physical(SpringDescription this.physics)
+  const new physical(SpringDescription this.physics)
     : response = const Duration(milliseconds: 400),
       bounce = .15;
 
-  /// Explicit physical spring description, if constructed with [PrismSpring.physical].
+  /// Physical spring parameters supplied through [PrismSpring.physical].
   final SpringDescription? physics;
 
   /// Nominal response duration.
@@ -70,7 +69,7 @@ class PrismSpring {
 @immutable
 class PrismControlMotion {
   /// Creates a partial control motion configuration.
-  const PrismControlMotion({
+  const new({
     this.travel,
     this.tracking,
     this.lift,
@@ -80,8 +79,14 @@ class PrismControlMotion {
     this.flexStrength,
     this.maxStretch,
     this.velocityDecay,
-  }) : assert(flexStrength == null || flexStrength >= 0),
-       assert(maxStretch == null || (maxStretch >= 0 && maxStretch < 1));
+  }) : assert(
+         flexStrength == null || flexStrength >= 0,
+         'flexStrength must be non-negative.',
+       ),
+       assert(
+         maxStretch == null || (maxStretch >= 0 && maxStretch < 1),
+         'maxStretch must be in [0, 1).',
+       );
 
   /// Spring driving committed value travel.
   final PrismSpring? travel;
@@ -180,7 +185,7 @@ class PrismControlMotion {
 @immutable
 class PrismMotion {
   /// Creates a motion configuration with duration and bounce springs.
-  const PrismMotion({
+  const new({
     this.response = const Duration(milliseconds: 400),
     this.bounce = 0.15,
     this.pressResponse = const Duration(milliseconds: 290),
@@ -189,11 +194,23 @@ class PrismMotion {
     this.releaseBounce = 0.48,
     this.pressScale = 1.1126,
     this.dragProjection = 0.12,
-  }) : assert(bounce >= 0 && bounce < 1),
-       assert(pressBounce >= 0 && pressBounce < 1),
-       assert(releaseBounce >= 0 && releaseBounce < 1),
-       assert(pressScale >= 1 && pressScale <= 1.2),
-       assert(dragProjection >= 0 && dragProjection <= 0.3);
+  }) : assert(bounce >= 0 && bounce < 1, 'bounce must be in [0, 1).'),
+       assert(
+         pressBounce >= 0 && pressBounce < 1,
+         'pressBounce must be in [0, 1).',
+       ),
+       assert(
+         releaseBounce >= 0 && releaseBounce < 1,
+         'releaseBounce must be in [0, 1).',
+       ),
+       assert(
+         pressScale >= 1 && pressScale <= 1.2,
+         'pressScale must be between 1 and 1.2.',
+       ),
+       assert(
+         dragProjection >= 0 && dragProjection <= 0.3,
+         'dragProjection must be between 0 and 0.3.',
+       );
 
   /// Selection travel spring response duration.
   final Duration response;
@@ -287,7 +304,7 @@ class PrismMotion {
 
 @internal
 abstract final class NativeMotion {
-  static const double lensInset = 8.0;
+  static const double lensInset = 8;
   static const double heldSelectedScale = 1.16;
   static final SpringDescription liftIn =
       SpringDescription.withDurationAndBounce(
@@ -321,10 +338,10 @@ abstract final class NativeMotion {
         duration: const Duration(milliseconds: 520),
         bounce: 0,
       );
-  static const double haloDiameter = 93.0;
+  static const double haloDiameter = 93;
   static const double haloBlurRadius = 46.5;
   static const double haloOpacity = 0.284;
-  static const double haloReleaseScale = 4.0;
+  static const double haloReleaseScale = 4;
   static const Duration haloRelease = Duration(milliseconds: 500);
   static final SpringDescription tracking =
       SpringDescription.withDurationAndBounce(
@@ -332,7 +349,7 @@ abstract final class NativeMotion {
         bounce: 0.4,
       );
   static const double stretchPerSpeed = 0.018;
-  static const double stretchLimit = 24.0;
+  static const double stretchLimit = 24;
   static final SpringDescription stretchFilter =
       SpringDescription.withDurationAndBounce(
         duration: const Duration(milliseconds: 330),
@@ -417,18 +434,16 @@ void springPrism(
       delay: delay,
     );
   } else {
-    unawaited(
-      controller.animateWith(
-        _delaySpring(
-          _prismSimulation(
-            spring,
-            controller.value,
-            target,
-            velocity ?? controller.velocity,
-            precision,
-          ),
-          controller.isAnimating ? Duration.zero : delay,
+    controller.animateWith(
+      _delaySpring(
+        _prismSimulation(
+          spring,
+          controller.value,
+          target,
+          velocity ?? controller.velocity,
+          precision,
         ),
+        controller.isAnimating ? Duration.zero : delay,
       ),
     );
   }
@@ -438,9 +453,9 @@ Simulation _delaySpring(SpringSimulation spring, Duration delay) =>
     delay == Duration.zero ? spring : _DelayedSpring(spring, delay);
 
 class _DelayedSpring extends Simulation {
-  _DelayedSpring(this.spring, Duration delay)
+  new(this.spring, Duration delay)
     : delay = delay.inMicroseconds / 1e6,
-      assert(!delay.isNegative);
+      assert(!delay.isNegative, 'delay must be non-negative.');
 
   final SpringSimulation spring;
   final double delay;
@@ -457,7 +472,7 @@ class _DelayedSpring extends Simulation {
 
 @internal
 class RetargetablePrismSpring extends AnimationController {
-  RetargetablePrismSpring({required super.vsync}) : super.unbounded();
+  new({required super.vsync}) : super.unbounded();
 
   _RetargetedSpring? _running;
 
@@ -482,7 +497,7 @@ class RetargetablePrismSpring extends AnimationController {
       _running!.retarget(next);
     } else {
       _running = _RetargetedSpring(next);
-      unawaited(super.animateWith(_running!));
+      super.animateWith(_running!);
     }
   }
 
@@ -494,7 +509,7 @@ class RetargetablePrismSpring extends AnimationController {
 }
 
 class _RetargetedSpring extends Simulation {
-  _RetargetedSpring(this._spring);
+  new(this._spring);
 
   Simulation _spring;
   double _origin = 0;
@@ -520,7 +535,7 @@ class _RetargetedSpring extends Simulation {
 
 @internal
 class NativeLensDeformation extends Simulation {
-  NativeLensDeformation({
+  new({
     required this.vertical,
     required this.travel,
     required this.timeScale,

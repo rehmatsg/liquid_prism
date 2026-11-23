@@ -3,34 +3,52 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_badge.dart';
-import '../menu/menu.dart';
-import '../theme/prism_theme.dart';
-import 'prism_toolbar_style.dart';
+import 'package:liquid_prism/src/core/prism_badge.dart';
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_style.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Scaffold region occupied by toolbar content.
 enum PrismToolbarPlacement {
+  /// Uses the default scaffold placement.
   automatic,
+
+  /// Places content at the top leading edge.
   topLeading,
+
+  /// Places content at the top trailing edge.
   topTrailing,
+
+  /// Places content in the principal title region.
   principal,
+
+  /// Places content at the bottom leading edge.
   bottomLeading,
+
+  /// Places content in the bottom center region.
   bottom,
+
+  /// Places content at the bottom trailing edge.
   bottomTrailing,
 }
 
 /// Axes a toolbar item supports when system chrome becomes a rail.
-enum PrismToolbarAxisBehavior { automatic, horizontalOnly, verticalPreferred }
+enum PrismToolbarAxisBehavior {
+  /// Chooses axis support from the item content.
+  automatic,
+
+  /// Keeps the item in horizontal chrome.
+  horizontalOnly,
+
+  /// Prefers a vertical rail for the item.
+  verticalPreferred,
+}
 
 /// Typed content placed in a toolbar or scaffold region.
 @immutable
 sealed class PrismToolbarContent {
   /// Creates content with an optional identity and scaffold placement.
-  const PrismToolbarContent({
-    this.key,
-    this.placement = PrismToolbarPlacement.automatic,
-  });
+  const new({this.key, this.placement = PrismToolbarPlacement.automatic});
 
   /// Identity used to preserve content across updates.
   final Key? key;
@@ -42,7 +60,7 @@ sealed class PrismToolbarContent {
 /// An action, native menu, or custom widget in a toolbar.
 final class PrismToolbarItem extends PrismToolbarContent {
   /// Creates a toolbar action.
-  const PrismToolbarItem({
+  const new({
     required this.label,
     required this.onPressed,
     this.icon,
@@ -57,10 +75,10 @@ final class PrismToolbarItem extends PrismToolbarContent {
        onMenuSelected = null,
        _menuEnabled = false,
        child = null,
-       assert(width == null || width >= 36);
+       assert(width == null || width >= 36, 'width must be >= 36.');
 
   /// Creates a toolbar item that owns native menu activation.
-  const PrismToolbarItem.menu({
+  const new menu({
     required this.label,
     required PrismMenu this.menu,
     this.icon,
@@ -77,10 +95,10 @@ final class PrismToolbarItem extends PrismToolbarContent {
        onMenuSelected = onSelected,
        _menuEnabled = enabled,
        child = null,
-       assert(width == null || width >= 36);
+       assert(width == null || width >= 36, 'width must be >= 36.');
 
   /// Uses the custom widget's own gestures and semantics.
-  const PrismToolbarItem.custom({
+  const new custom({
     required Widget this.child,
     this.width,
     super.key,
@@ -95,7 +113,7 @@ final class PrismToolbarItem extends PrismToolbarContent {
        selected = false,
        foregroundColor = null,
        badge = null,
-       assert(width == null || width >= 0);
+       assert(width == null || width >= 0, 'width must be >= 0.');
 
   /// Optional action icon; an omitted icon displays the label.
   final Widget? icon;
@@ -124,6 +142,8 @@ final class PrismToolbarItem extends PrismToolbarContent {
   /// Callback receiving the selected native menu value.
   final ValueChanged<Object?>? onMenuSelected;
   final bool _menuEnabled;
+
+  /// Whether the action or native menu can be activated.
   @internal
   bool get isEnabled => menu == null ? onPressed != null : _menuEnabled;
 
@@ -174,12 +194,7 @@ final class PrismToolbarItem extends PrismToolbarContent {
 /// Ordered items sharing one animated glass capsule.
 final class PrismToolbarGroup extends PrismToolbarContent {
   /// Creates a capsule content group, including an initially empty group.
-  const PrismToolbarGroup({
-    required this.items,
-    this.style,
-    super.key,
-    super.placement,
-  });
+  const new({required this.items, this.style, super.key, super.placement});
 
   /// Ordered items sharing the capsule.
   final List<PrismToolbarItem> items;
@@ -204,17 +219,14 @@ final class PrismToolbarGroup extends PrismToolbarContent {
 /// Fixed or flexible space between toolbar capsules.
 final class PrismToolbarSpacer extends PrismToolbarContent {
   /// Creates a fixed break between capsules.
-  const PrismToolbarSpacer.fixed(
-    double this.extent, {
-    super.key,
-    super.placement,
-  }) : flex = 1,
-       assert(extent >= 0);
+  const new fixed(double this.extent, {super.key, super.placement})
+    : flex = 1,
+      assert(extent >= 0, 'extent must be >= 0.');
 
   /// Creates flexible space on a bounded main axis.
-  const PrismToolbarSpacer.flexible({this.flex = 1, super.key, super.placement})
+  const new flexible({this.flex = 1, super.key, super.placement})
     : extent = null,
-      assert(flex > 0);
+      assert(flex > 0, 'flex must be > 0.');
 
   /// Fixed spacer extent, or null for flexible space.
   final double? extent;
@@ -286,7 +298,7 @@ double prismToolbarItemExtent(
 }) {
   if (item.width != null) return item.width!;
   if (item.icon != null || item.child != null || vertical) {
-    return lone ? math.max(height - inset * 2, 0) : 38;
+    return lone ? math.max<double>(height - inset * 2, 0) : 38;
   }
   final painter = TextPainter(
     text: TextSpan(text: item.label, style: prismToolbarTextStyle(style)),
@@ -294,7 +306,7 @@ double prismToolbarItemExtent(
     textScaler: MediaQuery.textScalerOf(context),
     maxLines: 1,
   )..layout();
-  final width = math.max(38.0, painter.width + 16);
+  final width = math.max<double>(38, painter.width + 16);
   painter.dispose();
   return width;
 }

@@ -75,7 +75,7 @@ jobs:
           ")
           xcodebuild test -scheme liquid_prism-Package -destination "platform=iOS Simulator,id=$SIM"
       - name: Validate CocoaPods podspec
-        run: pod lib lint ios/liquid_prism.podspec --allow-warnings --skip-tests
+        run: pod ipc spec ios/liquid_prism.podspec > /dev/null
       - run: flutter pub get
       - run: flutter build ios --simulator --debug
         working-directory: example

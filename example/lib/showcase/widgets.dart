@@ -5,11 +5,18 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/primitives.dart';
 
+/// Additional semantic colors used by the showcase.
 extension ShowcaseColors on PrismColors {
   bool get _dark => brightness == Brightness.dark;
+
+  /// The background color behind grouped sections.
   Color get groupedBackground =>
       _dark ? const Color(0xFF000000) : const Color(0xFFF2F2F7);
+
+  /// The background color of a grouped cell.
   Color get cell => _dark ? const Color(0xFF1C1C1E) : const Color(0xFFFFFFFF);
+
+  /// The divider color between grouped rows.
   Color get separator => _dark
       ? const Color.from(
           alpha: .5,
@@ -25,22 +32,36 @@ extension ShowcaseColors on PrismColors {
         );
 }
 
+/// Returns the primary label color for the current appearance.
 Color ink(BuildContext context) => PrismColors.of(context).label;
+
+/// Returns the secondary label color for the current appearance.
 Color muted(BuildContext context) => PrismColors.of(context).secondaryLabel;
 
+/// The maximum content width used by showcase pages.
 const double readableWidth = 720;
 
+/// A scrollable page with a large title and fold-aware layout.
 class LargeTitlePage extends StatelessWidget {
-  const LargeTitlePage({
+  /// Creates a [LargeTitlePage].
+  const new({
     super.key,
     required this.title,
     required this.children,
     this.subtitle,
     this.controller,
   });
+
+  /// The primary text displayed by this widget.
   final String title;
+
+  /// Supporting text displayed below the title.
   final String? subtitle;
+
+  /// The widgets displayed in this container.
   final List<Widget> children;
+
+  /// The optional controller for the page scroll view.
   final ScrollController? controller;
 
   @override
@@ -149,14 +170,18 @@ class LargeTitlePage extends StatelessWidget {
   }
 }
 
+/// A grouped section with optional header and footer text.
 class InsetSection extends StatelessWidget {
-  const InsetSection({
-    super.key,
-    required this.children,
-    this.header,
-    this.footer,
-  });
-  final String? header, footer;
+  /// Creates an [InsetSection].
+  const new({super.key, required this.children, this.header, this.footer});
+
+  /// The optional heading above the grouped rows.
+  final String? header;
+
+  /// The optional explanatory text below the grouped rows.
+  final String? footer;
+
+  /// The widgets displayed in this container.
   final List<Widget> children;
 
   @override
@@ -212,13 +237,15 @@ class InsetSection extends StatelessWidget {
   }
 }
 
+/// A rounded card using the current grouped-cell background.
 class GroupedCard extends StatelessWidget {
-  const GroupedCard({
-    super.key,
-    required this.child,
-    this.padding = EdgeInsets.zero,
-  });
+  /// Creates a [GroupedCard].
+  const new({super.key, required this.child, this.padding = EdgeInsets.zero});
+
+  /// The content displayed inside this widget.
   final Widget child;
+
+  /// The space between the container edge and its content.
   final EdgeInsetsGeometry padding;
 
   @override
@@ -231,8 +258,10 @@ class GroupedCard extends StatelessWidget {
   );
 }
 
+/// A settings row with optional icon, subtitle, and action.
 class ListRow extends StatelessWidget {
-  const ListRow({
+  /// Creates a [ListRow].
+  const new({
     super.key,
     required this.title,
     this.subtitle,
@@ -242,11 +271,26 @@ class ListRow extends StatelessWidget {
     this.onPressed,
     this.label,
   });
+
+  /// The primary text displayed by this widget.
   final String title;
-  final String? subtitle, label;
+
+  /// Supporting text displayed below the title.
+  final String? subtitle;
+
+  /// The optional accessibility label for the row action.
+  final String? label;
+
+  /// The icon displayed by this widget.
   final IconData? icon;
+
+  /// The optional background color of the row icon tile.
   final Color? iconColor;
+
+  /// The optional widget displayed at the end of the row.
   final Widget? trailing;
+
+  /// Called when the user activates this widget.
   final VoidCallback? onPressed;
 
   @override
@@ -304,15 +348,23 @@ class ListRow extends StatelessWidget {
   }
 }
 
+/// A colored tile containing a contrasting icon.
 class SymbolTile extends StatelessWidget {
-  const SymbolTile({
+  /// Creates a [SymbolTile].
+  const new({
     super.key,
     required this.icon,
     required this.color,
     this.size = 30,
   });
+
+  /// The icon displayed by this widget.
   final IconData icon;
+
+  /// The background color of the icon tile.
   final Color color;
+
+  /// The width and height of the icon tile.
   final double size;
 
   @override
@@ -329,9 +381,15 @@ class SymbolTile extends StatelessWidget {
   );
 }
 
+/// A section heading with an optional subtitle.
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.title, {super.key, this.subtitle});
+  /// Creates a [SectionTitle].
+  const new(this.title, {super.key, this.subtitle});
+
+  /// The primary text displayed by this widget.
   final String title;
+
+  /// Supporting text displayed below the title.
   final String? subtitle;
 
   @override
@@ -357,15 +415,24 @@ class SectionTitle extends StatelessWidget {
   );
 }
 
+/// A responsive grid that wraps children into equally sized columns.
 class FlowGrid extends StatelessWidget {
-  const FlowGrid({
+  /// Creates a [FlowGrid].
+  const new({
     super.key,
     required this.children,
     this.minimumWidth = 300,
     this.spacing = 14,
   });
+
+  /// The widgets displayed in this container.
   final List<Widget> children;
-  final double minimumWidth, spacing;
+
+  /// The target minimum width of each grid column.
+  final double minimumWidth;
+
+  /// The horizontal and vertical space between grid items.
+  final double spacing;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -386,15 +453,24 @@ class FlowGrid extends StatelessWidget {
   );
 }
 
+/// Procedural background artwork in one of the showcase palettes.
 class Art extends StatelessWidget {
-  const Art({super.key, this.variant = 0, this.child});
+  /// Creates an [Art].
+  const new({super.key, this.variant = 0, this.child});
+
+  /// The index of the artwork palette to display.
   final int variant;
+
+  /// The content displayed inside this widget.
   final Widget? child;
 
+  /// The display names of the available artwork palettes.
   static const names = ['Meadow', 'Dusk', 'Apricot'];
 
+  /// Foreground colors matched to each artwork palette.
   static const inks = [Color(0xFF233B36), Color(0xFF1F1D3D), Color(0xFF4A3029)];
 
+  /// Base background colors for each artwork palette.
   static const backgrounds = [
     Color(0xFF8EBEB5),
     Color(0xFF495D96),
@@ -407,7 +483,7 @@ class Art extends StatelessWidget {
 }
 
 class _ArtPainter extends CustomPainter {
-  _ArtPainter(this.variant);
+  new(this.variant);
   final int variant;
   static const palettes = [
     [
@@ -433,18 +509,19 @@ class _ArtPainter extends CustomPainter {
   @override
   void paint(Canvas c, Size s) {
     final colors = palettes[variant];
-    c.drawRect(
-      Offset.zero & s,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors.take(2).toList(),
-        ).createShader(Offset.zero & s),
-    );
-    c.save();
-    c.translate(s.width * .5, s.height * .48);
-    c.rotate(-.48);
+    c
+      ..drawRect(
+        Offset.zero & s,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: colors.take(2).toList(),
+          ).createShader(Offset.zero & s),
+      )
+      ..save()
+      ..translate(s.width * .5, s.height * .48)
+      ..rotate(-.48);
     final oval = Rect.fromCenter(
       center: Offset(s.width * .06, s.height * .45),
       width: s.width * 1.45,
@@ -461,14 +538,15 @@ class _ArtPainter extends CustomPainter {
       width: s.width * 1.12,
       height: s.height * .95,
     );
-    c.drawOval(
-      ring,
-      Paint()
-        ..color = colors[3].withValues(alpha: .2)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s.width * .18,
-    );
-    c.restore();
+    c
+      ..drawOval(
+        ring,
+        Paint()
+          ..color = colors[3].withValues(alpha: .2)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = s.width * .18,
+      )
+      ..restore();
     final glow = Rect.fromCircle(
       center: Offset(s.width * .8, s.height * .05),
       radius: s.width * .75,
@@ -486,15 +564,23 @@ class _ArtPainter extends CustomPainter {
   bool shouldRepaint(_ArtPainter old) => old.variant != variant;
 }
 
+/// A clipped artwork panel with matching foreground colors.
 class ArtCanvas extends StatelessWidget {
-  const ArtCanvas({
+  /// Creates an [ArtCanvas].
+  const new({
     super.key,
     required this.variant,
     required this.child,
     this.padding = const EdgeInsets.all(22),
   });
+
+  /// The index of the artwork palette to display.
   final int variant;
+
+  /// The content displayed inside this widget.
   final Widget child;
+
+  /// The space between the container edge and its content.
   final EdgeInsetsGeometry padding;
 
   @override
@@ -513,8 +599,10 @@ class ArtCanvas extends StatelessWidget {
   );
 }
 
+/// The rounded clipping path used by artwork panels.
 class CanvasClip extends CustomClipper<Path> {
-  const CanvasClip();
+  /// Creates a [CanvasClip].
+  const new();
   @override
   Path getClip(Size size) => const PrismShape.rect(cornerRadius: 26).path(size);
   @override

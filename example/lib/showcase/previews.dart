@@ -2,25 +2,28 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/primitives.dart';
 
-import 'conversation_page.dart';
-import 'header_page.dart';
-import 'model.dart';
-import 'package_features_demo.dart';
-import 'refresh_page.dart';
-import 'scaffold_lab_page.dart';
-import 'search_page.dart';
-import 'sliver_bar_page.dart';
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/conversation_page.dart';
+import 'package:liquid_prism_example/showcase/header_page.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/package_features_demo.dart';
+import 'package:liquid_prism_example/showcase/refresh_page.dart';
+import 'package:liquid_prism_example/showcase/scaffold_lab_page.dart';
+import 'package:liquid_prism_example/showcase/search_page.dart';
+import 'package:liquid_prism_example/showcase/sliver_bar_page.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// An interactive lens for exploring glass materials and optics.
 class LensPlayground extends StatefulWidget {
-  const LensPlayground({
-    super.key,
-    required this.model,
-    this.expert = false,
-    this.glass,
-  });
+  /// Creates a [LensPlayground].
+  const new({super.key, required this.model, this.expert = false, this.glass});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
+
+  /// Whether to show advanced optics controls.
   final bool expert;
+
+  /// The optional glass material override for the lens.
   final PrismGlass? glass;
   @override
   State<LensPlayground> createState() => _LensPlaygroundState();
@@ -169,16 +172,24 @@ class _LensPlaygroundState extends State<LensPlayground> {
   );
 }
 
+/// An interactive preview of a component category.
 class ComponentPreview extends StatefulWidget {
-  const ComponentPreview({super.key, required this.kind, required this.model});
+  /// Creates a [ComponentPreview].
+  const new({super.key, required this.kind, required this.model});
+
+  /// The component category to display.
   final ComponentKind kind;
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
   @override
   State<ComponentPreview> createState() => _ComponentPreviewState();
 }
 
 class _ComponentPreviewState extends State<ComponentPreview> {
-  int selectedTab = 0, selectedSurface = 0, actions = 0;
+  int selectedTab = 0;
+  int selectedSurface = 0;
+  int actions = 0;
   bool extraAction = false;
   String query = '';
   String menuResult = 'Choose something. See what happens.';
@@ -241,7 +252,6 @@ class _ComponentPreviewState extends State<ComponentPreview> {
     }
     return ArtCanvas(
       variant: m.wallpaper,
-      padding: const EdgeInsets.all(22),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -608,7 +618,8 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     (
                       'open-refresh-gallery',
                       'Refresh a Body',
-                      'The same pull on your own scroll view, over dark content',
+                      'The same pull on your own scroll view, '
+                          'over dark content',
                       const RefreshGalleryPage(),
                     ),
                     (
@@ -843,8 +854,12 @@ class _ComponentPreviewState extends State<ComponentPreview> {
   );
 }
 
+/// A scrolling demo of glass bars and edge effects.
 class ScrollEdgePreview extends StatefulWidget {
-  const ScrollEdgePreview({super.key, required this.model});
+  /// Creates a [ScrollEdgePreview].
+  const new({super.key, required this.model});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
   @override
   State<ScrollEdgePreview> createState() => _ScrollEdgePreviewState();
@@ -982,8 +997,10 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
   }
 }
 
+/// A scrolling demo of fading content at viewport edges.
 class ScrollFadePreview extends StatelessWidget {
-  const ScrollFadePreview({super.key});
+  /// Creates a [ScrollFadePreview].
+  const new({super.key});
   static const _names = [
     'Meadow',
     'Dusk',

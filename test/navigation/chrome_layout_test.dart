@@ -12,15 +12,15 @@ import 'package:liquid_prism/src/navigation/prism_system_chrome.dart'
 import 'package:liquid_prism/src/rendering/recipe.dart';
 import 'package:liquid_prism/src/rendering/surface.dart';
 
-const duo = (
+const ({FakeViewPadding padding, Size size}) duo = (
   size: Size(466, 678),
   padding: FakeViewPadding(right: 84, bottom: 34),
 );
-const duoUnfolded = (
+const ({FakeViewPadding padding, Size size}) duoUnfolded = (
   size: Size(951, 669),
   padding: FakeViewPadding(right: 84, bottom: 34),
 );
-const phone = (
+const ({FakeViewPadding padding, Size size}) phone = (
   size: Size(402, 874),
   padding: FakeViewPadding(top: 62, bottom: 34),
 );
@@ -301,9 +301,9 @@ void main() {
       );
     });
 
-    const avatar = Key('avatar'),
-        inline = Key('inline'),
-        invite = Key('invite');
+    const avatar = Key('avatar');
+    const inline = Key('inline');
+    const invite = Key('invite');
     var taps = 0;
     Widget app({required bool withAvatar, Widget? trailing, Widget? leading}) =>
         CupertinoApp(
@@ -692,20 +692,20 @@ void main() {
       Map<String, Object?> chrome, {
       void Function(void Function(Object?))? captureEvents,
     }) async {
-      final messenger = tester.binding.defaultBinaryMessenger;
-      messenger.setMockMethodCallHandler(
-        const MethodChannel('liquid_prism/menus'),
-        (call) async => 'iOS 27.1',
-      );
-      messenger.setMockStreamHandler(
-        SystemChromeListener.channel,
-        MockStreamHandler.inline(
-          onListen: (_, sink) {
-            captureEvents?.call(sink.success);
-            sink.success({'supported': true, ...chrome});
-          },
-        ),
-      );
+      final messenger = tester.binding.defaultBinaryMessenger
+        ..setMockMethodCallHandler(
+          const MethodChannel('liquid_prism/menus'),
+          (call) async => 'iOS 27.1',
+        )
+        ..setMockStreamHandler(
+          SystemChromeListener.channel,
+          MockStreamHandler.inline(
+            onListen: (_, sink) {
+              captureEvents?.call(sink.success);
+              sink.success({'supported': true, ...chrome});
+            },
+          ),
+        );
       addTearDown(() {
         unawaited(SystemChromeListener.instance.reset());
         messenger.setMockMethodCallHandler(
@@ -944,7 +944,7 @@ void main() {
         await report(tester, {
           'verticalBarEdge': null,
           'occlusions': [
-            [rtl ? 0.0 : 535.0, 0.0, 134.0, 82.0],
+            [if (rtl) 0.0 else 535.0, 0.0, 134.0, 82.0],
           ],
         });
         final scroll = ScrollController();
@@ -1008,7 +1008,7 @@ void main() {
           await report(tester, {
             'verticalBarEdge': null,
             'occlusions': [
-              [rtl ? 0.0 : 535.0, 0.0, 134.0, 82.0],
+              [if (rtl) 0.0 else 535.0, 0.0, 134.0, 82.0],
             ],
           });
           await tester.pumpWidget(
@@ -1052,7 +1052,7 @@ void main() {
             await report(tester, {
               'verticalBarEdge': null,
               'occlusions': [
-                [rtl ? 0.0 : 466 - cornerWidth, 0.0, cornerWidth, 82.0],
+                [if (rtl) 0.0 else 466 - cornerWidth, 0.0, cornerWidth, 82.0],
               ],
             });
             const titleKey = Key('wide title');
@@ -1436,7 +1436,7 @@ void main() {
   });
 }
 
-const _body = ValueKey('body');
+const ValueKey<String> _body = ValueKey('body');
 const _tabs = [
   PrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
   PrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
@@ -1456,7 +1456,7 @@ void window(
 }
 
 class _App extends StatelessWidget {
-  const _App({this.selected = 0, this.onSelected, this.tabBar});
+  const new({this.selected = 0, this.onSelected, this.tabBar});
   final int selected;
   final ValueChanged<int>? onSelected;
   final Widget? tabBar;
@@ -1490,7 +1490,7 @@ const _overlayArea = Key('overlay area');
 const _overlayHandle = Key('overlay handle');
 
 class _ContentAlignmentApp extends StatelessWidget {
-  const _ContentAlignmentApp({
+  const new({
     this.placement,
     this.overlayScope,
     this.overlayPlacement,

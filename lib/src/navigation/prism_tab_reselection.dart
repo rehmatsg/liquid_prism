@@ -18,7 +18,7 @@ class PrismTabReselection extends ChangeNotifier {
 }
 
 class _ReselectionScope extends InheritedWidget {
-  const _ReselectionScope({required this.reselection, required super.child});
+  const new({required this.reselection, required super.child});
   final PrismTabReselection reselection;
   @override
   bool updateShouldNotify(_ReselectionScope old) =>

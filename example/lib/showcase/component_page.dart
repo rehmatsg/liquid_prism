@@ -1,14 +1,20 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'app.dart';
-import 'model.dart';
-import 'previews.dart';
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/app.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/previews.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// A detail page with a live component preview.
 class ComponentPage extends StatelessWidget {
-  const ComponentPage({super.key, required this.info, required this.model});
+  /// Creates a [ComponentPage].
+  const new({super.key, required this.info, required this.model});
+
+  /// The component metadata displayed on this page.
   final ComponentInfo info;
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
 
   @override

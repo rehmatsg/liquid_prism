@@ -48,8 +48,7 @@ void main() {
       WidgetTester tester,
       Map<String, Object?> chrome,
     ) async {
-      final messenger = tester.binding.defaultBinaryMessenger;
-      messenger
+      final messenger = tester.binding.defaultBinaryMessenger
         ..setMockMethodCallHandler(
           const MethodChannel('liquid_prism/menus'),
           (call) async => 'iOS 27.1',
@@ -107,11 +106,9 @@ void main() {
         AxisDirection.right,
       );
 
-      unawaited(
-        showCupertinoDialog<void>(
-          context: context,
-          builder: (_) => const CupertinoAlertDialog(title: Text('Saved')),
-        ),
+      showCupertinoDialog<void>(
+        context: context,
+        builder: (_) => const CupertinoAlertDialog(title: Text('Saved')),
       );
       await tester.pumpAndSettle();
       final dialog = tester.getRect(find.byType(CupertinoAlertDialog));
@@ -174,4 +171,4 @@ void main() {
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 }
 
-const _body = ValueKey('body');
+const ValueKey<String> _body = ValueKey('body');

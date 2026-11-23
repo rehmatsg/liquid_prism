@@ -158,288 +158,271 @@ void main() {
     },
   );
 
-  testWidgets(
-    'nested defaults update live while explicit identity and false interaction override inheritance',
-    (tester) async {
-      final imageKey = GlobalKey();
-      const face = ValueKey('theme-face');
-      const bare = SizedBox(key: face, width: 160, height: 80);
-      Future<List<int>> render({
-        PrismGlass? explicit,
-        bool inherit = true,
-        PrismGlass? inherited,
-        Color tint = const Color(0xFF0000FF),
-        double pressScale = 1.15,
-      }) async {
-        await tester.pumpWidget(
-          glassHarness(
-            imageKey: imageKey,
-            child: PrismTheme(
-              data: PrismThemeData(
-                glass: inherited ?? PrismGlass.regular.interactive(),
-                optics: PrismOptics.clear.copyWith(tint: tint),
-                motion: PrismMotion(pressScale: pressScale),
-              ),
-              child: PrismTheme(
-                inherit: inherit,
-                data: const PrismThemeData(tint: Color(0xFFAA00CC)),
-                child: PrismSurface(glass: explicit, child: bare),
-              ),
-            ),
-          ),
-        );
-        return (await pixelsAt(tester, imageKey, [
-          const Offset(120, 80),
-        ])).single;
-      }
-
-      expect(await render(), [0, 0, 255, 255]);
-      final held = await tester.startGesture(
-        tester.getCenter(find.byKey(face)),
-      );
-      await tester.pumpAndSettle();
-      expect(visibleWidth(tester, find.byKey(face)), closeTo(184, .001));
-      await held.cancel();
-      await tester.pumpAndSettle();
-      final withoutScale = await render(pressScale: 1);
-      final colorOnly = await tester.startGesture(
-        tester.getCenter(find.byKey(face)),
-      );
-      await tester.pumpAndSettle();
-      expect(visibleWidth(tester, find.byKey(face)), 160);
-      expect(
-        (await pixelsAt(tester, imageKey, [const Offset(120, 80)])).single,
-        isNot(withoutScale),
-        reason: 'A scale of one must retain nonspatial press feedback',
-      );
-      await colorOnly.cancel();
-      await tester.pumpAndSettle();
-      expect(
-        (await pixelsAt(tester, imageKey, [const Offset(120, 80)])).single,
-        withoutScale,
-      );
-      expect(await render(tint: const Color(0xFFFF0000)), [255, 0, 0, 255]);
-      await render(explicit: PrismGlass.regular.interactive(false));
-      final noFeedback = await tester.startGesture(
-        tester.getCenter(find.byKey(face)),
-      );
-      await tester.pumpAndSettle();
-      expect(visibleWidth(tester, find.byKey(face)), 160);
-      await noFeedback.cancel();
-      expect(await render(explicit: PrismGlass.identity), [102, 102, 102, 255]);
-      expect(find.byType(PrismPressable), findsNothing);
-      final reset = await render(inherit: false);
+  testWidgets('nested defaults update live while explicit '
+      'identity and false interaction override inheritance', (tester) async {
+    final imageKey = GlobalKey();
+    const face = ValueKey('theme-face');
+    const bare = SizedBox(key: face, width: 160, height: 80);
+    Future<List<int>> render({
+      PrismGlass? explicit,
+      bool inherit = true,
+      PrismGlass? inherited,
+      Color tint = const Color(0xFF0000FF),
+      double pressScale = 1.15,
+    }) async {
       await tester.pumpWidget(
         glassHarness(
           imageKey: imageKey,
-          child: const PrismSurface(child: bare),
+          child: PrismTheme(
+            data: PrismThemeData(
+              glass: inherited ?? PrismGlass.regular.interactive(),
+              optics: PrismOptics.clear.copyWith(tint: tint),
+              motion: PrismMotion(pressScale: pressScale),
+            ),
+            child: PrismTheme(
+              inherit: inherit,
+              data: const PrismThemeData(tint: Color(0xFFAA00CC)),
+              child: PrismSurface(glass: explicit, child: bare),
+            ),
+          ),
         ),
       );
-      expect(
-        (await pixelsAt(tester, imageKey, [const Offset(120, 80)])).single,
-        reset,
-      );
-    },
-  );
+      return (await pixelsAt(tester, imageKey, [const Offset(120, 80)])).single;
+    }
 
-  testWidgets(
-    'explicit optics and zero blur win over inherited blur with observable backdrop pixels',
-    (tester) async {
-      final imageKey = GlobalKey();
-      final clear = PrismOptics.clear.copyWith(tint: const Color(0x00000000));
-      Future<List<List<int>>> render({
-        PrismThemeData theme = const PrismThemeData(),
-        PrismOptics? optics,
-        double? blur,
-      }) async {
-        await tester.pumpWidget(
-          WidgetsApp(
-            color: const Color(0xFF000000),
-            builder: (context, _) => Center(
-              child: RepaintBoundary(
-                key: imageKey,
-                child: SizedBox(
-                  width: 240,
-                  height: 160,
-                  child: Stack(
-                    children: [
-                      const Positioned.fill(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: ColoredBox(color: Color(0xFF000000)),
-                            ),
-                            Expanded(
-                              child: ColoredBox(color: Color(0xFFFFFFFF)),
-                            ),
-                          ],
+    expect(await render(), [0, 0, 255, 255]);
+    final held = await tester.startGesture(tester.getCenter(find.byKey(face)));
+    await tester.pumpAndSettle();
+    expect(visibleWidth(tester, find.byKey(face)), closeTo(184, .001));
+    await held.cancel();
+    await tester.pumpAndSettle();
+    final withoutScale = await render(pressScale: 1);
+    final colorOnly = await tester.startGesture(
+      tester.getCenter(find.byKey(face)),
+    );
+    await tester.pumpAndSettle();
+    expect(visibleWidth(tester, find.byKey(face)), 160);
+    expect(
+      (await pixelsAt(tester, imageKey, [const Offset(120, 80)])).single,
+      isNot(withoutScale),
+      reason: 'A scale of one must retain nonspatial press feedback',
+    );
+    await colorOnly.cancel();
+    await tester.pumpAndSettle();
+    expect(
+      (await pixelsAt(tester, imageKey, [const Offset(120, 80)])).single,
+      withoutScale,
+    );
+    expect(await render(tint: const Color(0xFFFF0000)), [255, 0, 0, 255]);
+    await render(explicit: PrismGlass.regular.interactive(false));
+    final noFeedback = await tester.startGesture(
+      tester.getCenter(find.byKey(face)),
+    );
+    await tester.pumpAndSettle();
+    expect(visibleWidth(tester, find.byKey(face)), 160);
+    await noFeedback.cancel();
+    expect(await render(explicit: PrismGlass.identity), [102, 102, 102, 255]);
+    expect(find.byType(PrismPressable), findsNothing);
+    final reset = await render(inherit: false);
+    await tester.pumpWidget(
+      glassHarness(
+        imageKey: imageKey,
+        child: const PrismSurface(child: bare),
+      ),
+    );
+    expect(
+      (await pixelsAt(tester, imageKey, [const Offset(120, 80)])).single,
+      reset,
+    );
+  });
+
+  testWidgets('explicit optics and zero blur win over '
+      'inherited blur with observable backdrop pixels', (tester) async {
+    final imageKey = GlobalKey();
+    final clear = PrismOptics.clear.copyWith(tint: const Color(0x00000000));
+    Future<List<List<int>>> render({
+      PrismThemeData theme = const PrismThemeData(),
+      PrismOptics? optics,
+      double? blur,
+    }) async {
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          builder: (context, _) => Center(
+            child: RepaintBoundary(
+              key: imageKey,
+              child: SizedBox(
+                width: 240,
+                height: 160,
+                child: Stack(
+                  children: [
+                    const Positioned.fill(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: ColoredBox(color: Color(0xFF000000))),
+                          Expanded(child: ColoredBox(color: Color(0xFFFFFFFF))),
+                        ],
+                      ),
+                    ),
+                    Center(
+                      child: PrismTheme(
+                        data: theme,
+                        child: PrismSurface(
+                          optics: optics,
+                          blur: blur,
+                          child: const SizedBox(width: 160, height: 80),
                         ),
                       ),
-                      Center(
-                        child: PrismTheme(
-                          data: theme,
-                          child: PrismSurface(
-                            optics: optics,
-                            blur: blur,
-                            child: const SizedBox(width: 160, height: 80),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return await pixelsAt(tester, imageKey, const [
+        Offset(108, 80),
+        Offset(116, 80),
+        Offset(124, 80),
+        Offset(132, 80),
+      ]);
+    }
+
+    final zero = await render(optics: clear.copyWith(frost: 0));
+    final two = await render(optics: clear.copyWith(frost: 2));
+    final eight = await render(optics: clear.copyWith(frost: 8));
+    expect(zero, isNot(eight));
+    final app = PrismThemeData(optics: clear.copyWith(frost: 2), blur: 8);
+    expect(await render(theme: app), eight);
+    expect(await render(theme: app, optics: clear.copyWith(frost: 2)), two);
+    expect(await render(theme: app, blur: 0), zero);
+    expect(
+      await render(theme: app, optics: clear.copyWith(frost: 8), blur: 0),
+      zero,
+    );
+  });
+
+  testWidgets('nested tab style preserves app fields and '
+      'false haptics while control motion wins', (tester) async {
+    final imageKey = GlobalKey();
+    final haptics = <MethodCall>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'HapticFeedback.vibrate') haptics.add(call);
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+    Future<void> render({PrismMotion? motion, bool? feedback}) =>
+        tester.pumpWidget(
+          glassHarness(
+            imageKey: imageKey,
+            child: PrismTheme(
+              data: const PrismThemeData(
+                motion: PrismMotion(pressScale: 1.15),
+                tabBar: PrismTabBarStyle(
+                  iconSize: 18,
+                  labelStyle: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Fixture Sans',
+                  ),
+                  selectedColor: Color(0xFFAA00CC),
+                  height: 60,
+                  haptics: true,
+                ),
+              ),
+              child: PrismTheme(
+                data: const PrismThemeData(
+                  tabBar: PrismTabBarStyle(
+                    labelStyle: TextStyle(height: 2),
+                    haptics: false,
+                  ),
+                ),
+                child: PrismTabBar(
+                  selectedIndex: 0,
+                  onSelected: (_) {},
+                  tabs: [
+                    for (final label in ['First', 'Second'])
+                      PrismTab(
+                        label: label,
+                        icon: Builder(
+                          builder: (context) => SizedBox(
+                            key: ValueKey(label),
+                            width: IconTheme.of(context).size,
+                            height: IconTheme.of(context).size,
                           ),
                         ),
                       ),
-                    ],
+                  ],
+                  style: PrismTabBarStyle(
+                    motion: motion,
+                    padding: EdgeInsets.zero,
+                    haptics: feedback,
                   ),
                 ),
               ),
             ),
           ),
         );
-        return pixelsAt(tester, imageKey, const [
-          Offset(108, 80),
-          Offset(116, 80),
-          Offset(124, 80),
-          Offset(132, 80),
-        ]);
-      }
+    await render();
+    expect(
+      tester.getSize(find.byKey(const ValueKey('First'))),
+      const Size(18, 18),
+    );
+    final label = tester.widget<Text>(find.text('First'));
+    expect(label.style!.fontSize, 14);
+    expect(label.style!.fontWeight, FontWeight.w800);
+    expect(label.style!.fontFamily, 'Fixture Sans');
+    expect(label.style!.height, 2);
+    expect(label.style!.color, const Color(0xFFAA00CC));
+    final pill = find.byType(PrismSelection);
+    final width = visibleWidth(tester, pill);
+    var pointer = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('First'))),
+    );
+    await tester.pumpAndSettle();
 
-      final zero = await render(optics: clear.copyWith(frost: 0));
-      final two = await render(optics: clear.copyWith(frost: 2));
-      final eight = await render(optics: clear.copyWith(frost: 8));
-      expect(zero, isNot(eight));
-      final app = PrismThemeData(optics: clear.copyWith(frost: 2), blur: 8);
-      expect(await render(theme: app), eight);
-      expect(await render(theme: app, optics: clear.copyWith(frost: 2)), two);
-      expect(await render(theme: app, blur: 0), zero);
-      expect(
-        await render(theme: app, optics: clear.copyWith(frost: 8), blur: 0),
-        zero,
+    double lifted(double pressScale) {
+      final factor = (pressScale - 1) / (const PrismMotion().pressScale - 1);
+      final bar = find.byWidgetPredicate(
+        (widget) =>
+            widget is RawPrismSurface && widget.role == PrismRole.tabBar,
       );
-    },
-  );
+      final barWidth = tester.getSize(bar).width;
+      return (width + 16 * factor) * (1 + 14.1379310344828 / barWidth * factor);
+    }
 
-  testWidgets(
-    'nested tab style preserves app fields and false haptics while control motion wins',
-    (tester) async {
-      final imageKey = GlobalKey();
-      final haptics = <MethodCall>[];
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-            if (call.method == 'HapticFeedback.vibrate') haptics.add(call);
-            return null;
-          });
-      addTearDown(
-        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(SystemChannels.platform, null),
-      );
-      Future<void> render({PrismMotion? motion, bool? feedback}) =>
-          tester.pumpWidget(
-            glassHarness(
-              imageKey: imageKey,
-              child: PrismTheme(
-                data: const PrismThemeData(
-                  motion: PrismMotion(pressScale: 1.15),
-                  tabBar: PrismTabBarStyle(
-                    iconSize: 18,
-                    labelStyle: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Fixture Sans',
-                    ),
-                    selectedColor: Color(0xFFAA00CC),
-                    height: 60,
-                    haptics: true,
-                  ),
-                ),
-                child: PrismTheme(
-                  data: const PrismThemeData(
-                    tabBar: PrismTabBarStyle(
-                      labelStyle: TextStyle(height: 2),
-                      haptics: false,
-                    ),
-                  ),
-                  child: PrismTabBar(
-                    selectedIndex: 0,
-                    onSelected: (_) {},
-                    tabs: [
-                      for (final label in ['First', 'Second'])
-                        PrismTab(
-                          label: label,
-                          icon: Builder(
-                            builder: (context) => SizedBox(
-                              key: ValueKey(label),
-                              width: IconTheme.of(context).size,
-                              height: IconTheme.of(context).size,
-                            ),
-                          ),
-                        ),
-                    ],
-                    style: PrismTabBarStyle(
-                      motion: motion,
-                      padding: EdgeInsets.zero,
-                      haptics: feedback,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-      await render();
-      expect(
-        tester.getSize(find.byKey(const ValueKey('First'))),
-        const Size(18, 18),
-      );
-      final label = tester.widget<Text>(find.text('First'));
-      expect(label.style!.fontSize, 14);
-      expect(label.style!.fontWeight, FontWeight.w800);
-      expect(label.style!.fontFamily, 'Fixture Sans');
-      expect(label.style!.height, 2);
-      expect(label.style!.color, const Color(0xFFAA00CC));
-      final pill = find.byType(PrismSelection);
-      final width = visibleWidth(tester, pill);
-      var pointer = await tester.startGesture(
-        tester.getCenter(find.byKey(const ValueKey('First'))),
-      );
-      await tester.pumpAndSettle();
-
-      double lifted(double pressScale) {
-        final factor = (pressScale - 1) / (const PrismMotion().pressScale - 1);
-        final bar = find.byWidgetPredicate(
-          (widget) =>
-              widget is RawPrismSurface && widget.role == PrismRole.tabBar,
-        );
-        final barWidth = tester.getSize(bar).width;
-        return (width + 16 * factor) *
-            (1 + 14.1379310344828 / barWidth * factor);
-      }
-
-      expect(visibleWidth(tester, pill), closeTo(lifted(1.15), .01));
-      await pointer.cancel();
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is Semantics && widget.properties.label == 'Second',
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(haptics, isEmpty);
-      await render(motion: const PrismMotion(pressScale: 1.02), feedback: true);
-      pointer = await tester.startGesture(
-        tester.getCenter(find.byKey(const ValueKey('First'))),
-      );
-      await tester.pumpAndSettle();
-      expect(visibleWidth(tester, pill), closeTo(lifted(1.02), .01));
-      await pointer.cancel();
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is Semantics && widget.properties.label == 'Second',
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(haptics, hasLength(1));
-    },
-  );
+    expect(visibleWidth(tester, pill), closeTo(lifted(1.15), .01));
+    await pointer.cancel();
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) => widget is Semantics && widget.properties.label == 'Second',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(haptics, isEmpty);
+    await render(motion: const PrismMotion(pressScale: 1.02), feedback: true);
+    pointer = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('First'))),
+    );
+    await tester.pumpAndSettle();
+    expect(visibleWidth(tester, pill), closeTo(lifted(1.02), .01));
+    await pointer.cancel();
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) => widget is Semantics && widget.properties.label == 'Second',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(haptics, hasLength(1));
+  });
 
   test('theme refraction replaces the material packet field only', () {
     const packet = PrismOptics(refraction: 9, frost: 3);

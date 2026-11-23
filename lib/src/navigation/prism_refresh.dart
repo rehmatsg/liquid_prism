@@ -5,11 +5,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_haptics.dart';
-import '../core/prism_motion.dart';
-import '../theme/prism_theme.dart';
-import 'prism_system_chrome.dart';
+import 'package:liquid_prism/src/core/prism_haptics.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_system_chrome.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Controls and observes a scaffold refresh operation.
 class PrismRefreshController extends ChangeNotifier {
@@ -31,7 +30,7 @@ class PrismRefreshController extends ChangeNotifier {
 
 @internal
 class PrismRefreshLayer extends StatefulWidget {
-  const PrismRefreshLayer({
+  const new({
     super.key,
     required this.onRefresh,
     this.controller,
@@ -71,7 +70,8 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
   static const trigger = 84.0;
 
   static const compactSpacing = 24.0;
-  static const compactExtent = compactSpacing * 2 + _DropGeometry.radius * 2;
+  static const double compactExtent =
+      compactSpacing * 2 + _DropGeometry.radius * 2;
 
   static const _disarmSlack = 10.0;
 
@@ -150,9 +150,11 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
                 debugPrint('PrismRefresh: refresh shader unavailable: $error');
                 return null;
               });
-      _loading!.then((_) {
-        if (mounted) setState(() {});
-      });
+      unawaited(
+        _loading!.then((_) {
+          if (mounted) setState(() {});
+        }),
+      );
     }
   }
 
@@ -191,13 +193,15 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
     super.dispose();
   }
 
-  double get _compactHoldExtent =>
-      math.max(0.0, compactExtent - (widget.headerBoundary?.value.height ?? 0));
+  double get _compactHoldExtent => math.max<double>(
+    0,
+    compactExtent - (widget.headerBoundary?.value.height ?? 0),
+  );
 
   void _updateDisplacement() {
     widget.contentDisplacement?.value = _belowHeader
-        ? math.max(
-            0.0,
+        ? math.max<double>(
+            0,
             math.max(_pull.value, _hold.value * _compactHoldExtent / trigger) -
                 math.max(0.0, _pull.value - _clampPull),
           )
@@ -235,7 +239,7 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
         _setDragging(dragDetails != null);
       case ScrollUpdateNotification(:final dragDetails, :final scrollDelta):
         if (_clampPull > 0 && (scrollDelta ?? 0) > 0) {
-          _clampPull = math.max(0, _clampPull - scrollDelta!);
+          _clampPull = math.max<double>(0, _clampPull - scrollDelta!);
         }
         _setDragging(dragDetails != null);
       case OverscrollNotification(:final dragDetails, :final overscroll):
@@ -249,7 +253,8 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
         break;
     }
     final over =
-        math.max(0.0, metrics.minScrollExtent - metrics.pixels) + _clampPull;
+        math.max<double>(0, metrics.minScrollExtent - metrics.pixels) +
+        _clampPull;
 
     if (_dragging && over > 0 && _phase == _Phase.done) {
       _return();
@@ -303,7 +308,7 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
   void _restartClock() {
     _ticker.stop();
     _time.value = 0;
-    unawaited(_ticker.start());
+    _ticker.start();
   }
 
   void _release() {
@@ -350,7 +355,7 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
 
   Future<void> _refreshFromCode() {
     if (widget.onRefresh == null) return Future<void>.value();
-    if (_phase == _Phase.refreshing) return _running!.future;
+    if (_phase == _Phase.refreshing) return _running.future;
     if (_phase == _Phase.done) {
       _return();
       _becomeIdle();
@@ -362,10 +367,10 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
     _haptic(PrismHapticKind.refreshArmed);
     final from = _extensionFor(_width);
     unawaited(_refresh(from));
-    return _running!.future;
+    return _running.future;
   }
 
-  Completer<void>? _running;
+  late Completer<void> _running;
 
   Future<void> _refresh(double from) async {
     final running = _running = Completer<void>();
@@ -379,7 +384,7 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
       immediate: _immediate,
     );
     _restartClock();
-    unawaited(_run.forward(from: 0));
+    _run.forward(from: 0);
     final minimum = Future<void>.delayed(_minimumRefresh);
 
     var succeeded = false;
@@ -404,7 +409,7 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
       if (_immediate) _reset();
       return;
     }
-    unawaited(_done.forward(from: 0));
+    _done.forward(from: 0);
     _haptic(PrismHapticKind.refreshSucceeded);
     _doneTimer = Timer(_doneHold, () {
       if (!mounted) return;
@@ -475,18 +480,18 @@ class PrismRefreshLayerState extends State<PrismRefreshLayer>
 
 @immutable
 class _Anchor {
-  const _Anchor.edge() : island = null, notch = null;
+  const new edge() : island = null, notch = null;
 
-  const _Anchor.island(Rect this.island) : notch = null;
+  const new island(Rect this.island) : notch = null;
 
-  const _Anchor.notch(Rect this.notch) : island = null;
+  const new notch(Rect this.notch) : island = null;
 
   final Rect? island;
   final Rect? notch;
 }
 
 class _DropGeometry {
-  _DropGeometry(
+  new(
     _Anchor anchor, {
     required this.width,
     required this.sideInsets,
@@ -556,7 +561,8 @@ class _DropGeometry {
       ((extension - (rest - 18)) / 12).clamp(0.0, 1.0);
 
   Rect bounds(Size size, double bottom, double reach) {
-    var left = centerX - reach, right = centerX + reach;
+    var left = centerX - reach;
+    var right = centerX + reach;
     if (island case final island?) {
       left = math.min(left, island.left);
       right = math.max(right, island.right);
@@ -565,8 +571,8 @@ class _DropGeometry {
       right = math.min(right, notch.right - _notchCorner);
     }
     return Rect.fromLTRB(
-      math.max(0, left),
-      math.max(0, island?.top ?? 0),
+      math.max<double>(0, left),
+      math.max<double>(0, island?.top ?? 0),
       math.min(size.width, right),
       math.min(size.height, bottom),
     );
@@ -574,7 +580,7 @@ class _DropGeometry {
 }
 
 class _DropPainter extends CustomPainter {
-  _DropPainter({
+  new({
     required this.state,
     required this.shader,
     required this.pixel,
@@ -683,24 +689,25 @@ class _DropPainter extends CustomPainter {
       );
       canvas.drawPath(path, fill);
       if (dark) {
-        canvas.save();
-        canvas.clipRect(
-          Rect.fromLTRB(
-            bounds.left,
-            island?.bottom ?? geometry.edgeY,
-            bounds.right,
-            bounds.bottom,
-          ),
-        );
-        canvas.clipPath(path);
-        canvas.drawPath(
-          path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = _outlineWidth * 2
-            ..color = _white.withValues(alpha: _outlineAlpha * opacity),
-        );
-        canvas.restore();
+        canvas
+          ..save()
+          ..clipRect(
+            Rect.fromLTRB(
+              bounds.left,
+              island?.bottom ?? geometry.edgeY,
+              bounds.right,
+              bounds.bottom,
+            ),
+          )
+          ..clipPath(path)
+          ..drawPath(
+            path,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = _outlineWidth * 2
+              ..color = _white.withValues(alpha: _outlineAlpha * opacity),
+          )
+          ..restore();
       }
     }
     final emergence = geometry.emergence(extension);
@@ -720,13 +727,14 @@ class _DropPainter extends CustomPainter {
     final swell = state._swell.value.clamp(0.0, 1.4);
     final radius = _DropGeometry.radius + 2 * swell;
 
-    canvas.saveLayer(
-      Rect.fromCircle(center: center, radius: radius + 3),
-      Paint()..color = _white.withValues(alpha: progress),
-    );
-    canvas.translate(center.dx, center.dy);
-    canvas.scale(progress);
-    canvas.drawCircle(Offset.zero, radius, Paint()..color = _black);
+    canvas
+      ..saveLayer(
+        Rect.fromCircle(center: center, radius: radius + 3),
+        Paint()..color = _white.withValues(alpha: progress),
+      )
+      ..translate(center.dx, center.dy)
+      ..scale(progress)
+      ..drawCircle(Offset.zero, radius, Paint()..color = _black);
     if (dark) {
       canvas.drawCircle(
         Offset.zero,
@@ -796,7 +804,9 @@ class _DropPainter extends CustomPainter {
       stroke..color = _white.withValues(alpha: 0.2 * emergence),
     );
 
-    final double tail, sweep, tailAlpha;
+    final double tail;
+    final double sweep;
+    final double tailAlpha;
     if (!refreshing) {
       tail = -0.25;
       sweep = (state._pull.value / PrismRefreshLayerState.trigger).clamp(
@@ -807,9 +817,9 @@ class _DropPainter extends CustomPainter {
     } else {
       final close = Curves.easeOut.transform(_interval(done, 0, 0.28));
       final spin = 0.44 + 0.26 * math.sin(time * 2.7);
-      sweep = ui.lerpDouble(ui.lerpDouble(1, spin, run)!, 1, close)!;
+      sweep = ui.lerpDouble(ui.lerpDouble(1, spin, run), 1, close)!;
       tail = -0.25 + time * 1.2 - sweep;
-      tailAlpha = ui.lerpDouble(ui.lerpDouble(1, 0.05, run)!, 1, close)!;
+      tailAlpha = ui.lerpDouble(ui.lerpDouble(1, 0.05, run), 1, close)!;
     }
     if (sweep <= 0.004) return;
     final start = tail * 2 * math.pi;

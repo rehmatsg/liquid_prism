@@ -17,7 +17,7 @@ void main() {
       MockStreamHandler.inline(
         onListen: (arguments, sink) {
           events = sink;
-          requests.add((arguments as Map)['enabled'] as bool);
+          requests.add((arguments! as Map)['enabled'] as bool);
         },
       ),
     );

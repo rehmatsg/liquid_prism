@@ -4,33 +4,32 @@ import 'dart:ui' show DisplayFeature;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-
-import '../../core/prism_colors.dart';
-import '../../core/prism_motion.dart';
-import '../../menu/menu.dart';
-import '../../menu/menu_elements.dart';
-import '../../rendering/edge_fade.dart' show PrismEdge;
-import '../../rendering/glass_group.dart';
-import '../../rendering/prism_transition.dart';
-import '../../theme/prism_theme.dart';
-import '../navigation_bar_minimization.dart';
-import '../navigation_bar_titles.dart';
-import '../navigation_title_motion.dart';
-import '../prism_navigation_bar_style.dart';
-import '../prism_refresh.dart';
-import '../prism_scaffold_style.dart';
-import '../prism_scroll_edge.dart';
-import '../prism_scroll_edge_style.dart';
-import '../prism_sidebar.dart';
-import '../prism_system_chrome.dart';
-import '../prism_tab_bar.dart';
-import '../prism_tab_reselection.dart';
-import '../prism_title.dart';
-import '../prism_title_style.dart';
-import '../prism_toolbar.dart';
-import '../prism_toolbar_content.dart';
-import '../prism_toolbar_style.dart';
-import 'chrome_placement.dart';
+import 'package:liquid_prism/src/core/prism_colors.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/menu/menu_elements.dart';
+import 'package:liquid_prism/src/navigation/navigation_bar_minimization.dart';
+import 'package:liquid_prism/src/navigation/navigation_bar_titles.dart';
+import 'package:liquid_prism/src/navigation/navigation_title_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_navigation_bar_style.dart';
+import 'package:liquid_prism/src/navigation/prism_refresh.dart';
+import 'package:liquid_prism/src/navigation/prism_scaffold_style.dart';
+import 'package:liquid_prism/src/navigation/prism_scroll_edge.dart';
+import 'package:liquid_prism/src/navigation/prism_scroll_edge_style.dart';
+import 'package:liquid_prism/src/navigation/prism_sidebar.dart';
+import 'package:liquid_prism/src/navigation/prism_system_chrome.dart';
+import 'package:liquid_prism/src/navigation/prism_tab_bar.dart';
+import 'package:liquid_prism/src/navigation/prism_tab_reselection.dart';
+import 'package:liquid_prism/src/navigation/prism_title.dart';
+import 'package:liquid_prism/src/navigation/prism_title_style.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_content.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_style.dart';
+import 'package:liquid_prism/src/navigation/scaffold/chrome_placement.dart';
+import 'package:liquid_prism/src/rendering/edge_fade.dart' show PrismEdge;
+import 'package:liquid_prism/src/rendering/glass_group.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 part 'chrome_layout_delegate.dart';
 part 'sliver_page.dart';
@@ -38,7 +37,7 @@ part 'sliver_page.dart';
 /// Adaptive navigation chrome, scroll insets, and refresh for a page.
 class PrismScaffold extends StatefulWidget {
   /// Creates a page from either a body or scaffold-owned slivers.
-  const PrismScaffold({
+  const new({
     super.key,
     this.body,
     this.slivers,
@@ -237,7 +236,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
       _titleHeightTarget = target;
       _configuringTitleHeight = false;
     }
-    return math.max(0, _titleHeight.value);
+    return math.max<double>(0, _titleHeight.value);
   }
 
   double _headerExtent = 0;
@@ -245,7 +244,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
   final _reselection = PrismTabReselection();
   late final _minimization = NavigationBarMinimization(vsync: this);
 
-  final _statusBarKey = GlobalKey();
+  final GlobalKey<State<StatefulWidget>> _statusBarKey = GlobalKey();
   final _refreshKey = GlobalKey<PrismRefreshLayerState>();
   final _refreshBoundary = ValueNotifier<Rect>(Rect.zero);
   final _refreshDisplacement = ValueNotifier<double>(0);
@@ -360,13 +359,16 @@ class _PrismScaffoldState extends State<PrismScaffold>
   bool _onScroll(ScrollMetrics metrics, {bool dimensionsChanged = false}) {
     if (metrics.axis == Axis.vertical) {
       _minimization.update(metrics, dimensionsChanged: dimensionsChanged);
-      _scrollOffset.value = math.max(
+      _scrollOffset.value = math.max<double>(
         0,
         metrics.pixels - metrics.minScrollExtent,
       );
-      _overscroll.value = math.max(0, metrics.minScrollExtent - metrics.pixels);
+      _overscroll.value = math.max<double>(
+        0,
+        metrics.minScrollExtent - metrics.pixels,
+      );
       _layoutOffset.value = math.min(_scrollOffset.value, _layoutCap);
-      _scrollRemaining.value = math.max(
+      _scrollRemaining.value = math.max<double>(
         0,
         metrics.maxScrollExtent - metrics.pixels,
       );
@@ -375,7 +377,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
     return false;
   }
 
-  final _sharedTitleKey = GlobalKey();
+  final GlobalKey<State<StatefulWidget>> _sharedTitleKey = GlobalKey();
   late final _titleMotion = Listenable.merge([_largeFade, _inlineFade]);
   late final _largeFade = RetargetablePrismSpring(vsync: this);
   late final _inlineFade = RetargetablePrismSpring(vsync: this);
@@ -494,9 +496,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
         sidebarTabs != null && (!_sidebarHidden || _reveal.value > 0);
     final sidebarToggle = sidebarTabs != null && _sidebarHidden;
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final sidebarLeft = resolved == PrismChromePlacement.leftRail
-        ? false
-        : !rtl;
+    final sidebarLeft = !(resolved == PrismChromePlacement.leftRail) && !rtl;
 
     final occlusions = [
       for (final region in system?.occlusions ?? const <PrismReservedRegion>[])
@@ -849,7 +849,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
         sharedTitle ? KeyedSubtree(key: _sharedTitleKey, child: child) : child;
     final titleBlur = PrismTheme.of(context).transition?.contentBlur ?? 4;
     Widget header(Widget child, TextStyle style, {required bool large}) {
-      Widget text = Semantics(
+      final Widget text = Semantics(
         header: true,
         child: DefaultTextStyle(
           style: style,
@@ -1371,7 +1371,7 @@ class _PrismScaffoldState extends State<PrismScaffold>
               top: 0,
               left: 0,
               right: 0,
-              height: math.max(1, media.viewPadding.top),
+              height: math.max<double>(1, media.viewPadding.top),
               child: MetaData(
                 key: _statusBarKey,
                 behavior: HitTestBehavior.translucent,
@@ -1494,7 +1494,8 @@ class _PrismScaffoldState extends State<PrismScaffold>
 
   double _railLength(List<PrismToolbarContent> content) {
     final theme = PrismTheme.of(context).toolbar ?? const PrismToolbarStyle();
-    var length = 0.0, gap = 0.0;
+    var length = 0.0;
+    var gap = 0.0;
     for (final entry in prismToolbarSegments(content)) {
       if (entry is PrismToolbarSpacer) {
         length += entry.extent ?? 0;
@@ -1504,7 +1505,8 @@ class _PrismScaffoldState extends State<PrismScaffold>
         gap = theme.groupSpacing ?? 8;
       } else if (entry is PrismToolbarGroup && entry.items.isNotEmpty) {
         final style = theme.merge(entry.style);
-        final extent = style.height ?? 48, inset = style.inset ?? 5;
+        final extent = style.height ?? 48;
+        final inset = style.inset ?? 5;
         length +=
             gap + inset * 2 + (entry.items.length - 1) * (style.spacing ?? 14);
         for (final item in entry.items) {
@@ -1544,8 +1546,10 @@ enum _Slot {
   tabBar,
 }
 
+/// Default spacing above the expanded large title.
 const double largeTitleLead = 10;
 
+/// Resolves the top scroll edge inset for glass title chrome.
 double topEdgeInset(
   Widget? inlineTitle, {
   required bool bareRows,

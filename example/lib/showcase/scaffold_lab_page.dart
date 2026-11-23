@@ -1,9 +1,9 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'scaffold_lab_options.dart';
-import 'sheet_route.dart';
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/scaffold_lab_options.dart';
+import 'package:liquid_prism_example/showcase/sheet_route.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
 enum _Heading { automatic, large, inlineLarge, inline, header }
 
@@ -11,16 +11,23 @@ enum _Edge { soft, hard, off }
 
 enum _Scrolling { automatic, sticky, away, reveal }
 
+/// An interactive lab for scaffold layout and navigation styles.
 class ScaffoldLabPage extends StatefulWidget {
-  const ScaffoldLabPage({
+  /// Creates a [ScaffoldLabPage].
+  const new({
     super.key,
     this.sheet = false,
     this.scrollController,
     this.initialOptions,
   });
 
+  /// The initial scaffold configuration shown by the lab.
   final ScaffoldLabOptions? initialOptions;
+
+  /// Whether the lab is presented inside a sheet.
   final bool sheet;
+
+  /// The optional controller for the lab scroll view.
   final ScrollController? scrollController;
 
   @override
@@ -28,11 +35,12 @@ class ScaffoldLabPage extends StatefulWidget {
 }
 
 class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
-  late var _options = widget.initialOptions ?? ScaffoldLabOptions();
+  late ScaffoldLabOptions _options =
+      widget.initialOptions ?? ScaffoldLabOptions();
   var _tab = 0;
-  var _heading = _Heading.automatic;
-  var _edge = _Edge.soft;
-  var _scrolling = _Scrolling.automatic;
+  _Heading _heading = _Heading.automatic;
+  _Edge _edge = _Edge.soft;
+  _Scrolling _scrolling = _Scrolling.automatic;
   var _accessory = false;
   var _bottomBar = true;
   var _twoCapsules = true;
@@ -119,7 +127,10 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
           children: [
             InsetSection(
               header: 'Heading',
-              footer: 'Automatic follows the bar placement. Sticky keeps the bar visible. Scroll away restores it at the top. Reveal restores it on reversal.',
+              footer:
+                  'Automatic follows the bar placement. Sticky keeps the bar '
+                  'visible. Scroll away restores it at the top. Reveal '
+                  'restores it on reversal.',
               children: [
                 _choice<_Heading>('Style', _heading, {
                   _Heading.automatic: 'Automatic',
@@ -220,7 +231,8 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  'Refreshed $_refreshed ${_refreshed == 1 ? 'time' : 'times'}.',
+                  'Refreshed $_refreshed '
+                  '${_refreshed == 1 ? 'time' : 'times'}.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: muted(context)),
                 ),
@@ -453,7 +465,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                       onRefresh: scaffold.onRefresh,
                     ),
                   if (scaffold.header != null)
-                    SliverToBoxAdapter(child: scaffold.header!),
+                    SliverToBoxAdapter(child: scaffold.header),
                   SliverPadding(
                     padding: EdgeInsets.only(
                       bottom: MediaQuery.paddingOf(context).bottom,
@@ -475,7 +487,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
 }
 
 class _LabAvatar extends StatelessWidget {
-  const _LabAvatar();
+  const new();
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(

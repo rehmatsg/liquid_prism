@@ -2,7 +2,7 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'scaffold_slivers_test.dart' show phone, rows, rectOf;
+import 'scaffold_slivers_test.dart' show phone, rectOf, rows;
 
 PrismToolbarItem _item(String label) => PrismToolbarItem(
   icon: const Icon(CupertinoIcons.star),

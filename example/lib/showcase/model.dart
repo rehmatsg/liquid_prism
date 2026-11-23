@@ -4,27 +4,72 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/primitives.dart';
 
+/// Shared appearance settings and interaction state for the showcase.
 class ShowcaseModel extends ChangeNotifier {
-  bool dark = false, clear = false, labels = true, verticalBar = true;
+  /// Whether the showcase uses a dark appearance.
+  bool dark = false;
+
+  /// Whether controls use the clear glass material.
+  bool clear = false;
+
+  /// Whether tab labels follow the default visibility behavior.
+  bool labels = true;
+
+  /// Whether automatic vertical system-bar behavior is enabled.
+  bool verticalBar = true;
+
+  /// Whether navigation uses the sidebar placement.
   bool sidebar = false;
+
+  /// The name of the selected accent color.
   String accent = 'blue';
+
+  /// The index of the selected background artwork.
   int wallpaper = 0;
-  double frost = 4, refraction = 24;
 
+  /// The customized glass blur amount.
+  double frost = 4;
+
+  /// The customized glass refraction strength.
+  double refraction = 24;
+
+  /// Whether customized optics apply throughout the showcase.
   bool globalOptics = false;
-  bool previewOptics = false;
-  bool enabled = true, favorite = false;
-  double level = .62;
-  int segment = 0, taps = 0;
 
+  /// Whether the studio preview uses customized optics.
+  bool previewOptics = false;
+
+  /// The current switch value in component previews.
+  bool enabled = true;
+
+  /// Whether the favorite action is selected.
+  bool favorite = false;
+
+  /// The current slider value in component previews.
+  double level = .62;
+
+  /// The selected segment in component previews.
+  int segment = 0;
+
+  /// The number of button activations in component previews.
+  int taps = 0;
+
+  /// The brightness derived from the selected appearance.
   Brightness get brightness => dark ? Brightness.dark : Brightness.light;
+
+  /// The glass material derived from the clear-material setting.
   PrismGlass get glass => clear ? PrismGlass.clear : PrismGlass.regular;
+
+  /// The selected accent color for the current brightness.
   Color get tint => PrismColors(brightness).accents[accent]!;
+
+  /// Applies a state update and notifies showcase listeners.
   void change(VoidCallback update) {
     update();
     notifyListeners();
   }
 
+  /// Updates vertical system-bar behavior and notifies listeners.
   void setVerticalBar(bool value) {
     change(() => verticalBar = value);
     unawaited(
@@ -36,6 +81,7 @@ class ShowcaseModel extends ChangeNotifier {
     );
   }
 
+  /// Restores default appearance and optics without resetting interactions.
   void reset() => change(() {
     dark = false;
     clear = false;
@@ -49,22 +95,46 @@ class ShowcaseModel extends ChangeNotifier {
   });
 }
 
+/// The component categories available in the showcase.
 enum ComponentKind {
+  /// Glass surfaces and materials.
   surfaces,
+
+  /// Buttons and press feedback.
   buttons,
+
+  /// Switch controls and haptic feedback.
   switches,
+
+  /// Sliders and lifted thumbs.
   sliders,
+
+  /// Segmented selection controls.
   segments,
+
+  /// Tab bars and navigation selection.
   tabs,
+
+  /// Grouped toolbar actions.
   toolbar,
+
+  /// Scroll-edge blur and fade effects.
   scrollEdges,
+
+  /// Scaffold layouts, headers, and navigation bars.
   pages,
+
+  /// Native popup and context menus.
   menus,
+
+  /// Search fields and suggestions.
   search,
 }
 
+/// Display metadata for a showcase component category.
 class ComponentInfo {
-  const ComponentInfo(
+  /// Creates a [ComponentInfo].
+  const new(
     this.kind,
     this.title,
     this.subtitle,
@@ -73,15 +143,33 @@ class ComponentInfo {
     required this.description,
     required this.details,
   });
+
+  /// The category represented by this entry.
   final ComponentKind kind;
-  final String title, subtitle, description;
+
+  /// The display name of the component category.
+  final String title;
+
+  /// A short summary shown in the component library.
+  final String subtitle;
+
+  /// The introductory text shown on the component detail page.
+  final String description;
+
+  /// The symbol identifying the component category.
   final IconData icon;
+
+  /// The accent color identifying the component category.
   final Color color;
 
+  /// Feature names and descriptions shown on the detail page.
   final List<(String, String)> details;
+
+  /// The stable identifier derived from the component category.
   String get id => kind.name;
 }
 
+/// The component categories and metadata shown in the library.
 const components = [
   ComponentInfo(
     ComponentKind.surfaces,

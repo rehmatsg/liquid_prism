@@ -1,12 +1,12 @@
 import 'package:flutter/widgets.dart';
 
-import '../theme/prism_theme.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Semantic source colors resolved for light or dark appearance.
 @immutable
 final class PrismColors {
   /// Creates a semantic palette for [brightness].
-  const PrismColors(this.brightness);
+  const new(this.brightness);
 
   /// Light appearance palette.
   static const PrismColors light = PrismColors(Brightness.light);

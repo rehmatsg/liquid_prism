@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart' show internal;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_motion.dart';
-import 'prism_navigation_bar_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_navigation_bar_style.dart';
 
 @internal
 void animateNavigationTitle({
@@ -19,8 +17,12 @@ void animateNavigationTitle({
   assert(
     style.largeTitleFadeDuration == null ||
         !style.largeTitleFadeDuration!.isNegative,
+    'largeTitleFadeDuration must not be negative.',
   );
-  assert(style.inlineTitleDelay == null || !style.inlineTitleDelay!.isNegative);
+  assert(
+    style.inlineTitleDelay == null || !style.inlineTitleDelay!.isNegative,
+    'inlineTitleDelay must not be negative.',
+  );
   void animate() {
     if (!isMounted()) return;
     final target = collapsed ? 1.0 : 0.0;
@@ -28,15 +30,14 @@ void animateNavigationTitle({
       large.value = inline.value = target;
       return;
     }
-    large.stop();
-    unawaited(
-      large.animateTo(
+    large
+      ..stop()
+      ..animateTo(
         target,
         duration:
             style.largeTitleFadeDuration ?? const Duration(milliseconds: 200),
         curve: style.largeTitleFadeCurve ?? Curves.easeInOut,
-      ),
-    );
+      );
     springPrism(
       inline,
       target,

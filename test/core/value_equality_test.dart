@@ -118,7 +118,7 @@ void main() {
         equals(const PrismScrollEdgeStyle(sigma: 4, hairline: true)),
       );
       expect(const PrismBadge.count(42), equals(const PrismBadge.count(42)));
-      expect(const PrismColors(Brightness.dark), equals(PrismColors.dark));
+      expect(PrismColors.dark, equals(PrismColors.dark));
       expect(
         const PrismMenu(
           title: 'Actions',

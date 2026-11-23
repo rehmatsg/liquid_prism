@@ -6,7 +6,7 @@ import 'package:liquid_prism/src/rendering/surface.dart' show RawPrismSurface;
 
 import 'scaffold_slivers_test.dart' show phone;
 
-const _body = ValueKey('body');
+const ValueKey<String> _body = ValueKey('body');
 const _tabs = [
   PrismTab(icon: Icon(CupertinoIcons.house), label: 'Home'),
   PrismTab(icon: Icon(CupertinoIcons.search), label: 'Search'),
@@ -116,8 +116,8 @@ void main() {
         of: find.byType(PrismToolbar),
         matching: find.byType(RawPrismSurface),
       );
-      final first = tester.getRect(groups.first),
-          last = tester.getRect(groups.last);
+      final first = tester.getRect(groups.first);
+      final last = tester.getRect(groups.last);
       expect((first.center.dx - last.center.dx).abs(), greaterThan(200));
       expect(first.center.dx > last.center.dx, rtl);
       expect(tester.getSize(find.byType(PrismToolbar)).width, 350);

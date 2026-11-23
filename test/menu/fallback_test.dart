@@ -30,18 +30,19 @@ void main() {
     final channels = MethodChannelPrismMenu();
     PrismMenuPlatform.instance = channels;
     final messenger =
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(channels.methodChannel, (_) async {
-      throw MissingPluginException('No native menu plugin');
-    });
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          ..setMockMethodCallHandler(channels.methodChannel, (_) async {
+            throw MissingPluginException('No native menu plugin');
+          });
     var eventSubscriptions = 0;
     messenger.setMockMessageHandler('liquid_prism/menus/events', (_) async {
       eventSubscriptions++;
       return const StandardMethodCodec().encodeSuccessEnvelope(null);
     });
     addTearDown(() {
-      messenger.setMockMethodCallHandler(channels.methodChannel, null);
-      messenger.setMockMessageHandler('liquid_prism/menus/events', null);
+      messenger
+        ..setMockMethodCallHandler(channels.methodChannel, null)
+        ..setMockMessageHandler('liquid_prism/menus/events', null);
     });
     PrismMenuEngine.instance.resetForTests();
     Object? selected;

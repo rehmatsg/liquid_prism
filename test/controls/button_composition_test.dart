@@ -622,48 +622,46 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets(
-      'the loading indicator uses local style over theme in the button foreground',
-      (tester) async {
-        const local = SizedBox(key: ValueKey('style'), width: 8, height: 8);
-        const themed = SizedBox(key: ValueKey('theme'), width: 8, height: 8);
-        const foreground = Color(0xFF12AB34);
-        for (final (expected, style) in [
-          ('style', const PrismButtonStyle(loadingIndicator: local)),
-          ('theme', const PrismButtonStyle(spacing: 4)),
-          ('theme', null),
-        ]) {
-          await show(
-            tester,
-            PrismTheme(
-              data: PrismThemeData(
-                button: const PrismButtonStyle(loadingIndicator: themed)
-                    .copyWith(spacing: 2),
-              ),
-              child: PrismButton(
-                label: label,
-                isLoading: true,
-                onPressed: () {},
-                style: (style ?? const PrismButtonStyle()).copyWith(
-                  foregroundColor: foreground,
-                ),
+    testWidgets('the loading indicator uses local style over '
+        'theme in the button foreground', (tester) async {
+      const local = SizedBox(key: ValueKey('style'), width: 8, height: 8);
+      const themed = SizedBox(key: ValueKey('theme'), width: 8, height: 8);
+      const foreground = Color(0xFF12AB34);
+      for (final (expected, style) in [
+        ('style', const PrismButtonStyle(loadingIndicator: local)),
+        ('theme', const PrismButtonStyle(spacing: 4)),
+        ('theme', null),
+      ]) {
+        await show(
+          tester,
+          PrismTheme(
+            data: PrismThemeData(
+              button: const PrismButtonStyle(loadingIndicator: themed)
+                  .copyWith(spacing: 2),
+            ),
+            child: PrismButton(
+              label: label,
+              isLoading: true,
+              onPressed: () {},
+              style: (style ?? const PrismButtonStyle()).copyWith(
+                foregroundColor: foreground,
               ),
             ),
-          );
-          for (final key in ['style', 'theme']) {
-            expect(
-              find.byKey(ValueKey(key)),
-              key == expected ? findsOneWidget : findsNothing,
-              reason: expected,
-            );
-          }
+          ),
+        );
+        for (final key in ['style', 'theme']) {
           expect(
-            IconTheme.of(tester.element(find.byKey(ValueKey(expected)))).color,
-            foreground,
+            find.byKey(ValueKey(key)),
+            key == expected ? findsOneWidget : findsNothing,
+            reason: expected,
           );
         }
-      },
-    );
+        expect(
+          IconTheme.of(tester.element(find.byKey(ValueKey(expected)))).color,
+          foreground,
+        );
+      }
+    });
 
     testWidgets(
       'destructive draws the system red over themed foregrounds unless the '
@@ -805,7 +803,7 @@ void main() {
 }
 
 class _StateProbe extends StatefulWidget {
-  const _StateProbe({required this.onInit});
+  const new({required this.onInit});
   final VoidCallback onInit;
 
   @override

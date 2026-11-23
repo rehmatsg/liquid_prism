@@ -1,14 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import '../prism_system_chrome.dart';
+import 'package:liquid_prism/src/navigation/prism_system_chrome.dart';
 
 /// System-adaptive bottom or side-rail chrome placement.
 enum PrismChromePlacement {
+  /// Places chrome along the bottom edge.
   bottom,
 
+  /// Places chrome in a left side rail.
   leftRail,
 
+  /// Places chrome in a right side rail.
   rightRail;
 
   /// Whether chrome occupies a vertical side rail.
@@ -53,11 +56,11 @@ Rect? prismTopChromeCorner(Size size, Iterable<Rect> occlusions) {
 @internal
 @immutable
 class PrismChrome extends InheritedWidget {
-  const PrismChrome({
+  const new({
     super.key,
     required this.placement,
-    this.axis,
     required super.child,
+    this.axis,
   });
 
   final PrismChromePlacement placement;

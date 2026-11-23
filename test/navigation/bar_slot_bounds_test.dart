@@ -2,7 +2,7 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'scaffold_slivers_test.dart' show phone, rows, rectOf;
+import 'scaffold_slivers_test.dart' show phone, rectOf, rows;
 
 PrismToolbarItem _item(String label) => PrismToolbarItem(
   icon: const Icon(CupertinoIcons.star),
@@ -103,7 +103,7 @@ void main() {
         final title = rectOf(tester, 'title');
         final toolbar = tester.getRect(find.byType(PrismToolbar));
 
-        final row = 17 * 2 * 1.2 + 8;
+        const row = 17 * 2 * 1.2 + 8;
         expect(title.height, lessThanOrEqualTo(row + .01));
         expect(title.center.dy, closeTo(62 + row / 2, .01));
         expect(toolbar.center.dy, closeTo(62 + row / 2, .01));

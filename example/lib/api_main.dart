@@ -9,8 +9,10 @@ Future<void> main() async {
   runApp(const ApiExample());
 }
 
+/// A compact app demonstrating the main Liquid Prism APIs.
 class ApiExample extends StatefulWidget {
-  const ApiExample({super.key});
+  /// Creates an [ApiExample].
+  const new({super.key});
 
   @override
   State<ApiExample> createState() => _ApiExampleState();

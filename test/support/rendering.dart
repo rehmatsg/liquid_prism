@@ -37,7 +37,7 @@ Future<List<List<int>>> pixelsAt(
   List<Offset> points,
 ) async {
   final boundary =
-      imageKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      imageKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
   return (await tester.runAsync(() async {
     final image = await boundary.toImage();
     final data = (await image.toByteData())!;

@@ -6,7 +6,7 @@ void main() {
   testWidgets(
     'scroll metrics arriving during layout rebuild on the next frame',
     (tester) async {
-      final progress = ValueNotifier(0.0);
+      final progress = ValueNotifier<double>(0);
       addTearDown(progress.dispose);
       await tester.pumpWidget(
         Directionality(
@@ -20,8 +20,9 @@ void main() {
               ),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  progress.value = .2;
-                  progress.value = .8;
+                  progress
+                    ..value = .2
+                    ..value = .8;
                   return const SizedBox.shrink();
                 },
               ),

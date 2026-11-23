@@ -1,10 +1,12 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// A page demonstrating custom headers and sticky tabs.
 class HeaderPage extends StatefulWidget {
-  const HeaderPage({super.key});
+  /// Creates a [HeaderPage].
+  const new({super.key});
 
   @override
   State<HeaderPage> createState() => _HeaderPageState();
@@ -134,7 +136,7 @@ class _HeaderPageState extends State<HeaderPage> {
 }
 
 class _StickyTabs extends SliverPersistentHeaderDelegate {
-  _StickyTabs({required this.background, required this.child});
+  new({required this.background, required this.child});
   final Color background;
   final Widget child;
 

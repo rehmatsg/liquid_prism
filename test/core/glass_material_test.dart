@@ -53,7 +53,7 @@ void main() {
             ),
           ),
         );
-        return pixelsAt(tester, imageKey, const [
+        return await pixelsAt(tester, imageKey, const [
           Offset(100, 80),
           Offset(140, 80),
         ]);
@@ -176,7 +176,7 @@ void main() {
         ),
       );
       expect(tester.getSize(find.byKey(childKey)), const Size(160, 80));
-      return pixelsAt(tester, imageKey, const [
+      return await pixelsAt(tester, imageKey, const [
         Offset(50, 50),
         Offset(50, 80),
         Offset(120, 80),
@@ -268,7 +268,7 @@ void main() {
             ),
           ),
         );
-        return pixelsAt(tester, imageKey, const [
+        return await pixelsAt(tester, imageKey, const [
           Offset(120, 80),
           Offset(180, 80),
         ]);
@@ -324,7 +324,7 @@ void main() {
             ),
           ),
         );
-        return pixelsAt(tester, imageKey, const [
+        return await pixelsAt(tester, imageKey, const [
           Offset(120, 80),
           Offset(180, 80),
         ]);

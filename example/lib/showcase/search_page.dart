@@ -1,12 +1,16 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'component_page.dart';
-import 'model.dart';
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/component_page.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// A search demo with suggestions and recent queries.
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key, required this.model});
+  /// Creates a [SearchPage].
+  const new({super.key, required this.model});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
 
   @override
@@ -90,7 +94,7 @@ class _SearchPageState extends State<SearchPage> {
               child: PrismButton(
                 key: const ValueKey('search-page-done'),
                 label: 'Show results',
-                onPressed: () => _focus.unfocus(),
+                onPressed: _focus.unfocus,
                 child: Text('Show ${found.length + ideas.length} results'),
               ),
             ),

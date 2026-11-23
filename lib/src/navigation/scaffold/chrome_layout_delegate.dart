@@ -1,13 +1,15 @@
 part of 'prism_scaffold.dart';
 
 class _BottomToolbar extends StatelessWidget {
-  const _BottomToolbar({
+  const new({
     required this.leading,
     required this.center,
     required this.trailing,
   });
 
-  final List<PrismToolbarContent> leading, center, trailing;
+  final List<PrismToolbarContent> leading;
+  final List<PrismToolbarContent> center;
+  final List<PrismToolbarContent> trailing;
 
   static const double sideMargin = 24;
 
@@ -36,7 +38,7 @@ class _BottomToolbar extends StatelessWidget {
 }
 
 class _Ellipsis extends StatelessWidget {
-  const _Ellipsis();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +69,7 @@ class _Ellipsis extends StatelessWidget {
 }
 
 class _ChromeLayout extends MultiChildLayoutDelegate {
-  _ChromeLayout({
+  new({
     required this.placement,
     required this.minimization,
     required this.onMinimizationExtent,
@@ -128,7 +130,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
   final bool slidesOff;
   final PrismScaffoldStyle style;
-  final double keyboard, actionsTop, railBottom;
+  final double keyboard;
+  final double actionsTop;
+  final double railBottom;
   final bool sheet;
 
   final double edgeFrame;
@@ -148,19 +152,20 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   final double contentSpacing;
   final PrismTitleAlignment titleAlignment;
   final EdgeInsets contentPadding;
-  final double titleRowHeight,
-      controlRowHeight,
-      expandedHeight,
-      expandedLead,
-      collapseExtent,
-      titleGutter,
-      largeTitleTop,
-      titleGap;
+  final double titleRowHeight;
+  final double controlRowHeight;
+  final double expandedHeight;
+  final double expandedLead;
+  final double collapseExtent;
+  final double titleGutter;
+  final double largeTitleTop;
+  final double titleGap;
   final ValueListenable<double> scrollOffset;
 
   final Rect? corner;
   final TextDirection textDirection;
-  final bool iOS, topBar;
+  final bool iOS;
+  final bool topBar;
 
   final AxisDirection? sidebar;
 
@@ -237,7 +242,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
   static const _bottomBarGap = 21.0;
   static const _railGap = 12.0;
   static const _railEdge = 24.0;
-  static const _railStrip = _railGap + 48 + _railEdge;
+  static const double _railStrip = _railGap + 48 + _railEdge;
   static const _railActionsTopPortrait = 170.0;
   static const _railActionsTopLandscape = 120.0;
 
@@ -256,7 +261,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     final rtl = textDirection == TextDirection.rtl;
     final railLeft = viewPadding.left;
     final railRight = size.width - viewPadding.right;
-    final sidebarWidth = NativeSidebar.width;
+    const sidebarWidth = NativeSidebar.width;
     final shown = sidebar == null ? 0.0 : reveal.value.clamp(0.0, 1.0);
     var contentLeft = sidebar == AxisDirection.left
         ? railLeft + (math.max(railLeft, sidebarWidth) - railLeft) * shown
@@ -298,15 +303,15 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         (sideDock || tabDock == PrismTabBarPlacement.top)) {
       final margin = dockMargin ?? const EdgeInsets.all(12);
       final dockTop = top + barRow + largeHeight + accessoryHeight;
-      final availableHeight = math.max(
-        0.0,
+      final availableHeight = math.max<double>(
+        0,
         size.height -
             math.max(keyboard, viewPadding.bottom) -
             dockTop -
             margin.vertical,
       );
-      final availableWidth = math.max(
-        0.0,
+      final availableWidth = math.max<double>(
+        0,
         contentRight - contentLeft - margin.horizontal,
       );
       final bar = layoutChild(
@@ -385,8 +390,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
 
     if (hasChild(_Slot.scrollEdge)) {
       final barBottom = top + barRow + largeHeight;
-      final full = math.max(
-        0.0,
+      final full = math.max<double>(
+        0,
         (accessoryHeight > 0 ? math.max(naturalTop, barBottom) : barBottom) +
             accessoryHeight +
             topDockHeight +
@@ -395,7 +400,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
             (accessoryHeight == 0 ? math.min(lead, largeHeight) : 0),
       );
 
-      final double height = !fullEdge
+      final height = !fullEdge
           ? compactEdgeHeight
           : !compactWhenHidden
           ? full
@@ -409,7 +414,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       layoutChild(
         _Slot.scrollEdge,
         BoxConstraints.tight(
-          Size(math.max(0, contentRight - contentLeft), math.max(0, height)),
+          Size(
+            math.max<double>(0, contentRight - contentLeft),
+            math.max<double>(0, height),
+          ),
         ),
       );
       positionChild(_Slot.scrollEdge, Offset(contentLeft, 0));
@@ -422,7 +430,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       layoutChild(
         _Slot.accessory,
         BoxConstraints.tightFor(
-          width: math.max(0, contentRight - contentLeft),
+          width: math.max<double>(0, contentRight - contentLeft),
           height: accessoryHeight,
         ),
       );
@@ -505,12 +513,17 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         }
         refreshHeaderBottom = math.max(
           refreshHeaderBottom,
-          top + math.max(0, (controlRow - actions.height) / 2) + actions.height,
+          top +
+              math.max<double>(0, (controlRow - actions.height) / 2) +
+              actions.height,
         );
         actionsInBar = true;
         positionChild(
           _Slot.actions,
-          Offset(x, top + math.max(0, (controlRow - actions.height) / 2)),
+          Offset(
+            x,
+            top + math.max<double>(0, (controlRow - actions.height) / 2),
+          ),
         );
       }
     }
@@ -565,7 +578,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                 leadingOffset;
       final child = layoutChild(
         _Slot.leading,
-        BoxConstraints.loose(Size(math.max(0, room), size.height)),
+        BoxConstraints.loose(Size(math.max<double>(0, room), size.height)),
       );
       if (rtl) {
         trailingStart = barRight - leadingOffset - child.width;
@@ -598,7 +611,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
                 offset;
       final child = layoutChild(
         _Slot.barLeading,
-        BoxConstraints.loose(Size(math.max(0, room), size.height)),
+        BoxConstraints.loose(Size(math.max<double>(0, room), size.height)),
       );
       if (rtl) {
         trailingStart = barRight - offset - child.width;
@@ -633,11 +646,11 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         barRight - titleGutter,
         trailingStart - (trailingStart < barRight ? titleGap : 0),
       );
-      final centeredWidth = math.max(
-        0.0,
+      final centeredWidth = math.max<double>(
+        0,
         2.0 * math.min(centre - left, right - centre),
       );
-      final availableWidth = math.max(0.0, right - left);
+      final availableWidth = math.max<double>(0, right - left);
 
       final title = layoutChild(
         _Slot.title,
@@ -672,7 +685,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
       layoutChild(
         _Slot.largeTitle,
         BoxConstraints.tightFor(
-          width: math.max(0, barRight - barLeft - 2 * titleGutter),
+          width: math.max<double>(0, barRight - barLeft - 2 * titleGutter),
         ),
       );
       positionChild(
@@ -696,7 +709,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         final bar = layoutChild(
           _Slot.tabBar,
           BoxConstraints.loose(
-            Size(size.width, math.max(0, railBottom - naturalTop)),
+            Size(size.width, math.max<double>(0, railBottom - naturalTop)),
           ),
         );
         positionChild(
@@ -713,8 +726,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
               24,
               iOS ? _bottomBarGap : viewPadding.bottom + 10,
             );
-        final width = math.max(
-          0.0,
+        final width = math.max<double>(
+          0,
           contentRight - contentLeft - margin.horizontal,
         );
         final bar = layoutChild(
@@ -722,7 +735,7 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           BoxConstraints.loose(
             Size(
               math.min(width, style.tabBarMaxWidth ?? 440),
-              math.max(0.0, size.height - covered.top - margin.vertical),
+              math.max<double>(0, size.height - covered.top - margin.vertical),
             ),
           ),
         );
@@ -742,7 +755,9 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
     if (hasChild(_Slot.railBottom)) {
       final group = layoutChild(
         _Slot.railBottom,
-        BoxConstraints.loose(Size(48, math.max(0, railFloor - railTop))),
+        BoxConstraints.loose(
+          Size(48, math.max<double>(0, railFloor - railTop)),
+        ),
       );
       positionChild(
         _Slot.railBottom,
@@ -757,8 +772,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
           : covered.bottom > 0
           ? covered.bottom + (margin?.bottom ?? 8)
           : margin?.bottom ?? (iOS ? _bottomBarGap : viewPadding.bottom);
-      final width = math.max(
-        0.0,
+      final width = math.max<double>(
+        0,
         contentRight - contentLeft - (margin?.horizontal ?? 0),
       );
       final bar = layoutChild(
@@ -766,8 +781,8 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         BoxConstraints.loose(
           Size(
             math.min(width, style.bottomBarMaxWidth ?? double.infinity),
-            math.max(
-              0.0,
+            math.max<double>(
+              0,
               size.height - floor - covered.top - (margin?.top ?? 0),
             ),
           ),
@@ -794,7 +809,10 @@ class _ChromeLayout extends MultiChildLayoutDelegate {
         layoutChild(
           _Slot.bottomScrollEdge,
           BoxConstraints.tight(
-            Size(math.max(0, contentRight - contentLeft), size.height - barTop),
+            Size(
+              math.max<double>(0, contentRight - contentLeft),
+              size.height - barTop,
+            ),
           ),
         );
         positionChild(_Slot.bottomScrollEdge, Offset(contentLeft, barTop));

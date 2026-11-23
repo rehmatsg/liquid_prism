@@ -1,7 +1,7 @@
 part of 'prism_scaffold.dart';
 
 class _BodyConstraints extends BoxConstraints {
-  _BodyConstraints(super.size, this.covered, this.scrollTop) : super.tight();
+  new(super.size, this.covered, this.scrollTop) : super.tight();
   final EdgeInsets covered;
   final double scrollTop;
 
@@ -17,13 +17,14 @@ class _BodyConstraints extends BoxConstraints {
 }
 
 class _InsetBody extends StatelessWidget {
-  const _InsetBody({
+  const new({
     required this.media,
     required this.child,
     required this.consumeKeyboard,
     required this.ownsScrollView,
   });
-  final bool consumeKeyboard, ownsScrollView;
+  final bool consumeKeyboard;
+  final bool ownsScrollView;
   final MediaQueryData media;
   final Widget child;
 
@@ -59,7 +60,7 @@ class _InsetBody extends StatelessWidget {
 }
 
 class _ScaffoldScrollInset extends InheritedWidget {
-  const _ScaffoldScrollInset({required this.extent, required super.child});
+  const new({required this.extent, required super.child});
   final double extent;
 
   static double of(BuildContext context) => context
@@ -71,7 +72,7 @@ class _ScaffoldScrollInset extends InheritedWidget {
 }
 
 class _SliverPage extends StatefulWidget {
-  const _SliverPage({
+  const new({
     required this.slivers,
     required this.header,
     required this.controller,
@@ -158,9 +159,11 @@ class _SliverPageState extends State<_SliverPage> {
 }
 
 class _TopInset extends SliverPersistentHeaderDelegate {
-  _TopInset(this.minExtent, this.maxExtent);
+  new(this.minExtent, this.maxExtent);
   @override
-  final double minExtent, maxExtent;
+  final double minExtent;
+  @override
+  final double maxExtent;
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
       const SizedBox.expand();
@@ -170,7 +173,7 @@ class _TopInset extends SliverPersistentHeaderDelegate {
 }
 
 class _SizeReporter extends SingleChildRenderObjectWidget {
-  const _SizeReporter({required this.onHeight, required super.child});
+  const new({required this.onHeight, required super.child});
   final ValueChanged<double> onHeight;
   @override
   RenderObject createRenderObject(BuildContext context) =>
@@ -183,7 +186,7 @@ class _SizeReporter extends SingleChildRenderObjectWidget {
 }
 
 class _RenderSizeReporter extends RenderProxyBox {
-  _RenderSizeReporter(this.onHeight);
+  new(this.onHeight);
   ValueChanged<double> onHeight;
   double? _reported;
   @override

@@ -47,7 +47,7 @@ void main() {
   group('wire serialization', () {
     testWidgets('action serializes static fields and a minted id', (t) async {
       await mount(t);
-      final menu = const PrismMenu(
+      const menu = PrismMenu(
         children: [
           PrismMenuAction<Object?>(
             title: 'Delete',
@@ -63,7 +63,8 @@ void main() {
       );
       unawaited(show(menu));
       await t.pump();
-      final items = platform.shows.single.menu['items'] as List;
+      final items = (platform.shows.single.menu['items']! as List<Object?>)
+          .cast<Map<String, Object?>>();
       expect(items.single, {
         'type': 'action',
         'id': startsWith('lm_'),
@@ -88,13 +89,14 @@ void main() {
         ),
       );
       await t.pump();
-      final items = platform.shows.single.menu['items'] as List;
-      expect((items.single as Map)['id'], 'save');
+      final items = (platform.shows.single.menu['items']! as List<Object?>)
+          .cast<Map<String, Object?>>();
+      expect(items.single['id'], 'save');
     });
 
     testWidgets('divider, section and submenu shapes', (t) async {
       await mount(t);
-      final menu = const PrismMenu(
+      const menu = PrismMenu(
         children: [
           PrismMenuAction<Object?>(title: 'A'),
           PrismMenuDivider(),
@@ -112,18 +114,20 @@ void main() {
       );
       unawaited(show(menu));
       await t.pump();
-      final items = platform.shows.single.menu['items'] as List;
+      final items = (platform.shows.single.menu['items']! as List<Object?>)
+          .cast<Map<String, Object?>>();
       expect(items[1], {'type': 'divider'});
       expect(items[2]['type'], 'section');
-      expect(items[2]['menu']['options'], {'singleSelection': true});
-      expect(items[2]['menu']['items'].single['state'], 'on');
+      final section = items[2]['menu']! as Map<String, Object?>;
+      final sectionItems = section['items']! as List<Object?>;
+      expect(section['options'], {'singleSelection': true});
+      expect((sectionItems.single! as Map<String, Object?>)['state'], 'on');
       expect(items[3]['type'], 'submenu');
-      expect(items[3]['menu']['title'], 'More');
-      expect(items[3]['menu']['image'], {
-        'kind': 'sfSymbol',
-        'name': 'ellipsis',
-      });
-      expect(items[3]['menu']['items'].single['title'], 'C');
+      final submenu = items[3]['menu']! as Map<String, Object?>;
+      expect(submenu['title'], 'More');
+      expect(submenu['image'], {'kind': 'sfSymbol', 'name': 'ellipsis'});
+      final submenuItems = submenu['items']! as List<Object?>;
+      expect((submenuItems.single! as Map<String, Object?>)['title'], 'C');
     });
 
     testWidgets('nested actions inside sections join the registry', (t) async {
@@ -144,9 +148,12 @@ void main() {
       final future = show(menu);
       await t.pump();
       final menuId = platform.shows.single.menuId;
-      final items = platform.shows.single.menu['items'] as List;
+      final items = (platform.shows.single.menu['items']! as List<Object?>)
+          .cast<Map<String, Object?>>();
+      final section = items.single['menu']! as Map<String, Object?>;
+      final sectionItems = section['items']! as List<Object?>;
       final nestedId =
-          (items.single['menu']['items'].single as Map)['id'] as String;
+          (sectionItems.single! as Map<String, Object?>)['id']! as String;
       expect(nestedId, startsWith('lm_'));
       platform.emit(PrismMenuActionEvent(menuId: menuId, actionId: nestedId));
       await t.pump();
@@ -171,16 +178,17 @@ void main() {
         ),
       );
       await t.pump();
-      final items = platform.shows.single.menu['items'] as List;
+      final items = (platform.shows.single.menu['items']! as List<Object?>)
+          .cast<Map<String, Object?>>();
       expect(items.single['type'], 'deferred');
       expect(items.single['id'], startsWith('lm_'));
 
       final resolved = await platform.deferredResolver!(
         platform.shows.single.menuId,
-        items.single['id'] as String,
+        items.single['id']! as String,
       );
       expect(resolved!.single, isA<Map<Object?, Object?>>());
-      expect((resolved.single as Map)['title'], 'Late');
+      expect((resolved.single! as Map<String, Object?>)['title'], 'Late');
     });
 
     testWidgets('anchor maps', (t) async {
@@ -232,7 +240,8 @@ void main() {
           ),
         );
         await t.pump();
-        final items = platform.shows.single.menu['items'] as List;
+        final items = (platform.shows.single.menu['items']! as List<Object?>)
+            .cast<Map<String, Object?>>();
         expect(items.single['icon'], {
           'kind': 'sfSymbol',
           'name': 'star.fill',
@@ -250,7 +259,7 @@ void main() {
       t,
     ) async {
       await mount(t);
-      final menu = const PrismMenu(
+      const menu = PrismMenu(
         children: [
           PrismMenuAction<Object?>(title: 'One', value: 'one'),
           PrismMenuAction<Object?>(title: 'Two', value: 'two'),
@@ -259,11 +268,13 @@ void main() {
       final result = show(menu);
       await t.pump();
       final menuId = platform.shows.single.menuId;
-      final items = platform.shows.single.menu['items'] as List;
-      final secondId = (items.last as Map)['id'] as String;
+      final items = (platform.shows.single.menu['items']! as List<Object?>)
+          .cast<Map<String, Object?>>();
+      final secondId = items.last['id']! as String;
 
-      platform.emit(PrismMenuActionEvent(menuId: menuId, actionId: secondId));
-      platform.emit(PrismMenuDismissed(menuId: menuId));
+      platform
+        ..emit(PrismMenuActionEvent(menuId: menuId, actionId: secondId))
+        ..emit(PrismMenuDismissed(menuId: menuId));
       expect(await result, 'two');
     });
 
@@ -318,10 +329,12 @@ void main() {
       await t.pump();
       final menuId = platform.shows.single.menuId;
       final actionId =
-          ((platform.shows.single.menu['items'] as List).single as Map)['id']
+          ((platform.shows.single.menu['items']! as List<Object?>).single!
+                  as Map<String, Object?>)['id']!
               as String;
-      platform.emit(PrismMenuActionEvent(menuId: menuId, actionId: actionId));
-      platform.emit(PrismMenuActionEvent(menuId: menuId, actionId: actionId));
+      platform
+        ..emit(PrismMenuActionEvent(menuId: menuId, actionId: actionId))
+        ..emit(PrismMenuActionEvent(menuId: menuId, actionId: actionId));
       await t.pump();
       expect(taps, 2);
       platform.emit(PrismMenuDismissed(menuId: menuId));

@@ -5,19 +5,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
-import '../core/prism_glass.dart';
-import '../core/prism_optics.dart';
-import 'glass_group.dart';
-import 'layer_transform.dart';
-import 'prism.dart';
-import 'prism_display.dart';
-import 'recipe.dart';
-import 'superellipse.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/rendering/glass_group.dart';
+import 'package:liquid_prism/src/rendering/layer_transform.dart';
+import 'package:liquid_prism/src/rendering/prism.dart';
+import 'package:liquid_prism/src/rendering/prism_display.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/superellipse.dart';
 
 @internal
 bool isHDRSurface(PrismRecipe recipe) =>
     PrismDisplay.headroom.value > 1 && recipe.kind == 1 && !recipe.dark;
 
+/// Writes the chromatic fringe values into the surface shader packet.
 @visibleForTesting
 void writeChromaticFringeUniforms(
   List<double> values,
@@ -45,6 +46,7 @@ PrismOptics resolveSurfaceOptics(
   refraction: widgetOptics != null ? null : themeRefraction,
 );
 
+/// Number of scalar uniforms in the surface shader packet.
 @visibleForTesting
 const int glassUniformCount = 46 + superellipseUniformCount + 16 + 4 + 4 + 1;
 
@@ -65,8 +67,9 @@ List<FrostPass> resolveSurfaceFrost(
 
 @internal
 double frostReachOf(List<FrostPass> passes) =>
-    passes.fold(0.0, (reach, pass) => math.max(reach, pass.sigma));
+    passes.fold(0, (reach, pass) => math.max(reach, pass.sigma));
 
+/// Writes the lens underlay extent into the surface shader packet.
 @visibleForTesting
 void writeLensUnderlayUniform(
   List<double> values,
@@ -80,7 +83,7 @@ void writeLensUnderlayUniform(
 
 @internal
 class PrismExteriorShadow extends CustomPainter {
-  const PrismExteriorShadow(
+  const new(
     this.shape, {
     required this.strength,
     required this.nativeControl,
@@ -104,7 +107,7 @@ class PrismExteriorShadow extends CustomPainter {
               dark: false,
             ).radius *
             (2 / 3)
-      : math.min(shape.rect(size).shortestSide * 0.1, 20.0);
+      : math.min(shape.rect(size).shortestSide * 0.1, 20);
   static double _drop(
     PrismShape shape,
     Size size,
@@ -112,7 +115,7 @@ class PrismExteriorShadow extends CustomPainter {
     bool hdrSurface,
   ) => nativeControl || hdrSurface
       ? NativeGlassShadow.offset - (hdrSurface ? 1 / 3 : 0)
-      : math.min(shape.rect(size).shortestSide * 0.1, 9.0);
+      : math.min(shape.rect(size).shortestSide * 0.1, 9);
 
   static double extent(
     PrismShape shape,
@@ -139,22 +142,23 @@ class PrismExteriorShadow extends CustomPainter {
         ? NativeGlassShadow.resolve(extent, dark: false).opacity *
               NativeGlassShadow.colorAlpha
         : math.min(0.123 * math.pow(extent / 160, 2), 0.14);
-    canvas.save();
-    canvas.clipPath(
-      Path()
-        ..fillType = PathFillType.evenOdd
-        ..addRect(
-          rect.inflate(
-            PrismExteriorShadow.extent(
-              shape,
-              size,
-              nativeControl: nativeControl,
-              hdrSurface: hdrSurface,
+    canvas
+      ..save()
+      ..clipPath(
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(
+            rect.inflate(
+              PrismExteriorShadow.extent(
+                shape,
+                size,
+                nativeControl: nativeControl,
+                hdrSurface: hdrSurface,
+              ),
             ),
-          ),
-        )
-        ..addPath(outline, Offset.zero),
-    );
+          )
+          ..addPath(outline, Offset.zero),
+      );
     if (opacity > 0.002) {
       _drawOutline(
         canvas,
@@ -224,7 +228,7 @@ class PrismExteriorShadow extends CustomPainter {
 
 @internal
 class PrismSurfaceRenderWidget extends SingleChildRenderObjectWidget {
-  const PrismSurfaceRenderWidget({
+  const new({
     super.key,
     required this.shader,
     required this.style,
@@ -288,7 +292,7 @@ class PrismSurfaceRenderWidget extends SingleChildRenderObjectWidget {
 
 @internal
 class RenderPrismSurface extends RenderProxyBox {
-  RenderPrismSurface(
+  new(
     this.shader,
     this.style,
     this._shape,
@@ -443,6 +447,7 @@ class RenderPrismSurface extends RenderProxyBox {
 
   double pixelRatio;
   PrismGroupData? _group;
+  PrismGroupData? get group => _group;
   set group(PrismGroupData? value) {
     if (value == _group) return;
     if (attached) _group?.members.remove(this);
@@ -520,7 +525,10 @@ class RenderPrismSurface extends RenderProxyBox {
       ...fillUniforms,
       PrismDisplay.headroom.value,
     ];
-    assert(values.length == glassUniformCount);
+    assert(
+      values.length == glassUniformCount,
+      'surface uniform count must match the shader ABI',
+    );
     writeChromaticFringeUniforms(values, recipe, pixelRatio);
     writeLensUnderlayUniform(values, recipe, rect);
     values[42] = press;
@@ -536,7 +544,7 @@ class RenderPrismSurface extends RenderProxyBox {
     final dpr = pixelRatio;
     final sigma = style.frost * dpr;
 
-    final rimWidth = math.max(math.min(4.0, minExtent * 0.25), 0.001);
+    final rimWidth = math.max(math.min<double>(4, minExtent * 0.25), 0.001);
     var rimEnd = 0.0;
     if (style.reflection > 0.001 && style.reflectionReach > 0.001) {
       final invisible = 0.00784 / math.max(style.reflection, 0.0001);
@@ -548,8 +556,8 @@ class RenderPrismSurface extends RenderProxyBox {
     final det = (m[0] * m[5] - m[4] * m[1]).abs();
     final pixel = 1 / (dpr * math.sqrt(math.max(det, 1e-8)));
     final bypass =
-        math.max(
-          math.max(math.max(24.0, 2.5 * pixel), edge),
+        math.max<double>(
+          math.max(math.max<double>(24, 2.5 * pixel), edge),
           recipe.kind == 3 ? recipe.chromaticBand : 0,
         ) +
         0.5 +
@@ -592,7 +600,7 @@ class RenderPrismSurface extends RenderProxyBox {
     }
     _debugReportedRasterTransform = true;
     debugPrint(
-      'RawPrismSurface: an ancestor moves this glass after it is rasterized, so '
+      'RawPrismSurface: an ancestor moves this glass after rasterization, so '
       'its refraction and rim are drawn away from its content. '
       'Transform(filterQuality: ...) and other ImageFilter.matrix layers do '
       'this. Remove filterQuality from the ancestor Transform; a plain '
@@ -606,9 +614,9 @@ class RenderPrismSurface extends RenderProxyBox {
     _paintOffset = offset;
     final shadow = _shadowLayer.layer ??= PrismSurfaceShadowLayer(this);
     context.pushLayer(shadow, (context, offset) {
-      final canvas = context.canvas;
-      canvas.save();
-      canvas.translate(offset.dx, offset.dy);
+      final canvas = context.canvas
+        ..save()
+        ..translate(offset.dx, offset.dy);
       final local = _scaleTransform;
       if (local != null) canvas.transform(local.storage);
       PrismExteriorShadow(
@@ -623,8 +631,7 @@ class RenderPrismSurface extends RenderProxyBox {
     final blur = blurPass != null;
     final fill = fillSigma != null;
     if (blur || fill) {
-      final frost = _frostLayer.layer ??= PrismFrostLayer();
-      frost.glass = this;
+      final frost = (_frostLayer.layer ??= PrismFrostLayer())..glass = this;
       final local = _scaleTransform;
       final contour = local == null
           ? shape.path(size)
@@ -644,9 +651,9 @@ class RenderPrismSurface extends RenderProxyBox {
     } else {
       _frostClip.layer = null;
     }
-    final layer = _glassLayer.layer ??= PrismSurfaceLayer();
-    layer.glass = this;
-    layer.filter = _filterLayer.layer ??= BackdropFilterLayer();
+    final layer = (_glassLayer.layer ??= PrismSurfaceLayer())
+      ..glass = this
+      ..filter = _filterLayer.layer ??= BackdropFilterLayer();
     _clipLayer.layer = context.pushClipRect(
       needsCompositing,
       offset,
@@ -718,19 +725,21 @@ class PrismSurfaceLayer extends ContainerLayer {
     assert(() {
       owner._debugCheckRasterTransform(this);
       return true;
-    }());
+    }(), 'raster transform diagnostics must complete');
     final group = owner._group;
     if (group == null && !owner.onScreen(this)) return;
     final batch = group?.prepared[owner];
     final backdrop = filter!;
     if (batch == null) {
-      backdrop.backdropKey = group != null && group.shared.contains(owner)
-          ? group.sharedKey
-          : null;
-      backdrop.filter = _filterCache.resolve(owner.shader, owner.uniforms(), 0);
+      backdrop
+        ..backdropKey = group != null && group.shared.contains(owner)
+            ? group.sharedKey
+            : null
+        ..filter = _filterCache.resolve(owner.shader, owner.uniforms(), 0);
     } else {
-      backdrop.backdropKey = batch.key;
-      backdrop.filter = batch.filter;
+      backdrop
+        ..backdropKey = batch.key
+        ..filter = batch.filter;
     }
     backdrop.markNeedsAddToScene();
     addChildrenToScene(builder);
@@ -738,7 +747,7 @@ class PrismSurfaceLayer extends ContainerLayer {
 }
 
 @internal
-class PrismSurfaceContentLayer extends ContainerLayer {}
+class PrismSurfaceContentLayer extends ContainerLayer;
 
 @internal
 class PrismFrostLayer extends ContainerLayer {
@@ -828,6 +837,7 @@ class PrismFrostLayer extends ContainerLayer {
   }
 }
 
+/// Whether two layers share a clear backdrop, or null if disconnected.
 @visibleForTesting
 bool? sameBackdropBetween(Layer from, Layer to) =>
     PrismFillShare._clearBetween(from, to);
@@ -938,7 +948,7 @@ class PrismFilterCache {
   ui.FragmentShader? _shader;
   List<double>? _values;
   double? _frost;
-  ui.ImageFilter? _filter;
+  late ui.ImageFilter _filter;
 
   ui.ImageFilter resolve(
     ui.FragmentShader shader,
@@ -956,7 +966,7 @@ class PrismFilterCache {
       _values = values;
       _frost = frost;
     }
-    return _filter!;
+    return _filter;
   }
 }
 
@@ -977,7 +987,7 @@ ui.ImageFilter _opticalFilter(ui.FragmentShader shader, double frost) =>
 
 @internal
 class PrismSurfaceShadowLayer extends ContainerLayer {
-  PrismSurfaceShadowLayer(this.glass);
+  new(this.glass);
   final RenderPrismSurface glass;
   @override
   bool get alwaysNeedsAddToScene => true;
@@ -995,8 +1005,9 @@ class PrismSurfaceShadowLayer extends ContainerLayer {
       return;
     }
     if (group.hoistHost == null) {
-      group.hoistHost = glass;
-      group.hoist(builder, glass, glass._paintOffset);
+      group
+        ..hoistHost = glass
+        ..hoist(builder, glass, glass._paintOffset);
     }
   }
 }

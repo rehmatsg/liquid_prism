@@ -1,26 +1,26 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import 'prism_colors.dart';
+import 'package:liquid_prism/src/core/prism_colors.dart';
 
 /// Badge indicator displayed on a tab or toolbar item.
 @immutable
 final class PrismBadge {
   /// Creates a compact activity dot badge.
-  const PrismBadge.dot({this.semanticLabel = 'New activity'})
+  const new dot({this.semanticLabel = 'New activity'})
     : count = null,
       overflow = null,
       label = null;
 
   /// Creates a numeric count badge with optional [overflow] cap.
-  const PrismBadge.count(int this.count, {this.overflow, String? semanticLabel})
-    : assert(count >= 0),
-      assert(overflow == null || overflow > 0),
+  const new count(int this.count, {this.overflow, String? semanticLabel})
+    : assert(count >= 0, 'count must be non-negative.'),
+      assert(overflow == null || overflow > 0, 'overflow must be positive.'),
       label = null,
       semanticLabel = semanticLabel ?? '$count';
 
   /// Creates a badge displaying short custom text.
-  const PrismBadge.text(String this.label, {String? semanticLabel})
+  const new text(String this.label, {String? semanticLabel})
     : count = null,
       overflow = null,
       semanticLabel = semanticLabel ?? label;
@@ -72,7 +72,7 @@ final class PrismBadge {
 
 @internal
 class PrismBadgeView extends StatelessWidget {
-  const PrismBadgeView({
+  const new({
     super.key,
     required this.badge,
     this.height = 18.33,
@@ -123,7 +123,7 @@ class PrismBadgeView extends StatelessWidget {
 
 @internal
 class PrismBadgedIcon extends StatelessWidget {
-  const PrismBadgedIcon({
+  const new({
     super.key,
     required this.child,
     this.badge,

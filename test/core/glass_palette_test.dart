@@ -10,7 +10,7 @@ import 'package:liquid_prism/src/theme/native_colors.dart';
 void main() {
   final fixture = jsonDecode(
     File('test/fixtures/native_colors.json').readAsStringSync(),
-  ) as Map<String, dynamic>;
+  ) as Map<String, Object?>;
 
   test('all named colors preserve native source RGB and semantic alpha', () {
     for (final colors in [PrismColors.light, PrismColors.dark]) {
@@ -30,7 +30,10 @@ void main() {
       };
       expect(named.length, 20);
       for (final entry in named.entries) {
-        final native = fixture['palette'][entry.key][mode]['rgba'] as List;
+        final palette = fixture['palette']! as Map<String, Object?>;
+        final color = palette[entry.key]! as Map<String, Object?>;
+        final appearance = color[mode]! as Map<String, Object?>;
+        final native = appearance['rgba']! as List<Object?>;
         final actual = [
           entry.value.r,
           entry.value.g,
@@ -40,7 +43,7 @@ void main() {
         for (var i = 0; i < 4; i++) {
           expect(
             actual[i],
-            closeTo(native[i] as num, 2e-7),
+            closeTo(native[i]! as num, 2e-7),
             reason: '$mode ${entry.key} channel $i',
           );
         }
@@ -51,7 +54,8 @@ void main() {
   });
 
   test('every captured tint uses full native RGB rows and caller opacity', () {
-    for (final row in fixture['tints'] as List) {
+    for (final entry in fixture['tints']! as List<Object?>) {
+      final row = entry! as Map<String, Object?>;
       final colors = row['mode'] == 'dark'
           ? PrismColors.dark
           : PrismColors.light;
@@ -59,7 +63,7 @@ void main() {
       final glass = row['variant'] == 'clear'
           ? PrismGlass.clear
           : PrismGlass.regular;
-      final native = row['matrix'] as List;
+      final native = row['matrix']! as List<Object?>;
       final expected = [
         for (final i in [0, 5, 10]) ...[
           ...native.sublist(i, i + 3),
@@ -87,10 +91,12 @@ void main() {
 
   test('pill matrices preserve native floats and convert only offsets', () {
     for (final mode in ['light', 'dark']) {
-      final native = fixture['selection'][mode]['matrix'] as List;
+      final selection = fixture['selection']! as Map<String, Object?>;
+      final appearance = selection[mode]! as Map<String, Object?>;
+      final native = appearance['matrix']! as List<Object?>;
       final expected = [
         for (var i = 0; i < 20; i++)
-          (native[i] as num).toDouble() * (i % 5 == 4 ? 255 : 1),
+          (native[i]! as num).toDouble() * (i % 5 == 4 ? 255 : 1),
       ];
       expect(
         mode == 'dark' ? nativeDarkSelection : nativeLightSelection,

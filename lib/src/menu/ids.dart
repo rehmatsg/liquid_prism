@@ -4,7 +4,7 @@ final Random _rng = Random.secure();
 
 /// Mints session-scoped menu identifiers for the native bridge.
 final class MenuIds {
-  MenuIds._();
+  new _();
 
   /// The random identifier prefix for this isolate.
   static final String session = List.generate(

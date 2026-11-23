@@ -1,7 +1,9 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 
+/// A sheet route that animates the page covered by another sheet.
 class ShowcaseSheetRoute extends CupertinoSheetRoute<void> {
-  ShowcaseSheetRoute({required super.scrollableBuilder});
+  /// Creates a [ShowcaseSheetRoute].
+  new({required super.scrollableBuilder});
 
   @override
   DelegatedTransitionBuilder get delegatedTransition => _coverPage;
@@ -37,7 +39,7 @@ class ShowcaseSheetRoute extends CupertinoSheetRoute<void> {
 }
 
 class _CoveredPage extends StatefulWidget {
-  const _CoveredPage({
+  const new({
     required this.animation,
     required this.sheet,
     required this.child,

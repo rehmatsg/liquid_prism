@@ -9,7 +9,7 @@ import 'package:liquid_prism/src/rendering/surface_render.dart';
 
 import '../support/rendering.dart';
 
-final backdrop = find.byWidgetPredicate(
+final Finder backdrop = find.byWidgetPredicate(
   (widget) => widget is BackdropFilter || widget is PrismSurfaceRenderWidget,
 );
 
@@ -61,7 +61,7 @@ void main() {
     await pumpLens(
       tester,
       lift: 0,
-      style: const PrismLensStyle(optics: PrismOptics()),
+      style: const PrismLensStyle(optics: PrismOptics.clear),
     );
     expect(backdrop, findsOneWidget);
     await pumpLens(tester, lift: 0, rim: 1);

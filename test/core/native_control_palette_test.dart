@@ -12,7 +12,7 @@ import '../support/rendering.dart';
 void main() {
   final native = jsonDecode(
     File('research/specs/native_controls_spec.json').readAsStringSync(),
-  ) as Map;
+  ) as Map<String, Object?>;
   for (final brightness in Brightness.values) {
     testWidgets(
       'control source colors match native ${brightness.name} and live tint',
@@ -44,14 +44,18 @@ void main() {
           }
         }
 
-        final layers =
-            native['colors'][brightness.name]['sliderTrackLayers'] as List;
-        final source = layers.first['backgroundColor']['components'] as List;
+        final palette = native['colors']! as Map<String, Object?>;
+        final appearance = palette[brightness.name]! as Map<String, Object?>;
+        final layers = appearance['sliderTrackLayers']! as List<Object?>;
+        final layer = layers.first! as Map<String, Object?>;
+        final backgroundColor =
+            layer['backgroundColor']! as Map<String, Object?>;
+        final source = backgroundColor['components']! as List<Object?>;
         final expectedTrack = Color.from(
-          alpha: (source[1] as num).toDouble(),
-          red: (source[0] as num).toDouble(),
-          green: (source[0] as num).toDouble(),
-          blue: (source[0] as num).toDouble(),
+          alpha: (source[1]! as num).toDouble(),
+          red: (source[0]! as num).toDouble(),
+          green: (source[0]! as num).toDouble(),
+          blue: (source[0]! as num).toDouble(),
         );
         final slider = PrismSlider(value: .4, onChanged: (_) {});
 
@@ -152,7 +156,8 @@ void main() {
         DefaultTextStyle.of(tester.element(find.text('One'))).style.color,
         const Color(0xFF000000),
       );
-      const red = Color(0xFFFF0000), blue = Color(0xFF0000FF);
+      const red = Color(0xFFFF0000);
+      const blue = Color(0xFF0000FF);
       expect(
         await render(themed: const PrismSegmentedStyle(thumbColor: blue)),
         [0, 0, 255, 255],
@@ -195,7 +200,8 @@ void main() {
             Radius.circular(size.shortestSide / 2),
           ),
         );
-      final inside = <Offset>[], outside = <Offset>[];
+      final inside = <Offset>[];
+      final outside = <Offset>[];
       const probes = [
         Offset(1.5, 0),
         Offset(-1.5, 0),

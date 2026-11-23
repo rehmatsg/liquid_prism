@@ -1,25 +1,25 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import '../controls/prism_pressable.dart';
-import '../core/prism_glass.dart';
-import '../core/prism_optics.dart';
-import '../navigation/prism_system_chrome.dart';
-import '../theme/prism_theme.dart';
-import 'glass_group.dart';
-import 'prism.dart';
-import 'prism_display.dart';
-import 'prism_transition.dart';
-import 'recipe.dart';
-import 'surface_render.dart';
+import 'package:liquid_prism/src/controls/prism_pressable.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_optics.dart';
+import 'package:liquid_prism/src/navigation/prism_system_chrome.dart';
+import 'package:liquid_prism/src/rendering/glass_group.dart';
+import 'package:liquid_prism/src/rendering/prism.dart';
+import 'package:liquid_prism/src/rendering/prism_display.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/surface_render.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Live backdrop glass with sharp foreground content.
 class PrismSurface extends StatelessWidget {
   /// Creates a surface using local, themed, and native material defaults.
-  const PrismSurface({
+  const new({
     super.key,
     this.glass,
     this.blur,
@@ -61,7 +61,7 @@ class PrismSurface extends StatelessWidget {
 /// Internal surface with resolved component roles and optical state.
 @internal
 class RawPrismSurface extends StatefulWidget {
-  const RawPrismSurface({
+  const new({
     super.key,
     this.glass,
     this.blur,
@@ -77,11 +77,14 @@ class RawPrismSurface extends StatefulWidget {
     this.resting = false,
     this.materialOptics = false,
     this.disabledProminent = false,
-  }) : assert(blur == null || (blur >= 0 && blur <= 12)),
-       assert(lensRim >= 0),
-       assert(chromaticSplit >= 0),
-       assert(chromaticBand >= 0),
-       assert(underlay >= 0);
+  }) : assert(
+         blur == null || (blur >= 0 && blur <= 12),
+         'blur must be null or in [0, 12]',
+       ),
+       assert(lensRim >= 0, 'lensRim must be nonnegative'),
+       assert(chromaticSplit >= 0, 'chromaticSplit must be nonnegative'),
+       assert(chromaticBand >= 0, 'chromaticBand must be nonnegative'),
+       assert(underlay >= 0, 'underlay must be nonnegative');
   final PrismGlass? glass;
   final double? blur;
 
@@ -180,7 +183,7 @@ class _RawPrismSurfaceState extends State<RawPrismSurface> {
     if (PrismShaderCache.program != null) {
       _shader = PrismShaderCache.createShader();
     } else if (Prism.isShaderSupported) {
-      _load();
+      unawaited(_load());
     }
   }
 

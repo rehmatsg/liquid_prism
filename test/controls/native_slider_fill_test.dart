@@ -23,7 +23,7 @@ void main() {
             data: const MediaQueryData(),
             child: Center(
               child: SizedBox(
-                width: (capture['width'] as num).toDouble(),
+                width: (capture['width']! as num).toDouble(),
                 child: StatefulBuilder(
                   builder: (context, setState) {
                     update = setState;
@@ -37,15 +37,16 @@ void main() {
       );
       for (final sample in capture['samples']! as List<Object?>) {
         final row = sample! as Map<String, Object?>;
-        update(() => value = (row['value'] as num).toDouble());
+        update(() => value = (row['value']! as num).toDouble());
         await tester.pumpAndSettle();
         final active = tester.getRect(find.byType(ControlTrack).last);
         final track = tester.getRect(find.byType(ControlTrack).first);
         expect(
           active.width,
-          closeTo((row['fillWidth'] as num).toDouble(), .001),
+          closeTo((row['fillWidth']! as num).toDouble(), .001),
           reason:
-              'Native active-fill width at ${(value * 100).toStringAsFixed(2)}%.',
+              'Native active-fill width at '
+              '${(value * 100).toStringAsFixed(2)}%.',
         );
         expect(
           rtl ? active.right : active.left,

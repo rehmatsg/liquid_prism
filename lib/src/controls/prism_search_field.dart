@@ -2,17 +2,16 @@ import 'dart:math' as math;
 
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/services.dart';
-
-import '../core/prism_motion.dart';
-import '../navigation/prism_toolbar.dart';
-import '../navigation/prism_toolbar_content.dart';
-import '../navigation/prism_toolbar_style.dart';
-import '../rendering/chrome_material.dart';
-import '../rendering/prism_transition.dart';
-import '../rendering/recipe.dart';
-import '../theme/prism_theme.dart';
-import 'prism_pressable.dart';
-import 'prism_search_style.dart';
+import 'package:liquid_prism/src/controls/prism_pressable.dart';
+import 'package:liquid_prism/src/controls/prism_search_style.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_content.dart';
+import 'package:liquid_prism/src/navigation/prism_toolbar_style.dart';
+import 'package:liquid_prism/src/rendering/chrome_material.dart';
+import 'package:liquid_prism/src/rendering/prism_transition.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// Wraps the search capsule without remounting the editor.
 typedef PrismSearchFieldBuilder = Widget Function(
@@ -29,7 +28,7 @@ typedef PrismSearchSuffixBuilder = Widget? Function(
 /// A glass search editor that preserves borrowed controller ownership.
 class PrismSearchField extends StatefulWidget {
   /// Creates a search field with optional borrowed editing resources.
-  const PrismSearchField({
+  const new({
     super.key,
     this.controller,
     this.focusNode,
@@ -68,17 +67,29 @@ class PrismSearchField extends StatefulWidget {
   /// Borrowed focus node; null uses an owned node.
   final FocusNode? focusNode;
 
-  /// Placeholder and accessible names for clear and cancel actions.
-  final String placeholder, clearLabel, cancelLabel;
+  /// Placeholder displayed while the editor is empty.
+  final String placeholder;
 
-  /// Callbacks for user edits and submitted text.
-  final ValueChanged<String>? onChanged, onSubmitted;
+  /// Accessible name for the clear action.
+  final String clearLabel;
+
+  /// Visible and accessible name for the cancel action.
+  final String cancelLabel;
+
+  /// Called when the user edits text.
+  final ValueChanged<String>? onChanged;
+
+  /// Called when the user submits text.
+  final ValueChanged<String>? onSubmitted;
 
   /// Called after clearing text and dismissing keyboard focus.
   final VoidCallback? onCancel;
 
-  /// Whether editing is enabled and initial focus is requested.
-  final bool enabled, autofocus;
+  /// Whether editing is enabled.
+  final bool enabled;
+
+  /// Whether to request focus when mounted.
+  final bool autofocus;
 
   /// Visual overrides merged over the search theme.
   final PrismSearchStyle? style;
@@ -95,17 +106,32 @@ class PrismSearchField extends StatefulWidget {
   /// Keyboard capitalization behavior.
   final TextCapitalization textCapitalization;
 
-  /// Correction, suggestion, and editing behavior.
-  final bool autocorrect, enableSuggestions, readOnly;
+  /// Whether to enable automatic text correction.
+  final bool autocorrect;
+
+  /// Whether to show text suggestions.
+  final bool enableSuggestions;
+
+  /// Whether the editor prevents text changes.
+  final bool readOnly;
 
   /// Alignment of editor text.
   final TextAlign textAlign;
 
-  /// Callbacks for taps, editing completion, and the clear action.
-  final VoidCallback? onTap, onEditingComplete, onCleared;
+  /// Called when the editor is tapped.
+  final VoidCallback? onTap;
 
-  /// Custom leading and trailing editor widgets.
-  final Widget? prefix, suffix;
+  /// Called when the user finishes editing.
+  final VoidCallback? onEditingComplete;
+
+  /// Called after clearing the editor.
+  final VoidCallback? onCleared;
+
+  /// Custom widget before the editor.
+  final Widget? prefix;
+
+  /// Custom widget after the editor.
+  final Widget? suffix;
 
   /// Builds trailing content unless an explicit suffix is supplied.
   final PrismSearchSuffixBuilder? suffixBuilder;
@@ -159,8 +185,8 @@ class _PrismSearchFieldState extends State<PrismSearchField>
   void didUpdateWidget(PrismSearchField old) {
     super.didUpdateWidget(old);
     if (old.controller != widget.controller) {
-      final previous = old.controller ?? _ownedController;
-      previous.removeListener(_textChanged);
+      final previous = (old.controller ?? _ownedController)
+        ..removeListener(_textChanged);
       if (widget.controller == null) _ownedController.value = previous.value;
       _controller.addListener(_textChanged);
     }

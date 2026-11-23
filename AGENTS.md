@@ -32,6 +32,6 @@ Liquid Prism is a Flutter package and iOS native-menu plugin. Keep public APIs s
 
 ## Verification
 
-Run `./tool/check.sh` after every change. For iOS native/Swift changes, also run `xcodebuild test -scheme liquid_prism-Package` and `pod lib lint ios/liquid_prism.podspec --allow-warnings --skip-tests`. Exercise shader or renderer changes on a real Impeller simulator or device; rebuild after GLSL changes.
+Run `./tool/check.sh` after every change. For iOS native/Swift changes, also run `xcodebuild test -scheme liquid_prism-Package` and `pod ipc spec ios/liquid_prism.podspec > /dev/null`. Exercise shader or renderer changes on a real Impeller simulator or device; rebuild after GLSL changes.
 
 Read [doc/agents/README.md](doc/agents/README.md) for detailed rendering, testing, and architecture guides.

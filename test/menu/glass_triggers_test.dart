@@ -34,8 +34,9 @@ void main() {
   );
   void select() {
     final id = platform.shows.last.menuId;
-    platform.emit(PrismMenuActionEvent(menuId: id, actionId: 'chosen'));
-    platform.emit(PrismMenuDismissed(menuId: id));
+    platform
+      ..emit(PrismMenuActionEvent(menuId: id, actionId: 'chosen'))
+      ..emit(PrismMenuDismissed(menuId: id));
   }
 
   testWidgets(
@@ -64,51 +65,49 @@ void main() {
     },
   );
 
-  testWidgets(
-    'toolbar anchors to its action rather than the entire group; disabled menu does nothing',
-    (tester) async {
-      Object? result;
-      await tester.pumpWidget(
-        app(
-          PrismToolbar.group(
-            items: [
-              PrismToolbarItem.menu(
-                key: const ValueKey('active-menu'),
-                icon: const Icon(CupertinoIcons.ellipsis),
-                label: 'Active menu',
-                menu: menu,
-                onSelected: (v) => result = v,
-              ),
-              const PrismToolbarItem.menu(
-                key: ValueKey('disabled-menu'),
-                icon: Icon(CupertinoIcons.star),
-                label: 'Disabled menu',
-                menu: menu,
-                enabled: false,
-              ),
-            ],
-          ),
+  testWidgets('toolbar anchors to its action rather than '
+      'the entire group; disabled menu does nothing', (tester) async {
+    Object? result;
+    await tester.pumpWidget(
+      app(
+        PrismToolbar.group(
+          items: [
+            PrismToolbarItem.menu(
+              key: const ValueKey('active-menu'),
+              icon: const Icon(CupertinoIcons.ellipsis),
+              label: 'Active menu',
+              menu: menu,
+              onSelected: (v) => result = v,
+            ),
+            const PrismToolbarItem.menu(
+              key: ValueKey('disabled-menu'),
+              icon: Icon(CupertinoIcons.star),
+              label: 'Disabled menu',
+              menu: menu,
+              enabled: false,
+            ),
+          ],
         ),
-      );
-      await tester.tap(find.byKey(const ValueKey('active-menu')));
-      await tester.pump();
-      final action = tester.getRect(find.byKey(const ValueKey('active-menu')));
-      final anchor = platform.shows.single.anchor;
-      expect(anchor['width'], closeTo(action.width, .01));
-      expect(anchor['height'], closeTo(action.height, .01));
-      expect(anchor['x'], closeTo(action.left, .01));
-      expect(
-        anchor['width'] as double,
-        lessThan(tester.getSize(find.byType(PrismToolbar)).width),
-      );
-      select();
-      await tester.pumpAndSettle();
-      expect(result, 'chosen-value');
-      await tester.tap(find.byKey(const ValueKey('disabled-menu')));
-      await tester.pumpAndSettle();
-      expect(platform.shows, hasLength(1));
-    },
-  );
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('active-menu')));
+    await tester.pump();
+    final action = tester.getRect(find.byKey(const ValueKey('active-menu')));
+    final anchor = platform.shows.single.anchor;
+    expect(anchor['width'], closeTo(action.width, .01));
+    expect(anchor['height'], closeTo(action.height, .01));
+    expect(anchor['x'], closeTo(action.left, .01));
+    expect(
+      anchor['width']! as double,
+      lessThan(tester.getSize(find.byType(PrismToolbar)).width),
+    );
+    select();
+    await tester.pumpAndSettle();
+    expect(result, 'chosen-value');
+    await tester.tap(find.byKey(const ValueKey('disabled-menu')));
+    await tester.pumpAndSettle();
+    expect(platform.shows, hasLength(1));
+  });
 
   testWidgets(
     'disabled glass menu and disposal during a native menu are safe',

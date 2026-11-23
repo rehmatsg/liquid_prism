@@ -2,19 +2,18 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
-import '../core/prism_glass.dart';
-import '../core/prism_haptics.dart';
-import '../core/prism_motion.dart';
-import '../theme/prism_theme.dart';
-import 'control_interaction.dart';
-import 'control_material.dart';
-import 'prism_switch_style.dart';
+import 'package:liquid_prism/src/controls/control_interaction.dart';
+import 'package:liquid_prism/src/controls/control_material.dart';
+import 'package:liquid_prism/src/controls/prism_switch_style.dart';
+import 'package:liquid_prism/src/core/prism_glass.dart';
+import 'package:liquid_prism/src/core/prism_haptics.dart';
+import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/theme/prism_theme.dart';
 
 /// A parent-controlled switch with a lifted glass thumb.
 class PrismSwitch extends StatelessWidget {
   /// Creates a controlled switch.
-  const PrismSwitch({
+  const new({
     super.key,
     required this.value,
     required this.onChanged,
@@ -36,8 +35,11 @@ class PrismSwitch extends StatelessWidget {
   /// Visual and motion overrides merged over the component theme.
   final PrismSwitchStyle? style;
 
-  /// Callbacks at the start and end of user input.
-  final ValueChanged<bool>? onChangeStart, onChangeEnd;
+  /// Called when user input starts.
+  final ValueChanged<bool>? onChangeStart;
+
+  /// Called when user input ends.
+  final ValueChanged<bool>? onChangeEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -51,14 +53,18 @@ class PrismSwitch extends StatelessWidget {
     final scale = appearance.scale ?? 1;
     final width = (appearance.width ?? 63) * scale;
     final trackHeight = (appearance.trackHeight ?? 28) * scale;
-    final hitWidth = math.max(44.0, width);
-    final hitHeight = math.max(44.0, (appearance.hitHeight ?? 44) * scale);
+    final hitWidth = math.max<double>(44, width);
+    final hitHeight = math.max<double>(
+      44,
+      (appearance.hitHeight ?? 44) * scale,
+    );
     final inset = (appearance.inset ?? 2) * scale;
     final thumb = (appearance.thumbSize ?? const Size(37, 24)) * scale;
     final held =
         (appearance.liftedThumbSize ?? const Size(58, 115 / 3)) * scale;
     assert(
       thumb.width > 0 && thumb.height > 0 && held.width > 0 && held.height > 0,
+      'Resting and lifted thumb dimensions must be positive.',
     );
     assert(
       width > thumb.width + 2 * inset,

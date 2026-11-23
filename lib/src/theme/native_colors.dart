@@ -1,3 +1,4 @@
+/// Native tint matrices keyed by appearance flags and RGB tint.
 const nativeTintMatrices = <(bool, bool, int), List<double>>{
   (false, true, 0x0091FF): [
     0.04340582713484764,
@@ -449,6 +450,7 @@ const nativeTintMatrices = <(bool, bool, int), List<double>>{
   ],
 };
 
+/// Native selection color matrix for light appearance.
 const nativeLightSelection = <double>[
   1.1850999593734741,
   -0.050200000405311584,
@@ -472,6 +474,7 @@ const nativeLightSelection = <double>[
   0,
 ];
 
+/// Native selection color matrix for dark appearance.
 const nativeDarkSelection = <double>[
   1.1297999620437622,
   -0.2360999882221222,

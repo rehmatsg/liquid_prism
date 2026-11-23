@@ -80,36 +80,40 @@ void main() {
           (jsonDecode(
                 File('research/specs/native_defaults_spec.json')
                     .readAsStringSync(),
-              ) as Map)['measured']
-              as Map;
+              ) as Map<String, Object?>)['measured']!
+              as Map<String, Object?>;
       for (final dark in [false, true]) {
-        for (final row in measured[dark ? 'dark' : 'light'] as List) {
-          final tint = (row['tint'] as num).toDouble();
-          final inputs = row['materials'][0]['inputs'] as Map;
+        for (final entry
+            in measured[dark ? 'dark' : 'light']! as List<Object?>) {
+          final row = entry! as Map<String, Object?>;
+          final tint = (row['tint']! as num).toDouble();
+          final materials = row['materials']! as List<Object?>;
+          final material = materials[0]! as Map<String, Object?>;
+          final inputs = material['inputs']! as Map<String, Object?>;
           final passes = _frost(PrismGlass.regular, tint, dark: dark);
 
           const scale = 2 * FrostPass.engineSigmaScale;
-          final base = scale * (inputs['inputBlurRadius'] as num);
-          final fill = scale * (inputs['inputBlurFillBlurRadius'] as num);
-          final normal = (inputs['inputBlurFillNormalOpacity'] as num)
+          final base = scale * (inputs['inputBlurRadius']! as num);
+          final fill = scale * (inputs['inputBlurFillBlurRadius']! as num);
+          final normal = (inputs['inputBlurFillNormalOpacity']! as num)
               .toDouble();
           final directional =
               inputs[dark
                       ? 'inputBlurFillDarkenOpacity'
-                      : 'inputBlurFillLightenOpacity']
+                      : 'inputBlurFillLightenOpacity']!
                   as num;
           if (tint == 1) {
-            expect(passes, [FrostPass.fill(fill.toDouble())]);
+            expect(passes, [FrostPass.fill(fill)]);
             continue;
           }
           expect(passes, [
-            FrostPass(base.toDouble(), 1, BlendMode.srcOver, true),
+            FrostPass(base, depthFade: true),
             FrostPass.fill(
-              fill.toDouble(),
+              fill,
               directional.toDouble(),
               dark ? BlendMode.darken : BlendMode.lighten,
             ),
-            if (normal > 0) FrostPass.fill(fill.toDouble(), normal),
+            if (normal > 0) FrostPass.fill(fill, normal),
           ]);
           expect(passes.first.scaled(.5).depthFade, isTrue);
           expect(passes.first.scaled(.5).sigma, base / 2);
@@ -117,7 +121,7 @@ void main() {
           expect(
             passes[1].scaled(.5),
             FrostPass.fill(
-              fill.toDouble(),
+              fill,
               directional / 2,
               dark ? BlendMode.darken : BlendMode.lighten,
             ),
@@ -376,7 +380,7 @@ void main() {
                 .toDiagnosticsNode()
                 .getProperties()
                 .firstWhere((p) => p.name == 'glassTint')
-                .value
+                .value!
             as double;
 
     Widget app(double? glassTint) => glassHarness(

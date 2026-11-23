@@ -56,7 +56,8 @@ void main() {
       );
       final lens = find.byType(RawPrismSurface);
       void expectBounds(String phase) {
-        final actual = tester.getSize(lens), expected = nativeSize(name, phase);
+        final actual = tester.getSize(lens);
+        final expected = nativeSize(name, phase);
         expect(actual.width, closeTo(expected.width, .01));
         expect(actual.height, closeTo(expected.height, .01));
       }
