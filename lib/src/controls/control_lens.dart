@@ -83,12 +83,9 @@ class ControlLens extends StatelessWidget {
             : 0.0;
         final light = appearance.rimLight ?? (slider ? 1.0 : .6);
         final faceBlack = appearance.faceBlack ?? (slider ? .1 : 0.0);
-        final rimLift = (progress / 0.55).clamp(0.0, 1.0);
-        final fillFade = ((progress - 0.15) / 0.45).clamp(0.0, 1.0);
         final fill = ColoredBox(
           color: restingColor.withValues(
-            alpha:
-                restingColor.a * (1 - fillFade * fillFade * (3 - 2 * fillFade)),
+            alpha: restingColor.a * (1 - progress),
           ),
         );
         final resting =
@@ -124,13 +121,13 @@ class ControlLens extends StatelessWidget {
                 appearance.optics ??
                 PrismOptics(
                   edgeWidth: rimWidth.clamp(.01, 64),
-                  refraction: (rimRefraction * rimLift).clamp(0, 64),
+                  refraction: (rimRefraction * progress).clamp(0, 64),
                   frost: 0,
                   dispersion: .3 * progress,
                   reflection: .04 * progress,
                   reflectionReach: (20 * tabScale).clamp(0, 80),
                   splay: .1,
-                  light: light * rimLift,
+                  light: light * progress,
                   saturation: 1,
                   brightness: 0,
                   tint: const Color(0xFFFFFFFF)

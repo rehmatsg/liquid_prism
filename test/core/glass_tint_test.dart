@@ -180,15 +180,25 @@ void main() {
 
     test('clear glass scales its blur and fades in a blur fill to tint 1', () {
       expect(_frost(PrismGlass.clear, 0), isEmpty);
-      expect(_frost(PrismGlass.clear, .25), [const FrostPass(.375)]);
-      expect(_frost(PrismGlass.clear, .5), [const FrostPass(.75)]);
+      expect(_frost(PrismGlass.clear, .25), [const FrostPass(.9)]);
+      expect(_frost(PrismGlass.clear, .5), [const FrostPass(1.8)]);
       expect(_frost(PrismGlass.clear, .75), [
-        const FrostPass(.75),
+        const FrostPass(1.8),
         const FrostPass.fill(PrismRecipe.blurFillFrost, .5),
       ]);
       expect(_frost(PrismGlass.clear, 1), [
         const FrostPass.fill(PrismRecipe.blurFillFrost),
       ]);
+    });
+
+    test('recipe optics keep their measured refraction and dispersion', () {
+      final regular = _recipe(PrismGlass.regular).optics(24);
+      expect(regular.refraction, 48);
+      expect(regular.dispersion, .2);
+      final clear = _recipe(PrismGlass.clear).optics(24);
+      expect(clear.refraction, 60);
+      expect(clear.dispersion, .2);
+      expect(PrismOptics.clear.frost, 1.8);
     });
 
     test('explicit blur, custom optics and lenses keep a plain frost', () {
@@ -222,7 +232,7 @@ void main() {
         FrostPass.effectiveSigma(_frost(PrismGlass.regular, 1)),
         FrostPass.regularFillSigma,
       );
-      expect(FrostPass.effectiveSigma(_frost(PrismGlass.clear, .75)), .75);
+      expect(FrostPass.effectiveSigma(_frost(PrismGlass.clear, .75)), 1.8);
       expect(FrostPass.effectiveSigma(const []), 0);
     });
   });
