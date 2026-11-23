@@ -2,11 +2,15 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 import 'package:liquid_prism/src/controls/control_interaction.dart';
+import 'package:liquid_prism/src/controls/control_lens.dart';
 import 'package:liquid_prism/src/controls/control_material.dart';
 import 'package:liquid_prism/src/controls/prism_segmented_style.dart';
+import 'package:liquid_prism/src/controls/prism_selection.dart';
 import 'package:liquid_prism/src/core/prism_glass.dart';
 import 'package:liquid_prism/src/core/prism_lens_style.dart';
 import 'package:liquid_prism/src/core/prism_motion.dart';
+import 'package:liquid_prism/src/rendering/recipe.dart';
+import 'package:liquid_prism/src/rendering/surface.dart';
 import 'package:liquid_prism/src/rendering/tab_content_lens.dart';
 import 'package:liquid_prism/src/theme/prism_theme.dart';
 import 'package:liquid_prism/src/theme/typography.dart';
@@ -55,10 +59,16 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
       appearance.motion,
     );
     final scale = appearance.scale ?? 1;
-    var hitHeight = math.max<double>(44, (appearance.hitHeight ?? 44) * scale);
-    var trackHeight = (appearance.trackHeight ?? 32) * scale;
-    var thumbHeight = (appearance.thumbHeight ?? 28) * scale;
-    final inset = (appearance.selectionInset ?? 2) * scale;
+    final glass = appearance.variant == PrismSegmentedVariant.glass;
+    final fontSize = (glass ? 15.0 : 13.0) * scale;
+    final tracking = glass ? -.23 * scale : null;
+    var trackHeight = (appearance.trackHeight ?? (glass ? 48 : 32)) * scale;
+    var thumbHeight = (appearance.thumbHeight ?? (glass ? 40 : 28)) * scale;
+    final inset = (appearance.selectionInset ?? (glass ? 4 : 2)) * scale;
+    var hitHeight = math.max<double>(
+      glass ? math.max(44, trackHeight) : 44,
+      (appearance.hitHeight ?? 44) * scale,
+    );
     final liftInset = (appearance.liftInset ?? const Size(12, 8)) * scale;
     assert(
       liftInset.width >= 0 && liftInset.height >= 0,
@@ -92,7 +102,11 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
       for (final child in children.values) {
         final base = prismTextStyle(
           context,
-          TextStyle(fontSize: 13 * scale, fontWeight: FontWeight.w500),
+          TextStyle(
+            fontSize: fontSize,
+            fontWeight: glass ? FontWeight.w400 : FontWeight.w500,
+            letterSpacing: tracking,
+          ),
         ).merge(appearance.labelStyle);
         final span = switch (child) {
           Text(:final data, :final textSpan, :final style) => TextSpan(
@@ -191,7 +205,11 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
             grabExtent: slot / 2,
             builder: (context, position, lift, stretch, activate) {
               final selectedForeground = appearance.selectedForegroundColor;
-              final selectedLabel = colors.controlThumbLabel;
+              final selectedLabel = glass
+                  ? colors.label
+                  : colors.controlThumbLabel;
+              final selectionShape =
+                  appearance.lens?.shape ?? PrismShape.capsule;
               final preview = (position * (count - 1)).round().clamp(
                 0,
                 count - 1,
@@ -221,13 +239,37 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
                       top: (hitHeight - trackHeight) / 2,
                       width: width,
                       height: trackHeight,
-                      child: ControlTrack(
-                        shape: appearance.trackShape ?? PrismShape.capsule,
-                        color:
-                            appearance.backgroundColor ??
-                            colors.tertiarySystemFill,
-                      ),
+                      child: glass
+                          ? RawPrismSurface(
+                              glass: appearance.glass,
+                              shape:
+                                  appearance.trackShape ?? PrismShape.capsule,
+                              role: PrismRole.toolbar,
+                              child: const SizedBox.expand(),
+                            )
+                          : ControlTrack(
+                              shape:
+                                  appearance.trackShape ?? PrismShape.capsule,
+                              color:
+                                  appearance.backgroundColor ??
+                                  colors.tertiarySystemFill,
+                            ),
                     ),
+                    if (glass)
+                      Positioned.fromRect(
+                        rect: pill,
+                        child: IgnorePointer(
+                          child: Opacity(
+                            opacity: 1 - lift.clamp(0.0, 1.0),
+                            child: PrismSelection(
+                              selected: true,
+                              shape: selectionShape,
+                              color: appearance.thumbColor,
+                              child: const SizedBox.expand(),
+                            ),
+                          ),
+                        ),
+                      ),
                     Positioned.fromRect(
                       rect: pill,
                       child: Transform(
@@ -237,12 +279,20 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
                           1 - stretch,
                           1,
                         ),
-                        child: ControlThumb(
-                          lift: lift,
-                          small: false,
-                          color: appearance.thumbColor,
-                          style: appearance.lens,
-                        ),
+                        child: glass
+                            ? ControlLens(
+                                lift: lift,
+                                shape: selectionShape,
+                                role: PrismRole.tabLens,
+                                rim: 1,
+                                style: appearance.lens,
+                              )
+                            : ControlThumb(
+                                lift: lift,
+                                small: false,
+                                color: appearance.thumbColor,
+                                style: appearance.lens,
+                              ),
                       ),
                     ),
                     Positioned.fill(
@@ -288,11 +338,13 @@ class PrismSegmentedControl<T extends Object> extends StatelessWidget {
                                             prismTextStyle(
                                                   context,
                                                   TextStyle(
-                                                    fontSize: 13 * scale,
+                                                    fontSize: fontSize,
                                                     fontWeight:
-                                                        i == visualSelection
+                                                        i == visualSelection &&
+                                                            !glass
                                                         ? FontWeight.w500
                                                         : FontWeight.w400,
+                                                    letterSpacing: tracking,
                                                   ),
                                                 )
                                                 .merge(appearance.labelStyle)

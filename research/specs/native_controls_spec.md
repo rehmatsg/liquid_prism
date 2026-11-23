@@ -308,3 +308,23 @@ every `.44 band` (5.5 and 2.1 points at the default 4.8). `size` is the pill's
 height over 73.6, following native's aberration inputs (H/19), so the segmented
 selection's labels fringe at about 0.6 of the tab's; the segmented glyph fringe
 itself was not measured.
+
+## Glass segmented control (toolbar picker)
+
+Reference: a SwiftUI segmented `Picker` in a `ToolbarItem` (`.principal` and
+`.bottomBar`), iPhone Duo simulator, iOS 27.1, light, 3x, read from a
+screenshot of a 240-point control with two segments.
+
+| Property | Value |
+| --- | --- |
+| Track | Regular glass capsule, 48 points tall |
+| Resting selection | Tinted pill 40 points tall, inset 4 points from the track on every side |
+| Labels | 15-point, label color in both states |
+
+Label widths fit 15-point regular with the system's -0.23 tracking for the
+unselected label (274 px against 273 predicted). The selected label measures
+186 px, closer to regular (184) than medium (189), so both states use regular;
+that inference rests on width alone. A plain segmented `Picker` with
+`.glassEffect()` keeps its white thumb and 32-point track and is a different
+look. The held state was not captured natively: the package lifts the selection
+into the tab bar's lens.

@@ -15,7 +15,7 @@ export 'src/controls/prism_search_style.dart'
     show PrismSearchCancelVisibility, PrismSearchStyle;
 export 'src/controls/prism_segmented_control.dart' show PrismSegmentedControl;
 export 'src/controls/prism_segmented_style.dart'
-    show PrismSegmentedSizing, PrismSegmentedStyle;
+    show PrismSegmentedSizing, PrismSegmentedStyle, PrismSegmentedVariant;
 export 'src/controls/prism_slider.dart' show PrismSlider;
 export 'src/controls/prism_slider_style.dart' show PrismSliderStyle;
 export 'src/controls/prism_switch.dart' show PrismSwitch;

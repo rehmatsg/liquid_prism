@@ -11,6 +11,10 @@
 - Remove internal shader plumbing parameters from public `PrismSurface` (moved to internal `RawPrismSurface`).
 - See [doc/migration-1.0.md](doc/migration-1.0.md) for the complete symbol mapping.
 
+### Features
+
+- Add a glass segmented control. `PrismSegmentedStyle(variant: PrismSegmentedVariant.glass)` gives the track a glass capsule with a tinted selection, matching a segmented picker in an iOS toolbar, for controls that float over content. `glass` selects the track material.
+
 ### Fixes & Improvements
 
 - Implement `operator ==` and `hashCode` on `PrismThemeData` and every immutable style, optics, motion, badge, tab, toolbar, and menu data class, fixing spurious `PrismTheme` descendant rebuilds.

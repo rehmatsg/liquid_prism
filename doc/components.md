@@ -254,6 +254,27 @@ heights, selection inset, lift inset per side, colors and typography.
 Set colors in `PrismSegmentedStyle`; local fields override the component theme. `onChangeStart`/`onChangeEnd` use your
 value type. Touch commits on release; keys and semantics commit immediately.
 
+### Glass segmented control
+
+Use the glass variant when the control floats over scrolling content, as iOS
+does for a segmented picker in a toolbar:
+
+```dart
+PrismSegmentedControl<String>(
+  selectedValue: kind,
+  onValueChanged: (next) => setState(() => kind = next),
+  children: const {'media': Text('Media'), 'links': Text('Links'), 'docs': Text('Docs')},
+  style: const PrismSegmentedStyle(variant: PrismSegmentedVariant.glass),
+)
+```
+
+The track becomes a glass capsule 48 points tall, the resting selection a tinted
+pill inset 4 points, and labels 15-point regular in the label color for both
+states. Holding the selection lifts it into the same lens the tab bar uses.
+Gestures, semantics, sizing and every other style field work as in the plain
+variant. Set `glass` to choose the track material, and set the variant in
+`PrismThemeData.segmentedControl` to apply it app-wide.
+
 A touch on the selected segment grabs the selection: it claims the pointer,
 lifts, and follows a drag at any angle. A touch on another segment behaves as on
 iOS: the selection neither lifts nor moves, the touched label dims to .4, a

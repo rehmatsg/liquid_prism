@@ -13,11 +13,22 @@ enum PrismSegmentedSizing {
   fitLabels,
 }
 
+/// Track material for `PrismSegmentedControl`.
+enum PrismSegmentedVariant {
+  /// A tinted track with an opaque selection that lifts into a lens.
+  plain,
+
+  /// A glass capsule with a tinted selection, for controls over content.
+  glass,
+}
+
 /// Track, typography, and selection overrides for `PrismSegmentedControl`.
 @immutable
 class PrismSegmentedStyle {
   /// Creates a partial segmented control style override.
   const new({
+    this.variant,
+    this.glass,
     this.width,
     this.sizing,
     this.labelPadding,
@@ -65,6 +76,12 @@ class PrismSegmentedStyle {
          contentDepth == null || contentDepth > 0,
          'Content depth must be positive.',
        );
+
+  /// Track material; defaults to [PrismSegmentedVariant.plain].
+  final PrismSegmentedVariant? variant;
+
+  /// Glass recipe for the track of the glass variant.
+  final PrismGlass? glass;
 
   /// Preferred width before scaling.
   final double? width;
@@ -128,6 +145,8 @@ class PrismSegmentedStyle {
 
   /// Returns a copy with specified fields replaced.
   PrismSegmentedStyle copyWith({
+    PrismSegmentedVariant? variant,
+    PrismGlass? glass,
     double? width,
     PrismSegmentedSizing? sizing,
     EdgeInsetsGeometry? labelPadding,
@@ -149,6 +168,8 @@ class PrismSegmentedStyle {
     double? contentDepth,
     PrismControlMotion? motion,
   }) => PrismSegmentedStyle(
+    variant: variant ?? this.variant,
+    glass: glass ?? this.glass,
     width: width ?? this.width,
     sizing: sizing ?? this.sizing,
     labelPadding: labelPadding ?? this.labelPadding,
@@ -176,6 +197,8 @@ class PrismSegmentedStyle {
   PrismSegmentedStyle merge(PrismSegmentedStyle? other) => other == null
       ? this
       : PrismSegmentedStyle(
+          variant: other.variant ?? variant,
+          glass: other.glass ?? glass,
           width: other.width ?? width,
           sizing: other.sizing ?? sizing,
           labelPadding: other.labelPadding ?? labelPadding,
@@ -207,6 +230,8 @@ class PrismSegmentedStyle {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrismSegmentedStyle &&
+          other.variant == variant &&
+          other.glass == glass &&
           other.width == width &&
           other.sizing == sizing &&
           other.labelPadding == labelPadding &&
@@ -230,6 +255,8 @@ class PrismSegmentedStyle {
 
   @override
   int get hashCode => Object.hashAll([
+    variant,
+    glass,
     width,
     sizing,
     labelPadding,

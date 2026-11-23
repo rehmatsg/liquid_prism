@@ -90,6 +90,7 @@ width for its continuous endpoint blend, even when the held knob grows or flexes
 
 | Fields | Default / meaning |
 | --- | --- |
+| `variant`, `glass` | `plain` / regular glass; `glass` only applies to the glass variant |
 | `width`, `scale`, `hitHeight` | 300 / 1 / 44, before scale |
 | `trackHeight`, `thumbHeight`, `selectionInset` | 32 / 28 / 2, before scale |
 | `liftInset` | (12, 8) extra space on each side, before scale |
@@ -101,6 +102,9 @@ width for its continuous endpoint blend, even when the held knob grows or flexes
 
 `refractContent`, `contentRefraction` and `contentDepth` default to true / 14 /
 11.2 for the held selection's foreground lens.
+
+The glass variant defaults to track 48, selection 40, inset 4 and 15-point
+regular labels, measured from a segmented picker in an iOS toolbar.
 
 Segments divide final width equally. `foregroundColor` overrides both label states;
 `selectedForegroundColor` applies only to the resting selected label. Child text
