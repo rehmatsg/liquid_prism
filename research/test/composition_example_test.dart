@@ -1,7 +1,8 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
-import 'package:liquid_prism_example/composition_main.dart';
+
+import '../benchmarks/composition_main.dart';
 
 void main() {
   for (final size in [const Size(320, 640), const Size(1024, 768)]) {
@@ -14,7 +15,7 @@ void main() {
         addTearDown(tester.view.reset);
         final key = GlobalKey<CompositionExampleState>();
         await tester.pumpWidget(CompositionExample(key: key));
-        for (final dock in GlassTabBarPlacement.values) {
+        for (final dock in PrismTabBarPlacement.values) {
           for (final rtl in [false, true]) {
             key.currentState!.configure(dock: dock, rtl: rtl, textScale: 1.6);
             await tester.pumpAndSettle();

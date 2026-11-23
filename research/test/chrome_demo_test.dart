@@ -5,7 +5,9 @@ import 'dart:io';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:liquid_prism_example/chrome_demo.dart';
+
+import '../benchmarks/chrome_demo.dart';
+
 import 'package:liquid_prism_example/showcase/sheet_route.dart';
 
 void main() {
@@ -186,7 +188,7 @@ void main() {
     tester,
   ) async {
     final source = jsonDecode(
-      File('../doc/native_chrome_spec.json').readAsStringSync(),
+      File('specs/native_chrome_spec.json').readAsStringSync(),
     );
     Rect reference(String profile) {
       final frame =
