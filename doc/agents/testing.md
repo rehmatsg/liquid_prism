@@ -13,7 +13,7 @@ flutter pub publish --dry-run
 3. `flutter analyze --fatal-infos` (root and `example/`)
 4. `flutter test --timeout=30s` (root and `example/`)
 5. `python3 -m unittest discover -s test/tooling -p 'test_*.py'`
-6. `python3 tool/check_versions.py`
+6. `python3 tool/release.py check`
 
 ## Native iOS checks
 

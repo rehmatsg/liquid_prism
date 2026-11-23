@@ -50,12 +50,14 @@ Starting with `1.0.0`, Liquid Prism follows [Semantic Versioning](https://semver
 
 Pull request titles must follow [Conventional Commits](https://www.conventionalcommits.org):
 
-- `feat:` / `feat(scope):` — backwards-compatible feature (bumps minor)
-- `fix:` / `fix(scope):` — bug fix (bumps patch)
-- `feat!:` or `BREAKING CHANGE:` footer — breaking change (bumps major)
+- `feat:` / `feat(scope):` for a backwards-compatible feature
+- `fix:` / `fix(scope):` for a bug fix
+- `feat!:` or a `BREAKING CHANGE:` footer for a breaking change
 - `perf:`, `refactor:`, `docs:`, `test:`, `ci:`, `build:`, `chore:`
 
-Releases are automated with [Release Please](https://github.com/googleapis/release-please):
-1. Merging Conventional Commits to `main` opens or updates a release PR that updates `pubspec.yaml`, `ios/liquid_prism.podspec`, `README.md`, `.release-please-manifest.json`, and `CHANGELOG.md`.
-2. Merging the release PR tags `vX.Y.Z` and publishes the GitHub Release automatically.
-3. Distribution is via Git tags and GitHub Releases; CI still runs `flutter pub publish --dry-run` to keep the package archive valid.
+Add a line for user-visible changes under `## Unreleased` in `CHANGELOG.md`.
+
+Releases start from a version tag:
+1. A release PR runs `python3 tool/release.py bump X.Y.Z`, which moves the pending changelog notes under the new version and updates `pubspec.yaml`, `ios/liquid_prism.podspec` and the README install ref.
+2. A maintainer tags the merged commit and pushes the tag (`git tag vX.Y.Z && git push origin vX.Y.Z`).
+3. The Release workflow verifies the versions, runs the checks, and creates the GitHub Release from the changelog section. See [doc/agents/release.md](doc/agents/release.md).

@@ -1,14 +1,21 @@
 # Releases and packaging
 
-## Automated releases (Release Please)
+## Releasing
 
-Liquid Prism uses [Release Please](https://github.com/googleapis/release-please) configured in `release-please-config.json`, `.release-please-manifest.json`, and `.github/workflows/release-please.yml`:
+`pubspec.yaml` holds the version. `ios/liquid_prism.podspec` and the install snippet in `README.md` mirror it, and `CHANGELOG.md` keeps one `## X.Y.Z` section per release with pending notes under `## Unreleased`.
 
-1. Merge PRs to `main` using Conventional Commits (`feat:`, `fix:`, `feat!:`, etc.).
-2. Release Please maintains a release PR that bumps `pubspec.yaml`, `ios/liquid_prism.podspec`, `README.md`, `.release-please-manifest.json`, and `CHANGELOG.md`.
-3. Merging the release PR tags `vX.Y.Z` and creates the GitHub Release automatically.
+1. Add notes under `## Unreleased` in `CHANGELOG.md` as changes merge.
+2. In a release PR, run `python3 tool/release.py bump X.Y.Z`. It moves the pending notes under `## X.Y.Z` and updates the pubspec, podspec and README ref.
+3. After that PR merges, tag the merge commit and push only the tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
-`tool/check_versions.py` (invoked by `tool/check.sh`) guarantees that `pubspec.yaml`, `ios/liquid_prism.podspec`, `.release-please-manifest.json`, and `README.md` never drift out of sync.
+Pushing the tag runs `.github/workflows/release.yml`:
+
+- `verify` checks the tag against the pubspec, podspec, README and changelog (`tool/release.py check --tag`), then runs `tool/check.sh` and a publish dry run.
+- `publish` uploads to pub.dev through OIDC. It runs only when the repository variable `PUBLISH_TO_PUB_DEV` is `true`, and needs automated publishing enabled on pub.dev with the tag pattern `v{{version}}`.
+- `github-release` creates the GitHub release from that version's changelog section. A version with a `-` suffix is marked as a prerelease.
+- `docs` deploys the API docs to GitHub Pages when the repository variable `DEPLOY_API_DOCS` is `true`, for full releases only.
+
+`tool/check.sh` runs `tool/release.py check`, so version drift fails every PR.
 
 ## Package archive verification
 

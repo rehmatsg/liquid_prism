@@ -20,7 +20,7 @@
 - Keep regular glass frosted at fractional device-pixel positions. The blur fill is now clipped to whole device pixels, so a surface that is scaled, animated or laid out between pixels no longer drops its frost. This removes the tab bar flicker while its selection is pressed and held.
 - Reorganize `lib/src/` and `test/` into domain modules (`core`, `theme`, `rendering`, `controls`, `navigation`, `menu`) and move research probes, specs, and benchmarks into `research/`.
 - Enable strict static analysis (`strict-casts`, `strict-inference`, `strict-raw-types`, `--fatal-infos`) across both the package and `example/`.
-- Upgrade CI to run iOS SwiftPM unit tests, CocoaPods podspec validation, and Conventional Commit PR checks, and automate releases with Release Please.
+- Upgrade CI to run iOS SwiftPM unit tests, CocoaPods podspec validation, and Conventional Commit PR checks. Pushing a `v*` tag verifies the versions, runs the checks, creates the GitHub release from the changelog, and can publish to pub.dev and deploy the API docs.
 
 ## 0.20.1
 

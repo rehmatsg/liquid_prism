@@ -8,4 +8,4 @@ flutter analyze --fatal-infos
 flutter test --timeout=30s
 (cd example && flutter test --timeout=30s)
 python3 -m unittest discover -s test/tooling -p 'test_*.py'
-python3 tool/check_versions.py
+python3 tool/release.py check > /dev/null

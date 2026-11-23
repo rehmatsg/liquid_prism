@@ -155,7 +155,7 @@ class DeveloperScriptsTest(unittest.TestCase):
             },
             {
                 "tool": "python3",
-                "args": ["tool/check_versions.py"],
+                "args": ["tool/release.py", "check"],
                 "cwd": str(self.checkout),
             },
         ])
