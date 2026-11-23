@@ -8,9 +8,9 @@ class PrismOptics {
   /// Creates an optical configuration in logical pixels.
   const new({
     this.edgeWidth = 16,
-    this.refraction = 60,
-    this.frost = 1.8,
-    this.dispersion = 0.2,
+    this.refraction = 28,
+    this.frost = 0.75,
+    this.dispersion = 0.14,
     this.brightness = 0.06,
     this.tint = const Color(0x0FFFFFFF),
     this.saturation = 1.12,

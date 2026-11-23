@@ -180,10 +180,10 @@ void main() {
 
     test('clear glass scales its blur and fades in a blur fill to tint 1', () {
       expect(_frost(PrismGlass.clear, 0), isEmpty);
-      expect(_frost(PrismGlass.clear, .25), [const FrostPass(.9)]);
-      expect(_frost(PrismGlass.clear, .5), [const FrostPass(1.8)]);
+      expect(_frost(PrismGlass.clear, .25), [const FrostPass(.375)]);
+      expect(_frost(PrismGlass.clear, .5), [const FrostPass(.75)]);
       expect(_frost(PrismGlass.clear, .75), [
-        const FrostPass(1.8),
+        const FrostPass(.75),
         const FrostPass.fill(PrismRecipe.blurFillFrost, .5),
       ]);
       expect(_frost(PrismGlass.clear, 1), [
@@ -222,7 +222,7 @@ void main() {
         FrostPass.effectiveSigma(_frost(PrismGlass.regular, 1)),
         FrostPass.regularFillSigma,
       );
-      expect(FrostPass.effectiveSigma(_frost(PrismGlass.clear, .75)), 1.8);
+      expect(FrostPass.effectiveSigma(_frost(PrismGlass.clear, .75)), .75);
       expect(FrostPass.effectiveSigma(const []), 0);
     });
   });

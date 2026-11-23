@@ -107,10 +107,10 @@ Future<void> main() async {
     }
 
     final dpr = box['dpr']!;
-    final cx = (box['x']! * dpr).round();
-    final cy = (box['y']! * dpr).round();
-    final cw = ((box['w']! * dpr).round() ~/ 2) * 2;
-    final ch = ((box['h']! * dpr).round() ~/ 2) * 2;
+    final cx = (box['x']! * dpr).round() + 2;
+    final cy = (box['y']! * dpr).round() + 2;
+    final cw = (((box['w']! * dpr).round() - 4) ~/ 2) * 2;
+    final ch = (((box['h']! * dpr).round() - 4) ~/ 2) * 2;
     final mp4Path = '${outDir.path}/$name.mp4';
     final pngPath = '${rawDir.path}/$name-mid.png';
 

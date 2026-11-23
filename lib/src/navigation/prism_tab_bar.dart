@@ -957,9 +957,9 @@ class _PrismTabBarState extends State<PrismTabBar>
                             shape: selectionShape,
                             refraction: style.refractContent == false
                                 ? 0
-                                : style.contentRefraction ?? 14,
+                                : style.contentRefraction ?? 6.5,
                             depth: style.contentDepth ?? 11.2,
-                            wrapper: style.refractContent == false ? 0 : 17.5,
+                            wrapper: style.refractContent == false ? 0 : 3.0,
                             chromaticAberration: style.refractContent == false
                                 ? 0
                                 : (lensStyle.chromaticAberration ?? 3.5) *
