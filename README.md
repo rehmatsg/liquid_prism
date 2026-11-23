@@ -22,7 +22,7 @@ dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: v1.0.0
+      ref: v1.0.1
 ```
 
 Upgrading from `0.x`? See the [1.0 migration guide](doc/migration-1.0.md) and [CHANGELOG.md](CHANGELOG.md).

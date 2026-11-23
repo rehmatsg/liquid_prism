@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+## 1.0.1
+
+- Default the glass segmented control to a 44-point track and a 36-point selection, the height of a standard navigation toolbar capsule, so it fits a 44-point title row. 1.0.0 used the 48 points measured on the iPhone Duo, where toolbars are taller. Set `PrismSegmentedStyle(trackHeight: 48, thumbHeight: 40)` in 48-point bars.
+
 ## 1.0.0
 
 ### Breaking Changes

@@ -328,3 +328,9 @@ that inference rests on width alone. A plain segmented `Picker` with
 `.glassEffect()` keeps its white thumb and 32-point track and is a different
 look. The held state was not captured natively: the package lifts the selection
 into the tab bar's lens.
+
+The 48-point track is the Duo's toolbar capsule height. The package models a
+standard navigation toolbar capsule as 44 points, so the glass variant defaults
+to a 44-point track and a 36-point selection with the same 4-point inset, which
+fits a 44-point title row. That standard-phone value is derived from the toolbar
+height, not measured from a picker: only the Duo runtime was installed.

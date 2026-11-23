@@ -46,7 +46,7 @@ void main() {
     );
     expect(
       tester.getSize(find.byType(PrismSegmentedControl<int>)),
-      const Size(300, 48),
+      const Size(300, 44),
     );
     final track = tester.widget<RawPrismSurface>(
       find.byWidgetPredicate(
@@ -55,10 +55,10 @@ void main() {
       ),
     );
     expect(track.shape, PrismShape.capsule);
-    expect(tester.getSize(find.byWidget(track)), const Size(300, 48));
+    expect(tester.getSize(find.byWidget(track)), const Size(300, 44));
     expect(
       tester.getRect(find.byType(PrismSelection)),
-      const Rect.fromLTWH(254, 280, 92, 40),
+      const Rect.fromLTWH(254, 282, 92, 36),
     );
     for (final label in ['Media', 'Links', 'Docs']) {
       final style = labelStyle(tester, label);
