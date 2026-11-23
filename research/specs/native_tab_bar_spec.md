@@ -117,7 +117,7 @@ at radius 46.5 pt. Flutter now paints a Gaussian-blurred circle and scales both
 its contour and blur on release. The previous radial gradient concentrated
 white at the contact and stopped at the circle's edge, causing a conspicuous
 bright spot in dark mode. The native dark hold/drag is reproducible with
-`tool/native_showcase/record_motion.py SIM OUTPUT --dark-tabs`; Flutter's
+`research/probes/native_showcase/record_motion.py SIM OUTPUT --dark-tabs`; Flutter's
 matching fixture uses `PRISM_LENS_DARK=true PRISM_LENS_CASES=tabs`.
 The Gaussian rendering remains an approximation of Core Animation's kernel.
 The live trace directly reads targets rather than reconstructing them from

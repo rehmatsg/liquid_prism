@@ -115,7 +115,7 @@ to 2. The edge sample remains pure white. The grouped face sample at tint .5
 changed from (249,249,254) to (247,247,252), against native (248,247,252).
 This improves rim/face separation without drawing an additional white border.
 These measurements cover the stated fixtures, not pixel equivalence on all
-backgrounds or OS versions. Reproduce with `tool/rim_contrast/README.md`.
+backgrounds or OS versions. Reproduce with `research/probes/rim_contrast/README.md`.
 
 Angles are radians. Clear glass's shadow opacity/radius and all ring-shadow
 inputs are zero in the captured fixtures. It retains its optical edge lighting.

@@ -115,8 +115,9 @@ quick switch taps. After building the UI test bundle,
 `record_motion.py SIMULATOR OUTPUT_DIRECTORY` records the lens tests and
 copies their measured presentation bounds.
 
-The Flutter comparison entry point is `example/test_driver/showcase.dart`.
-Run `native_showcase_compare.dart` with `PRISM_SIMULATOR_ID`,
+The Flutter comparison entry point is `research/test_driver/showcase.dart`,
+run from the research app in `research/`. Run
+`test_driver/native_showcase_compare.dart` with `PRISM_SIMULATOR_ID`,
 `PRISM_COMPARE_OUT` and `DART_VM_SERVICE_URL` after installing this app and
 launching that fixture. It captures matching light and dark states.
 Recordings, generated projects and builds are ignored by Git.

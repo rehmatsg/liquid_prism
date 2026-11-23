@@ -1,6 +1,6 @@
 # Native showcase comparison — 2026-10-11
 
-The standalone reference app in `tool/native_showcase` mirrors Explore, Studio,
+The standalone reference app in `research/probes/native_showcase` mirrors Explore, Studio,
 Library and all nine component routes, using native SwiftUI components and UIKit
 inline chrome. Both release apps were installed on the connected iPhone. The
 reference's captions use the system font; the earlier invalid named-font fallback

@@ -333,8 +333,8 @@ the anchor and the antialiasing margin. The tip can still be above the top edge
 while the union protrudes below it; using the tip's bounds alone clips that
 early bulge on devices without an island. Verify early pulls as well as attached,
 detached and refreshing states. With `research/test_driver/showcase.dart` running, use
-`DART_VM_SERVICE_URL=... dart ../research/test_driver/capture_refresh.dart <output-directory>`
-from `example/` to capture both appearances and the reported device tint. Captures
+`DART_VM_SERVICE_URL=... dart test_driver/capture_refresh.dart <output-directory>`
+from `research/` to capture both appearances and the reported device tint. Captures
 are local evidence, not package assets.
 
 ## Fallback and lifecycle

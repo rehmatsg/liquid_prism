@@ -3,10 +3,10 @@
 Dumps the layers, filters, mask images and gradients of iOS's scroll edge
 effect (the softening of content scrolled under a bar) and screenshots it
 over a calibration pattern, for the measurements in
-`doc/native_scroll_edge_spec.md`. Research only; nothing here ships.
+`research/specs/native_scroll_edge_spec.md`. Research only; nothing here ships.
 
 ```sh
-tool/native_scroll_edge_probe/run.sh <simulator-udid> _research/scroll_edge [testSoftLight testHardLight ...]
+research/probes/native_scroll_edge_probe/run.sh <simulator-udid> _research/scroll_edge [testSoftLight testHardLight ...]
 python3 _research/scroll_edge/analyze.py _research/scroll_edge soft-light
 python3 _research/scroll_edge/fit_curve.py _research/scroll_edge/images/<mask>.png
 ```

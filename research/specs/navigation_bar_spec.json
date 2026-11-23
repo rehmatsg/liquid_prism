@@ -9,7 +9,7 @@
     ],
     "devicePixelRatio": 3,
     "appearance": "light, default text size",
-    "probe": "tool/native_dispersion_probe --scene navigation",
+    "probe": "research/probes/native_dispersion_probe --scene navigation",
     "capture": "public UILabel geometry and Core Animation model/presentation layers sampled by CADisplayLink",
     "tests": [
       "NavigationTests/testTitleTiming",

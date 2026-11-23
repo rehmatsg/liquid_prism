@@ -133,7 +133,7 @@ cannot reproduce native blur-fill behavior at every texture frequency.
 
 ## Reproduce
 
-See [the calibration tools](../tool/native_defaults/README.md). Use the same
+See [the calibration tools](../probes/native_defaults/README.md). Use the same
 simulator for each pair and retain the setting reported by the native getter in
 its JSON. Launch arguments override that process's UIKit preference; they do not
 change the user's system setting. The core optical shader still owns refraction,

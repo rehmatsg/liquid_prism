@@ -8,7 +8,7 @@ they do not supply the geometry or spring constants.
 Reference: SwiftUI Toggle, Slider and segmented Picker on iPhone 17, iOS 27.0
 runtime build 24A5370g, SDK build 24A430, 402 × 874 points at 3×. Light and dark
 appearances, disabled controls, taps, held thumbs and continuous drags were
-captured. The probe is isolated in tool/native_control_probe; it is never linked
+captured. The probe is isolated in research/probes/native_control_probe; it is never linked
 into the Flutter package or example app. Private inspection belongs only there.
 
 ## Directly extracted values
@@ -90,7 +90,7 @@ of that broad field: **the knob still grows to 1.55× on hold, but the track see
 through it keeps its normal thickness**. Its clear face and shadow still use the
 shared material, but its rim and face take the captured slider inputs: inner
 refraction height 6.66 and amount 11.1, face black .1, and the layer contact
-shadow kept at the held frame (see [motion and lenses](motion_and_lenses.md)).
+shadow kept at the held frame (see [motion and lenses](../../doc/motion_and_lenses.md)).
 The switch takes its captured inner refraction (11.5 / 6.9) for the rim and the
 segmented selection the 8.8 / 7.04 its measured displacement fits, separately
 from the shared underlay (see [held lens displacement](#held-lens-displacement)).
@@ -170,7 +170,7 @@ view does not cancel touches already delivered to a `UIControl`
 measure a held segmented control inside a scroll view, the thumb's exact hit
 extent, or the coasting projection.
 
-The package's policy (judged, see [components](components.md)): the slider
+The package's policy (judged, see [components](../../doc/components.md)): the slider
 thumb, the selected segment, the switch and every tab claim the pointer on
 contact and follow drags at any angle, as the native thumb does; the package
 also gives the selected segment that ownership for quick drags inside a scroll
@@ -182,7 +182,7 @@ slider does not coast after release.
 ## Reproduce
 
 Use Xcode with the reference runtime installed and xcodegen. From
-tool/native_control_probe, generate the project, then build and run the four UI
+research/probes/native_control_probe, generate the project, then build and run the four UI
 tests on the chosen simulator (parallel testing disabled). The app writes
 Documents/specs, Documents/extracted and Documents/motion in its simulator data
 container. Copy them to a local raw directory as specs, layers and motion.
@@ -194,17 +194,18 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   -destination 'platform=iOS Simulator,id=YOUR_SIMULATOR_ID' \
   -derivedDataPath build -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
 # From the repository root, after copying the three native output directories:
-python3 tool/extract_controls_spec.py PATH_TO_RAW_DIRECTORY
+python3 research/probes/extract_controls_spec.py PATH_TO_RAW_DIRECTORY
 ```
 
-The tracked example has a controls gallery and a standalone controls_main.dart.
-For the recording fixture, run example/test_driver/controls.dart, then run
-controls_video.dart against its VM service with PRISM_SIMULATOR_ID,
-PRISM_CONTROLS_OUT and DART_VM_SERVICE_URL set. The recording shows taps, stationary
+The showcase has a controls gallery; the research app has a standalone
+research/benchmarks/controls_main.dart. For the recording fixture, run
+research/test_driver/controls.dart, then run controls_video.dart against its
+VM service with PRISM_SIMULATOR_ID, PRISM_CONTROLS_OUT and DART_VM_SERVICE_URL
+set. The recording shows taps, stationary
 holds, slow drags both ways and releases for each component. Videos and raw native
 captures stay in the ignored artifacts/research directories.
 For a focused quick-tap comparison, run `SwitchTapTests` in the native showcase
-and `example/test_driver/switch_tap_video.dart` against the showcase Flutter VM.
+and `research/test_driver/switch_tap_video.dart` against the showcase Flutter VM.
 
 ## Held lens displacement
 
@@ -213,7 +214,7 @@ light appearance (dark within 0.13 pt), lenses held 1 s over a backdrop whose
 color encodes its own position (three phase-shifted grey patterns, decoded per
 pixel; 0 ± 0.066 pt outside any lens). Depth runs inward from the held
 `glassBackground` frame; positive values sample from farther out (minify).
-Probe: `tool/native_dispersion_probe`, `--pattern grayx|grayy`.
+Probe: `research/probes/native_dispersion_probe`, `--pattern grayx|grayy`.
 
 | Depth (pt) | 1 | 2 | 3 | 4 | 6 | 8 | 12 |
 | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -3,11 +3,12 @@
 `run.py` measures what glass costs the GPU on this Mac, without a phone.
 
 ```sh
-tool/gpu_bench/run.py                  # the working tree
-tool/gpu_bench/run.py --compare main   # beside another git ref
+research/probes/gpu_bench/run.py                  # the working tree
+research/probes/gpu_bench/run.py --compare main   # beside another git ref
 ```
 
-It builds `example/lib/gpu_bench_main.dart` as a macOS profile app. For each
+It builds `research/benchmarks/gpu_bench_main.dart` as a macOS profile app
+from the research app (`research/macos/`, Impeller enabled). For each
 scenario the app renders the layer tree offscreen in a tight loop and reads
 the last frame back, so the clock stops only when the GPU has finished. The
 GPU stays saturated (check `ioreg -r -d 1 -c IOAccelerator | grep "Device
@@ -24,6 +25,7 @@ each scenario instead of timing it.
 Limits: an Apple-silicon Mac renders at 2x in 8-bit sRGB; an iPhone renders
 at 3x in 10-bit wide gamut, so absolute times differ and the phone pays more
 per backdrop capture. Use it to compare two versions, then confirm a large
-change once on a device with `example/lib/bench_main.dart`
-([testing](../../doc/agents/testing.md)). Other apps using the GPU add noise;
-close simulators first. The example needs its `macos/` runner.
+change once on a device with `research/benchmarks/bench_main.dart`
+([research README](../../README.md)). Other apps using the GPU add noise;
+close simulators first. `--compare` needs a ref whose package already has the
+1.0 `Prism*` API.

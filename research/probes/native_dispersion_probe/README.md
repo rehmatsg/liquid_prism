@@ -31,11 +31,11 @@ large title's directly recorded Core Animation timing.
 `testNavigationModes` compares resting, scrolled-down and reversed states.
 `testRestorationAtEdge` follows the inset feedback through the content's top.
 
-The Flutter counterpart is `example/test_driver/navigation.dart`; run
+The Flutter counterpart is `research/test_driver/navigation.dart`; run
 `navigation_check.dart` with `DART_VM_SERVICE_URL`, `PRISM_SIMULATOR_ID` and
 `PRISM_NAVIGATION_OUT` set. Optionally pass `PRISM_NAVIGATION_REFERENCE` as the
 exported native measurements JSON to align content scroll positions, or
 `PRISM_NAVIGATION_TRACES_ONLY=true` to capture just motion. It captures both app-bar implementations, light/dark,
 minimization/restoration states, RTL/large text and per-frame enter/exit traces.
-See [the native spec](../../doc/navigation_bar_spec.json) for measured constants,
+See [the native spec](../../specs/navigation_bar_spec.json) for measured constants,
 renderer fits and remaining differences.

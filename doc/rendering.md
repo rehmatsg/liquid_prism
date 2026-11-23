@@ -79,8 +79,10 @@ Transform.scale(scale: scale, alignment: Alignment.topCenter, child: page)
 
 The plain transform rasterizes the scaled page directly, which is also how
 Impeller samples text and images under it. `research/benchmarks/transform_main.dart`
-shows both compositions; run it with `--dart-define=PRISM_TRANSFORM_MODE=filter`
-or `transform`, and `PRISM_TRANSFORM_T=-1` to animate.
+shows both compositions; from `research/`, run
+`flutter run -t benchmarks/transform_main.dart` with
+`--dart-define=PRISM_TRANSFORM_MODE=filter` or `transform`, and
+`PRISM_TRANSFORM_T=-1` to animate (see the [research README](../research/README.md)).
 
 ## Cost
 

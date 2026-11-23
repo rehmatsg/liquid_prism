@@ -204,7 +204,7 @@ symbols are missing (earlier iOS, possibly 26.x) it reports null. It also
 re-reads when the app becomes active.
 
 What the setting changes, read directly from the glass layers' filter inputs
-(`tool/native_dispersion_probe --scene tint`, iOS 27.2 iPhone Duo, light, white
+(`research/probes/native_dispersion_probe --scene tint`, iOS 27.2 iPhone Duo, light, white
 backdrop, the slider moved in Settings; `UIViewGlassSetTintAmount` does not
 change the value in-process). Only `glassBackground` inputs move; refraction,
 highlights and shapes do not.
@@ -255,7 +255,7 @@ above are interpolated linearly between the measured amounts
 See [native defaults](native_defaults.md) for the current fit tables, dark face
 fill and measured inputs. Explicit blur or optics retain literal Gaussian frost.
 
-Native glass over flat sRGB greys (`tool/native_dispersion_probe --scene
+Native glass over flat sRGB greys (`research/probes/native_dispersion_probe --scene
 levels --light`, iOS 27.0 simulator, default tint), the face at each band's
 middle in 8-bit sRGB. The band at 0 is left out because it reads light from
 the white strip above it.

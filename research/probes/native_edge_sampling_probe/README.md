@@ -2,7 +2,7 @@
 
 Measures how the native scroll edge effect fills its blur where the kernel
 reaches past the screen edge, and how wide its blurs are, then compares
-Liquid Prism against it. Findings: `doc/native_scroll_edge_spec.md`,
+Liquid Prism against it. Findings: `research/specs/native_scroll_edge_spec.md`,
 "Edge sampling and width".
 
 Each scene paints black and white bands fixed in screen coordinates under a
@@ -16,7 +16,8 @@ inputs such as `inputNormalizeEdges`, backdrop `scale` and `marginWidth`).
   simulator (the iOS 27.1 runtime supports only the iPhone Duo; display 1 is
   folded).
 - `SIM=<udid> DISPLAY_ARG=--display=1 run_flutter_ios.sh [out]`: the Flutter
-  twin, `example/lib/edge_probe_main.dart`, on the same simulator.
+  twin, `research/benchmarks/edge_probe_main.dart` built by the research app,
+  on the same simulator.
 - `uv run analyze.py <run> [style] [x0 x1 strip_pt fit_end_pt]`: fits
   clamp, mirror and renormalised edges to one run.
 - `uv run compare.py <native run> <flutter run> [x0 x1]`: line width, halo,

@@ -38,9 +38,9 @@ The resting iOS 27 foreground measured on our reference wallpaper is `#005DC7`
 and `#3BCCFF`, respectively. Those wallpaper samples are reference measurements, not
 universal native colors: Apple's output changes with the backdrop and settings.
 Current grouped-background defaults and renderer fits are recorded in
-[native defaults](native_defaults.md). The implementation lives in [material recipes](../lib/src/recipe.dart),
-[foreground colors](../lib/src/foreground.dart), [selection](../lib/src/selection.dart),
-and the [shared shader](../shaders/glass_core.glsl).
+[native defaults](native_defaults.md). The implementation lives in [material recipes](../../lib/src/rendering/recipe.dart),
+[foreground colors](../../lib/src/theme/foreground.dart), [selection](../../lib/src/controls/prism_selection.dart),
+and the [shared shader](../../shaders/glass_core.glsl).
 
 The shader does not reproduce Apple's complete adaptive renderer. Shadows,
 overlapping materials, custom tint, and color management remain approximations.
@@ -67,4 +67,4 @@ archive; they are not shipped with the package.
   in this package or its example.
 
 Pinned revisions and redistribution terms are in
-[third-party notices](../THIRD_PARTY_NOTICES.md) and [LICENSES](../LICENSES/).
+[third-party notices](../../THIRD_PARTY_NOTICES.md) and [LICENSES](../../LICENSES/).

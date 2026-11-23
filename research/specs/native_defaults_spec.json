@@ -15,7 +15,7 @@
       "model": "iPhone Duo simulator",
       "os": "iOS 27.1 (24A94232)"
     },
-    "method": "SwiftUI glassEffect/TabView/Toggle/Slider/Picker, genuine XCTest holds; private layer reads stay in tool/."
+    "method": "SwiftUI glassEffect/TabView/Toggle/Slider/Picker, genuine XCTest holds; private layer reads stay in research/probes/."
   },
   "measured": {
     "light": [
@@ -921,7 +921,7 @@
   "device_regular": {
     "date": "2026-11-09",
     "device": "iPhone 16 Pro, iOS 27.0.1",
-    "method": "Native glassEffect(.regular) over the Flutter backdrop in one app (tool/glass_parity); 21 launch-argument amounts and the Settings slider.",
+    "method": "Native glassEffect(.regular) over the Flutter backdrop in one app (research/probes/glass_parity); 21 launch-argument amounts and the Settings slider.",
     "size_inputs": {
       "short_side": [
         48,

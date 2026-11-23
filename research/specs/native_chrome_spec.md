@@ -70,7 +70,7 @@ policies are adaptive fallbacks, not measured native configurations.
 For the measured bottom layout, place the search widget inside an 8-point
 horizontal inset and set restingInset=20. Screen placement and keyboard avoidance
 belong to the containing layout; the field handles its own focus/clear/cancel
-state. See example/lib/chrome_demo.dart for the complete arrangement.
+state. See research/benchmarks/chrome_demo.dart for the complete arrangement.
 
 The lone-item rows come from the probe's `--single` launch argument (one
 symbol at the top trailing edge, an "Edit" text item at the leading edge and
@@ -78,8 +78,8 @@ two separated bottom symbols), read from `chrome-<mode>-single-rest.json` on an
 iPhone 17 Pro simulator, iOS 27.1, light appearance. They are not yet folded
 into the JSON.
 
-Generate tool/native_chrome_probe with xcodegen and run its ChromeSpecs scheme on
+Generate research/probes/native_chrome_probe with xcodegen and run its ChromeSpecs scheme on
 the reference simulator. Copy app Documents/extracted and Documents/specs into
-a raw directory as layers and specs. Run python3 tool/extract_chrome_spec.py
+a raw directory as layers and specs. Run python3 research/probes/extract_chrome_spec.py
 RAW_DIRECTORY from the repository root to regenerate the compact JSON. Raw
 captures stay local; private introspection is confined to this development tool.

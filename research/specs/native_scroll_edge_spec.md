@@ -1,7 +1,7 @@
 # Native scroll edge effect
 
 Direct measurements of iOS's scroll edge effect, the softening of content
-scrolled under a bar, taken with `tool/native_scroll_edge_probe` on the iPhone
+scrolled under a bar, taken with `research/probes/native_scroll_edge_probe` on the iPhone
 17 simulator (iOS 27.0, build 24A434, 3x) in light appearance. The fixture is
 a SwiftUI `NavigationStack` with an inline title, one leading and two trailing
 glass bar buttons, and a `ScrollView` with `.scrollEdgeEffectStyle(.soft)` or
@@ -91,10 +91,10 @@ reveal over the first points of scroll is this package's, not native.
 
 ## Edge sampling and width
 
-Measured on 2026-11-16 with `tool/native_edge_sampling_probe` (SwiftUI
+Measured on 2026-11-16 with `research/probes/native_edge_sampling_probe` (SwiftUI
 `.scrollEdgeEffectStyle(.soft)`, iOS 27.1 simulator on the folded iPhone Duo,
 466 × 678 pt at 3x, plus macOS 27.2) and its Flutter twin
-`example/lib/edge_probe_main.dart` on the same simulator. Evidence:
+`research/benchmarks/edge_probe_main.dart` on the same simulator. Evidence:
 `_research/edge_sampling/` (local).
 
 Direct, from the layer tree: every native scroll edge blur sets
@@ -141,7 +141,7 @@ bottom toolbar alike:
 
 Liquid Prism draws the same colours a device pixel thick at the far side of
 the edge. Its hairline follows the package's reveal; native shows it at rest.
-Evidence: `_research/hard_hairline/`; probe: `tool/native_scroll_edge_probe/hairline.sh`.
+Evidence: `_research/hard_hairline/`; probe: `research/probes/native_scroll_edge_probe/hairline.sh`.
 
 Not verified: whether the native glass bar buttons sample the content before
 or after the effect. Over the stripes both read as frosted grey, and the

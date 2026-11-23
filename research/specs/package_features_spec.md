@@ -2,7 +2,7 @@
 
 Package features that replace common app-level workarounds, with the native
 measurements behind their defaults. Measurements: iOS 27.0 (24A434), iPhone 17
-Pro simulator at 3x, content size L, `tool/native_package_features_probe`;
+Pro simulator at 3x, content size L, `research/probes/native_package_features_probe`;
 raw dumps under `_research/package_features/` (local evidence).
 
 ## 1. Tab long press
@@ -161,8 +161,8 @@ composition are **not implemented** by this scroll-scrubbed contract.
 
 ## Native validation
 
-`tool/native_package_features_probe` builds and runs on the iPhone 17 Pro
-(iOS27) simulator: `tool/native_package_features_probe/run.sh <out>` (cases
+`research/probes/native_package_features_probe` builds and runs on the iPhone 17 Pro
+(iOS27) simulator: `research/probes/native_package_features_probe/run.sh <out>` (cases
 Light, Dark, ToolbarLight, ToolbarDark, Tabs4, Tabs5, Scrub). JSON dumps record
 view/layer frames, fonts and colours every 100 ms and title opacity/frames per
 frame.

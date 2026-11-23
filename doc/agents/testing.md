@@ -42,3 +42,11 @@ Headless widget tests exercise the frosted fallback and do not prove GPU shader 
 ```
 
 Hot reload/restart works for Dart changes; stop and rebuild the app after GLSL changes.
+
+## Research harnesses
+
+Benchmarks, parity fixtures and simulator drivers live in the unpublished
+research app under `research/`, which depends on the package and the example by
+path and carries the research-only native channels. See the
+[research README](../../research/README.md) for every harness command, and run
+`flutter analyze` and `flutter test` inside `research/` after changing them.

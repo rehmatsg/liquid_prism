@@ -24,7 +24,7 @@ The white page measures 1.0012; values close to it include encoding error.
 The native circle's lower rim also peaks at 1.2015. This establishes a
 brighter-than-SDR rim in this capture, not a universal 1.2 native constant or
 Apple's lighting algorithm. JPEG output clips that brightness distinction and
-also changes the dark contour. Reproduce with `tool/hdr_probe/analyze.swift`.
+also changes the dark contour. Reproduce with `research/probes/hdr_probe/analyze.swift`.
 
 ## Renderer fit
 
@@ -105,7 +105,7 @@ These thresholds describe visibility; there is no hard 90° endpoint. A faint
 tail remains near 1.04 at the side midpoints. Screenshot geometry and compression
 limit precision; these are rounded measurements, not exact native constants.
 
-Reproduce using `analyze.swift --raw` and `tool/hdr_probe/measure.py`. Keep raw
+Reproduce using `analyze.swift --raw` and `research/probes/hdr_probe/measure.py`. Keep raw
 float buffers and charts in `artifacts/`. The comparison app has a light
 column on white and a dark column on black. Each has grouped Prism regular,
 native regular, grouped Prism clear and native clear rows, with a labelled

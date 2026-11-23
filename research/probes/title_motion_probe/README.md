@@ -1,6 +1,6 @@
 # Title spring reference
 
-Run `xcrun swift tool/title_motion_probe/main.swift` on macOS 14 or later.
+Run `xcrun swift research/probes/title_motion_probe/main.swift` on macOS 14 or later.
 The probe prints public SwiftUI `Spring` parameters, positions and velocities.
 It does not capture a system navigation-title animation.
 

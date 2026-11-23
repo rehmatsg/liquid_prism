@@ -8,7 +8,7 @@ From the repository root:
 ```sh
 xcrun simctl list devices
 xcrun simctl boot 75CB9880-0032-4922-A694-BEF70503D63F # if shut down
-./tool/native_package_features_probe/run.sh _research/package_features
+./research/probes/native_package_features_probe/run.sh _research/package_features
 ```
 
 The script runs xcodegen, xcodebuild build-for-testing, test-without-building and
@@ -35,9 +35,9 @@ revision, appearance and font scale with results before updating defaults.
 
 In the implementation sandbox, CoreSimulator refused its connection; no values
 were measured. Package badge/title defaults are provisional. The 86-point tab
-pitch remains unchanged. See `doc/package_features_spec.md`.
+pitch remains unchanged. See `research/specs/package_features_spec.md`.
 
-Navigation subtitle and sheet bars: `PROBE_CASES=Nav ./tool/native_package_features_probe/run.sh _research/nav_subtitle_sheet`
+Navigation subtitle and sheet bars: `PROBE_CASES=Nav ./research/probes/native_package_features_probe/run.sh _research/nav_subtitle_sheet`
 launches `--nav <mode>` fixtures (`.navigationSubtitle`, inline/large, long-text truncation,
 and NavigationStack in a `.sheet` with large or medium+large detents, with/without
 `.presentationDragIndicator(.visible)`, inline or large title). FrameSampler tracks the title
