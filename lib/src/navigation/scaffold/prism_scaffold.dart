@@ -1555,7 +1555,9 @@ double topEdgeInset(
   required bool bareRows,
   required PrismScrollEdgeStyle style,
 }) {
-  final glass = inlineTitle is PrismTitle || inlineTitle is PrismToolbar;
+  final glass =
+      inlineTitle is PrismTitle ||
+      (inlineTitle is PrismToolbar && inlineTitle.items == null);
   if (!glass || bareRows) return 0;
   return style.extension ??
       (style.variant == PrismScrollEdgeVariant.hard

@@ -53,6 +53,10 @@ class PrismToolbarStyle {
        assert(
          groupSpacing == null || groupSpacing >= 0,
          'groupSpacing must be >= 0.',
+       ),
+       assert(
+         backIconShift == null || backIconShift >= 0,
+         'backIconShift must be >= 0.',
        );
 
   /// Toolbar sizing preset.
