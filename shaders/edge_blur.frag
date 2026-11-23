@@ -63,47 +63,46 @@ void main() {
       + u_end.y * ramp(len - coord, u_end.x, u_end.z, u_end.w);
   if (sigmaLogical < 0.02) {
     frag_color = sampleUV(xy / u_size);
-    return;
-  }
+  } else {
+    vec2 dir = vertical ? vec2(m[1][0], m[1][1]) : vec2(m[0][0], m[0][1]);
+    float stretch = max(length(dir), 0.0001);
+    dir /= stretch;
+    float sigma = sigmaLogical * stretch;
 
-  vec2 dir = vertical ? vec2(m[1][0], m[1][1]) : vec2(m[0][0], m[0][1]);
-  float stretch = max(length(dir), 0.0001);
-  dir /= stretch;
-  float sigma = sigmaLogical * stretch;
+    float along = vertical ? p.y : p.x;
+    float lenAlong = vertical ? boxSize.y : boxSize.x;
+    float maxBack = along * stretch - 0.5;
+    float maxForward = (lenAlong - along) * stretch - 0.5;
 
-  float along = vertical ? p.y : p.x;
-  float lenAlong = vertical ? boxSize.y : boxSize.x;
-  float maxBack = along * stretch - 0.5;
-  float maxForward = (lenAlong - along) * stretch - 0.5;
-
-  vec3 g = vec3(1.0, exp(-0.5 / (sigma * sigma)), 0.0);
-  g.z = g.y * g.y;
-  float radius = (sigma < 1.5 ? 3.0 : 2.88) * sigma;
-  vec2 texel = 1.0 / u_size;
-  vec2 uv = xy * texel;
-  vec2 tapStep = dir * texel;
-  vec4 total = sampleUV(uv);
-  float totalWeight = 1.0;
-  for (int i = 1; i <= MAX_PAIRS; i++) {
-    float x0 = float(2 * i - 1);
-    if (x0 > radius) break;
-    g.xy *= g.yz;
-    float w0 = g.x;
-    g.xy *= g.yz;
-    float w1 = g.x;
-    float f0 = clamp(maxForward + 1.0 - x0, 0.0, 1.0) * w0;
-    float f1 = clamp(maxForward - x0, 0.0, 1.0) * w1;
-    float b0 = clamp(maxBack + 1.0 - x0, 0.0, 1.0) * w0;
-    float b1 = clamp(maxBack - x0, 0.0, 1.0) * w1;
-    float forward = f0 + f1;
-    float back = b0 + b1;
-    if (forward > 0.0) {
-      total += sampleUV(uv + tapStep * (x0 + f1 / forward)) * forward;
+    vec3 g = vec3(1.0, exp(-0.5 / (sigma * sigma)), 0.0);
+    g.z = g.y * g.y;
+    float radius = (sigma < 1.5 ? 3.0 : 2.88) * sigma;
+    vec2 texel = 1.0 / u_size;
+    vec2 uv = xy * texel;
+    vec2 tapStep = dir * texel;
+    vec4 total = sampleUV(uv);
+    float totalWeight = 1.0;
+    for (int i = 1; i <= MAX_PAIRS; i++) {
+      float x0 = float(2 * i - 1);
+      if (x0 > radius) break;
+      g.xy *= g.yz;
+      float w0 = g.x;
+      g.xy *= g.yz;
+      float w1 = g.x;
+      float f0 = clamp(maxForward + 1.0 - x0, 0.0, 1.0) * w0;
+      float f1 = clamp(maxForward - x0, 0.0, 1.0) * w1;
+      float b0 = clamp(maxBack + 1.0 - x0, 0.0, 1.0) * w0;
+      float b1 = clamp(maxBack - x0, 0.0, 1.0) * w1;
+      float forward = f0 + f1;
+      float back = b0 + b1;
+      if (forward > 0.0) {
+        total += sampleUV(uv + tapStep * (x0 + f1 / forward)) * forward;
+      }
+      if (back > 0.0) {
+        total += sampleUV(uv - tapStep * (x0 + b1 / back)) * back;
+      }
+      totalWeight += forward + back;
     }
-    if (back > 0.0) {
-      total += sampleUV(uv - tapStep * (x0 + b1 / back)) * back;
-    }
-    totalWeight += forward + back;
+    frag_color = total / totalWeight;
   }
-  frag_color = total / totalWeight;
 }

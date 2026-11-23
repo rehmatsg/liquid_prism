@@ -300,7 +300,7 @@ void main() {
         RegExp(r'u_lenses\[(\d+)\]').firstMatch(batch)![1]!,
       );
       final stride = int.parse(
-        RegExp(r'slot = i \* (\d+);').firstMatch(batch)![1]!,
+        RegExp(r'u_lenses\[i \* (\d+)\]').firstMatch(batch)![1]!,
       );
       final most = int.parse(
         RegExp(r'i < (\d+); i\+\+').firstMatch(batch)![1]!,
@@ -308,7 +308,7 @@ void main() {
       expect(stride * 4, batchLensStride);
       expect(most, batchMaxLenses);
       expect(most * stride, lessThanOrEqualTo(lenses));
-      expect(batch, contains('u_face = u_lenses[slot + 16];'));
+      expect(batch, contains('u_face = u_lenses[i * 17 + 16];'));
 
       final packet = [for (var i = 0; i < glassUniformCount; i++) i * 1.0];
       final lens = batchLensUniforms(
