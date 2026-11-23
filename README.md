@@ -2,42 +2,44 @@
 
 # Liquid Prism
 
-Liquid glass for Flutter: surfaces, buttons, switches, sliders, segmented controls,
-floating tab bars, toolbars and search. Popup menus use real UIKit menus on iOS.
+[![CI](https://github.com/rehmatsg/liquid_prism/actions/workflows/ci.yml/badge.svg)](https://github.com/rehmatsg/liquid_prism/actions/workflows/ci.yml)
+[![style: very good analysis](https://img.shields.io/badge/style-very_good_analysis-B22C89.svg)](https://pub.dev/packages/very_good_analysis)
+[![License: BSD-3-Clause & MIT](https://img.shields.io/badge/license-BSD--3--Clause%20%26%20MIT-blue.svg)](LICENSE)
+[![Flutter 3.50+](https://img.shields.io/badge/flutter-3.50%2B-02569B.svg)](https://flutter.dev)
 
-The defaults follow our SwiftUI reference. Use a few widget arguments for a local
-change, reusable styles for a component, or a theme for the whole app.
+Liquid glass for Flutter: live Impeller shaders, velocity-driven spring controls, adaptive iOS chrome, and real UIKit popup menus.
+
+Defaults follow measured native iOS Liquid Glass behavior. Keep widget call sites short with semantic props, customize visuals through immutable `Prism*Style` objects, or theme an entire app with `PrismTheme`.
+
+---
 
 ## Install
 
-Requires **Flutter 3.50+ / Dart 3.14+**. The supported app targets are iOS and
-Android. Native menus require iOS 17.4+; other platforms use the Material fallback.
-Glass uses Impeller shader filters when available and a frosted fallback otherwise.
+Requires **Flutter 3.50+ / Dart 3.14+**. Supported targets are **iOS** and **Android**. Native popup menus require iOS 17.4+ (other platforms use a Material fallback). Glass renders with Impeller fragment shaders when supported and a frosted fallback otherwise.
 
 ```yaml
 dependencies:
   liquid_prism:
     git:
       url: https://github.com/rehmatsg/liquid_prism.git
-      ref: v0.20.1
+      ref: v1.0.0
 ```
 
-Run `flutter pub get`. For breaking API changes, see the [0.7 migration guide](doc/releases/0.7.md).
-Each [release](https://github.com/rehmatsg/liquid_prism/releases)
-is a `vX.Y.Z` tag; see the [changelog](CHANGELOG.md). The package is not on
-pub.dev.
+Upgrading from `0.x`? See the [1.0 migration guide](doc/migration-1.0.md) and [CHANGELOG.md](CHANGELOG.md).
+
+---
 
 ## Your first glass surface
 
-https://github.com/user-attachments/assets/669b0c2c-dfd9-484a-8d25-1bf75be2b271
+https://github.com/user-attachments/assets/219dc3e0-f48d-4790-a473-492f5849f47e
 
 ```dart
-import 'package:material_ui/material_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:material_ui/material_ui.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(const MaterialApp(home: GlassPage()));
 }
 
@@ -57,11 +59,11 @@ class GlassPage extends StatelessWidget {
           ),
         ),
         Center(
-          child: LiquidPrism(
-            shape: const GlassShape.rect(cornerRadius: 28),
+          child: PrismSurface(
+            shape: const PrismShape.rect(cornerRadius: 28),
             child: const Padding(
               padding: EdgeInsets.all(24),
-              child: Text('Hello, glass'),
+              child: Text('Hello, glass.'),
             ),
           ),
         ),
@@ -71,94 +73,91 @@ class GlassPage extends StatelessWidget {
 }
 ```
 
-Put glass above something visible. `Glass.regular`, `Glass.clear` and
-`Glass.identity` choose the material; `.tint(color)` adds a tint and `.interactive()`
-adds press feedback to a surface. Continuous rounded corners are the default.
+Choose a material with `PrismGlass.regular`, `PrismGlass.clear`, or `PrismGlass.identity`. Chain `.tint(color)` for tinted glass and `.interactive()` for spring press feedback. Continuous superellipse corners are the default.
 
 ### Clear glass
 
-https://github.com/user-attachments/assets/b8a14a8a-5ca1-4a54-93b6-22e2a8cba75a
+https://github.com/user-attachments/assets/85cbce99-ef16-45bc-b7dd-5014bcd28693
 
 ```dart
-LiquidPrism(
-  glass: Glass.clear,
-  shape: const GlassShape.rect(cornerRadius: 30),
-  child: const SizedBox(width: 234, height: 150),
+PrismSurface(
+  glass: PrismGlass.clear,
+  shape: const PrismShape.rect(cornerRadius: 30),
+  child: const SizedBox(width: 220, height: 126),
 )
 ```
 
 ### Glass shapes
 
-https://github.com/user-attachments/assets/afc6683d-6ee2-4ab5-b33d-46606fe35170
+https://github.com/user-attachments/assets/3d5205f0-d5e5-4270-ad90-b41d4b5e4b76
 
 ```dart
 Wrap(
   spacing: 16,
   runSpacing: 16,
   children: [
-    LiquidPrism(
-      glass: Glass.clear,
-      shape: const GlassShape.rect(cornerRadius: 30),
-      child: const SizedBox(width: 174, height: 138),
+    PrismSurface(
+      glass: PrismGlass.clear.interactive(),
+      shape: const PrismShape.rect(cornerRadius: 26),
+      child: const SizedBox(width: 112, height: 112, child: Icon(CupertinoIcons.sparkles)),
     ),
-    LiquidPrism(
-      glass: Glass.clear,
-      shape: GlassShape.circle,
-      child: const SizedBox.square(dimension: 78, child: Icon(Icons.add)),
+    PrismSurface(
+      glass: PrismGlass.clear.interactive(),
+      shape: PrismShape.circle,
+      child: const SizedBox.square(dimension: 78, child: Icon(CupertinoIcons.add)),
     ),
-    LiquidPrism(
-      glass: Glass.clear,
-      shape: GlassShape.capsule,
+    PrismSurface(
+      glass: PrismGlass.clear.interactive(),
+      shape: PrismShape.capsule,
       child: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Text('Through a new lens.'),
+        padding: EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+        child: Text('Capsule'),
       ),
     ),
   ],
 )
 ```
 
-## Choose a component
+---
 
-| You need | Use |
+## Components
+
+| Need | Widget |
 | --- | --- |
-| A surface | `LiquidPrism` |
-| An action or circular icon | `LiquidPrismButton` / `LiquidPrismButton.icon` |
-| An on/off setting | `LiquidPrismSwitch` |
-| A numeric value | `LiquidPrismSlider` |
-| One choice from a small set | `LiquidPrismSegmentedControl<T>` |
-| Floating navigation | `LiquidPrismTabBar` |
-| Grouped icon actions | `LiquidPrismToolbarGroup` / `LiquidPrismToolbar` |
-| Content softening under a bar | `LiquidPrismScrollEdge` / `LiquidPrismEdgeBlur` |
-| Search with clear/cancel | `LiquidPrismSearchField` |
-| A native popup | `LiquidPrismButton.menu` / `GlassToolbarItem.menu` |
+| Glass surface & batched group | `PrismSurface`, `PrismGroup` |
+| Action button or circular icon | `PrismButton`, `PrismButton.icon`, `PrismButton.menu` |
+| On/off toggle | `PrismSwitch` |
+| Continuous or stepped slider | `PrismSlider` |
+| Segmented picker | `PrismSegmentedControl<T>` |
+| Floating navigation tabs | `PrismTabBar`, `PrismTab` |
+| Adaptive app layout & pull-to-refresh | `PrismScaffold`, `PrismSliverAppBar`, `PrismRefreshController` |
+| Grouped glass actions & back button | `PrismToolbar`, `PrismToolbar.group`, `PrismBackButton` |
+| Glass search bar | `PrismSearchField` |
+| Scroll edge blur & fade | `PrismScrollEdge`, `PrismScrollEdge.fade` |
+| Live materialize transition | `PrismVisibility`, `PrismVisibility.driven` |
+| Native iOS `UIMenu` popup | `PrismMenu`, `PrismMenuRegion`, `prismMenus` |
 
-You own the values in these examples. A null action callback disables a control.
-Sliders update continuously; switch and segmented drags commit on release.
-Controls support keyboard input, accessibility, RTL and Reduce Motion.
-The videos were recorded from Flutter at 1206 pixels wide and 60 fps.
+All controls are parent-owned: a null callback disables every input path, and controls support keyboard navigation, semantics, RTL, and Reduce Motion. All demos above were recorded directly from Flutter running on iOS Impeller.
 
 ### Switch
 
-This demo uses `GlassSwitchStyle(scale: 2)`.
-
-https://github.com/user-attachments/assets/b8bb5865-b513-462b-8e28-8b6784ad7d3c
+https://github.com/user-attachments/assets/3b8dfa3b-2480-46bb-b416-392e9d0e6c64
 
 ```dart
-LiquidPrismSwitch(
+PrismSwitch(
   label: 'Notifications',
   value: notifications,
   onChanged: (next) => setState(() => notifications = next),
-  style: const GlassSwitchStyle(scale: 2),
+  style: const PrismSwitchStyle(scale: 2),
 )
 ```
 
 ### Slider
 
-https://github.com/user-attachments/assets/71ccc482-a99e-4562-a2e5-d6ed8d503106
+https://github.com/user-attachments/assets/badff0e6-90bf-4fbb-b891-3efd8cc090b8
 
 ```dart
-LiquidPrismSlider(
+PrismSlider(
   label: 'Volume',
   value: volume,
   min: 0,
@@ -170,99 +169,112 @@ LiquidPrismSlider(
 
 ### Tab bar
 
-The tab bar is compact by default and grows for longer labels. Use
-`GlassTabBarStyle(sizing: GlassTabBarSizing.fill)` for full-width navigation. Place it where your
-layout needs it; the widget does not add safe-area margins. The icons below use
-`package:cupertino_ui/cupertino_ui.dart`.
+Compact by default; pass `PrismTabBarStyle(sizing: PrismTabBarSizing.fill)` for full-width navigation.
 
-https://github.com/user-attachments/assets/1448b864-000b-4883-a7b1-d5bff2de8142
+https://github.com/user-attachments/assets/011a4e2a-59ce-4b0a-aca2-baa88c515383
 
 ```dart
-LiquidPrismTabBar(
+PrismTabBar(
   selectedIndex: selectedTab,
   onSelected: (next) => setState(() => selectedTab = next),
   tabs: const [
-    LiquidPrismTab(label: 'Explore', icon: Icon(CupertinoIcons.sparkles)),
-    LiquidPrismTab(label: 'Studio', icon: Icon(CupertinoIcons.slider_horizontal_3)),
-    LiquidPrismTab(label: 'Library', icon: Icon(CupertinoIcons.square_grid_2x2_fill)),
+    PrismTab(label: 'Explore', icon: Icon(CupertinoIcons.sparkles)),
+    PrismTab(label: 'Studio', icon: Icon(CupertinoIcons.slider_horizontal_3)),
+    PrismTab(label: 'Library', icon: Icon(CupertinoIcons.square_grid_2x2_fill)),
   ],
-  style: const GlassTabBarStyle(
-    height: 62,
-    labelStyle: TextStyle(fontSize: 11),
-  ),
 )
 ```
 
-### App layout for every iPhone, including iPhone Duo
+### Adaptive scaffold & pull to refresh
 
-`LiquidPrismScaffold` floats your tab bar and actions over scrolling content and
-puts them where iOS would. On iPhone, actions sit top-right and the tab bar floats
-at the bottom. Beside the iPhone Duo sensor bar, both move into a side rail and
-the tabs turn icon-only. The layout follows the window as it folds, rotates or
-resizes, and scroll views get padding to clear the glass. Content scrolled
-under the top bar softens with the native scroll edge effect, which the glass
-controls see through.
+`PrismScaffold` floats your navigation title, toolbar actions, and tab bar over scrolling content and adapts automatically between standard iPhone layout, iPhone Duo side rails, and regular-width sidebars. Add `onRefresh` for a Dynamic Island / top-edge liquid drop refresh indicator.
 
 ```dart
-LiquidPrismScaffold(
-  backgroundColor: const Color(0xFFF2F2F7),
+PrismScaffold(
+  title: const Text('Inbox'),
+  largeTitle: const Text('Inbox'),
+  onRefresh: reload,
   toolbar: [
-    GlassToolbarItem(
+    PrismToolbarItem(
       icon: const Icon(CupertinoIcons.share),
       label: 'Share',
       onPressed: share,
     ),
   ],
-  tabBar: LiquidPrismTabBar(
+  tabBar: PrismTabBar(
     selectedIndex: selectedTab,
     onSelected: (next) => setState(() => selectedTab = next),
     tabs: tabs,
   ),
-  body: ListView(children: rows),
+  slivers: [
+    SliverList.builder(itemCount: items.length, itemBuilder: buildRow),
+  ],
 )
 ```
 
-Add `onRefresh: reload` for pull to refresh: a drop pulls out of the Dynamic
-Island (or the notch, or the top edge), pinches off into a circle when a
-release will refresh, and spins until your future completes. A
-`LiquidPrismRefreshController` starts the same refresh from code.
+### Native iOS popup menus
 
-Position chrome with typed toolbar placements, title alignment and tab docks.
-See the [0.7 API and migration guide](doc/releases/0.7.md) and run
-`example/lib/composition_main.dart` to explore the layouts.
-
-## Make it yours
-
-Set shared defaults around your app's routes:
+Popup menus use real `UIMenu` presentation on iOS 17.4+ with a Material `showMenu` fallback elsewhere.
 
 ```dart
-LiquidPrismTheme(
-  data: const LiquidPrismThemeData(
+PrismButton.menu(
+  label: 'More options',
+  menu: PrismMenu(
+    children: [
+      PrismMenuAction<String>(
+        title: 'Favorite',
+        value: 'favorite',
+        icon: const PrismMenuSfSymbol('heart'),
+        onSelected: saveFavorite,
+      ),
+      const PrismMenuDivider(),
+      const PrismMenuAction<String>(
+        title: 'Delete',
+        value: 'delete',
+        destructive: true,
+        icon: PrismMenuSfSymbol('trash'),
+      ),
+    ],
+  ),
+  onSelected: handleResult,
+  child: const Text('More'),
+)
+```
+
+---
+
+## Styling & theming
+
+Widgets take semantic and behavioral inputs directly. Visual, geometry, motion, optical, and haptic overrides live in immutable `Prism*Style` objects that merge cleanly over `PrismTheme`:
+
+```dart
+PrismTheme(
+  data: const PrismThemeData(
     tint: Color(0xFF6155F5),
-    button: GlassButtonStyle(minimumSize: Size(88, 48)),
-    slider: GlassSliderStyle(trackHeight: 8),
-    lens: GlassLensStyle(shadowOpacity: .08),
-    toolbar: GlassToolbarStyle(spacing: 10),
+    button: PrismButtonStyle(minimumSize: Size(88, 48)),
+    slider: PrismSliderStyle(trackHeight: 8),
+    lens: PrismLensStyle(shadowOpacity: .08),
+    toolbar: PrismToolbarStyle(spacing: 10),
   ),
   child: myApp,
 )
 ```
 
-Override one component with `style`. Search also accepts a direct `textStyle`.
-Direct widget arguments override styles. Null fields inherit;
-zero and false are real overrides. Nested themes merge fields; `inherit: false`
-starts from native defaults. Styles and themes support `copyWith` and `merge`.
+- Resolution order: **local widget `style` > `PrismThemeData` > native default**.
+- Typography: labels and titles use native iOS sizes and weights in your app's font. A custom `ThemeData.fontFamily` or Cupertino text theme font is picked up automatically; set `PrismThemeData.textStyle` to choose the font, size or weight for every Prism label, or a component's `textStyle` for one widget.
+- Use `PrismColors.of(context)` for the adaptive light/dark semantic palette.
+- Low-level building blocks (`PrismOptics`, `PrismLensStyle`, `PrismPressable`, `PrismSelection`, `PrismEdgeBlur`, `PrismEdgeFade`, `PrismPresence`, `PrismSystemChrome`, `PrismTabReselection`) live in `package:liquid_prism/primitives.dart`.
 
-Use `GlassColors.of(context)` for the native light/dark palette. Set theme
-`brightness` when your app's appearance differs from the device. Advanced
-customization includes geometry, typography, lens optics/shadows, motion, toolbar
-spacing, tab foreground refraction and search input behavior.
+---
 
-- [Component examples and options](doc/components.md)
-- [Theming, styles and override precedence](doc/customization.md)
-- [Motion and lens customization](doc/motion_and_lenses.md)
-- [Native menus](doc/native_menus.md)
-- [Rendering and performance](doc/rendering.md)
+## Documentation
+
+- [Component guide](doc/components.md)
+- [Theming & styles](doc/customization.md)
+- [Motion & lenses](doc/motion_and_lenses.md)
+- [Native iOS menus](doc/native_menus.md)
+- [Rendering & performance](doc/rendering.md)
+- [1.0 migration guide](doc/migration-1.0.md)
 
 ## Try the showcase
 
@@ -272,19 +284,8 @@ flutter pub get
 ../tool/run_example.sh <device-id>
 ```
 
-Explore the components, customize them in Studio, or find examples in Library.
-See the [showcase guide](example/README.md).
+For contributors, see [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [SECURITY.md](SECURITY.md).
 
-For apps using coding agents: install the [Liquid Prism integration skill](doc/agent_integration.md).
-For package contributors: [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md)
-and the [implementation guides](doc/agents/README.md).
+## Credits & license
 
-## Credits and license
-
-Built with research from [Liquid Glass Easy](https://github.com/AhmeedGamil/liquid_glass_easy)
-and [GPUI Glass Demo](https://github.com/luciascarlet/gpui-glass-demo), alongside our
-native SwiftUI measurements. Rendering approximates Apple's private glass
-operators. See [research and acknowledgments](doc/research.md) for sources and limits.
-
-BSD-3-Clause, with the merged Liquid Menu code under MIT. See [LICENSE](LICENSE),
-[LICENSE-liquid-menu](LICENSE-liquid-menu) and [third-party notices](THIRD_PARTY_NOTICES.md).
+BSD-3-Clause, with the merged Liquid Menu UIKit bridge under MIT. Built with research from [Liquid Glass Easy](https://github.com/AhmeedGamil/liquid_glass_easy) and [GPUI Glass Demo](https://github.com/luciascarlet/gpui-glass-demo). See [LICENSE](LICENSE), [LICENSE-liquid-menu](LICENSE-liquid-menu), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

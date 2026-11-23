@@ -1,12 +1,7 @@
 import UIKit
 
-// The vertical bar and reserved-region APIs ship in the iOS 27.1 SDK (UIKit
-// 9127.0.85). `#available` only guards at run time, so builds with older
-// SDKs compile the fallback instead.
 
-/// Where the system places bar chrome around a view, from the iOS 27.1
-/// vertical bar trait and reserved-region APIs. Coordinates are in the
-/// observed view's space, which is Flutter's logical coordinate space.
+/// System bar placement and reserved regions in the observed view’s coordinates.
 public struct SystemChrome: Equatable, Sendable {
   /// A reserved region in the observed view's space.
   public struct Region: Equatable, Sendable {
@@ -24,28 +19,22 @@ public struct SystemChrome: Equatable, Sendable {
 
   /// False before iOS 27.1, where neither API exists.
   public var supported: Bool
-  /// The physical edge of the vertical bar, or nil when the system uses
-  /// horizontal bars here. UIKit reports the preferred edge even while the
-  /// app has disabled the vertical bar; see [verticalBarDisabled].
+  /// The preferred vertical bar edge, even when disabled, or nil for horizontal bars.
   public var verticalBarEdge: UIRectEdge?
   /// Whether the app opted out with `LiquidPrismViewController`.
   public var verticalBarDisabled = false
-  /// The view's size classes, which an iPhone app on iPhone Duo can combine
-  /// in any way.
+  /// The view’s horizontal size class.
   public var horizontalSizeClass: UIUserInterfaceSizeClass = .unspecified
   public var verticalSizeClass: UIUserInterfaceSizeClass = .unspecified
-  /// Regions covered by system UI, such as the status bar in the rail or the
-  /// camera. Inactive regions are included with `active == false`.
+  /// Regions covered by system UI, including inactive regions.
   public var occlusions: [Region]
   /// Regions content should divide around, such as the fold.
   public var divisions: [Region]
-  /// The device's Liquid Glass setting (UIKit's glass tint amount), or nil
-  /// where the system has none. Read on every iOS version that has it.
+  /// The device’s Liquid Glass tint amount, or nil if unavailable.
   public var glassTintAmount: Double? = DeviceGlass.tintAmount
   /// Accessibility's Reduce Transparency, public on every iOS version.
   public var reduceTransparency: Bool = UIAccessibility.isReduceTransparencyEnabled
-  /// The Dynamic Island in the view's space, or nil where the view has none
-  /// centred along its top edge. Read on every iOS version.
+  /// The centred Dynamic Island in the view’s coordinates, or nil if absent.
   public var island: CGRect?
   /// A notch in the view's space: a sensor housing joined to the top edge.
   public var notch: CGRect?
@@ -118,8 +107,7 @@ public struct SystemChrome: Equatable, Sendable {
     }
   }
 
-  /// The channel payload: regions are `[x, y, width, height, marginLeft,
-  /// marginTop, marginRight, marginBottom, active]`.
+  /// The channel payload, with region frames, margins, and active flags.
   public var map: [String: Any] {
     func encode(_ region: Region) -> [Double] {
       let r = region.frame
@@ -149,9 +137,7 @@ public struct SystemChrome: Equatable, Sendable {
   }
 }
 
-/// Reports [SystemChrome] for a view whenever it may have changed: layout,
-/// safe-area and vertical-bar trait changes cover folding, rotation, resizing
-/// and Split View. UIKit has no change notification for reserved regions.
+/// Reports system chrome changes caused by layout, safe-area, and trait updates.
 @MainActor
 public final class SystemChromeObserver {
   public var onChange: ((SystemChrome) -> Void)?
@@ -163,9 +149,6 @@ public final class SystemChromeObserver {
   private var glassObservers: [NSObjectProtocol] = []
 
   public init() {
-    // The Liquid Glass and Reduce Transparency settings change without any
-    // layout or trait change.
-    // Returning from Settings re-reads them too.
     let names = [
       DeviceGlass.didChange,
       UIAccessibility.reduceTransparencyStatusDidChangeNotification,
@@ -224,7 +207,6 @@ public final class SystemChromeObserver {
   }
 }
 
-/// A transparent view that tracks its host's size and safe area.
 final class SentinelView: UIView {
   var onUpdate: (@MainActor () -> Void)?
 

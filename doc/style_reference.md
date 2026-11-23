@@ -5,7 +5,12 @@ native defaults when neither a local style nor a theme supplies an override.
 Lengths are logical pixels. See [customization](customization.md) for precedence
 and [components](components.md) for usage.
 
-## Shared lens: `GlassLensStyle`
+Styles, themes, optics, motion and data objects implement value equality
+(`operator ==` and `hashCode`). Import `package:liquid_prism/liquid_prism.dart`
+for component styles; `PrismLensStyle` and `PrismOptics` require
+`package:liquid_prism/primitives.dart`.
+
+## Shared lens: `PrismLensStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
@@ -33,22 +38,24 @@ Chromatic split/band do not scale with lens height and remain independent of
 `optics`; split scales with lift and surface presence. They affect backdrop and
 refracted foreground. Generic optical dispersion is a separate setting.
 
-## Buttons: `GlassButtonStyle`
+## Buttons: `PrismButtonStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
-| `variant` | `GlassButtonVariant.regular`; prominent is the tinted preset |
+| `variant` | `PrismButtonVariant.regular`; prominent is the tinted preset |
 | `glass`, `optics`, `blur`, `motion`, `shape` | Component overrides of surface/theme settings |
 | `padding` | Standard/menu: horizontal 20, vertical 15, matching the native large button's 50.3-point height with a 17-point label; icon: 12 all sides |
 | `minimumSize` | Standard/menu: no added minimum; icon: 48×48 |
-| `textStyle` | 17-point regular, merged with surrounding text style |
+| `textStyle` | 17-point regular in the app font, merged over `PrismThemeData.textStyle` |
 | `iconSize` | Ambient icon size |
 | `foregroundColor` | Semantic tint; prominent defaults white |
+| `tintColor` | Material tint override; prominent uses the theme accent by default |
+| `loadingIndicator` | Built-in activity indicator; optional replacement widget |
 
-An icon button defaults to `GlassShape.circle`. Explicitly colored child content
+An icon button defaults to `PrismShape.circle`. Explicitly colored child content
 keeps its own colors. Disabled controls use the semantic disabled label.
 
-## Switches: `GlassSwitchStyle`
+## Switches: `PrismSwitchStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
@@ -59,12 +66,12 @@ keeps its own colors. Disabled controls use the semantic disabled label.
 | `inactiveColor`, `thumbColor` | Tertiary label / white |
 | `haptics` | True on iOS user changes |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
-| `refractContent`, `contentRefraction`, `contentDepth` | True / 14 / 11.2; labels bend near the held selection's rim |
+| `motion` | Partial `PrismControlMotion` override; native timing otherwise |
 
 Hit width/height remain at least 44. Width must exceed the resting thumb width
 plus both insets. Parent layout constraints still apply; leave room for the lens.
 
-## Sliders: `GlassSliderStyle`
+## Sliders: `PrismSliderStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
@@ -72,16 +79,18 @@ plus both insets. Parent layout constraints still apply; leave room for the lens
 | `thumbSize`, `heldScale` | 37×24 / 1.55; hold scale multiplies both thumb axes |
 | `activeColor`, `inactiveColor`, `thumbColor` | Theme accent / semantic slider track / white |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
+| `motion` | Partial `PrismControlMotion` override; native timing otherwise |
 | `haptics` | True: iOS light impact when user input reaches the minimum or maximum |
 
 Preferred width is constrained by the parent; the resting thumb fits narrow widths
 proportionally. Hit height stays at least 44. Track fill uses the resting thumb
 width for its continuous endpoint blend, even when the held knob grows or flexes.
 
-## Segments: `GlassSegmentedStyle`
+## Segments: `PrismSegmentedStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
+| `variant`, `glass` | `plain` / regular glass; `glass` only applies to the glass variant |
 | `width`, `scale`, `hitHeight` | 300 / 1 / 44, before scale |
 | `trackHeight`, `thumbHeight`, `selectionInset` | 32 / 28 / 2, before scale |
 | `liftInset` | (12, 8) extra space on each side, before scale |
@@ -89,18 +98,25 @@ width for its continuous endpoint blend, even when the held knob grows or flexes
 | `backgroundColor`, `thumbColor` | Tertiary system fill / white in light, translucent gray in dark |
 | `foregroundColor`, `selectedForegroundColor` | Semantic label / black in light, white in dark |
 | `trackShape`, `lens` | Capsule / partial shared-lens override |
+| `motion` | Partial `PrismControlMotion` override; native timing otherwise |
+
+`refractContent`, `contentRefraction` and `contentDepth` default to true / 14 /
+11.2 for the held selection's foreground lens.
+
+The glass variant defaults to track 48, selection 40, inset 4 and 15-point
+regular labels, measured from a segmented picker in an iOS toolbar.
 
 Segments divide final width equally. `foregroundColor` overrides both label states;
 `selectedForegroundColor` applies only to the resting selected label. Child text
 and artwork can override ambient styling themselves.
 
-## Tabs: `GlassTabBarStyle`
+## Tabs: `PrismTabBarStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
 | `glass`, `optics`, `blur`, `motion` | Housing/travel overrides; lifted optics use `lens` separately |
 | `height`, `padding`, `iconSize`, `labelStyle` | 54-point minimum, horizontal 8 / vertical 4 padding, 25-point symbols, 10-point labels with 1.2 line height; text can require greater height |
-| `sizing` | `GlassTabBarSizing.compact`; `.fill` fills a bounded main axis |
+| `sizing` | `PrismTabBarSizing.compact`; `.fill` fills a bounded main axis |
 | `minimumTabWidth`, `labelPadding` | 86 / 32; spacing uses the widest measured label |
 | `labelBehavior` | Always; selected/never hide visual labels, not semantic names |
 | `selectedColor`, `unselectedColor` | Calibrated accent / semantic label |
@@ -112,10 +128,10 @@ and artwork can override ambient styling themselves.
 
 Height/content defaults depend on text scale and available width. Set
 `selectionShape` to override shared lens shape for this bar. Housing minification
-and glyph refraction are separate effects. Tab motion is the widget/theme's
-`GlassMotion`; see [motion scope](motion_and_lenses.md).
+and glyph refraction are separate effects. Tab motion uses style/theme
+`PrismMotion`; see [motion scope](motion_and_lenses.md).
 
-## Toolbars: `GlassToolbarStyle`
+## Toolbars: `PrismToolbarStyle`
 
 | Fields | Navigation / bottom defaults |
 | --- | --- |
@@ -125,13 +141,16 @@ and glyph refraction are separate effects. Tab motion is the widget/theme's
 | `foregroundColor`, `pressedColor` | Calibrated accent / no press fill (explicit color opts in) |
 | `shape`, `itemShape` | Capsule / capsule |
 | `glass`, `optics`, `blur`, `motion` | Component overrides of material/theme settings |
-| `backIcon`, `closeIcon` | Back chevron / close mark of `LiquidPrismBackButton` |
+| `backIcon`, `closeIcon` | Back chevron / close mark of `PrismBackButton` |
 | `backIconShift`, `backIconMirrors` | .5 toward the tip / true, the shift mirrors in RTL |
 
-Each `GlassToolbarItem` owns its width (38 default, at least 36), selected state,
-label, callback/menu, key and optional foreground. Group spacing is independent.
+Each `PrismToolbarItem` owns its width (38 default, at least 36), selected state,
+label, callback/menu, key and optional foreground. Style `groupSpacing` defaults
+to 8 between capsules. `itemTransition` defaults to `PrismTransition.materialize`;
+`itemTransitionStyle` overrides its springs and blur. Badge colors/typography
+are listed below.
 
-## Search: `GlassSearchStyle`
+## Search: `PrismSearchStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
@@ -147,13 +166,14 @@ label, callback/menu, key and optional foreground. Group spacing is independent.
 | `focusSpring` | 380 ms with zero bounce; field focus, shortening and cancel exit |
 | `cancelSpring` | 520 ms with 0.22 bounce; cancel slides in, scales up and fades in |
 
-Apply this through search `style` or theme `search`. Search `textStyle` overrides
-the editor typography directly. Input configuration, custom prefix/suffix and
+Apply this through search `style` or theme `search`.
+`PrismSearchStyle.textStyle` sets the editor typography. Input configuration,
+custom prefix/suffix and
 controller/focus ownership stay on the widget. A custom suffix replaces clearing.
 Autocomplete hooks (`fieldBuilder`, `suffixBuilder`, `groupId`, `onTapOutside`,
 `onFocusChange`) are widget arguments; see [components](components.md#hosting-autocomplete).
 
-## Transitions: `GlassTransitionStyle`
+## Transitions: `PrismTransitionStyle`
 
 | Fields | Default / meaning |
 | --- | --- |
@@ -161,13 +181,13 @@ Autocomplete hooks (`fieldBuilder`, `suffixBuilder`, `groupId`, `onTapOutside`,
 | `contentBlur` | 4; content blur at zero presence, 0 fades only |
 
 Defaults are fitted by eye; native materialize timing has not been captured.
-Apply through `LiquidPrismVisibility.style` or theme `transition`.
+Apply through `PrismVisibility.style` or theme `transition`.
 
 ## Motion
 
-`GlassControlMotion` exposes partial travel/tracking/lift/release/flex springs,
-minimum lift, flex strength, maximum stretch and velocity decay. `GlassSpring`
-accepts duration/bounce or Flutter physics. `GlassMotion` controls button/toolbar
+`PrismControlMotion` exposes partial travel/tracking/lift/release/flex springs,
+minimum lift, flex strength, maximum stretch and velocity decay. `PrismSpring`
+accepts duration/bounce or Flutter physics. `PrismMotion` controls button/toolbar
 press and tab travel. See [motion and lenses](motion_and_lenses.md) for their
 separate scopes, native timings and input guarantees.
 
@@ -175,21 +195,21 @@ separate scopes, native timings and input guarantees.
 
 | Style / field | Default / meaning |
 | --- | --- |
-| `GlassSegmentedStyle.sizing` | `fixed`; opt into `fitLabels` for Text/RichText |
-| `GlassSegmentedStyle.labelPadding` | Horizontal 10 (measured) / vertical 8, before scale; fit mode only |
+| `PrismSegmentedStyle.sizing` | `fixed`; opt into `fitLabels` for Text/RichText |
+| `PrismSegmentedStyle.labelPadding` | Horizontal 10 (measured) / vertical 8, before scale; fit mode only |
 | Tab / toolbar `badgeColor` | System red (measured) |
 | Tab / toolbar `badgeTextStyle` | 12-point medium, white (measured) |
 | `titleDisplayMode` | `automatic`, `inline`, `inlineLarge`, `large` |
-| `GlassNavigationBarStyle.titleStyle` | Compact 17-point semibold, or 15 with a subtitle. A single title promoted on the Duo rail uses 28-point bold, or 22 with a subtitle. |
-| `GlassNavigationBarStyle.largeTitleStyle` | 34-point bold horizontally. 28 on the Duo rail, or 22 with a subtitle. |
+| `PrismNavigationBarStyle.titleStyle` | Compact 17-point semibold, or 15 with a subtitle. A single title promoted on the Duo rail uses 28-point bold, or 22 with a subtitle. |
+| `PrismNavigationBarStyle.largeTitleStyle` | 34-point bold horizontally. 28 on the Duo rail, or 22 with a subtitle. |
 | `titleAlignment` / `largeTitleAlignment` | Centered inline / leading expanded; automatic follows those defaults |
 | `gutter` / `controlGap` | 16 / 12 |
 | `contentSpacing` | 12 below a standard bar, 0 below a bare Duo title row, 16 below a Duo accessory or in other rail/sidebar layouts |
 | `minimizationBehavior` | `automatic` reveals titled rail bars on reversal and pins horizontal bars. Also accepts `never`, `onScrollDown`, `onScrollUp`. |
 | `minimizationRestoration` | Automatic restores on reversal. Pair `atScrollEdge` with explicit `onScrollDown` for edge restoration. |
-| `minimizationSafeAreaAdjustment` | Automatic moves the pinned clearance with the bar on a rail and keeps it fixed horizontally. `enabled` and `disabled` override this. Scroll extent and caller-owned body padding stay stable. |
+| `minimizationSafeArea` | Automatic moves the pinned clearance with the bar on a rail and keeps it fixed horizontally. `enabled` and `disabled` override this. Scroll extent and caller-owned body padding stay stable. |
 | `minimizationThreshold` | Fitted initial travel 13⅓ points, after large-title collapse |
-| `titleCapsule` (`GlassTitleStyle`) | `LiquidPrismTitle` geometry: avatar 64, tucked 6 under; inline capsule matches bar control height (44 top, 48 rail), adapting default vertical insets to content; explicit padding/minimum heights and larger text can grow it; above-avatar capsule at least 38 tall with 14 × 9 padding; leading 22, a circle (`leadingCornerRadius` half its size) as far from the start as from the top and bottom, and 10 gap; regular glass |
+| `titleCapsule` (`PrismTitleStyle`) | `PrismTitle` geometry: avatar 64, tucked 6 under; inline capsule matches bar control height (44 top, 48 rail), adapting default vertical insets to content; explicit padding/minimum heights and larger text can grow it; above-avatar capsule at least 38 tall with 14 × 9 padding; leading 22, a circle (`leadingCornerRadius` half its size) as far from the start as from the top and bottom, and 10 gap; regular glass |
 | `revealExtent` | The large title's row, 52 at default size (measured); zero swaps on the first pixel |
 | `revealSpring` / `hideSpring` | Native-fitted inline fade/rise springs: mass 1, stiffness/damping 225/28.3 entering, 93.3/18.22 leaving |
 | `inlineTitleDelay` | Fitted 12 ms onset after the large fade, only when starting at rest; zero disables it |
@@ -200,9 +220,9 @@ Measured on iOS 27: badges are 18.33-point capsules (18 on toolbar items) with
 trailing edge, its top 24.5 above the glyph's centre; a toolbar badge sits 2.8
 points above the capsule and overhangs the item by 3. The icon-only tab pitch is
 86, as for labelled tabs.
-See [evidence and adoption](package_features_spec.md).
+See [evidence and adoption](../research/specs/package_features_spec.md).
 
-Theme `haptics` replaces native calls with `GlassHaptics`, subject to component
+Theme `haptics` replaces native calls with `PrismHaptics`, subject to component
 haptics flags. Scaffold titles resolve `navigationBarStyle` above theme
 `navigationBar`; scaffold `resizeToAvoidBottomInset` defaults true.
 
@@ -210,13 +230,13 @@ haptics flags. Scaffold titles resolve `navigationBarStyle` above theme
 
 | Style / fields | Default / meaning |
 | --- | --- |
-| `GlassButtonStyle.variant`, `size` | Regular glass / large; widget arguments override these |
+| `PrismButtonStyle.variant`, `size` | Regular glass / large; widget arguments override these |
 | `sizing`, `labelPlacement`, `spacing`, `alignment` | Intrinsic / trailing / 8 / center |
 | `minimumSize`, `maximumSize` | Native preset minimum / unbounded visual maximum; hit area at least 44 where possible |
-| `GlassToolbarStyle.textStyle` | 17-point semibold text actions; labels measure their width |
-| `GlassNavigationBarStyle.titleAlignment` | Automatic centers the inline title; explicit leading/trailing remain available |
+| `PrismToolbarStyle.textStyle` | 17-point semibold text actions; labels measure their width |
+| `PrismNavigationBarStyle.titleAlignment` | Automatic centers the inline title; explicit leading/trailing remain available |
 | `controlRowHeight`, `contentPadding`, `largeTitleExtent` | 44 for standard bars or 58 for the Duo title row / zero / measured typography |
-| `GlassScaffoldStyle.tabBarMargin`, `tabBarMaxWidth`, `tabBarAlignment` | Bottom horizontal 24, native bottom gap; explicit top/side 12 all around / 440 / center |
+| `PrismScaffoldStyle.tabBarMargin`, `tabBarMaxWidth`, `tabBarAlignment` | Bottom horizontal 24, native bottom gap; explicit top/side 12 all around / 440 / center |
 | `bottomBarMargin`, `bottomBarMaxWidth`, `bottomBarAlignment` | Native bottom gap or 8 above tabs / unbounded / center |
 
 Alignment uses the dock's cross axis. Directional insets/alignment follow RTL.

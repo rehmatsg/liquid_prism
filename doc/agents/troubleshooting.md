@@ -3,16 +3,16 @@
 | Symptom | Investigate |
 | --- | --- |
 | Shader float RangeError after reload | Uniform packet mismatch or cached program; inspect ABI then stop/rebuild |
-| Glass looks flat | Backend filter support, preload/logs, material identity, lack of painted backdrop |
+| Glass looks flat | Backend filter support, `Prism.initialize()`/logs, material identity, lack of painted backdrop |
 | Missing unselected tab content | Foreground pass ownership/repaint boundaries and first-paint layer behavior |
 | Glyph warp shifts during drag | Source crop origin, DPR/ancestor transform and contour bounds |
 | Extra translucent capsule inside a lens | Shadow captured under the lens or prematurely clipped paint |
 | Dark pill has a bright white hotspot | Halo kernel/opacity, material brightness and accidental face grading |
 | Slider says 100% with incomplete fill | Fraction-to-fill mapping; preserve the continuous outer-2% blend |
 | Fast motion produces no size change | Pointer timestamps, velocity sampling, decay and flex settings |
-| A style option appears ignored | Direct argument precedence, merge wiring and final paint/layout consumption |
+| A style option appears ignored | Local `Prism*Style` > component theme > native fallback, merge wiring and final paint/layout consumption |
 | False/zero overrides disappear | Nullable input handling; do not compare against default values |
-| Switch has no haptics | iOS target, enabled callback, haptics precedence and physical-device testing |
+| Switch has no haptics | iOS target, enabled callback, `PrismSwitchStyle.haptics`, theme hook and physical-device testing |
 | Search borrows a disposed controller | Ownership/listener migration; caller disposes caller-owned objects |
 | Popup has wrong anchor | Trigger context/render bounds, keyboard/focus state and native bridge diagnostics |
 | Only fallback looks correct | Real Impeller layer order and shader packet; headless tests are insufficient |

@@ -1,12 +1,14 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
-/// A page whose bar is a [LiquidPrismSliverAppBar]: the large title collapses
-/// with the scroll and the bar's glass refracts the rows beneath it.
+/// A demo of a navigation bar inside a custom scroll view.
 class SliverBarPage extends StatefulWidget {
-  const SliverBarPage({super.key, this.scrollEdge = true});
+  /// Creates a [SliverBarPage].
+  const new({super.key, this.scrollEdge = true});
+
+  /// Whether the demo enables the scroll-edge effect.
   final bool scrollEdge;
 
   @override
@@ -18,36 +20,36 @@ class _SliverBarPageState extends State<SliverBarPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     return ColoredBox(
       color: colors.groupedBackground,
       child: CustomScrollView(
         key: const ValueKey('sliver-bar-scroll'),
         slivers: [
-          LiquidPrismSliverAppBar(
+          PrismSliverAppBar(
             title: const Text('Library'),
             largeTitle: const Text('Library'),
             backgroundColor: colors.groupedBackground,
             scrollEdge: widget.scrollEdge,
             toolbar: [
-              GlassToolbarGroup(
+              PrismToolbarGroup(
                 items: [
-                  GlassToolbarItem(
+                  PrismToolbarItem(
                     icon: const Icon(CupertinoIcons.bell),
                     label: 'Activity',
-                    badge: const GlassBadge.dot(),
+                    badge: const PrismBadge.dot(),
                     onPressed: () {},
                   ),
                 ],
               ),
-              GlassToolbarGroup(
+              PrismToolbarGroup(
                 items: [
-                  GlassToolbarItem(
+                  PrismToolbarItem(
                     icon: const Icon(CupertinoIcons.square_arrow_up),
                     label: 'Share',
                     onPressed: () {},
                   ),
-                  GlassToolbarItem(
+                  PrismToolbarItem(
                     icon: const Icon(CupertinoIcons.ellipsis),
                     label: 'More',
                     onPressed: () {},
@@ -58,7 +60,7 @@ class _SliverBarPageState extends State<SliverBarPage> {
             accessory: PreferredSize(
               preferredSize: const Size.fromHeight(48),
               child: Center(
-                child: LiquidPrismSegmentedControl<int>(
+                child: PrismSegmentedControl<int>(
                   selectedValue: _segment,
                   onValueChanged: (v) => setState(() => _segment = v),
                   children: const {0: Text('All'), 1: Text('Saved')},

@@ -3,18 +3,21 @@
 Default motion and optics preserve the native-reference behavior. Override only
 what you need; partially specified objects inherit the rest.
 
+Import `package:liquid_prism/liquid_prism.dart` for widgets, styles and motion,
+and `package:liquid_prism/primitives.dart` for `PrismLensStyle` and `PrismOptics`.
+
 ## Reusable lens appearance
 
 ```dart
-const quietLens = GlassLensStyle(
+const quietLens = PrismLensStyle(
   shadowOpacity: .06,
   ringOpacity: .03,
   shadowBlur: 6,
-  shape: GlassShape.rect(cornerRadius: 16),
+  shape: PrismShape.rect(cornerRadius: 16),
 );
 
-LiquidPrismTheme(
-  data: const LiquidPrismThemeData(lens: quietLens),
+PrismTheme(
+  data: const PrismThemeData(lens: quietLens),
   child: myApp,
 )
 ```
@@ -27,10 +30,10 @@ are separate. Blur/offset/ring-width metrics scale with lens height relative to
 
 The default lens uses clear glass. Switch/segment/tab underlays minify, while the
 slider's underlying track does not. `minifyUnderlay` explicitly overrides that
-choice. Enlarging a slider knob is separate: `GlassSliderStyle.heldScale` controls
+choice. Enlarging a slider knob is separate: `PrismSliderStyle.heldScale` controls
 its bounds. Keep those two settings independent.
 
-An explicit `optics` is a complete `LiquidPrismStyle` packet. Use its `copyWith`
+An explicit `optics` is a complete `PrismOptics` packet. Use its `copyWith`
 against a chosen preset instead of assuming unspecified fields inherit the native
 lens recipe. It replaces the computed optical settings; shadow/layout settings
 remain independent. Setting blur to zero is an explicit override.
@@ -51,10 +54,10 @@ segment and tab lenses (displacement 9 over a 36-point field, native for all
 three) is a separate pass, read at the depth the rim has already refracted the
 sample to; changing the rim does not change its amount, and explicit `optics`
 still drive both. See
-[held lens displacement](native_controls_spec.md#held-lens-displacement).
+[held lens displacement](../research/specs/native_controls_spec.md#held-lens-displacement).
 
 The slider resolves these from the held small-lens capture in
-`doc/native_controls_spec.json`. Measured: inner refraction height 6.66 and
+`research/specs/native_controls_spec.json`. Measured: inner refraction height 6.66 and
 amount 11.1, face color matrix black .1, the layer contact shadow (.14, radius 5,
 offset 1) still present at the held frame, and the ring shadow geometry (width 4,
 radius 3, offset 8). Mapping Apple's refraction height/amount onto this
@@ -69,18 +72,22 @@ unless set through their `lens`.
 ## Small-control timing
 
 ```dart
-const relaxed = GlassControlMotion(
-  travel: GlassSpring(response: Duration(milliseconds: 500), bounce: .1),
-  lift: GlassSpring(response: Duration(milliseconds: 300), bounce: .2),
-  release: GlassSpring(response: Duration(milliseconds: 550), bounce: .15),
+const relaxed = PrismControlMotion(
+  travel: PrismSpring(response: Duration(milliseconds: 500), bounce: .1),
+  lift: PrismSpring(response: Duration(milliseconds: 300), bounce: .2),
+  release: PrismSpring(response: Duration(milliseconds: 550), bounce: .15),
   minimumLiftDuration: Duration(milliseconds: 300),
 );
 
-LiquidPrismSwitch(value: enabled, onChanged: changeEnabled, motion: relaxed)
+PrismSwitch(
+  value: enabled,
+  onChanged: changeEnabled,
+  style: const PrismSwitchStyle(motion: relaxed),
+)
 ```
 
-Use `LiquidPrismThemeData.controlMotion` for switches, sliders and segmented
-controls together, or a widget's `motion` for local overrides. Fields are:
+Use `PrismThemeData.controlMotion` for switches, sliders and segmented
+controls together, or a component style's `motion` for local overrides. Fields are:
 
 | Field | Meaning |
 | --- | --- |
@@ -93,10 +100,10 @@ controls together, or a widget's `motion` for local overrides. Fields are:
 | `maxStretch` | Maximum fractional target deformation |
 | `velocityDecay` | Stationary-sample timeout before flex target returns to zero |
 
-A `GlassSpring` accepts duration/bounce, or Flutter physics:
+A `PrismSpring` accepts duration/bounce, or Flutter physics:
 
 ```dart
-const spring = GlassSpring.physical(
+const spring = PrismSpring.physical(
   SpringDescription(mass: 1, stiffness: 300, damping: 26),
 );
 ```
@@ -110,14 +117,14 @@ Default switch travel is .3 s with critical damping; sliders/segments travel at
 .4 s with their own damping. Switch/slider lenses lift at .27 s / .625 damping and lower
 at .5 s / .7; segmented lenses use .25 s with critical damping on both edges. Switches/segments have a 220 ms minimum lift; sliders do not delay
 release by default. Native spec inputs and fitted flex coupling are distinguished
-in [control measurements](native_controls_spec.md).
+in [control measurements](../research/specs/native_controls_spec.md).
 
 ## Buttons, toolbar and tab travel
 
-These use `GlassMotion`, independently from small-control motion:
+These use `PrismMotion`, independently from small-control motion:
 
 ```dart
-const motion = GlassMotion(
+const motion = PrismMotion(
   response: Duration(milliseconds: 450),
   pressResponse: Duration(milliseconds: 300),
   releaseResponse: Duration(milliseconds: 400),
@@ -132,11 +139,11 @@ housing and deformation timings remain separate native/fitted settings. Do not
 assume a shared duration changes every optical or nonspatial leg.
 
 The tab lens has an independent foreground filter. Configure its glyph displacement
-and depth through `GlassTabBarStyle.contentRefraction` / `contentDepth`, or turn it
+and depth through `PrismTabBarStyle.contentRefraction` / `contentDepth`, or turn it
 off with `refractContent: false`. The housing minification remains a lens setting.
 The segmented control's held selection runs the same filter over its label row
-(`GlassSegmentedStyle.refractContent`, `contentRefraction`, `contentDepth`).
-`GlassLensStyle.chromaticAberration` adds a lift-scaled red–blue split along the
+(`PrismSegmentedStyle.refractContent`, `contentRefraction`, `contentDepth`).
+`PrismLensStyle.chromaticAberration` adds a lift-scaled red–blue split along the
 rim (3.5 points for segments/tabs, 0 for switches/sliders), in both the backdrop
 and foreground. `chromaticBand` defaults to 4.8 points; neither length scales
 with lens height. Explicit zero disables it independently of generic optical
@@ -150,7 +157,7 @@ The renderer fits stripe measurements with
 clamped nonnegative, and direction `-(n.y, n.x)` for outward normal `n`.
 Red samples at `p - .5 * w * split * direction`, green at `p`, blue at the
 opposite offset. This is a fitted renderer, not Apple's recovered operator.
-See [measured values and fit error](native_controls_spec.md#chromatic-rim-fringe).
+See [measured values and fit error](../research/specs/native_controls_spec.md#chromatic-rim-fringe).
 
 ## Interaction guarantees
 

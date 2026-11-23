@@ -1,22 +1,17 @@
 #include <flutter/runtime_effect.glsl>
 precision highp float;
 
-// Texture pixels. Other lengths are logical pixels mapped by u_matrix.
 uniform vec2 u_size;
-// Direction (0 horizontal, 1 vertical), fade axis (0 x, 1 y), frame, box width.
 uniform vec4 u_pass;
-// Box height, texture origin xy, unused.
 uniform vec4 u_box;
 uniform vec4 u_matrix;
 uniform vec4 u_inverse;
-// Extent, sigma, plateau, floor; top/left and bottom/right strips.
 uniform vec4 u_start;
 uniform vec4 u_end;
 uniform sampler2D u_texture;
 
 out vec4 frag_color;
 
-// Paired taps span 72 texels: 3 sigma for an 8-point blur at 3x.
 #define MAX_PAIRS 36
 
 float smoothstep01(float t) {
@@ -58,7 +53,7 @@ void main() {
     m = mat2(u_matrix.x, u_matrix.y, u_matrix.z, u_matrix.w);
     inv = mat2(u_inverse.x, u_inverse.y, u_inverse.z, u_inverse.w);
   }
-  vec2 p = inv * (xy - origin); // logical coords within the box
+  vec2 p = inv * (xy - origin);
 
   float coord = axisY ? p.y : p.x;
   float len = axisY ? boxSize.y : boxSize.x;
@@ -68,55 +63,46 @@ void main() {
       + u_end.y * ramp(len - coord, u_end.x, u_end.z, u_end.w);
   if (sigmaLogical < 0.02) {
     frag_color = sampleUV(xy / u_size);
-    return;
-  }
+  } else {
+    vec2 dir = vertical ? vec2(m[1][0], m[1][1]) : vec2(m[0][0], m[0][1]);
+    float stretch = max(length(dir), 0.0001);
+    dir /= stretch;
+    float sigma = sigmaLogical * stretch;
 
-  vec2 dir = vertical ? vec2(m[1][0], m[1][1]) : vec2(m[0][0], m[0][1]);
-  float stretch = max(length(dir), 0.0001);
-  dir /= stretch;
-  float sigma = sigmaLogical * stretch; // texture px
+    float along = vertical ? p.y : p.x;
+    float lenAlong = vertical ? boxSize.y : boxSize.x;
+    float maxBack = along * stretch - 0.5;
+    float maxForward = (lenAlong - along) * stretch - 0.5;
 
-  float along = vertical ? p.y : p.x;
-  float lenAlong = vertical ? boxSize.y : boxSize.x;
-  // Distance in texels to the centre of the last texel inside the box on
-  // each side. Taps past it are dropped and the kernel renormalised, as
-  // Core Animation's inputNormalizeEdges does: the box edge (the screen's,
-  // or the strip's inner end) never repeats its last row.
-  float maxBack = along * stretch - 0.5;
-  float maxForward = (lenAlong - along) * stretch - 0.5;
-
-  // Incremental Gaussian weights (GPU Gems 3, ch. 40); pair adjacent taps.
-  vec3 g = vec3(1.0, exp(-0.5 / (sigma * sigma)), 0.0);
-  g.z = g.y * g.y;
-  // Truncate under 0.4% of the kernel mass; retain narrow kernels in full.
-  float radius = (sigma < 1.5 ? 3.0 : 2.88) * sigma;
-  vec2 texel = 1.0 / u_size;
-  vec2 uv = xy * texel;
-  vec2 tapStep = dir * texel;
-  vec4 total = sampleUV(uv);
-  float totalWeight = 1.0;
-  for (int i = 1; i <= MAX_PAIRS; i++) {
-    float x0 = float(2 * i - 1);
-    if (x0 > radius) break;
-    g.xy *= g.yz;
-    float w0 = g.x;
-    g.xy *= g.yz;
-    float w1 = g.x;
-    // Each tap counts by the part of its texel inside the box, so a box at
-    // a fractional position fades its last texel instead of stepping.
-    float f0 = clamp(maxForward + 1.0 - x0, 0.0, 1.0) * w0;
-    float f1 = clamp(maxForward - x0, 0.0, 1.0) * w1;
-    float b0 = clamp(maxBack + 1.0 - x0, 0.0, 1.0) * w0;
-    float b1 = clamp(maxBack - x0, 0.0, 1.0) * w1;
-    float forward = f0 + f1;
-    float back = b0 + b1;
-    if (forward > 0.0) {
-      total += sampleUV(uv + tapStep * (x0 + f1 / forward)) * forward;
+    vec3 g = vec3(1.0, exp(-0.5 / (sigma * sigma)), 0.0);
+    g.z = g.y * g.y;
+    float radius = (sigma < 1.5 ? 3.0 : 2.88) * sigma;
+    vec2 texel = 1.0 / u_size;
+    vec2 uv = xy * texel;
+    vec2 tapStep = dir * texel;
+    vec4 total = sampleUV(uv);
+    float totalWeight = 1.0;
+    for (int i = 1; i <= MAX_PAIRS; i++) {
+      float x0 = float(2 * i - 1);
+      if (x0 > radius) break;
+      g.xy *= g.yz;
+      float w0 = g.x;
+      g.xy *= g.yz;
+      float w1 = g.x;
+      float f0 = clamp(maxForward + 1.0 - x0, 0.0, 1.0) * w0;
+      float f1 = clamp(maxForward - x0, 0.0, 1.0) * w1;
+      float b0 = clamp(maxBack + 1.0 - x0, 0.0, 1.0) * w0;
+      float b1 = clamp(maxBack - x0, 0.0, 1.0) * w1;
+      float forward = f0 + f1;
+      float back = b0 + b1;
+      if (forward > 0.0) {
+        total += sampleUV(uv + tapStep * (x0 + f1 / forward)) * forward;
+      }
+      if (back > 0.0) {
+        total += sampleUV(uv - tapStep * (x0 + b1 / back)) * back;
+      }
+      totalWeight += forward + back;
     }
-    if (back > 0.0) {
-      total += sampleUV(uv - tapStep * (x0 + b1 / back)) * back;
-    }
-    totalWeight += forward + back;
+    frag_color = total / totalWeight;
   }
-  frag_color = total / totalWeight;
 }

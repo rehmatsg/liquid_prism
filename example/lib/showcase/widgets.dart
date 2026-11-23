@@ -3,13 +3,20 @@ import 'dart:ui' show DisplayFeatureState;
 
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 
-/// System grouped-list colors the package palette doesn't carry.
-extension ShowcaseColors on GlassColors {
+/// Additional semantic colors used by the showcase.
+extension ShowcaseColors on PrismColors {
   bool get _dark => brightness == Brightness.dark;
+
+  /// The background color behind grouped sections.
   Color get groupedBackground =>
       _dark ? const Color(0xFF000000) : const Color(0xFFF2F2F7);
+
+  /// The background color of a grouped cell.
   Color get cell => _dark ? const Color(0xFF1C1C1E) : const Color(0xFFFFFFFF);
+
+  /// The divider color between grouped rows.
   Color get separator => _dark
       ? const Color.from(
           alpha: .5,
@@ -25,31 +32,42 @@ extension ShowcaseColors on GlassColors {
         );
 }
 
-Color ink(BuildContext context) => GlassColors.of(context).label;
-Color muted(BuildContext context) => GlassColors.of(context).secondaryLabel;
+/// Returns the primary label color for the current appearance.
+Color ink(BuildContext context) => PrismColors.of(context).label;
 
-/// Widest readable column on iPad and the unfolded iPhone Duo.
+/// Returns the secondary label color for the current appearance.
+Color muted(BuildContext context) => PrismColors.of(context).secondaryLabel;
+
+/// The maximum content width used by showcase pages.
 const double readableWidth = 720;
 
-/// A scrolling page with an iOS large title. Chrome from the enclosing
-/// [LiquidPrismScaffold] floats over it; its padding keeps content clear.
+/// A scrollable page with a large title and fold-aware layout.
 class LargeTitlePage extends StatelessWidget {
-  const LargeTitlePage({
+  /// Creates a [LargeTitlePage].
+  const new({
     super.key,
     required this.title,
     required this.children,
     this.subtitle,
     this.controller,
   });
+
+  /// The primary text displayed by this widget.
   final String title;
+
+  /// Supporting text displayed below the title.
   final String? subtitle;
+
+  /// The widgets displayed in this container.
   final List<Widget> children;
+
+  /// The optional controller for the page scroll view.
   final ScrollController? controller;
 
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     final titleStyle = CupertinoTheme.of(context)
         .textTheme
         .navLargeTitleTextStyle
@@ -69,8 +87,7 @@ class LargeTitlePage extends StatelessWidget {
       ],
       const SizedBox(height: 20),
     ];
-    // A bent iPhone Duo reports its fold as a display feature. Interactive
-    // content moves off the crease: the sections reflow into two columns.
+
     final fold = MediaQuery.displayFeaturesOf(context)
         .where(
           (feature) =>
@@ -148,26 +165,28 @@ class LargeTitlePage extends StatelessWidget {
         );
       }(),
     };
-    // The scaffold's scroll edge effect softens content under the bar; the
-    // page paints no fade of its own.
+
     return content;
   }
 }
 
-/// A titled inset-grouped list section.
+/// A grouped section with optional header and footer text.
 class InsetSection extends StatelessWidget {
-  const InsetSection({
-    super.key,
-    required this.children,
-    this.header,
-    this.footer,
-  });
-  final String? header, footer;
+  /// Creates an [InsetSection].
+  const new({super.key, required this.children, this.header, this.footer});
+
+  /// The optional heading above the grouped rows.
+  final String? header;
+
+  /// The optional explanatory text below the grouped rows.
+  final String? footer;
+
+  /// The widgets displayed in this container.
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 28),
       child: Column(
@@ -218,29 +237,31 @@ class InsetSection extends StatelessWidget {
   }
 }
 
-/// A grouped-list cell background with continuous corners.
+/// A rounded card using the current grouped-cell background.
 class GroupedCard extends StatelessWidget {
-  const GroupedCard({
-    super.key,
-    required this.child,
-    this.padding = EdgeInsets.zero,
-  });
+  /// Creates a [GroupedCard].
+  const new({super.key, required this.child, this.padding = EdgeInsets.zero});
+
+  /// The content displayed inside this widget.
   final Widget child;
+
+  /// The space between the container edge and its content.
   final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: ShapeDecoration(
-      color: GlassColors.of(context).cell,
+      color: PrismColors.of(context).cell,
       shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(26)),
     ),
     child: Padding(padding: padding, child: child),
   );
 }
 
-/// One list row: optional icon, title and subtitle, and a trailing control.
+/// A settings row with optional icon, subtitle, and action.
 class ListRow extends StatelessWidget {
-  const ListRow({
+  /// Creates a [ListRow].
+  const new({
     super.key,
     required this.title,
     this.subtitle,
@@ -250,16 +271,31 @@ class ListRow extends StatelessWidget {
     this.onPressed,
     this.label,
   });
+
+  /// The primary text displayed by this widget.
   final String title;
-  final String? subtitle, label;
+
+  /// Supporting text displayed below the title.
+  final String? subtitle;
+
+  /// The optional accessibility label for the row action.
+  final String? label;
+
+  /// The icon displayed by this widget.
   final IconData? icon;
+
+  /// The optional background color of the row icon tile.
   final Color? iconColor;
+
+  /// The optional widget displayed at the end of the row.
   final Widget? trailing;
+
+  /// Called when the user activates this widget.
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     final row = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 52),
       child: Padding(
@@ -304,7 +340,7 @@ class ListRow extends StatelessWidget {
       ),
     );
     if (onPressed == null) return row;
-    return LiquidPrismPressable(
+    return PrismPressable(
       label: label ?? title,
       onPressed: onPressed,
       child: row,
@@ -312,16 +348,23 @@ class ListRow extends StatelessWidget {
   }
 }
 
-/// A Settings-style rounded square with a white symbol.
+/// A colored tile containing a contrasting icon.
 class SymbolTile extends StatelessWidget {
-  const SymbolTile({
+  /// Creates a [SymbolTile].
+  const new({
     super.key,
     required this.icon,
     required this.color,
     this.size = 30,
   });
+
+  /// The icon displayed by this widget.
   final IconData icon;
+
+  /// The background color of the icon tile.
   final Color color;
+
+  /// The width and height of the icon tile.
   final double size;
 
   @override
@@ -338,10 +381,15 @@ class SymbolTile extends StatelessWidget {
   );
 }
 
-/// A section heading above free-form content.
+/// A section heading with an optional subtitle.
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.title, {super.key, this.subtitle});
+  /// Creates a [SectionTitle].
+  const new(this.title, {super.key, this.subtitle});
+
+  /// The primary text displayed by this widget.
   final String title;
+
+  /// Supporting text displayed below the title.
   final String? subtitle;
 
   @override
@@ -367,17 +415,24 @@ class SectionTitle extends StatelessWidget {
   );
 }
 
-/// A circular glass back button, 44 pt like the native one.
-/// Columns of at least [minimumWidth], filling the available width.
+/// A responsive grid that wraps children into equally sized columns.
 class FlowGrid extends StatelessWidget {
-  const FlowGrid({
+  /// Creates a [FlowGrid].
+  const new({
     super.key,
     required this.children,
     this.minimumWidth = 300,
     this.spacing = 14,
   });
+
+  /// The widgets displayed in this container.
   final List<Widget> children;
-  final double minimumWidth, spacing;
+
+  /// The target minimum width of each grid column.
+  final double minimumWidth;
+
+  /// The horizontal and vertical space between grid items.
+  final double spacing;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -398,18 +453,24 @@ class FlowGrid extends StatelessWidget {
   );
 }
 
-/// Original abstract artwork for glass to refract.
+/// Procedural background artwork in one of the showcase palettes.
 class Art extends StatelessWidget {
-  const Art({super.key, this.variant = 0, this.child});
+  /// Creates an [Art].
+  const new({super.key, this.variant = 0, this.child});
+
+  /// The index of the artwork palette to display.
   final int variant;
+
+  /// The content displayed inside this widget.
   final Widget? child;
 
+  /// The display names of the available artwork palettes.
   static const names = ['Meadow', 'Dusk', 'Apricot'];
 
-  /// Legible ink on each artwork.
+  /// Foreground colors matched to each artwork palette.
   static const inks = [Color(0xFF233B36), Color(0xFF1F1D3D), Color(0xFF4A3029)];
 
-  /// Each artwork's base color, for fades toward it.
+  /// Base background colors for each artwork palette.
   static const backgrounds = [
     Color(0xFF8EBEB5),
     Color(0xFF495D96),
@@ -422,7 +483,7 @@ class Art extends StatelessWidget {
 }
 
 class _ArtPainter extends CustomPainter {
-  _ArtPainter(this.variant);
+  new(this.variant);
   final int variant;
   static const palettes = [
     [
@@ -448,18 +509,19 @@ class _ArtPainter extends CustomPainter {
   @override
   void paint(Canvas c, Size s) {
     final colors = palettes[variant];
-    c.drawRect(
-      Offset.zero & s,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors.take(2).toList(),
-        ).createShader(Offset.zero & s),
-    );
-    c.save();
-    c.translate(s.width * .5, s.height * .48);
-    c.rotate(-.48);
+    c
+      ..drawRect(
+        Offset.zero & s,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: colors.take(2).toList(),
+          ).createShader(Offset.zero & s),
+      )
+      ..save()
+      ..translate(s.width * .5, s.height * .48)
+      ..rotate(-.48);
     final oval = Rect.fromCenter(
       center: Offset(s.width * .06, s.height * .45),
       width: s.width * 1.45,
@@ -476,14 +538,15 @@ class _ArtPainter extends CustomPainter {
       width: s.width * 1.12,
       height: s.height * .95,
     );
-    c.drawOval(
-      ring,
-      Paint()
-        ..color = colors[3].withValues(alpha: .2)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s.width * .18,
-    );
-    c.restore();
+    c
+      ..drawOval(
+        ring,
+        Paint()
+          ..color = colors[3].withValues(alpha: .2)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = s.width * .18,
+      )
+      ..restore();
     final glow = Rect.fromCircle(
       center: Offset(s.width * .8, s.height * .05),
       radius: s.width * .75,
@@ -501,16 +564,23 @@ class _ArtPainter extends CustomPainter {
   bool shouldRepaint(_ArtPainter old) => old.variant != variant;
 }
 
-/// Artwork clipped to a continuous rounded rectangle.
+/// A clipped artwork panel with matching foreground colors.
 class ArtCanvas extends StatelessWidget {
-  const ArtCanvas({
+  /// Creates an [ArtCanvas].
+  const new({
     super.key,
     required this.variant,
     required this.child,
     this.padding = const EdgeInsets.all(22),
   });
+
+  /// The index of the artwork palette to display.
   final int variant;
+
+  /// The content displayed inside this widget.
   final Widget child;
+
+  /// The space between the container edge and its content.
   final EdgeInsetsGeometry padding;
 
   @override
@@ -529,10 +599,12 @@ class ArtCanvas extends StatelessWidget {
   );
 }
 
+/// The rounded clipping path used by artwork panels.
 class CanvasClip extends CustomClipper<Path> {
-  const CanvasClip();
+  /// Creates a [CanvasClip].
+  const new();
   @override
-  Path getClip(Size size) => const GlassShape.rect(cornerRadius: 26).path(size);
+  Path getClip(Size size) => const PrismShape.rect(cornerRadius: 26).path(size);
   @override
   bool shouldReclip(CanvasClip old) => false;
 }

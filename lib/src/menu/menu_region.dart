@@ -1,48 +1,31 @@
 import 'package:flutter/widgets.dart';
 
-import 'menu.dart';
-import 'menu_anchor.dart';
-import 'menu_engine.dart';
+import 'package:liquid_prism/src/menu/menu.dart';
+import 'package:liquid_prism/src/menu/menu_anchor.dart';
+import 'package:liquid_prism/src/menu/menu_engine.dart';
 
-/// What gesture opens the menu.
-enum LiquidMenuTrigger {
-  /// A tap anywhere inside the region opens the menu at the tap point (or the
-  /// trigger's rect — see [LiquidMenuRegion.anchor]).
+/// The gesture that opens a menu region.
+enum PrismMenuTrigger {
+  /// Opens the menu on a tap.
   tap,
 
-  /// A long-press opens the menu — context-menu style.
+  /// Opens the menu on a long press.
   longPress,
 }
 
-/// Where the presented menu anchors.
-enum LiquidMenuAnchorMode {
-  /// The menu attaches at the exact tap position.
+/// The attachment geometry used by a menu region.
+enum PrismMenuAnchorMode {
+  /// Anchors the menu at the last pointer position.
   tapPoint,
 
-  /// The menu attaches to the region's global bounds, pulldown style.
+  /// Anchors the menu to the trigger bounds.
   triggerRect,
 }
 
-/// A region that opens a native menu around its child — the "drop it around a
-/// button or custom trigger" surface.
-///
-/// ```dart
-/// LiquidMenuRegion(
-///   menu: LiquidMenu(children: [...]),
-///   child: Text('For You'),   // visual-only child
-/// )
-///
-/// // Or keep the trigger's own handler in charge (manual mode):
-/// LiquidMenuRegion.builder(
-///   menu: menu,
-///   builder: (context, show) => LiquidPrismButton(onPressed: show, label: 'More', child: const Text('More')),
-/// )
-/// ```
-///
-/// With [trigger] set, the region owns the gesture: give the child a null
-/// `onTap`/`onPressed` (or use `.builder`) so taps don't double-handle.
-final class LiquidMenuRegion extends StatefulWidget {
-  const LiquidMenuRegion({
+/// Opens a menu using a region gesture or an existing child handler.
+final class PrismMenuRegion extends StatefulWidget {
+  /// Creates a PrismMenuRegion.
+  const new({
     super.key,
     required this.menu,
     required this.child,
@@ -51,10 +34,8 @@ final class LiquidMenuRegion extends StatefulWidget {
     this.onSelected,
   }) : builder = null;
 
-  /// Manual mode: the builder receives a `show` closure to call from the
-  /// child's own handler (`onPressed`, `onTap`, …). The anchor still resolves
-  /// from the recorded pointer position or the region's rect.
-  const LiquidMenuRegion.builder({
+  /// Creates a region using the child’s existing activation handler.
+  const new builder({
     super.key,
     required this.menu,
     required this.builder,
@@ -63,34 +44,30 @@ final class LiquidMenuRegion extends StatefulWidget {
   }) : trigger = null,
        child = null;
 
-  /// The menu presented when the region triggers.
-  final LiquidMenu menu;
+  /// The menu presented by this region.
+  final PrismMenu menu;
 
-  /// The visual trigger — typically a button-styled widget.
+  /// The visual trigger used with the region gesture.
   final Widget? child;
 
-  /// Builder form of [child]; receives the `show` closure (manual trigger).
+  /// Builds a child that calls the supplied show callback itself.
   final Widget Function(BuildContext context, VoidCallback show)? builder;
 
-  /// The opening gesture; null in builder/manual mode.
-  final LiquidMenuTrigger? trigger;
+  /// The opening gesture, or null when the builder owns activation.
+  final PrismMenuTrigger? trigger;
 
-  /// Where the menu anchors — the region's rect (pulldown, the default) or
-  /// the tap point (context-menu-at-touch).
-  final LiquidMenuAnchorMode anchor;
+  /// The attachment mode for the presented menu.
+  final PrismMenuAnchorMode anchor;
 
-  /// Called after the menu closes with the first selected action's `value`
-  /// (null on a bare dismissal). Per-action `onSelected` callbacks also fire.
+  /// Called after dismissal with the first selected value, or null.
   final void Function(Object? selected)? onSelected;
 
+  /// Creates the menu region state.
   @override
-  State<LiquidMenuRegion> createState() => _LiquidMenuRegionState();
+  State<PrismMenuRegion> createState() => _PrismMenuRegionState();
 }
 
-class _LiquidMenuRegionState extends State<LiquidMenuRegion> {
-  /// The last pointer-down position — the tap point. `Listener` receives
-  /// pointer events without competing in the gesture arena, so a child's own
-  /// recognizers are unaffected.
+class _PrismMenuRegionState extends State<PrismMenuRegion> {
   Offset? _lastPointer;
 
   void _recordPointer(PointerDownEvent event) {
@@ -101,11 +78,11 @@ class _LiquidMenuRegionState extends State<LiquidMenuRegion> {
     final anchor = switch (widget.anchor) {
       .tapPoint =>
         _lastPointer != null
-            ? LiquidMenuAnchor.point(_lastPointer!)
+            ? PrismMenuAnchor.point(_lastPointer!)
             : _rectAnchor(),
       .triggerRect => _rectAnchor(),
     };
-    final selected = await LiquidMenuEngine.instance.show(
+    final selected = await PrismMenuEngine.instance.show(
       context: context,
       menu: widget.menu,
       anchor: anchor,
@@ -113,7 +90,7 @@ class _LiquidMenuRegionState extends State<LiquidMenuRegion> {
     if (mounted) widget.onSelected?.call(selected);
   }
 
-  LiquidMenuAnchor _rectAnchor() {
+  PrismMenuAnchor _rectAnchor() {
     final box = context.findRenderObject();
     if (box is RenderBox && box.hasSize) {
       return .rect(

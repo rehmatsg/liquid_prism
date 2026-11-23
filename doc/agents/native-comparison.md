@@ -1,7 +1,7 @@
 # Comparing native behavior
 
-The SwiftUI app under `tool/native_showcase/` is the visual/interaction reference.
-Measurement probes under `tool/native_*` expose native geometry, optical and
+The SwiftUI app under `research/probes/native_showcase/` is the visual/interaction reference.
+Measurement probes under `research/probes/native_*` expose native geometry, optical and
 animation properties. Do not ship their inspection code.
 
 ## Evidence hierarchy
@@ -19,16 +19,16 @@ JSON; preserve unresolved questions instead of upgrading an approximation to fac
 
 ## Existing specifications
 
-- [Tab optical and motion inputs](../native_tab_bar_spec.md),
-  [compact layout measurements](../native_tab_layout_spec.json).
-- [Control sizes/timing](../native_controls_spec.md),
-  [continuous slider endpoint fill](../native_slider_fill_spec.json).
-- [Navigation geometry, title motion and minimization](../navigation_bar_spec.json).
-- [Toolbar/search geometry](../native_chrome_spec.md).
-- [Scroll edge effect composition, mask curve and pixel profile](../native_scroll_edge_spec.md),
-  from `tool/native_scroll_edge_probe`.
-- [Palette](../native_colors.md), [shadows](../native_shadows.md).
-- [Showcase comparison](../native_showcase_comparison.md).
+- [Tab optical and motion inputs](../../research/specs/native_tab_bar_spec.md),
+  [compact layout measurements](../../research/specs/native_tab_layout_spec.json).
+- [Control sizes/timing](../../research/specs/native_controls_spec.md),
+  [continuous slider endpoint fill](../../research/specs/native_slider_fill_spec.json).
+- [Navigation geometry, title motion and minimization](../../research/specs/navigation_bar_spec.json).
+- [Toolbar/search geometry](../../research/specs/native_chrome_spec.md).
+- [Scroll edge effect composition, mask curve and pixel profile](../../research/specs/native_scroll_edge_spec.md),
+  from `research/probes/native_scroll_edge_probe`.
+- [Palette](../../research/specs/native_colors.md), [shadows](../../research/specs/native_shadows.md).
+- [Showcase comparison](../../research/specs/native_showcase_comparison.md).
 
 Read the probe's source/README for current scheme and capture flags before running
 it. Use `xcrun simctl list devices` and `xcodebuild -list -project <project>` rather

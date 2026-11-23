@@ -1,25 +1,25 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
-import 'package:liquid_prism/liquid_menu_platform_interface.dart';
 import 'package:liquid_prism/src/menu/menu_engine.dart';
+import 'package:liquid_prism/src/menu/menu_platform_interface.dart';
 
 import 'fake_platform.dart';
 
 void main() {
-  late FakeLiquidMenuPlatform platform;
+  late FakePrismMenuPlatform platform;
   setUp(() {
-    platform = FakeLiquidMenuPlatform();
-    LiquidMenuPlatform.instance = platform;
-    LiquidMenuEngine.instance.resetForTests();
-    LiquidMenuEngine.debugTargetPlatformOverride = TargetPlatform.iOS;
+    platform = FakePrismMenuPlatform();
+    PrismMenuPlatform.instance = platform;
+    PrismMenuEngine.instance.resetForTests();
+    PrismMenuEngine.debugTargetPlatformOverride = TargetPlatform.iOS;
   });
   tearDown(() {
-    LiquidMenuEngine.debugTargetPlatformOverride = null;
+    PrismMenuEngine.debugTargetPlatformOverride = null;
   });
-  const menu = LiquidMenu(
+  const menu = PrismMenu(
     children: [
-      LiquidMenuAction<String>(
+      PrismMenuAction<String>(
         id: 'chosen',
         title: 'Choose me',
         value: 'chosen-value',
@@ -27,15 +27,16 @@ void main() {
     ],
   );
   Widget app(Widget child) => CupertinoApp(
-    home: LiquidPrismTheme(
+    home: PrismTheme(
       brightness: Brightness.dark,
       child: Center(child: child),
     ),
   );
   void select() {
     final id = platform.shows.last.menuId;
-    platform.emit(LiquidMenuActionEvent(menuId: id, actionId: 'chosen'));
-    platform.emit(LiquidMenuDismissed(menuId: id));
+    platform
+      ..emit(PrismMenuActionEvent(menuId: id, actionId: 'chosen'))
+      ..emit(PrismMenuDismissed(menuId: id));
   }
 
   testWidgets(
@@ -44,7 +45,7 @@ void main() {
       final results = <Object?>[];
       await tester.pumpWidget(
         app(
-          LiquidPrismButton.menu(
+          PrismButton.menu(
             menu: menu,
             label: 'Options',
             onSelected: results.add,
@@ -52,7 +53,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byType(LiquidPrismButton));
+      await tester.tap(find.byType(PrismButton));
       await tester.pump();
       expect(platform.shows, hasLength(1));
       expect(platform.shows.single.anchor['type'], 'rect');
@@ -64,51 +65,49 @@ void main() {
     },
   );
 
-  testWidgets(
-    'toolbar anchors to its action rather than the entire group; disabled menu does nothing',
-    (tester) async {
-      Object? result;
-      await tester.pumpWidget(
-        app(
-          LiquidPrismToolbarGroup(
-            items: [
-              GlassToolbarItem.menu(
-                key: const ValueKey('active-menu'),
-                icon: const Icon(CupertinoIcons.ellipsis),
-                label: 'Active menu',
-                menu: menu,
-                onSelected: (v) => result = v,
-              ),
-              const GlassToolbarItem.menu(
-                key: ValueKey('disabled-menu'),
-                icon: Icon(CupertinoIcons.star),
-                label: 'Disabled menu',
-                menu: menu,
-                enabled: false,
-              ),
-            ],
-          ),
+  testWidgets('toolbar anchors to its action rather than '
+      'the entire group; disabled menu does nothing', (tester) async {
+    Object? result;
+    await tester.pumpWidget(
+      app(
+        PrismToolbar.group(
+          items: [
+            PrismToolbarItem.menu(
+              key: const ValueKey('active-menu'),
+              icon: const Icon(CupertinoIcons.ellipsis),
+              label: 'Active menu',
+              menu: menu,
+              onSelected: (v) => result = v,
+            ),
+            const PrismToolbarItem.menu(
+              key: ValueKey('disabled-menu'),
+              icon: Icon(CupertinoIcons.star),
+              label: 'Disabled menu',
+              menu: menu,
+              enabled: false,
+            ),
+          ],
         ),
-      );
-      await tester.tap(find.byKey(const ValueKey('active-menu')));
-      await tester.pump();
-      final action = tester.getRect(find.byKey(const ValueKey('active-menu')));
-      final anchor = platform.shows.single.anchor;
-      expect(anchor['width'], closeTo(action.width, .01));
-      expect(anchor['height'], closeTo(action.height, .01));
-      expect(anchor['x'], closeTo(action.left, .01));
-      expect(
-        anchor['width'] as double,
-        lessThan(tester.getSize(find.byType(LiquidPrismToolbarGroup)).width),
-      );
-      select();
-      await tester.pumpAndSettle();
-      expect(result, 'chosen-value');
-      await tester.tap(find.byKey(const ValueKey('disabled-menu')));
-      await tester.pumpAndSettle();
-      expect(platform.shows, hasLength(1));
-    },
-  );
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('active-menu')));
+    await tester.pump();
+    final action = tester.getRect(find.byKey(const ValueKey('active-menu')));
+    final anchor = platform.shows.single.anchor;
+    expect(anchor['width'], closeTo(action.width, .01));
+    expect(anchor['height'], closeTo(action.height, .01));
+    expect(anchor['x'], closeTo(action.left, .01));
+    expect(
+      anchor['width']! as double,
+      lessThan(tester.getSize(find.byType(PrismToolbar)).width),
+    );
+    select();
+    await tester.pumpAndSettle();
+    expect(result, 'chosen-value');
+    await tester.tap(find.byKey(const ValueKey('disabled-menu')));
+    await tester.pumpAndSettle();
+    expect(platform.shows, hasLength(1));
+  });
 
   testWidgets(
     'disabled glass menu and disposal during a native menu are safe',
@@ -116,7 +115,7 @@ void main() {
       var callbacks = 0;
       await tester.pumpWidget(
         app(
-          const LiquidPrismButton.menu(
+          const PrismButton.menu(
             enabled: false,
             menu: menu,
             label: 'Disabled',
@@ -124,12 +123,12 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byType(LiquidPrismButton));
+      await tester.tap(find.byType(PrismButton));
       await tester.pumpAndSettle();
       expect(platform.shows, isEmpty);
       await tester.pumpWidget(
         app(
-          LiquidPrismButton.menu(
+          PrismButton.menu(
             menu: menu,
             label: 'Options',
             onSelected: (_) => callbacks++,
@@ -137,7 +136,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byType(LiquidPrismButton));
+      await tester.tap(find.byType(PrismButton));
       await tester.pump();
       await tester.pumpWidget(const SizedBox());
       select();
@@ -164,7 +163,7 @@ void main() {
         ),
       ),
     );
-    final pending = liquidMenus.show(context: trigger, menu: menu);
+    final pending = prismMenus.show<Object?>(context: trigger, menu: menu);
     await tester.pump();
     expect(platform.shows.single.anchor['width'], 120);
     expect(platform.shows.single.anchor['height'], 60);

@@ -2,86 +2,51 @@
 
 ## Local checks
 
-Use the installed Flutter version that satisfies `pubspec.yaml`.
-
 ```sh
-flutter pub get
-dart format lib test example/lib example/test
 ./tool/check.sh
 flutter pub publish --dry-run
 ```
 
-The check script verifies formatting, analyzes Dart, runs package and example
-widget tests, then Python tooling tests. Inspect the final exit status; background
-command startup is not completion. Publish dry-run validates packaging, not a
-release authorization.
+`tool/check.sh` runs:
+1. `flutter pub get`
+2. `dart format --output=none --set-exit-if-changed lib test example/lib example/test`
+3. `flutter analyze --fatal-infos` (root and `example/`)
+4. `flutter test --timeout=30s` (root and `example/`)
+5. `python3 -m unittest discover -s test/tooling -p 'test_*.py'`
+6. `python3 tool/release.py check`
 
-## Tests by contract
-
-| Change | Relevant tests |
-| --- | --- |
-| Style/theme precedence | `test/appearance_api_test.dart`, `test/glass_theme_test.dart` |
-| Controlled input, lift and velocity | `test/glass_controls_test.dart`, `test/pressable_test.dart` |
-| Native sizes and endpoint fill | `test/native_input_geometry_test.dart`, `test/native_slider_fill_test.dart` |
-| Compact tabs, keyboard, cancellation | `test/tab_bar_layout_test.dart`, `test/glass_tab_bar_test.dart` |
-| Search controller/focus and toolbar | `test/chrome_test.dart` |
-| Colors/shadows/contours | `test/native_control_palette_test.dart`, palette/shadow/shape tests |
-| Menus | `test/menu/` |
-| Showcase layout and composition | `example/test/` |
-
-Prefer tests through the public barrel. Verify behavior, ownership and meaningful
-edge cases; do not merely compare newly assigned fields. Use tester time for
-minimum-lift windows, not wall-clock DateTime. Reset platform/channel overrides
-in teardown. Await settling and remove listeners/resources.
-
-## Real renderer
-
-Headless tests use the fallback and do not establish GPU appearance. After API or
-renderer changes, launch a fresh Impeller app:
+## Native iOS checks
 
 ```sh
-cd example
-flutter run -d <simulator-id> -t lib/main.dart
-# Separate customization example:
-flutter run -d <simulator-id> -t lib/api_main.dart
+xcodebuild test -scheme liquid_prism-Package -destination 'platform=iOS Simulator,id=<simulator-id>'
+pod ipc spec ios/liquid_prism.podspec > /dev/null
+cd example && flutter build ios --simulator --debug
 ```
 
-After Dart edits, hot reload/restart and observe the updated app. After GLSL or
-shader uniform changes, terminate and rebuild; cached programs can survive a hot
-restart. Changes in included GLSL files may also reuse a compiled asset; clean
-the example build when the asset predates an include, then rebuild. Check logs
-for shader, layout and range errors. Exercise light/dark,
-narrow layout, large text, held/slow/fast drag, release and repeated interaction.
+## Test structure
 
-Measure GPU cost on the Mac with `tool/gpu_bench/run.py` (optionally
-`--compare <ref>`); it renders fixed scenarios offscreen with the GPU saturated,
-so it needs no device and is unaffected by vsync or heat. See
-[its README](../../tool/gpu_bench/README.md).
+Tests mirror `lib/src/`:
+- `test/core/` — materials, shapes, palette, theme, value equality & non-rebuild guarantees, API surface contract, badges, haptics
+- `test/rendering/` — surface fallback, grouping, fill sharing, shadows, transitions, edge blur, chromatic fringe, HDR display, frame budget
+- `test/controls/` — buttons, switches, sliders, segmented controls, search fields, gesture ownership, pressable, selection
+- `test/navigation/` — scaffold, sliver app bar, navigation title motion/minimization, tab bars, toolbars, scroll edges, refresh, system chrome
+- `test/menu/` — native platform interface, wire serialization, fallback menu, menu regions
+- `test/tooling/` — developer script and version check tests
 
-The driver fixture supports deterministic interaction and capture:
+## Real renderer verification
+
+Headless widget tests exercise the frosted fallback and do not prove GPU shader output. After renderer or shader changes, run the showcase on a real Impeller simulator or device:
 
 ```sh
-flutter run -d <simulator-id> -t test_driver/showcase.dart
-# In another terminal, from example/:
-DART_VM_SERVICE_URL=<printed-vm-uri> \
-PRISM_SIMULATOR_ID=<simulator-id> \
-PRISM_LENS_OUT=<absolute-output-directory> \
-dart test_driver/unified_lens_video.dart
+./tool/run_example.sh <device-id>
 ```
 
-For gesture ownership (angles, flicks, holds on inactive parts, a scroll view
-competing for the drag), run `test_driver/controls.dart` and then
-`dart test_driver/gesture_ownership.dart` with `DART_VM_SERVICE_URL` set; it
-prints PASS/FAIL per case. The native counterpart is `ControlGestureTests` in
-`tool/native_control_probe`.
+Hot reload/restart works for Dart changes; stop and rebuild the app after GLSL changes.
 
-Use a fresh output directory. Optional `PRISM_LENS_CASES=tabs` selects a component;
-`PRISM_LENS_DARK=true` checks dark appearance. Compare geometry from fixture layout
-responses before comparing captures. See [native comparison](native-comparison.md).
+## Research harnesses
 
-## Documentation
-
-Compile runnable examples as part of analysis. Verify local Markdown links after
-moving guides. Keep snippets based on public exports. If a snippet omits app state
-or context, say so instead of presenting it as a complete program. Report any
-unrun platform check; do not describe a static screenshot as motion validation.
+Benchmarks, parity fixtures and simulator drivers live in the unpublished
+research app under `research/`, which depends on the package and the example by
+path and carries the research-only native channels. See the
+[research README](../../research/README.md) for every harness command, and run
+`flutter analyze` and `flutter test` inside `research/` after changing them.

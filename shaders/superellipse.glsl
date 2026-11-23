@@ -2,7 +2,6 @@
 // Copyright 2013 The Flutter Authors. BSD-3-Clause; see THIRD_PARTY_NOTICES.md.
 // Closest-point search adapted from Inigo Quilez (2015, MIT).
 #ifndef SKIA_GRAPHICS_BACKEND
-// cos^2(k*pi/256), paired with u_curve vertices for the tangent predicate.
 const float kCos2[65] = float[65](
     1.000000000, 0.999849409, 0.999397728, 0.998645228, 0.997592363,
     0.996239767, 0.994588255, 0.992638821, 0.990392640, 0.987851065,
@@ -49,7 +48,6 @@ vec3 superellipseField(vec2 p, bool top) {
     return vec3(distance,flip ? normal.yx : normal);
 }
 #else
-// SkSL forbids computed array indices; this path only keeps it compiling.
 vec3 superellipseField(vec2 p, bool top) {
     float degree = top ? u_shapeA.x : u_shapeA.y;
     bool flip = p.y > p.x;

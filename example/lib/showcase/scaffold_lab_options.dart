@@ -1,52 +1,113 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
-/// Nullable overrides keep the lab on native defaults until explicitly enabled.
+/// Mutable settings and style builders for the scaffold lab.
 class ScaffoldLabOptions {
+  /// Numeric style overrides keyed by lab control name.
   final values = <String, double>{};
-  final expanded = <String>{};
-  GlassTitleAlignment titleAlignment = GlassTitleAlignment.automatic;
-  GlassTitleAlignment largeTitleAlignment = GlassTitleAlignment.automatic;
-  GlassToolbarMinimizationSafeAreaAdjustment safeArea =
-      GlassToolbarMinimizationSafeAreaAdjustment.automatic;
-  GlassToolbarMinimizationBehavior? minimization;
-  GlassToolbarMinimizationRestoration? restoration;
-  GlassChromePlacement? placement;
-  GlassTabBarPlacement tabPlacement = GlassTabBarPlacement.automatic;
-  GlassToolbarPlacement actionPlacement = GlassToolbarPlacement.automatic;
-  var titleKind = 0;
-  var leadingKind = 0;
-  var background = 0;
-  var capsuleGlass = 0;
-  var fadeColor = 0;
-  var fadeCurve = 0;
-  var tabAlignment = 0;
-  var bottomAlignment = 0;
-  bool? hairline;
-  var implyLeading = true;
-  var trailing = false;
-  var tabs = false;
-  var resize = true;
-  var textField = false;
-  var rtl = false;
-  var bodyMode = false;
-  var sliverAppBar = false;
-  var scrollDepth = 0;
 
+  /// The names of currently expanded settings sections.
+  final expanded = <String>{};
+
+  /// The alignment of the inline navigation title.
+  PrismTitleAlignment titleAlignment = PrismTitleAlignment.automatic;
+
+  /// The alignment of the expanded navigation title.
+  PrismTitleAlignment largeTitleAlignment = PrismTitleAlignment.automatic;
+
+  /// The safe-area policy used during bar minimization.
+  PrismMinimizationSafeArea safeArea = PrismMinimizationSafeArea.automatic;
+
+  /// The optional override for bar minimization behavior.
+  PrismMinimizationBehavior? minimization;
+
+  /// The optional override for restoring a minimized bar.
+  PrismMinimizationRestoration? restoration;
+
+  /// The optional override for navigation chrome placement.
+  PrismChromePlacement? placement;
+
+  /// The placement of the scaffold tab bar.
+  PrismTabBarPlacement tabPlacement = PrismTabBarPlacement.automatic;
+
+  /// The placement of toolbar actions.
+  PrismToolbarPlacement actionPlacement = PrismToolbarPlacement.automatic;
+
+  /// The index of the selected title composition.
+  int titleKind = 0;
+
+  /// The index of the selected leading control.
+  int leadingKind = 0;
+
+  /// The index of the selected scaffold background.
+  int background = 0;
+
+  /// The index of the selected title-capsule material.
+  int capsuleGlass = 0;
+
+  /// The index of the selected scroll-edge fade color.
+  int fadeColor = 0;
+
+  /// The index of the selected large-title fade curve.
+  int fadeCurve = 0;
+
+  /// The index of the selected tab-bar alignment.
+  int tabAlignment = 0;
+
+  /// The index of the selected bottom-bar alignment.
+  int bottomAlignment = 0;
+
+  /// The optional override for the scroll-edge hairline.
+  bool? hairline;
+
+  /// Whether the scaffold infers a leading navigation control.
+  bool implyLeading = true;
+
+  /// Whether the lab shows trailing toolbar actions.
+  bool trailing = false;
+
+  /// Whether the lab shows a tab bar.
+  bool tabs = false;
+
+  /// Whether the scaffold resizes around the keyboard.
+  bool resize = true;
+
+  /// Whether the bottom bar includes a text field.
+  bool textField = false;
+
+  /// Whether the lab uses right-to-left text direction.
+  bool rtl = false;
+
+  /// Whether the lab supplies a body instead of slivers.
+  bool bodyMode = false;
+
+  /// Whether the lab uses a standalone sliver app bar.
+  bool sliverAppBar = false;
+
+  /// The notification depth of the lab scroll view.
+  int scrollDepth = 0;
+
+  /// Returns the numeric override for the given control key.
   double? n(String key) => values[key];
+
+  /// Converts a numeric millisecond override to a duration.
   Duration? duration(String key) =>
       n(key) == null ? null : Duration(milliseconds: n(key)!.round());
-  GlassSpring? spring(String prefix) =>
+
+  /// Builds a spring from response and bounce overrides.
+  PrismSpring? spring(String prefix) =>
       n('${prefix}Response') == null && n('${prefix}Bounce') == null
       ? null
-      : GlassSpring(
+      : PrismSpring(
           response:
               duration('${prefix}Response') ??
               const Duration(milliseconds: 400),
           bounce: n('${prefix}Bounce') ?? .15,
         );
+
+  /// Builds a text style from typography overrides.
   TextStyle? textStyle(String prefix) =>
       values.keys.any(
         (key) =>
@@ -64,6 +125,8 @@ class ScaffoldLabOptions {
           height: n('${prefix}LineHeight'),
         )
       : null;
+
+  /// Builds optional insets from the matching numeric overrides.
   EdgeInsetsGeometry? insets(String prefix, {bool directional = false}) {
     if (!values.keys.any((key) => key.startsWith(prefix))) return null;
     if (directional) {
@@ -82,23 +145,26 @@ class ScaffoldLabOptions {
     );
   }
 
+  /// Resolves a lab alignment index to a directional alignment.
   AlignmentGeometry? alignment(int value) => switch (value) {
     1 => AlignmentDirectional.centerStart,
     2 => Alignment.center,
     3 => AlignmentDirectional.centerEnd,
     _ => null,
   };
-  GlassNavigationBarStyle navigation(
-    GlassToolbarMinimizationBehavior behavior,
-    GlassToolbarMinimizationRestoration restore, {
-    required GlassToolbarTitleDisplayMode titleDisplayMode,
-  }) => GlassNavigationBarStyle(
+
+  /// Builds the navigation-bar style from the current lab settings.
+  PrismNavigationBarStyle navigation(
+    PrismMinimizationBehavior behavior,
+    PrismMinimizationRestoration restore, {
+    required PrismTitleDisplayMode titleDisplayMode,
+  }) => PrismNavigationBarStyle(
     titleDisplayMode: titleDisplayMode,
     titleAlignment: titleAlignment,
     largeTitleAlignment: largeTitleAlignment,
     minimizationBehavior: minimization ?? behavior,
     minimizationRestoration: restoration ?? restore,
-    minimizationSafeAreaAdjustment: safeArea,
+    minimizationSafeArea: safeArea,
     minimizationThreshold: n('minimizationThreshold'),
     controlRowHeight: n('controlRowHeight'),
     contentPadding: insets('contentPadding', directional: true),
@@ -121,7 +187,7 @@ class ScaffoldLabOptions {
       3 => Curves.easeOutCubic,
       _ => null,
     },
-    titleCapsule: GlassTitleStyle(
+    titleCapsule: PrismTitleStyle(
       avatarSize: n('avatarSize'),
       avatarOverlap: n('avatarOverlap'),
       leadingSize: n('leadingSize'),
@@ -144,13 +210,15 @@ class ScaffoldLabOptions {
           : null,
       minHeight: n('titleMinHeight'),
       glass: switch (capsuleGlass) {
-        1 => Glass.regular,
-        2 => Glass.clear,
+        1 => PrismGlass.regular,
+        2 => PrismGlass.clear,
         _ => null,
       },
     ),
   );
-  GlassScaffoldStyle get scaffold => GlassScaffoldStyle(
+
+  /// The scaffold style derived from dock geometry overrides.
+  PrismScaffoldStyle get scaffold => PrismScaffoldStyle(
     tabBarAlignment: alignment(tabAlignment),
     tabBarMargin: insets('tabBarMargin'),
     tabBarMaxWidth: n('tabBarMaxWidth'),
@@ -158,10 +226,12 @@ class ScaffoldLabOptions {
     bottomBarMargin: insets('bottomBarMargin'),
     bottomBarMaxWidth: n('bottomBarMaxWidth'),
   );
-  GlassScrollEdgeStyle edge(
-    GlassScrollEdgeVariant variant,
-    GlassColors colors,
-  ) => GlassScrollEdgeStyle(
+
+  /// Builds the scroll-edge style from the current lab settings.
+  PrismScrollEdgeStyle edge(
+    PrismScrollEdgeVariant variant,
+    PrismColors colors,
+  ) => PrismScrollEdgeStyle(
     variant: variant,
     sigma: n('sigma'),
     falloff: n('falloff'),
@@ -181,6 +251,7 @@ class ScaffoldLabOptions {
     spring: spring('edge'),
   );
 
+  /// Builds the settings controls and reports changes to the caller.
   Widget controls(VoidCallback changed) {
     Widget cycle<T>(
       String label,
@@ -206,7 +277,7 @@ class ScaffoldLabOptions {
     Widget toggle(String label, bool value, void Function(bool) write) =>
         ListRow(
           title: label,
-          trailing: LiquidPrismSwitch(
+          trailing: PrismSwitch(
             key: ValueKey('lab-$label'),
             label: label,
             value: value,
@@ -226,7 +297,7 @@ class ScaffoldLabOptions {
                   Expanded(
                     child: Text(
                       key.replaceAllMapped(
-                        RegExp(r'([a-z])([A-Z])'),
+                        RegExp('([a-z])([A-Z])'),
                         (m) => '${m[1]} ${m[2]}',
                       ),
                     ),
@@ -247,7 +318,7 @@ class ScaffoldLabOptions {
                 ],
               ),
               if (n(key) != null)
-                LiquidPrismSlider(
+                PrismSlider(
                   key: ValueKey('lab-$key'),
                   label: key,
                   value: n(key)!,
@@ -283,7 +354,9 @@ class ScaffoldLabOptions {
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text(
-              'Body mode owns its scrolling and insets. Refresh and custom scrolling headers use sliver mode. Notification depth 1 previews a list inside a page view.',
+              'Body mode owns its scrolling and insets. Refresh and custom '
+              'scrolling headers use sliver mode. Notification depth 1 '
+              'previews a list inside a page view.',
             ),
           ),
           cycle(
@@ -306,18 +379,18 @@ class ScaffoldLabOptions {
           cycle(
             'Toolbar placement',
             actionPlacement,
-            GlassToolbarPlacement.values,
+            PrismToolbarPlacement.values,
             (v) => actionPlacement = v,
           ),
-          cycle<GlassChromePlacement?>('Chrome placement', placement, [
+          cycle<PrismChromePlacement?>('Chrome placement', placement, [
             null,
-            ...GlassChromePlacement.values,
+            ...PrismChromePlacement.values,
           ], (v) => placement = v),
           toggle('Tab bar', tabs, (v) => tabs = v),
           cycle(
             'Tab placement',
             tabPlacement,
-            GlassTabBarPlacement.values,
+            PrismTabBarPlacement.values,
             (v) => tabPlacement = v,
           ),
           cycle(
@@ -361,31 +434,31 @@ class ScaffoldLabOptions {
           cycle(
             'Inline alignment',
             titleAlignment,
-            GlassTitleAlignment.values,
+            PrismTitleAlignment.values,
             (v) => titleAlignment = v,
           ),
           cycle(
             'Large alignment',
             largeTitleAlignment,
-            GlassTitleAlignment.values,
+            PrismTitleAlignment.values,
             (v) => largeTitleAlignment = v,
           ),
-          cycle<GlassToolbarMinimizationBehavior?>(
+          cycle<PrismMinimizationBehavior?>(
             'Minimization override',
             minimization,
-            [null, ...GlassToolbarMinimizationBehavior.values],
+            [null, ...PrismMinimizationBehavior.values],
             (v) => minimization = v,
           ),
-          cycle<GlassToolbarMinimizationRestoration?>(
+          cycle<PrismMinimizationRestoration?>(
             'Restoration override',
             restoration,
-            [null, ...GlassToolbarMinimizationRestoration.values],
+            [null, ...PrismMinimizationRestoration.values],
             (v) => restoration = v,
           ),
           cycle(
             'Safe-area adjustment',
             safeArea,
-            GlassToolbarMinimizationSafeAreaAdjustment.values,
+            PrismMinimizationSafeArea.values,
             (v) => safeArea = v,
           ),
           cycle(

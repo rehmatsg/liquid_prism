@@ -1,17 +1,19 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
-/// Scroll, hold a tab, or change a segment to exercise package-owned chrome.
+/// An embedded demo of navigation, badges, and tab actions.
 class PackageFeaturesDemo extends StatefulWidget {
-  const PackageFeaturesDemo({super.key});
+  /// Creates a [PackageFeaturesDemo].
+  const new({super.key});
   @override
   State<PackageFeaturesDemo> createState() => _PackageFeaturesDemoState();
 }
 
 class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
-  int tab = 0, segment = 0;
+  int tab = 0;
+  int segment = 0;
   String? held;
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -19,30 +21,30 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
     child: MediaQuery(
       data: MediaQuery.of(context)
           .copyWith(padding: EdgeInsets.zero, viewPadding: EdgeInsets.zero),
-      child: LiquidPrismScaffold(
+      child: PrismScaffold(
         automaticallyImplyLeading: false,
         title: const Text('Inbox'),
         largeTitle: const Text('Inbox'),
-        backgroundColor: GlassColors.of(context).groupedBackground,
+        backgroundColor: PrismColors.of(context).groupedBackground,
         toolbar: [
-          GlassToolbarGroup(
+          PrismToolbarGroup(
             items: [
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.bell),
                 label: 'Activity',
-                badge: const GlassBadge.dot(),
+                badge: const PrismBadge.dot(),
                 onPressed: () {},
               ),
             ],
           ),
-          GlassToolbarGroup(
+          PrismToolbarGroup(
             items: [
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.square_arrow_up),
                 label: 'Share',
                 onPressed: () {},
               ),
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.ellipsis),
                 label: 'More',
                 onPressed: () {},
@@ -50,18 +52,18 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
             ],
           ),
         ],
-        tabBar: LiquidPrismTabBar(
+        tabBar: PrismTabBar(
           selectedIndex: tab,
           onSelected: (value) => setState(() => tab = value),
           onLongPressed: (value) =>
               setState(() => held = ['Inbox', 'Saved'][value]),
           tabs: const [
-            LiquidPrismTab(
+            PrismTab(
               label: 'Inbox',
               icon: Icon(CupertinoIcons.tray),
-              badge: GlassBadge.count(125),
+              badge: PrismBadge.count(125),
             ),
-            LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+            PrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
           ],
         ),
         body: ListView(
@@ -71,15 +73,16 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
               child: Text(
                 held == null
                     ? 'Scroll to collapse the title. Hold a tab for its action.'
-                    : 'Held $held; selection remains ${['Inbox', 'Saved'][tab]}.',
+                    : 'Held $held; selection remains '
+                          '${['Inbox', 'Saved'][tab]}.',
               ),
             ),
             Center(
-              child: LiquidPrismSegmentedControl<int>(
+              child: PrismSegmentedControl<int>(
                 selectedValue: segment,
                 onValueChanged: (value) => setState(() => segment = value),
-                style: const GlassSegmentedStyle(
-                  sizing: GlassSegmentedSizing.fitLabels,
+                style: const PrismSegmentedStyle(
+                  sizing: PrismSegmentedSizing.fitLabels,
                 ),
                 children: const {0: Text('All'), 1: Text('Unread messages')},
               ),

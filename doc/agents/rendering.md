@@ -4,25 +4,25 @@ For the optical code, start at `shadeGlass()` in `shaders/glass_core.glsl`:
 it maps coordinates and displacement, then calls `sampleGlass`, `gradeInput`,
 `reflectGlass`, `gradeFace`, `lightGlass`, `gradePressed` and `hdrRim` in paint order.
 `glass.frag` declares the scalar packet; `glass_batch.frag` unpacks a member
-before entering the same routine. Dart packet assembly is in `_RenderGlass`.
+before entering the same routine. Dart packet assembly is in `RenderPrismSurface`.
 
-For grouping, `_GlassGroupData.prepare` selects shared and batched members.
-`_GlassGroupGeometry.measure` computes each member's bounds and sampling reach;
+For grouping, `PrismGroupData.prepare` selects shared and batched members.
+`_PrismGroupGeometry.measure` computes each member's bounds and sampling reach;
 `_prepareBatches` packs the accepted members. `_hoist` paints only shared
-shadows and frost. Edge effects compose independently in `edge_blur.dart`.
+shadows and frost. Edge effects compose independently in `lib/src/rendering/edge_blur.dart`.
 
 Read [consumer rendering requirements](../rendering.md) and the relevant native
 spec before changing paint order or shaders.
 
 ## Shader ABI
 
-`GlassRole` IDs in `recipe.dart` are explicit values shared with shader logic.
+`PrismRole.shaderId` values in `lib/src/rendering/recipe.dart` are explicit values shared with shader logic.
 Deleted components leave holes; never renumber by enum index. The unminified
 shared control lens is ID 10; the slider's native unminified lens remains ID 9.
 
 Dart float writes and GLSL uniforms must agree in count, order and coordinate
 units. The tab foreground packet appends its effect vector after the existing
-65-point continuous contour array. Update both `tab_content_lens.dart` and
+65-point continuous contour array. Update both `lib/src/rendering/tab_content_lens.dart` and
 `shaders/tab_content.frag` when changing this packet. Inspect all material roles
 and batch paths, not only the one fixture under test.
 
@@ -79,24 +79,24 @@ at most `batchMaxLenses` 15 lenses in its 256 vec4. `test/glass_tint_test.dart`
 parses both shaders against these constants.
 
 The batch packet has one shared headroom float after `u_count`; per-lens
-stride/capacity stay unchanged. `glass_display.dart` listens to the iOS
-`liquid_prism/display` stream. `GlassDisplayObserver` requests EDR only for
+stride/capacity stay unchanged. `lib/src/rendering/prism_display.dart` listens to the iOS
+`liquid_prism/display` stream. The native display observer requests EDR only for
 the engine's existing nonlinear extended-sRGB BGRA10_XR surface and restores
 the host's earlier request when the subscription ends. A headroom transition
 repaints surface shadows and invalidates both grouped shadow caches.
-See [HDR evidence and fitted lighting](../native_hdr_rim.md).
+See [HDR evidence and fitted lighting](../../research/specs/native_hdr_rim.md).
 
 The ring is evaluated in `ringShadow()` under the key/fill highlight. Its band
-mask (`facing`, `gain`) is a fit documented in [native shadows](../native_shadows.md#the-rim-over-white-on-ios-272).
+mask (`facing`, `gain`) is a fit documented in [native shadows](../../research/specs/native_shadows.md#the-rim-over-white-on-ios-272).
 
-A surface's frost is a list of `FrostPass`es (`lib/src/recipe.dart`), resolved
+A surface's frost is a list of `FrostPass`es (`lib/src/rendering/recipe.dart`), resolved
 from the tint amount for the material's own frost and plain otherwise. Passes
 are of two kinds:
 
-- A blur that replaces the backdrop (`_RenderGlass.blurPass`): explicit blur,
+- A blur that replaces the backdrop (`RenderPrismSurface.blurPass`): explicit blur,
   clear glass's base, and regular's size-dependent base (`depthFade`, nothing
   up to 64 points, then one blur at `_baseTaper` of the deep radius). It is one
-  `BackdropFilterLayer` under the `_FrostLayer`, clipped to the contour.
+  `BackdropFilterLayer` under the `PrismFrostLayer`, clipped to the contour.
 - Blur fills (`FrostPass.fill`): regular's fill at the captured directional
   (`lighten`/`darken`) and normal opacities, and clear glass's fill. These have
   no backdrop layer of their own. The optical pass blends them itself
@@ -107,7 +107,7 @@ are of two kinds:
 
 The fill reaches the optical pass through the framebuffer's alpha.
 `shaders/frost_fill.frag` over a blur is one `ImageFilter` instance per sigma
-(`LiquidPrism._fillFilter`), drawn with `BlendMode.modulate`: its colour is
+(`PrismShaderCache.fillFilter`), drawn with `BlendMode.modulate`: its colour is
 white, so the sharp backdrop is untouched, and its alpha holds the blur in
 columns of marker, red, green, blue. `readFill` rebuilds the colour from four
 neighbouring pixels a few pixels inside the contour, displaced with the
@@ -121,19 +121,19 @@ Two engine behaviours make this cheap (`impeller/display_list/canvas.cc`,
 every filter on the key is equal the filter is rendered once per frame over
 the whole capture, each layer then being a plain textured draw in the current
 pass with the layer's blend mode. That path needs at least two layers on the
-key, so every fill is drawn as two halves (`_FrostLayer.addFill`, added at composition so no retained clip keeps a
+key, so every fill is drawn as two halves (`PrismFrostLayer.addFill`, added at composition so no retained clip keeps a
 stale key). Only
 pipeline blend modes work there; `lighten`/`darken` do not, which is why the
 blend lives in the shader. Fills fade in by opacity (`FrostPass.scaled`): a
 per-surface sigma would make the filters unequal.
 
-`_FillShare` picks the key at composition, in paint order. A surface joins
+`PrismFillShare` picks the key at composition, in paint order. A surface joins
 the previous surface's key only if nothing but glass was added to the scene
 between them, neither sits inside a saveLayer the other is outside of, their
 fills have one sigma, and it does not overlap glass painted since the key's
 capture; otherwise it starts the next key. A group's hoisted members join the
 first hoisted member. Free-standing rows of controls therefore share one
-capture and one blur without a `LiquidPrismGroup`. The test compares the
+capture and one blur without a `PrismGroup`. The test compares the
 surfaces' own rectangles, not the blur's reach, so a later surface's fill does
 not hold its neighbours' shadows or faces; under a 16-point blur that is not
 visible. Each key costs a capture and a blur of the whole pass (the engine
@@ -147,7 +147,7 @@ members whose frost is a single covering pass batch; the rest share captures.
 backdrop margin (a quarter of the shortest side, at least 16 points) into the outermost point of a regular
 face. Sigmas carry `FrostPass.engineSigmaScale` because Impeller's blur is a
 Gaussian cut off at sqrt(3) sigma. The calibration and limits are in
-[native defaults](../native_defaults.md).
+[native defaults](../../research/specs/native_defaults.md).
 
 ## Shared captures
 
@@ -156,20 +156,20 @@ screen and redraw it into a new pass; this pass break, not fragment arithmetic,
 dominates the cost of many surfaces at once. An unbatched surface costs
 one break for its optical pass, one more when it has a blur that replaces the
 backdrop, and a share of its fill key's capture. In a group, members in
-`_GlassGroupData.shared` are hoisted: the first shared member to add itself to
-the scene (`_GlassShadowLayer.addToScene`) paints every shared member's exterior
+`PrismGroupData.shared` are hoisted: the first shared member to add itself to
+the scene (`PrismSurfaceShadowLayer.addToScene`) paints every shared member's exterior
 shadow picture and frost (clipped to that member's contour; blurs keyed by
-`frostKey`, fills by the group's `_FillShare` key), and every shared optical
-pass uses `sharedKey`. Members' own `_FrostLayer` and
-`_GlassShadowLayer` skip themselves while hoisted. Transforms are taken relative
+`frostKey`, fills by the group's `PrismFillShare` key), and every shared optical
+pass uses `sharedKey`. Members' own `PrismFrostLayer` and
+`PrismSurfaceShadowLayer` skip themselves while hoisted. Transforms are taken relative
 to the host (`inverse(host.getTransformTo(null)) * member.glassTransform()`),
 so members under offset or plain transform layers stay aligned.
 
-`GlassGroupHost` and `GlassGroupMembers` split the group's render layer from its
+`PrismGroupHost` and `PrismGroupMembers` split the group's render layer from its
 membership scope; the scaffold hosts the layer around its layout and scopes only
 the chrome slots. Keep the contract: nothing paints between members that a
 member samples. Headless tests exercise the fallback, so verify grouping with
-the showcase drivers in `example/test_driver/`.
+the showcase drivers in `research/test_driver/`.
 
 `_clipsToGroup` walks a member's layers up to the group layer. Offset, transform, plain container and annotated-region layers pass;
 plain clip layers are collected (in root logical coordinates, via
@@ -190,7 +190,7 @@ components are their strength floors); keep `_uniforms` and
 `shaders/edge_blur.frag` in step. The shader pairs Gaussian taps into one
 bilinear read, so the backdrop sampler is bound linear through the same 1 x 1
 image trick as the optical shader, and derives weights incrementally. Its ramp
-is smoothstep, fitted to the native mask (doc/native_scroll_edge_spec.md).
+is smoothstep, fitted to the native mask (research/specs/native_scroll_edge_spec.md).
 The pass is ALU bound: taps are formed in uv space (the clamp is a free
 saturate) and, from a 1.5-texel sigma up, the kernel ends at 2.88 sigma
 (under 0.4% of its mass dropped, at most one 8-bit step); below that one pair
@@ -199,7 +199,7 @@ dropped and the kernel renormalised (Core Animation's `inputNormalizeEdges`,
 measured on every native scroll edge blur): each tap of a pair counts by the
 part of its texel inside the box, so the box edge never repeats its last row.
 
-The haze (`GlassEdgeBlur.haze`) is one more backdrop filter per strip after
+The haze (`PrismEdgeBlurStrip.haze`) is one more backdrop filter per strip after
 the vertical pass: `ImageFilter.blur(sigma, tileMode: decal, bounds: strip)`,
 Impeller's bounded blur, which drops samples outside the strip and divides by
 the remaining weight, as native's `inputNormalizeEdges` with `marginWidth` 0
@@ -219,8 +219,8 @@ pass.
 ## Tab pill rim
 
 The tab pill uses an along-rim chromatic fringe.
-Recipe slot `u_state.w` (uniform 45, `GlassRecipe.lensRim`) retains the bright
-glint, scaled by lift and `GlassTabBarStyle.rimRefraction`. That style multiplier
+Recipe slot `u_state.w` (uniform 45, `PrismRecipe.lensRim`) retains the bright
+glint, scaled by lift and `PrismTabBarStyle.rimRefraction`. That style multiplier
 also scales the fringe in backdrop and foreground; 0 disables all three.
 The 1.5-point glint (blue reaching .3 deeper) and .16 strength
 scale with lens height over 70; this is a fitted treatment, not a native operator.
@@ -244,8 +244,8 @@ raster basis. The existing generic dispersion path remains outside the band.
 The glyph pass has its own measured fit (`glyphFringeWeight`): channels shift
 `.77 × split × size × w`, half blended with the unshifted glyph, flat to
 `1.15 band` then e-folding every `.44 band`, with `size` the pill height over
-73.6. See [measurements and fit errors](../native_controls_spec.md#chromatic-rim-fringe)
-and [glyph fringe](../native_controls_spec.md#glyph-fringe).
+73.6. See [measurements and fit errors](../../research/specs/native_controls_spec.md#chromatic-rim-fringe)
+and [glyph fringe](../../research/specs/native_controls_spec.md#glyph-fringe).
 
 In the foreground packet, `u_effect` is vec4 at floats 286–289:
 displacement/depth in scaled points,
@@ -270,7 +270,7 @@ including its flex expansion, so its inner edge cannot refract as a second rim.
 `ControlLens` owns clear optics and underlay minification; controls supply their
 bounds and lift. It resolves each role's captured rim and the separate underlay
 amount (9 points over 36 for every minifying lens, scaled by lift). The shader
-reads that field at the refracted sample's depth, as native composes the two. `GlassLensStyle` merges shared defaults and local overrides.
+reads that field at the refracted sample's depth, as native composes the two. `PrismLensStyle` merges shared defaults and local overrides.
 Explicit optics replace the recipe; explicit blur wins over their frost.
 
 Paint lens shadows externally, after capture, with an outside-contour clip. If
@@ -286,7 +286,7 @@ while idle; keep it that way (no repeating controllers, no listeners that
 rebuild on unchanged values).
 
 - Springs stop when their remaining motion is invisible. Pass `precision` to
-  `springGlass` (from `GlassSettle.precision`: a quarter physical pixel of
+  `springPrism` (from `PrismSettle.precision`: a quarter physical pixel of
   movement, half an 8-bit step of colour) and the spring ends once its energy
   bound says it can never stray further. Flutter's default tolerance waited for
   0.001 units/s and kept a unit-range spring ticking for 0.3 to 0.4 s more. Leave
@@ -297,7 +297,7 @@ rebuild on unchanged values).
   it), and `ScrollEdgeProgressBuilder` rebuilds an edge effect only when its
   strength changes. A relayout of the scaffold's `CustomMultiChildLayout`
   repaints its whole route boundary, re-recording every bar surface and shadow.
-- A `LiquidPrismSliverAppBar` sits under a `RepaintBoundary`: the viewport
+- A `PrismSliverAppBar` sits under a `RepaintBoundary`: the viewport
   repaints all slivers each scroll frame, and the pinned bar would otherwise be
   re-recorded with them. Glass uniforms are read at composition, so a reused
   bar layer still follows the scroll.
@@ -305,7 +305,7 @@ rebuild on unchanged values).
   its fill, clipped to the contour: every optic is scaled by lift and the
   opaque fill covers the lens, so the backdrop pass (a full-screen store and
   reload per thumb, every frame) bought nothing. Custom `optics`, frost, a
-  `LiquidPrismPresence` ancestor or a tab glint (`rim`) keep the glass, since
+  `PrismVisibility.driven` ancestor or a tab glint (`rim`) keep the glass, since
   those are not neutral at rest. `test/resting_thumb_test.dart` covers it.
 
 `test/frame_budget_test.dart` covers these contracts.
@@ -332,14 +332,14 @@ Paint bounds include both smooth unions' possible expansion (`k / 6` each),
 the anchor and the antialiasing margin. The tip can still be above the top edge
 while the union protrudes below it; using the tip's bounds alone clips that
 early bulge on devices without an island. Verify early pulls as well as attached,
-detached and refreshing states. With `test_driver/showcase.dart` running, use
+detached and refreshing states. With `research/test_driver/showcase.dart` running, use
 `DART_VM_SERVICE_URL=... dart test_driver/capture_refresh.dart <output-directory>`
-from `example/` to capture both appearances and the reported device tint. Captures
+from `research/` to capture both appearances and the reported device tint. Captures
 are local evidence, not package assets.
 
 ## Fallback and lifecycle
 
-Shader preload is an optimization, not a requirement that removes fallback paths.
+Shader initialization is an optimization, not a requirement that removes fallback paths.
 Check supported renderer APIs before installing a filter. Dispose owned images,
 listeners and animations, and ignore stale async completions after disposal.
 Fallback still needs correct geometry, semantics, colors and controlled input.

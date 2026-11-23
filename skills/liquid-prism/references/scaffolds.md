@@ -1,17 +1,16 @@
 # Scaffolds and scroll edges
 
-Check these contracts against the app's resolved package source. This guide
-covers the 0.7 scaffold API; newer title behavior may require a newer release,
-and the pull to refresh described below needs 0.8 (0.9 for its controller,
-failure result and haptics hook).
+This guide covers Liquid Prism 1.0.0. Import
+`package:liquid_prism/liquid_prism.dart` and the Flutter widgets used below.
+Check these contracts against the app's resolved package source.
 
 ## Select the composition
 
 | Need | Composition and ownership |
 | --- | --- |
-| An ordinary scrolling page | `LiquidPrismScaffold(slivers: ...)` owns the scroll view, chrome insets and scroll notifications. |
+| An ordinary scrolling page | `PrismScaffold(slivers: ...)` owns the scroll view, chrome insets and scroll notifications. |
 | A custom body or tabbed/nested scroll views | `body:` owns its scroll views and consumes the scaffold's supplied `MediaQuery.padding`. Choose `scrollDepth` for the vertical scrollable driving chrome. |
-| An app-owned sliver scroll view and app bar | `LiquidPrismSliverAppBar` owns that bar. Avoid also creating a scaffold top bar for the same region. |
+| An app-owned sliver scroll view and app bar | `PrismSliverAppBar` owns that bar. Avoid also creating a scaffold top bar for the same region. |
 | A permanent row below the title | `accessory: PreferredSize(...)` participates in scaffold chrome geometry and its shared scroll edge. Its height must describe the row. |
 | Content that scrolls and then pins | A pinned sliver in managed `slivers`. Its content lifecycle differs from an accessory; any custom background effect needs explicit coordination. |
 
@@ -21,7 +20,7 @@ A custom `header` and `largeTitle` are alternatives.
 A minimal managed page (inside a Flutter app):
 
 ```dart
-LiquidPrismScaffold(
+PrismScaffold(
   title: const Text('Library'),
   largeTitle: const Text('Library'),
   slivers: [
@@ -46,11 +45,13 @@ primary/controller relationship for scroll-to-top and tab reselection.
 
 ## Pull to refresh
 
-From 0.8, `onRefresh: () => reload()` on the scaffold is the whole integration,
-for `slivers` and for `body`. The scaffold draws a black drop out of the Dynamic
-Island, a notch or the top edge, arms it at a fixed pull, and holds a spinner
-until the returned future completes. Before 0.8 `onRefresh` required `slivers`
-and showed the stock Cupertino control; check the resolved version.
+`onRefresh: () => reload()` on the scaffold enables refresh for both `slivers`
+and `body`. Compact and accessory-only headers show a black circle below the
+full header, holding a gap in the body while refreshing. Large titles, custom
+scrolling headers and headerless pages draw a black drop from the Dynamic
+Island, notch or top edge; that presentation floats over content. The choice
+is latched at pull start, so a collapsed large title still uses the drop.
+Both presentations spin until the callback future completes.
 
 - Return the future of the real reload. The indicator spins until it completes,
   and for at least a moment so a fast reload still reads. Do not add your own
@@ -60,26 +61,27 @@ and showed the stock Cupertino control; check the resolved version.
   answer the same pull.
 - The drop follows the scrollable at `scrollDepth`. With `body`, a list shorter
   than the window needs `AlwaysScrollableScrollPhysics` to be pulled at all.
-- The content is not held down while refreshing, so do not reserve space for
-  the indicator. There is no style to configure: it is always black and its
-  anchor comes from the device.
+- Let the scaffold manage the indicator gap; do not reserve space yourself.
+  The indicator is always black, with a thin white outline in dark appearance.
+  Its anchor follows the device and header layout.
 - A scaffold in a sheet draws the drop from the sheet's own top edge.
 
-From 0.9:
-
 - To refresh from code (a tab tapped again, a deep link), pass a
-  `LiquidPrismRefreshController` as `refreshController` and call `refresh()`.
-  Do not fake a pull by scrolling, and do not show a separate spinner.
+  `PrismRefreshController` as `refreshController` and call `refresh()`.
+  `refresh()` joins an in-flight refresh. Dispose an app-created controller with
+  its owner. Do not fake a pull by scrolling or show a separate spinner.
 - A page that only sometimes allows refresh passes `onRefresh: allowed ?
   reload : null`. This keeps scroll position and focus; do not pass a no-op
   callback to work around a rebuild.
 - When the app records failures instead of throwing, return them: a future
   that completes with `false` ends without the check or success haptic.
-- Refresh haptics go through the theme's `GlassHaptics` hook
-  (`GlassHapticComponent.refresh`). Route them through the app's own haptics
+- Refresh haptics go through the theme's `PrismHaptics` hook
+  (`PrismHapticComponent.refresh`). Route them through the app's own haptics
   setting there rather than calling `HapticFeedback` beside the scaffold. An
-  exhaustive `switch` over `GlassHapticKind` or `GlassHapticComponent` in app
-  code needs the new cases.
+  exhaustive `switch` must handle `refreshPulled`, `refreshArmed`,
+  `refreshReleased`, `refreshSucceeded` and `refreshFailed` kinds.
+  `refreshReleased` fires once for an armed pull release, not a programmatic
+  refresh; `refreshFailed` is silent by default.
 
 ## Adaptive safe areas
 
@@ -89,16 +91,15 @@ regions and safe areas. Actions can occupy a side rail independently of the
 scrolling title. Do not move them with an app-owned title transform.
 
 The body receives safe insets **plus measured chrome coverage** through
-`MediaQuery.padding`. `LiquidPrismScaffold.contentInsetsOf(context)` instead
+`MediaQuery.padding`. `PrismScaffold.contentInsetsOf(context)` instead
 returns content-safe insets including a rail; it is useful for overlays outside
 the body, such as aligning a route's drag indicator with its title. It does not
 return app-bar/accessory heights or the entire body padding. Its optional
 `placement` is for an overlay associated with a different chrome placement.
 
-Do not use `topBarClearance` as universal spacing between arbitrary widgets.
-For example, 0.7.2 uses 10 logical pixels in regular chrome and 16 for rail
-content spacing, before overrides. Those numbers explain why fixed stitching
-fails; they are not values to copy into an app. Check resolved geometry instead.
+Read resolved chrome geometry instead of copying gaps between arbitrary
+widgets. Configure shared spacing through `PrismNavigationBarStyle`, and dock
+margins and alignment through `PrismScaffoldStyle`.
 
 Keyboard avoidance defaults to folding the keyboard into body padding. If the
 app disables it, descendants own avoidance; do not compensate in both places.
@@ -111,7 +112,7 @@ A custom header uses its measured extent; do not assume a large-title reveal
 threshold controls it. Keep interactive titles in the title slot, with a single
 accessible activation owner, rather than moving them to `leading` for tap support.
 
-`GlassNavigationBarStyle` controls alignment and minimization. Exercise pinned,
+`PrismNavigationBarStyle` controls alignment and minimization. Exercise pinned,
 scroll-away and reveal-on-scroll-up with an accessory present: the accessory
 remains usable when the title row hides. Expanded titles, compact titles and
 custom headers have different motion roles. Do not wrap all of them in the same
@@ -121,7 +122,7 @@ fade/blur/size animation or recreate a title subtree with a new key every frame.
 
 Prefer the scaffold's one effect across its title and accessory. A separately
 pinned content row is not automatically part of that effect. Before adding a
-`LiquidPrismScrollEdge` to it, establish:
+`PrismScrollEdge` to it, establish:
 
 - Where both effects begin and end in the same coordinate space, including their
   extension beyond layout bounds and any clipping.
@@ -137,6 +138,9 @@ row effect at assumed padding can produce both a seam and mismatched frosting.
 Do not hide that defect by increasing global glass opacity. If the desired
 scroll-then-pin composition needs coordination the public API does not provide,
 report the limitation or propose a package change instead of importing internals.
+
+For custom scroll-view edge fades, use `PrismScrollEdge.fade(child: ...)`.
+Low-level `PrismEdgeBlur` and `PrismEdgeBlurStrip` require `primitives.dart`.
 
 Bottom chrome uses a soft edge, or no effect when disabled; do not introduce a
 hard bottom edge. For custom rounded routes, inspect both the presented surface

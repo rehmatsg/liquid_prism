@@ -2,16 +2,11 @@ import UIKit
 
 /// Lifecycle events of one presented menu.
 public enum MenuLifecycleEvent: Equatable, Sendable {
-  /// The system began presenting the menu.
   case presented
-  /// The menu finished dismissing (selection or cancellation alike).
   case dismissed
 }
 
-/// Presents `UIMenu`s through invisible anchor controls in an overlay host.
-///
-/// One menu at a time: presenting while presented dismisses the live menu
-/// first (the system serializes the transition).
+/// Presents one native menu at a time through an overlay anchor control.
 @MainActor
 public final class MenuPresenter {
   public init() {}
@@ -19,37 +14,22 @@ public final class MenuPresenter {
   /// Whether a menu is currently presented (or mid-presentation).
   public private(set) var isPresented = false
 
-  /// Whether programmatic presentation is supported on this OS.
-  /// `UIControl.performPrimaryAction` is iOS 17.4+.
+  /// Whether programmatic presentation is supported (iOS 17.4+).
   public static var isSupported: Bool {
     if #available(iOS 17.4, *) { return true }
     return false
   }
 
   private weak var control: MenuAnchorControl?
-  /// The live presentation's action router — lets `debugSelect` drive the
-  /// same path a real row tap does (used by integration tests; synthesized
-  /// touches can't reach the context-menu window).
   private var actionHandler: (@MainActor (String) -> Void)?
-  /// Supersedes callbacks from a replaced control: only the latest
-  /// presentation's events reach listeners.
   private var generation = 0
 
-  /// Per-presentation flags shared by the control's lifecycle closures and the
-  /// watchdog — guards against double `dismissed` emissions.
   private final class _Presentation {
     var presented = false
     var dismissed = false
   }
 
-  /// Presents `spec`'s menu at `anchor` inside `host`.
-  ///
-  /// - `onAction`: fired per action tap (may fire repeatedly for
-  ///   `keepsMenuPresented` rows).
-  /// - `onLifecycle`: `.presented` then exactly one `.dismissed`.
-  ///
-  /// Returns `false` when programmatic presentation is unavailable
-  /// (iOS < 17.4) — the caller should fall back.
+  /// Presents a menu with action and lifecycle callbacks; returns false if unsupported.
   @discardableResult
   public func present(
     _ spec: MenuSpec,
@@ -89,14 +69,10 @@ public final class MenuPresenter {
     host.layoutIfNeeded()
     self.control = control
 
-    // The context-menu interaction installs on window insertion — give it a
-    // runloop turn before asking the button to perform its primary action.
     DispatchQueue.main.async { [weak control] in
       control?.performPrimaryAction()
     }
 
-    // If the system never began presenting, `willDisplayMenuFor` won't fire
-    // and the caller would hang — tear down and report dismissal instead.
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self, weak control] in
       guard let self, self.generation == gen, !state.presented, !state.dismissed else { return }
       state.dismissed = true
@@ -107,15 +83,12 @@ public final class MenuPresenter {
     return true
   }
 
-  /// Dismisses the presented menu, if any. No-op when nothing is up.
-  /// The anchor removes itself when the dismissal finishes.
+  /// Dismisses the current menu, removing its anchor when dismissal finishes.
   public func dismiss() {
     control?.contextMenuInteraction?.dismissMenu()
   }
 
-  /// Testing hook: routes `actionId` through the live menu's action handler
-  /// and dismisses — what a real row tap does end-to-end. Integration tests
-  /// need this because synthesized touches never reach the menu's window.
+  /// Routes a test action through the current handler and dismisses the menu.
   public func debugSelect(_ actionId: String) {
     actionHandler?(actionId)
     dismiss()
@@ -123,19 +96,8 @@ public final class MenuPresenter {
 }
 
 extension MenuAnchor {
-  /// Gap between the trigger's edge and the menu's near edge.
   private static let rectGap: CGFloat = 6
 
-  /// The invisible anchor control's frame plus the menu's attachment point
-  /// inside it (unit coordinates).
-  ///
-  /// A `.point` anchor is a 1×1 at the touch — the menu's top edge lands on
-  /// the tap. A `.rect` anchor is a 1pt strip offset `rectGap` **below** the
-  /// rect when it sits in the container's upper half, else offset **above**
-  /// it — so the menu hangs off the trigger rather than covering it. The
-  /// attachment point's unit-y picks which side of the strip the menu lands
-  /// on: near the strip's bottom → menu below; near the top → above. (UIKit
-  /// still clamps or scrolls a menu too tall for either side.)
   func resolvedControl(in container: CGRect) -> (frame: CGRect, attachment: CGPoint) {
     switch self {
     case .point(let point):

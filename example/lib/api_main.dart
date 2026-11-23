@@ -1,16 +1,18 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
+import 'package:material_ui/material_ui.dart';
 
-/// Run with `flutter run -t lib/api_main.dart -d <device-id>`.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await LiquidPrism.preload();
+  await Prism.initialize();
   runApp(const ApiExample());
 }
 
+/// A compact app demonstrating the main Liquid Prism APIs.
 class ApiExample extends StatefulWidget {
-  const ApiExample({super.key});
+  /// Creates an [ApiExample].
+  const new({super.key});
 
   @override
   State<ApiExample> createState() => _ApiExampleState();
@@ -19,7 +21,7 @@ class ApiExample extends StatefulWidget {
 class _ApiExampleState extends State<ApiExample> {
   final _search = TextEditingController();
   final _searchFocus = FocusNode();
-  // The app owns its suggestions; the field only provides the anchor.
+
   final _suggestionLink = LayerLink();
   final _suggestions = OverlayPortalController();
   final _searchGroup = Object();
@@ -30,17 +32,16 @@ class _ApiExampleState extends State<ApiExample> {
   int _tab = 0;
   int _favorites = 0;
 
-  // Unspecified fields retain the package's native defaults.
-  static const _lens = GlassLensStyle(shadowOpacity: .07, ringOpacity: .035);
-  static const _theme = LiquidPrismThemeData(
+  static const _lens = PrismLensStyle(shadowOpacity: .07, ringOpacity: .035);
+  static const _theme = PrismThemeData(
     lens: _lens,
-    button: GlassButtonStyle(
+    button: PrismButtonStyle(
       minimumSize: Size(48, 48),
       padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
     ),
-    slider: GlassSliderStyle(width: 320, trackHeight: 8),
-    toolbar: GlassToolbarStyle(spacing: 2),
-    search: GlassSearchStyle(showCancelButton: false),
+    slider: PrismSliderStyle(width: 320, trackHeight: 8),
+    toolbar: PrismToolbarStyle(spacing: 2),
+    search: PrismSearchStyle(showCancelButton: false),
   );
 
   @override
@@ -96,7 +97,7 @@ class _ApiExampleState extends State<ApiExample> {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: ThemeData(useMaterial3: true),
-    home: LiquidPrismTheme(
+    home: PrismTheme(
       data: _theme,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F3EB),
@@ -111,7 +112,7 @@ class _ApiExampleState extends State<ApiExample> {
               const SizedBox(height: 8),
               const Text('Shared defaults. Local choices. Native motion.'),
               const SizedBox(height: 24),
-              LiquidPrismSearchField(
+              PrismSearchField(
                 controller: _search,
                 focusNode: _searchFocus,
                 placeholder: 'Try the search field',
@@ -128,7 +129,7 @@ class _ApiExampleState extends State<ApiExample> {
                     child: field,
                   ),
                 ),
-                style: const GlassSearchStyle(
+                style: const PrismSearchStyle(
                   height: 52,
                   iconColor: Color(0xFF426D62),
                 ),
@@ -138,34 +139,34 @@ class _ApiExampleState extends State<ApiExample> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('A brighter idea'),
-                  LiquidPrismSwitch(
+                  PrismSwitch(
                     value: _enabled,
                     label: 'A brighter idea',
                     onChanged: (value) => setState(() => _enabled = value),
-                    style: const GlassSwitchStyle(scale: 1.1),
+                    style: const PrismSwitchStyle(scale: 1.1),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
               Align(
                 alignment: Alignment.centerLeft,
-                child: LiquidPrismSlider(
+                child: PrismSlider(
                   value: _level,
                   label: 'Brightness',
                   semanticFormatterCallback: (value) =>
                       '${(value * 100).round()} percent',
                   onChanged: (value) => setState(() => _level = value),
-                  // The knob grows; the track behind its lens keeps its scale.
-                  style: const GlassSliderStyle(
+
+                  style: const PrismSliderStyle(
                     thumbSize: Size(40, 26),
                     heldScale: 1.6,
-                    lens: GlassLensStyle(minifyUnderlay: false),
+                    lens: PrismLensStyle(minifyUnderlay: false),
                   ),
                 ),
               ),
               Text('${(_level * 100).round()}%'),
               const SizedBox(height: 24),
-              LiquidPrismSegmentedControl<int>(
+              PrismSegmentedControl<int>(
                 selectedValue: _segment,
                 onValueChanged: (value) => setState(() => _segment = value),
                 children: const {
@@ -173,7 +174,7 @@ class _ApiExampleState extends State<ApiExample> {
                   1: Text('Dusk'),
                   2: Text('Apricot'),
                 },
-                style: const GlassSegmentedStyle(
+                style: const PrismSegmentedStyle(
                   trackHeight: 36,
                   thumbHeight: 32,
                   labelStyle: TextStyle(fontSize: 14),
@@ -189,11 +190,11 @@ class _ApiExampleState extends State<ApiExample> {
                       colors: [Color(0xFF82B8AB), Color(0xFFF0B588)],
                     ),
                   ),
-                  child: Center(
-                    child: LiquidPrism(
-                      glass: Glass.clear,
-                      shape: const GlassShape.rect(cornerRadius: 20),
-                      child: const Padding(
+                  child: const Center(
+                    child: PrismSurface(
+                      glass: PrismGlass.clear,
+                      shape: PrismShape.rect(cornerRadius: 20),
+                      child: Padding(
                         padding: EdgeInsets.all(24),
                         child: Text('Something to see through.'),
                       ),
@@ -207,28 +208,28 @@ class _ApiExampleState extends State<ApiExample> {
                 runSpacing: 12,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  LiquidPrismButton(
+                  PrismButton(
                     label: 'Favorite',
                     onPressed: () => setState(() => _favorites++),
                     child: Text('Favorite · $_favorites'),
                   ),
-                  LiquidPrismButton.icon(
+                  PrismButton.icon(
                     icon: const Icon(CupertinoIcons.heart),
                     label: 'Add favorite',
                     onPressed: () => setState(() => _favorites++),
-                    // Opt out of the app's larger horizontal button padding.
-                    padding: const EdgeInsets.all(12),
+
+                    style: const PrismButtonStyle(padding: EdgeInsets.all(12)),
                   ),
-                  LiquidPrismToolbarGroup(
+                  PrismToolbar.group(
                     items: [
-                      GlassToolbarItem(
+                      PrismToolbarItem(
                         icon: const Icon(CupertinoIcons.minus),
                         label: 'Dim',
                         onPressed: () => setState(
                           () => _level = (_level - .1).clamp(0.0, 1.0),
                         ),
                       ),
-                      GlassToolbarItem(
+                      PrismToolbarItem(
                         icon: const Icon(CupertinoIcons.plus),
                         label: 'Brighten',
                         onPressed: () => setState(
@@ -240,19 +241,19 @@ class _ApiExampleState extends State<ApiExample> {
                 ],
               ),
               const SizedBox(height: 30),
-              LiquidPrismTabBar(
+              PrismTabBar(
                 selectedIndex: _tab,
                 onSelected: (value) => setState(() => _tab = value),
                 tabs: const [
-                  LiquidPrismTab(
+                  PrismTab(
                     icon: Icon(CupertinoIcons.sparkles),
                     label: 'Explore',
                   ),
-                  LiquidPrismTab(
+                  PrismTab(
                     icon: Icon(CupertinoIcons.slider_horizontal_3),
                     label: 'Studio',
                   ),
-                  LiquidPrismTab(
+                  PrismTab(
                     icon: Icon(CupertinoIcons.square_grid_2x2_fill),
                     label: 'Library',
                   ),

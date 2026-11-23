@@ -4,7 +4,6 @@ vec2 scenePoint(vec2 local) {
     return u_origin + mat2(u_transform.x, u_transform.z,
                           u_transform.y, u_transform.w) * local * u_geometry.y;
 }
-// The engine supplies a live backdrop with the factory's linear sampler.
 vec3 readScene(vec2 px) {
     vec2 uv = clamp(px, vec2(0.5), u_textureSize - 0.5) * (1. / u_textureSize);
     #ifdef IMPELLER_TARGET_OPENGLES
@@ -24,9 +23,6 @@ float readAlpha(vec2 px) {
     #endif
     return texture(u_backdrop, uv).a;
 }
-// The blur fill stored in the backdrop's alpha by shaders/frost_fill.frag:
-// one marker column in four, followed by red, green and blue. Without exactly
-// one marker the pixels carry no fill and [fallback] is returned.
 vec3 readFill(vec2 px, vec3 fallback) {
     vec2 c = floor(px) + .5;
     vec4 a = vec4(readAlpha(c-vec2(1.,0.)), readAlpha(c),
@@ -36,22 +32,15 @@ vec3 readFill(vec2 px, vec3 fallback) {
     vec3 fill = m.x > .5 ? a.yzw : (m.y > .5 ? a.zwx : (m.z > .5 ? a.wxy : a.xyz));
     return fill * (1./.9);
 }
-// Whether the pixels around [px] hold a stored fill.
 bool hasFill(vec2 px) {
     vec2 c = floor(px) + .5;
     return max(max(readAlpha(c-vec2(1.,0.)), readAlpha(c)),
                max(readAlpha(c+vec2(1.,0.)), readAlpha(c+vec2(2.,0.)))) > .5;
 }
-// Pixels the glass does not cover outright still hold the stored fill in
-// their alpha; completing them with the backdrop leaves them opaque.
 vec4 completeFill(vec4 color, vec2 screen) {
     if (u_frost.w < 0. || color.a > .999 || !hasFill(screen)) return color;
     return color + (1.-color.a)*vec4(readScene(screen),1.);
 }
-// Native regular frost: the fill blended lighten (darken in dark appearance)
-// at the directional opacity, then normally at the normal opacity. The fill
-// is read a few pixels inside the contour, where every column is stored, and
-// displaced by [bend] with the backdrop so the lens refracts it too.
 vec3 fillGlass(vec3 color, vec2 local, vec2 bend, vec2 normal, float d, float aa) {
     if (u_frost.w < 0.) return color;
     float len = length(normal);
@@ -63,10 +52,6 @@ vec3 fillGlass(vec3 color, vec2 local, vec2 bend, vec2 normal, float d, float aa
     color = mix(color, directional, u_frost.x);
     return mix(color, fill, u_frost.y);
 }
-// Dark regular glass lightens toward its surroundings: native blurs them
-// wider than the fill, which four fills a bleed radius apart stand in for
-// (kept inside the face, where the fill is stored). The result goes through
-// the native bleed matrix and fades out over the last 1.5 points.
 vec3 bleedGlass(vec3 color, vec2 local, float d, float aa) {
     if (u_frost.z <= 0.) return color;
     vec2 inset = vec2(.3*u_derived[2].w + 4.*aa);
@@ -81,7 +66,6 @@ vec3 bleedGlass(vec3 color, vec2 local, float d, float aa) {
     return mix(color, max(color,bleed), u_frost.z*clamp(-d/1.5,0.,1.));
 }
 
-// Integrate compressed pixel footprints with one, two or four taps.
 vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
     float dxx = dot(dx, dx);
     float dyy = dot(dy, dy);
@@ -90,7 +74,6 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
     if (stretch2 <= u_derived[1].y) return readScene(p);
     vec2 major = dxx > dyy ? dx : dy;
     major *= min(1., 16. / max(sqrt(stretch2), 0.0001));
-    // A moment-matched pair suffices up to 2.2 frost sigma.
     if (sigma >= 2. && stretch2 <= u_derived[1].z) {
         return (readScene(p - major * 0.28867513) + readScene(p + major * 0.28867513)) * 0.5;
     }
@@ -104,7 +87,6 @@ vec3 filteredScene(vec2 p, vec2 dx, vec2 dy) {
 #include "superellipse.glsl"
 #include "chromatic_fringe.glsl"
 
-// Past the inward bands, round-corner depth bounds the smooth contour.
 vec4 shape(vec2 p) {
     vec2 rel = p - u_extent * 0.5;
     float radius = u_derived[2].w;
@@ -127,7 +109,6 @@ vec4 shape(vec2 p) {
     }
     return vec4(d,n,len);
 }
-// Abramowitz and Stegun 7.1.26, within 1.5e-7.
 float erfApprox(float x) {
     float a = abs(x);
     float t = 1./(1.+0.3275911*a);
@@ -135,7 +116,6 @@ float erfApprox(float x) {
                    -0.284496736)*t+0.254829592)*t*exp(-a*a);
     return x < 0. ? -y : y;
 }
-// Blurred, shifted inner stroke with a fitted rim mask; see doc/native_shadows.md.
 float ringShadow(float d, vec2 normal, float depth) {
     float x = d-8.*normal.y;
     if (abs(x) > 17.) return 0.;
@@ -190,14 +170,10 @@ vec3 gradeInput(vec3 color) {
     return clamp(mix(color,u_tint.rgb,u_tint.a) + u_geometry.w,0.,1.);
 }
 float hdrAmount() { return clamp((u_headroom-1.)/.3,0.,1.); }
-// Light glass keeps its unclamped face white when the surface has headroom:
-// 1.03 encoded (about 1.07 linear) for regular and 1.08 (about 1.19) for
-// clear. Dark glass, lenses and custom optics stop at 1.
 float faceWhite() {
     if (u_material.y > .5 || u_material.x < .5 || u_material.x > 2.5) return 1.;
     return 1.+(u_material.x > 1.5 ? .08 : .03)*hdrAmount();
 }
-// [limit] is u_face.z: the dark SDR luma limit or the light contrast gain.
 vec3 gradeFaceAt(vec3 color, float limit) {
     if (u_material.x > .5 && u_material.x < 2.5) {
         bool dark = u_material.y > .5;
@@ -209,18 +185,13 @@ vec3 gradeFaceAt(vec3 color, float limit) {
         float saturation = clear ? 1.059999942779541 :
             (dark ? 1.2999999523162842 : 1.2000000476837158);
         float tone = mix(black,white,value);
-        // Light-regular face curve measured on surfaces without depth terms.
         if (!clear && !dark) tone = .4 + value*(.627-.035*value);
-        // With headroom the native face follows the linear matrix through
-        // white instead of the SDR rolloff (measured 1.07 linear over white).
         if (!clear && !dark && u_headroom > 1.)
             tone = mix(tone,.4+.63*value,hdrAmount());
-        // Fitted SDR tone rolloff; the limit and gray fill are measured inputs.
         if (!clear && dark) tone = .125 + value*(.97+(limit-.97)*value);
         color = (color-vec3(value))*saturation + tone;
         float fill = clear ? 0. : u_face.x;
         color = mix(color,vec3(u_face.w),fill);
-        // Larger light surfaces gain face contrast about the black point.
         if (!clear && !dark) color = .4 + (color-.4)*limit;
         color = clamp(color,0.,faceWhite());
     }
@@ -246,10 +217,6 @@ vec3 gradePressed(vec3 color) {
     }
     return color;
 }
-// Premultiplied exterior edge line. Clear glass and lenses draw a black line;
-// regular glass follows the native measurements: in dark appearance a black
-// line at .6 alpha (stronger on larger surfaces), in light appearance the
-// backdrop lowered by .3 on the sides and .04 above and below.
 vec4 exteriorRim(float d, vec2 normal, float aa, float coverage, vec2 local) {
     if (u_material.x > 1.5 && u_material.x < 3.5 &&
         u_finish.y > 0. && d > -0.5*aa) {
@@ -269,8 +236,6 @@ vec4 exteriorRim(float d, vec2 normal, float aa, float coverage, vec2 local) {
         float size = clamp((min(u_extent.x,u_extent.y)-64.)/40.,0.,1.);
         float width = 0.46 + (dark ? 0.07*size : 0.);
         float hdr = dark ? 0. : hdrAmount();
-        // Matched-device HDR fit: a slightly wider side band with a softer
-        // key/fill at the vertical poles. Preserve the SDR and dark recipes.
         width += .04*hdr*abs(normal.x);
         float line = max(clamp(0.5-(d-width)/aa,0.,1.)-coverage,0.);
         if (dark) {
@@ -321,13 +286,6 @@ vec3 sampleGlass(vec2 samplePoint, vec2 dx, vec2 dy, vec2 direction,
     return color;
 }
 
-// The surroundings beside the rim, averaged along the edge with Gaussian
-// weights over +-halfWindow (sigma halfWindow/2), so the rim reads as one
-// continuous line: detail outside the glass becomes gradual changes in
-// brightness and colour, and where bright surroundings end the line ramps out
-// along the kernel instead of breaking off. Alternate taps step +-across along
-// the normal so thin features outside never line up with the tap grid.
-// Arguments are in scene pixels.
 vec3 readAlongEdge(vec2 center, vec2 tangent, vec2 normal, float across) {
     vec3 sum = vec3(0.);
     float total = 0.;
@@ -341,16 +299,10 @@ vec3 readAlongEdge(vec2 center, vec2 tangent, vec2 normal, float across) {
     return sum / total;
 }
 
-// Half the window the rim averages its surroundings over: wide enough on a
-// small control that the reflection is a smooth line, narrower relative to a
-// large surface so it keeps some sense of what is around it.
 float edgeWindow() {
     return clamp(.15*min(u_extent.x,u_extent.y), 3., 12.);
 }
 
-// Reflection lives on the rim only: the surroundings just outside the contour
-// mirrored into a band at most 4 points (and a quarter of the short side)
-// wide, so no surface reflects across its interior.
 vec3 reflectGlass(vec3 color, vec2 local, vec2 normal, float d, float depth) {
     if (depth < u_derived[3].x) {
         float rimWidth = u_derived[2].x;
@@ -369,14 +321,6 @@ vec3 reflectGlass(vec3 color, vec2 local, vec2 normal, float d, float depth) {
     return color;
 }
 
-// Regular glass shows its surroundings in the outermost point of the face:
-// native mixes in the backdrop from outside the contour (its outer refraction
-// amount, a quarter of the shortest side and at least 16 points, less 4) at
-// .6 opacity on the contour, falling to nothing one point in. Native mirrors
-// point for point; here the surroundings are averaged along the edge
-// (readAlongEdge) so a small surface shows one continuous line rather than
-// broken pieces of nearby detail. Measured on
-// device with white content at set distances outside the surface.
 vec3 mirrorSurroundings(vec3 color, vec2 local, vec2 normal, float depth) {
     if (u_material.x < .5 || u_material.x > 1.5 || depth >= 1.) return color;
     float len = length(normal);
@@ -386,7 +330,6 @@ vec3 mirrorSurroundings(vec3 color, vec2 local, vec2 normal, float depth) {
     mat2 toScene = mat2(u_transform.x,u_transform.z,u_transform.y,u_transform.w)*u_geometry.y;
     vec3 outside = readAlongEdge(scenePoint(local + n*reach),
         toScene*vec2(-n.y,n.x)*edgeWindow(), toScene*n, 3.);
-    // The mirrored surroundings keep a small surface's grade at any size.
     outside = gradeFaceAt(gradeInput(outside),u_material.y > .5 ? .6 : 1.);
     return mix(color,outside,0.6*(1.-depth)*min(len,1.)*u_finish.y);
 }
@@ -395,9 +338,6 @@ vec3 lightGlass(vec3 color, vec2 normal, float depth, float aa, float lensRim) {
         float light;
         float edge = 0.;
         if (u_material.x > .5 && u_material.x < 1.5) {
-            // Regular glass: the diffuse lobe grades the face; the sharp rim
-            // is added on top, .18 at the contour falling off over 1.31
-            // points whatever the face colour (measured on device).
             light = highlight(-normal.y,depth,8.,0.593419,11.333333,1.,aa);
             float lobe = clamp((abs(normal.y)-0.130526)/0.869474,0.,1.);
             edge = 0.18*lobe*clamp(1.-depth/1.31,0.,1.);
@@ -429,35 +369,23 @@ vec3 lightGlass(vec3 color, vec2 normal, float depth, float aa, float lensRim) {
     return color;
 }
 
-// Fit to the HDR reference, not an extracted Apple operator. Keep the existing
-// SDR face/lighting path, then add only the rim's linear-light radiance. Flutter's
-// XR output is nonlinear extended sRGB, so 1.3 linear white encodes as ~1.12.
 vec3 hdrRim(vec3 color, vec2 normal, float depth) {
     if (u_headroom <= 1. || u_material.x < .5 || u_material.x > 2.5
         || depth >= 1. || u_finish.y <= 0.) return color;
     bool clear = u_material.x > 1.5;
     bool dark = u_material.y > .5;
     if (dark && !clear) return color;
-    // Rounded renderer parameters, checked against HDR angular/radial profiles;
-    // this is not a recovered Apple lighting operator.
     float n2 = normal.y*normal.y;
     float n4 = n2*n2;
     float n8 = n4*n4;
     float n32 = n8*n8*n8*n8;
-    // Confine emission to the rim. Treating the reference's broad pixel
-    // shoulder as additive light created an unwanted inner glow.
     float band = 1.-smoothstep(.5,1.,depth);
     float radiance;
     if (dark) {
-        // Dark clear: a one-pixel glint at the poles and along flat edges.
         radiance = .15*n32*(1.-smoothstep(.2,.6,depth));
     } else if (clear) {
-        // Light clear: the lifted face carries the brightness; the rim adds
-        // only a faint glint toward the poles.
         radiance = .025*n8*band;
     } else {
-        // Light regular: broad cosine-squared light plus a narrow glint at
-        // the poles, added over the lifted face (about 1.3 linear in all).
         radiance = (.01+.09*n2+.12*n32)*band;
     }
     radiance *= hdrAmount()*clamp(u_finish.y,0.,1.);
@@ -506,12 +434,10 @@ void shadeGlass() {
     vec2 dx = vec2(1., 0.);
     vec2 dy = vec2(0., 1.);
     #if defined(IMPELLER_GRAPHICS_BACKEND)
-    // Derivatives must precede per-fragment coverage branches.
     dx = dFdx(samplePoint);
     dy = dFdy(samplePoint);
     aa = max(fwidth(d), 0.0001);
     #endif
-    // The lens band only needs the full path when it bends or disperses.
     float lensEnd = (u_derived[0].y > 0. || u_optics.w > 0.001)
         ? 1./u_derived[0].x : 0.;
     float interiorEnd = max(lensEnd, u_derived[3].x);
@@ -540,7 +466,7 @@ void shadeGlass() {
         return;
     }
     bool lens = u_material.x > 2.5 && u_material.x < 3.5;
-    float lensRim = lens ? u_state.w : 0.; // Tab glint, independent of split.
+    float lensRim = lens ? u_state.w : 0.;
     vec3 color = sampleGlass(
         samplePoint,dx,dy,direction,normal,profile,d,depth,lens);
     color = fillGlass(color,local,underlayOffset-offset,normal,d,aa);

@@ -1,50 +1,63 @@
-# Contributing
+# Contributing to Liquid Prism
 
-Use Flutter 3.50+ with Dart 3.14+. iOS builds require macOS and a compatible Xcode.
-The public API is exported by `lib/liquid_prism.dart`; keep consumer examples and
-`doc/` in sync when changing it.
+## Prerequisites
+
+- **Flutter 3.50+** and **Dart 3.14+**
+- macOS with Xcode for iOS builds and Swift unit tests
+
+## Local Verification
+
+Run the full check suite before opening a pull request:
 
 ```sh
-flutter pub get
 ./tool/check.sh
+```
+
+`tool/check.sh` verifies formatting, strict static analysis (`--fatal-infos`) for both the package and `example/`, Dart/Flutter tests, tooling tests, and version alignment.
+
+For platform builds and Swift unit tests:
+
+```sh
+xcodebuild test -scheme liquid_prism-Package -destination 'platform=iOS Simulator,name=iPhone 17'
+pod ipc spec ios/liquid_prism.podspec > /dev/null
 cd example
 flutter build ios --simulator --debug
 flutter build apk --debug
 ```
 
-The check script formats nothing: it reports formatting differences, runs analysis,
-and executes package and example tests. CI bounds each job. For tests, prefer
-observable behavior through the public API: gestures, semantics, color overrides,
-inheritance, disposal, and fallback behavior.
+Renderer or shader changes should also be exercised on a real Impeller simulator or device; headless widget tests exercise the frosted fallback and cannot certify shader output.
 
-## Versions and releases
+## Public API & Stability Policy
 
-Versions follow [semantic versioning](https://semver.org) with Dart's rule
-before 1.0: a minor bump (0.2 → 0.3) marks breaking changes, a patch bump marks
-fixes and compatible additions. `pubspec.yaml` holds the version; the podspec
-mirrors it, and `tool/check.sh` fails if they or `CHANGELOG.md` disagree.
+Starting with `1.0.0`, Liquid Prism follows [Semantic Versioning](https://semver.org):
 
-Add a line under `## Unreleased` in `CHANGELOG.md` with each user-visible
-change. To release:
+- **Public entry points**:
+  - `package:liquid_prism/liquid_prism.dart` — core consumer widgets, styles, theme, and native menus.
+  - `package:liquid_prism/primitives.dart` — low-level optical, pressable, edge-blur, and system-chrome building blocks.
+  - `lib/src/` is private implementation detail and not covered by SemVer guarantees.
+- **Patch (`1.0.x`)**: bug fixes, performance improvements, and internal refactors with no breaking API changes.
+- **Minor (`1.x.0`)**: backwards-compatible additions (new widgets, optional style fields, non-breaking behaviors).
+- **Major (`2.0.0`)**: breaking API removals or signature changes. Deprecations are marked with `@Deprecated('... Will be removed in 2.0.0.')` for at least one minor release before removal.
+- **Widget vs. style separation**: keep widget constructors focused on semantic and behavioral inputs; visual, geometry, optical, motion, and haptic overrides belong in immutable `Prism*Style` classes that implement `==`, `hashCode`, `copyWith`, and `merge`.
 
-1. On a branch, run `python3 tool/release.py bump X.Y.Z`. It moves the
-   Unreleased notes under `## X.Y.Z` and sets both versions. Merge it through
-   a pull request.
-2. Tag the merge commit on `main` and push the tag:
-   `git tag -a vX.Y.Z -m "Liquid Prism X.Y.Z" && git push origin vX.Y.Z`.
-3. The Release workflow checks the tag against the versions, runs the checks
-   and publishes a GitHub release with that version's notes. A version with a
-   suffix, such as `0.3.0-beta.1`, becomes a pre-release.
+## Code Style
 
-The package is not published to pub.dev; apps depend on a release tag through
-Git. CI still runs `flutter pub publish --dry-run` to keep the package valid.
-`_research/` and `artifacts/` are local-only directories excluded from Git and
-package archives. Keep required third-party notices and license texts in distributions.
+- Single quotes, sorted imports, strict typing (`strict-casts`, `strict-inference`, `strict-raw-types`), and zero analyzer infos.
+- No inline `//` implementation comments. Keep concise one-line `///` dartdocs on public APIs only. Always preserve third-party license attribution headers.
+- Format all Dart code with `dart format`.
 
-An API or renderer change should be exercised on a real mobile renderer. Headless
-widget tests use the fallback path and cannot certify shader output. Report device/build mode and remaining validation gaps.
+## Commits & Releases
 
-Read [AGENTS.md](AGENTS.md) and the [implementation guides](doc/agents/README.md)
-for ownership rules, API precedence, shader ABI and native comparison workflows.
-The [API example](example/lib/api_main.dart) should remain runnable using only
-public exports. Keep README usage concise; put implementation detail in the guides.
+Pull request titles must follow [Conventional Commits](https://www.conventionalcommits.org):
+
+- `feat:` / `feat(scope):` for a backwards-compatible feature
+- `fix:` / `fix(scope):` for a bug fix
+- `feat!:` or a `BREAKING CHANGE:` footer for a breaking change
+- `perf:`, `refactor:`, `docs:`, `test:`, `ci:`, `build:`, `chore:`
+
+Add a line for user-visible changes under `## Unreleased` in `CHANGELOG.md`.
+
+Releases start from a version tag:
+1. A release PR runs `python3 tool/release.py bump X.Y.Z`, which moves the pending changelog notes under the new version and updates `pubspec.yaml`, `ios/liquid_prism.podspec` and the README install ref.
+2. A maintainer tags the merged commit and pushes the tag (`git tag vX.Y.Z && git push origin vX.Y.Z`).
+3. The Release workflow verifies the versions, runs the checks, and creates the GitHub Release from the changelog section. See [doc/agents/release.md](doc/agents/release.md).

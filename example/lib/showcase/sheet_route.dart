@@ -1,13 +1,13 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 
-/// Cupertino's drag/scroll coordination with plain transforms over live glass.
+/// A sheet route that animates the page covered by another sheet.
 class ShowcaseSheetRoute extends CupertinoSheetRoute<void> {
-  ShowcaseSheetRoute({required super.scrollableBuilder});
+  /// Creates a [ShowcaseSheetRoute].
+  new({required super.scrollableBuilder});
 
   @override
   DelegatedTransitionBuilder get delegatedTransition => _coverPage;
 
-  // Equal delegates let stacked routes own their secondary transition once.
   static Widget _coverPage(
     BuildContext context,
     Animation<double> animation,
@@ -39,7 +39,7 @@ class ShowcaseSheetRoute extends CupertinoSheetRoute<void> {
 }
 
 class _CoveredPage extends StatefulWidget {
-  const _CoveredPage({
+  const new({
     required this.animation,
     required this.sheet,
     required this.child,
@@ -110,7 +110,7 @@ class _CoveredPageState extends State<_CoveredPage> {
         child: Transform.scale(
           scale: 1 - .0835 * progress,
           alignment: Alignment.topCenter,
-          // Filtered transforms rasterize the backdrop before moving it.
+
           child: Stack(
             fit: StackFit.passthrough,
             children: [

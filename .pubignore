@@ -1,6 +1,9 @@
 /_research/
+/research/
 /artifacts/
+/example/artifacts/
 /.github/
+/.editorconfig
 /example/android/
 /example/ios/
 /example/macos/

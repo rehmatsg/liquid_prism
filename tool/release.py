@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Keep the package version in one place and prepare releases.
 
-  release.py check [--tag vX.Y.Z]  pubspec, podspec and changelog agree
+  release.py check [--tag vX.Y.Z]  pubspec, podspec, README and changelog agree
   release.py bump X.Y.Z            move Unreleased notes under X.Y.Z
   release.py notes X.Y.Z           print that version's changelog notes
 
-pubspec.yaml holds the version. The podspec mirrors it, and CHANGELOG.md keeps
-an `## Unreleased` section above one `## X.Y.Z` section per release.
+pubspec.yaml holds the version. The podspec and the README install snippet
+mirror it, and CHANGELOG.md keeps one `## X.Y.Z` section per release, with
+pending notes under `## Unreleased`.
 """
 import argparse
 from pathlib import Path
@@ -17,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SEMVER = r'\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?'
 PUBSPEC_VERSION = re.compile(rf'^version:\s*({SEMVER})\s*$', re.M)
 PODSPEC_VERSION = re.compile(rf"^(\s*s\.version\s*=\s*)'({SEMVER})'", re.M)
+README_REF = re.compile(rf'^(\s*ref:\s*v)({SEMVER})\b', re.M)
 HEADING = re.compile(r'^## (.+?)\s*$', re.M)
 
 
@@ -53,6 +55,10 @@ def check(root, tag=None):
     if not match or match.group(2) != version:
         found = match.group(2) if match else 'none'
         raise ReleaseError(f'podspec version {found} != pubspec {version}')
+    readme = root / 'README.md'
+    ref = README_REF.search(readme.read_text()) if readme.exists() else None
+    if ref and ref.group(2) != version:
+        raise ReleaseError(f'README.md ref v{ref.group(2)} != v{version}')
     headings = [name for name, _ in sections(changelog)]
     if version not in headings:
         raise ReleaseError(f'CHANGELOG.md has no "## {version}" section')
@@ -83,6 +89,10 @@ def bump(root, version):
         f'version: {version}', pubspec.read_text(), count=1))
     podspec.write_text(PODSPEC_VERSION.sub(
         rf"\g<1>'{version}'", podspec.read_text(), count=1))
+    readme = root / 'README.md'
+    if readme.exists():
+        readme.write_text(README_REF.sub(
+            rf'\g<1>{version}', readme.read_text(), count=1))
     return check(root)
 
 

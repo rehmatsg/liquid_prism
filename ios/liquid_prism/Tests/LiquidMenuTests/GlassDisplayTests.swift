@@ -5,8 +5,6 @@ import XCTest
 
 @MainActor
 final class GlassDisplayTests: XCTestCase {
-  // The simulator rejects XR drawable formats. Test layer ownership with a
-  // recording layer; tool/hdr_probe covers the actual Metal path on device.
   private final class RecordingLayer: CAMetalLayer {
     private var format: MTLPixelFormat = .bgra8Unorm
     private var space: CGColorSpace?

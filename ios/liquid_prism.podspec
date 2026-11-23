@@ -1,10 +1,10 @@
 Pod::Spec.new do |s|
   s.name             = 'liquid_prism'
-  s.version          = '0.20.1'
+  s.version          = '1.0.0'
   s.summary          = 'Glass components with native UIKit popup menus.'
   s.description      = 'Liquid Prism includes the Liquid Menu UIKit bridge for real native popup presentation.'
   s.homepage         = 'https://github.com/rehmatsg/liquid_prism'
-  s.license          = { :type => 'BSD-3-Clause AND MIT', :files => ['../LICENSE', '../LICENSE-liquid-menu'] }
+  s.license          = { :type => 'BSD-3-Clause AND MIT', :file => '../LICENSE' }
   s.author           = 'Rehmat Singh Gill'
   s.source           = { :path => '.' }
   s.source_files     = 'liquid_prism/Sources/liquid_prism/**/*.swift'

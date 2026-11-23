@@ -1,8 +1,6 @@
 import XCTest
 @testable import liquid_prism
 
-/// The overlay reports window resizes so a menu anchored in the old geometry
-/// closes, as UIKit's own menus do on fold, rotation and Split View changes.
 @MainActor
 final class MenuHostViewTests: XCTestCase {
   func testReportsSizeChangesAfterFirstLayout() {

@@ -1,14 +1,16 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'component_page.dart';
-import 'model.dart';
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/component_page.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
-/// A page that only searches: the field stays fixed under the bar as the
-/// scaffold's accessory while the results scroll beneath the edge effect.
+/// A search demo with suggestions and recent queries.
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key, required this.model});
+  /// Creates a [SearchPage].
+  const new({super.key, required this.model});
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
 
   @override
@@ -62,36 +64,37 @@ class _SearchPageState extends State<SearchPage> {
       for (final idea in _ideas)
         if (matches(idea.$1, idea.$2)) idea,
     ];
-    return LiquidPrismScaffold(
-      backgroundColor: GlassColors.of(context).groupedBackground,
+    return PrismScaffold(
+      backgroundColor: PrismColors.of(context).groupedBackground,
       title: const Text('Search'),
       accessory: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-          child: LiquidPrismSearchField(
+          child: PrismSearchField(
             key: const ValueKey('search-page-field'),
             controller: _query,
             focusNode: _focus,
             placeholder: 'Components and ideas',
             onChanged: (_) => setState(() {}),
-            // The page only searches: cancel stays visible and closes it.
-            cancelVisibility: GlassSearchCancelVisibility.always,
+
+            style: const PrismSearchStyle(
+              cancelVisibility: PrismSearchCancelVisibility.always,
+            ),
             onCancel: () => Navigator.of(context).maybePop(),
           ),
         ),
       ),
-      // The scaffold builds the scroll view, clears the bar, the field and
-      // the bottom bar, and dismisses the keyboard on drag.
+
       onRefresh: () => Future<void>.delayed(const Duration(seconds: 1)),
       bottomBar: query.isEmpty
           ? null
           : Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: LiquidPrismButton(
+              child: PrismButton(
                 key: const ValueKey('search-page-done'),
                 label: 'Show results',
-                onPressed: () => _focus.unfocus(),
+                onPressed: _focus.unfocus,
                 child: Text('Show ${found.length + ideas.length} results'),
               ),
             ),

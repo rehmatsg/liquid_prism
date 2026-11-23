@@ -1,0 +1,19 @@
+name: Feature request
+description: Propose a new component, customization option, or improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you building that the current public API does not cover?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: Sketch the smallest additive API that would solve it.
+      render: dart
+    validations:
+      required: true

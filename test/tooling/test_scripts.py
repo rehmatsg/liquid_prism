@@ -79,8 +79,11 @@ class DeveloperScriptsTest(unittest.TestCase):
                         [] if device is None else [device],
                         fail_at=1 if failure else 0,
                     )
-                    self.assertEqual(result.returncode, 37 if failure else 0,
-                                     result.stderr)
+                    self.assertEqual(
+                        result.returncode,
+                        37 if failure else 0,
+                        result.stderr,
+                    )
                     arguments = ["run", "--debug", "--target", "lib/main.dart"]
                     if device is not None:
                         arguments += ["-d", device]
@@ -94,47 +97,75 @@ class DeveloperScriptsTest(unittest.TestCase):
         result, success = self.run_script("check.sh")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(success[0], {
-            "tool": "flutter", "args": ["pub", "get"],
+            "tool": "flutter",
+            "args": ["pub", "get"],
             "cwd": str(self.checkout),
         })
-        # Flutter pub get defaults to --example; it resolves both manifests.
         formatting = [call for call in success if call["tool"] == "dart"]
         self.assertEqual(len(formatting), 1)
         self.assertEqual(formatting[0]["cwd"], str(self.checkout))
-        self.assertEqual(formatting[0]["args"][:3],
-                         ["format", "--output=none", "--set-exit-if-changed"])
-        self.assertEqual(set(formatting[0]["args"][3:]),
-                         {"lib", "test", "example/lib", "example/test"})
-        analysis = [call for call in success if call["args"] == ["analyze"]]
-        self.assertEqual(analysis, [{
-            "tool": "flutter", "args": ["analyze"],
-            "cwd": str(self.checkout),
-        }])
-        tests = [call for call in success if call["tool"] == "flutter"
-                 and call["args"][0] == "test"]
-        self.assertEqual([call["cwd"] for call in tests],
-                         [str(self.checkout), str(self.example)])
+        self.assertEqual(
+            formatting[0]["args"][:3],
+            ["format", "--output=none", "--set-exit-if-changed"],
+        )
+        self.assertEqual(
+            set(formatting[0]["args"][3:]),
+            {"lib", "test", "example/lib", "example/test"},
+        )
+        analysis = [
+            call for call in success
+            if call["tool"] == "flutter" and call["args"][0] == "analyze"
+        ]
+        self.assertEqual(analysis, [
+            {
+                "tool": "flutter",
+                "args": ["analyze", "--fatal-infos"],
+                "cwd": str(self.checkout),
+            },
+            {
+                "tool": "flutter",
+                "args": ["analyze", "--fatal-infos"],
+                "cwd": str(self.example),
+            },
+        ])
+        tests = [
+            call for call in success
+            if call["tool"] == "flutter" and call["args"][0] == "test"
+        ]
+        self.assertEqual(
+            [call["cwd"] for call in tests],
+            [str(self.checkout), str(self.example)],
+        )
         for call in tests:
             self.assertIn("--timeout=30s", call["args"])
         tooling = [call for call in success if call["tool"] == "python3"]
-        self.assertEqual(tooling, [{
-            "tool": "python3",
-            "args": ["-m", "unittest", "discover", "-s", "test/tooling", "-p", "test_*.py"],
-            "cwd": str(self.checkout),
-        }, {
-            # Versions in pubspec, podspec and changelog agree.
-            "tool": "python3",
-            "args": ["tool/release.py", "check"],
-            "cwd": str(self.checkout),
-        }])
+        self.assertEqual(tooling, [
+            {
+                "tool": "python3",
+                "args": [
+                    "-m",
+                    "unittest",
+                    "discover",
+                    "-s",
+                    "test/tooling",
+                    "-p",
+                    "test_*.py",
+                ],
+                "cwd": str(self.checkout),
+            },
+            {
+                "tool": "python3",
+                "args": ["tool/release.py", "check"],
+                "cwd": str(self.checkout),
+            },
+        ])
         self.assertLess(success.index(formatting[0]), success.index(analysis[0]))
-        self.assertLess(success.index(analysis[0]), success.index(tests[0]))
+        self.assertLess(success.index(analysis[-1]), success.index(tests[0]))
         for stage in range(1, len(success) + 1):
             with self.subTest(failed_stage=stage):
                 result, calls = self.run_script("check.sh", fail_at=stage)
                 self.assertEqual(result.returncode, 37, result.stderr)
-                self.assertEqual(calls, success[:stage],
-                                 "No later validation may run after a failure")
+                self.assertEqual(calls, success[:stage])
 
 
 if __name__ == "__main__":

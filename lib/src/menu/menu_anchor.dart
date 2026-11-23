@@ -1,25 +1,44 @@
 import 'dart:ui' show Offset, Rect;
 
-/// Where a presented menu is anchored, in global (window) coordinates.
-sealed class LiquidMenuAnchor {
-  const LiquidMenuAnchor();
+import 'package:flutter/foundation.dart' show immutable;
 
-  /// Anchor at a point — typically the tap location. The menu's attachment
-  /// point is the position itself.
-  const factory LiquidMenuAnchor.point(Offset position) = LiquidMenuPointAnchor;
+/// A menu attachment point or rectangle in global coordinates.
+sealed class PrismMenuAnchor {
+  /// Creates a PrismMenuAnchor.
+  const new();
 
-  /// Anchor to a rect — typically the trigger's global bounds. The system
-  /// picks the attachment edge, pulldown style.
-  const factory LiquidMenuAnchor.rect(Rect rect) = LiquidMenuRectAnchor;
+  /// Creates an anchor at a global point.
+  const factory point(Offset position) = PrismMenuPointAnchor;
 
+  /// Creates an anchor at global bounds.
+  const factory rect(Rect rect) = PrismMenuRectAnchor;
+
+  /// Serializes native wire fields.
   Map<String, Object?> toMap();
 }
 
-final class LiquidMenuPointAnchor extends LiquidMenuAnchor {
-  const LiquidMenuPointAnchor(this.position);
+/// Anchors a menu at a global point.
+@immutable
+final class PrismMenuPointAnchor extends PrismMenuAnchor {
+  /// Creates a PrismMenuPointAnchor.
+  const new(this.position);
 
+  /// The attachment point in global coordinates.
   final Offset position;
 
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuPointAnchor &&
+          runtimeType == other.runtimeType &&
+          position == other.position);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(runtimeType, position);
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'type': 'point',
@@ -28,11 +47,28 @@ final class LiquidMenuPointAnchor extends LiquidMenuAnchor {
   };
 }
 
-final class LiquidMenuRectAnchor extends LiquidMenuAnchor {
-  const LiquidMenuRectAnchor(this.rect);
+/// Anchors a menu to global bounds.
+@immutable
+final class PrismMenuRectAnchor extends PrismMenuAnchor {
+  /// Creates a PrismMenuRectAnchor.
+  const new(this.rect);
 
+  /// The attachment bounds in global coordinates.
   final Rect rect;
 
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuRectAnchor &&
+          runtimeType == other.runtimeType &&
+          rect == other.rect);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(runtimeType, rect);
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'type': 'rect',

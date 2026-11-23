@@ -1,21 +1,27 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'app.dart';
-import 'model.dart';
-import 'previews.dart';
-import 'widgets.dart';
+import 'package:liquid_prism_example/showcase/app.dart';
+import 'package:liquid_prism_example/showcase/model.dart';
+import 'package:liquid_prism_example/showcase/previews.dart';
+import 'package:liquid_prism_example/showcase/widgets.dart';
 
+/// A detail page with a live component preview.
 class ComponentPage extends StatelessWidget {
-  const ComponentPage({super.key, required this.info, required this.model});
+  /// Creates a [ComponentPage].
+  const new({super.key, required this.info, required this.model});
+
+  /// The component metadata displayed on this page.
   final ComponentInfo info;
+
+  /// Shared showcase appearance and interaction state.
   final ShowcaseModel model;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: model,
-    builder: (context, _) => LiquidPrismScaffold(
-      backgroundColor: GlassColors.of(context).groupedBackground,
+    builder: (context, _) => PrismScaffold(
+      backgroundColor: PrismColors.of(context).groupedBackground,
       toolbar: appearanceActions(model),
       body: LargeTitlePage(
         key: ValueKey('detail-${info.id}'),
@@ -47,7 +53,7 @@ class ComponentPage extends StatelessWidget {
   Widget? _disabled() => switch (info.kind) {
     ComponentKind.buttons => const Align(
       alignment: AlignmentDirectional.centerStart,
-      child: LiquidPrismButton(
+      child: PrismButton(
         label: 'Unavailable action',
         onPressed: null,
         child: Text('Taking a moment'),
@@ -56,34 +62,30 @@ class ComponentPage extends StatelessWidget {
     ComponentKind.switches => const Row(
       children: [
         Expanded(child: Text('Unavailable switch')),
-        LiquidPrismSwitch(
-          label: 'Unavailable switch',
-          value: true,
-          onChanged: null,
-        ),
+        PrismSwitch(label: 'Unavailable switch', value: true, onChanged: null),
       ],
     ),
-    ComponentKind.sliders => const LiquidPrismSlider(
+    ComponentKind.sliders => const PrismSlider(
       label: 'Unavailable slider',
       value: .62,
       onChanged: null,
     ),
-    ComponentKind.segments => const LiquidPrismSegmentedControl<int>(
+    ComponentKind.segments => const PrismSegmentedControl<int>(
       label: 'Unavailable segments',
       selectedValue: 0,
       onValueChanged: null,
       children: {0: Text('Day'), 1: Text('Dusk'), 2: Text('Night')},
     ),
-    ComponentKind.toolbar => Align(
+    ComponentKind.toolbar => const Align(
       alignment: AlignmentDirectional.centerStart,
-      child: LiquidPrismToolbarGroup(
-        items: const [
-          GlassToolbarItem(
+      child: PrismToolbar.group(
+        items: [
+          PrismToolbarItem(
             icon: Icon(CupertinoIcons.star),
             label: 'Unavailable star',
             onPressed: null,
           ),
-          GlassToolbarItem(
+          PrismToolbarItem(
             icon: Icon(CupertinoIcons.share),
             label: 'Unavailable share',
             onPressed: null,

@@ -1,10 +1,10 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-/// A conversation cycling through an above-avatar, inline-avatar and plain
-/// glass title. Repeated taps retarget the transition without resetting the conversation.
+/// A conversation demonstrating animated title compositions.
 class ConversationPage extends StatefulWidget {
-  const ConversationPage({super.key});
+  /// Creates a [ConversationPage].
+  const new({super.key});
 
   @override
   State<ConversationPage> createState() => _ConversationPageState();
@@ -23,12 +23,12 @@ class _ConversationPageState extends State<ConversationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     final dark = colors.brightness == Brightness.dark;
     const messages = _directMessages;
-    return LiquidPrismScaffold(
+    return PrismScaffold(
       backgroundColor: dark ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
-      title: LiquidPrismTitle(
+      title: PrismTitle(
         key: const ValueKey('conversation-title'),
         avatar: _layout == 0 ? _Avatar(color: colors.teal, initial: 'M') : null,
         leading: _layout == 1
@@ -38,7 +38,7 @@ class _ConversationPageState extends State<ConversationPage> {
         child: const Text('Maya'),
       ),
       toolbar: [
-        GlassToolbarItem(
+        PrismToolbarItem(
           icon: const Icon(CupertinoIcons.phone),
           label: 'Call',
           onPressed: () {},
@@ -95,9 +95,8 @@ class _ConversationPageState extends State<ConversationPage> {
   }
 }
 
-/// A round avatar filling its square.
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.color, required this.initial});
+  const new({required this.color, required this.initial});
   final Color color;
   final String initial;
 

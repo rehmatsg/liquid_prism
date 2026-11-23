@@ -3,6 +3,7 @@ import 'dart:ui' show DisplayFeature, DisplayFeatureState, DisplayFeatureType;
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 import 'package:liquid_prism_example/main.dart';
 import 'package:liquid_prism_example/showcase/app.dart' show ShowcaseHome;
 import 'package:liquid_prism_example/showcase/model.dart';
@@ -13,22 +14,23 @@ void main() {
     'Studio preserves native optics until customized and after reset',
     (tester) async {
       phone(tester);
-      await tester.pumpWidget(const LiquidPrismExample());
+      await tester.pumpWidget(const PrismExample());
       await tab(tester, 'Studio');
       final lens = find.byKey(const ValueKey('studio-lens'));
-      expect(tester.widget<LiquidPrism>(lens).optics, isNull);
+      expect(tester.widget<PrismSurface>(lens).optics, isNull);
       final model = tester
           .widget<ShowcaseHome>(find.byType(ShowcaseHome))
           .model;
       model.change(() {
-        model.previewOptics = true;
-        model.frost = 9;
+        model
+          ..previewOptics = true
+          ..frost = 9;
       });
       await tester.pump();
-      expect(tester.widget<LiquidPrism>(lens).optics?.frost, 9);
+      expect(tester.widget<PrismSurface>(lens).optics?.frost, 9);
       model.reset();
       await tester.pump();
-      expect(tester.widget<LiquidPrism>(lens).optics, isNull);
+      expect(tester.widget<PrismSurface>(lens).optics, isNull);
     },
   );
 
@@ -41,7 +43,7 @@ void main() {
       addTearDown(tester.view.resetViewInsets);
       tester.view.padding = const FakeViewPadding(top: 62, bottom: 34);
       tester.view.viewPadding = const FakeViewPadding(top: 62, bottom: 34);
-      await tester.pumpWidget(const LiquidPrismExample());
+      await tester.pumpWidget(const PrismExample());
       final navigation = find.byKey(const ValueKey('showcase-navigation'));
       expect(tester.getBottomRight(navigation).dy, 874 - 21);
 
@@ -68,13 +70,13 @@ void main() {
     tester.view.viewPadding = const FakeViewPadding(right: 84, bottom: 34);
     addTearDown(tester.view.resetPadding);
     addTearDown(tester.view.resetViewPadding);
-    await tester.pumpWidget(const LiquidPrismExample());
+    await tester.pumpWidget(const PrismExample());
     final navigation = tester.getRect(
       find.byKey(const ValueKey('showcase-navigation')),
     );
     expect(navigation.left, 466 - 84 + 12);
     expect(navigation.width, 48);
-    // Content keeps the full window height and stays clear of the rail.
+
     final title = tester.getRect(
       find.byKey(const ValueKey('page-title:Explore')),
     );
@@ -100,7 +102,7 @@ void main() {
         ),
       ];
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(const LiquidPrismExample());
+    await tester.pumpWidget(const PrismExample());
     final hero = tester.getRect(find.byType(ExploreHero));
     final section = tester.getRect(find.text('Try it'));
     expect(hero.right, lessThanOrEqualTo(455.5));
@@ -112,7 +114,7 @@ void main() {
     'library finds all components, filters, and restores after a route',
     (tester) async {
       phone(tester);
-      await tester.pumpWidget(const LiquidPrismExample());
+      await tester.pumpWidget(const PrismExample());
       expect(find.byKey(const ValueKey('page-title:Explore')), findsOneWidget);
       await tab(tester, 'Library');
       expect(find.text('11 components'), findsOneWidget);
@@ -153,7 +155,7 @@ void main() {
     'studio settings propagate to routes and reset without losing interactions',
     (tester) async {
       phone(tester);
-      await tester.pumpWidget(const LiquidPrismExample());
+      await tester.pumpWidget(const PrismExample());
       await tab(tester, 'Studio');
       await input(tester, 'Dark appearance');
       await input(tester, 'Clear material');
@@ -161,12 +163,12 @@ void main() {
       await tab(tester, 'Library');
       await press(tester, 'Explore Buttons');
       final button = find.byWidgetPredicate(
-        (w) => w is LiquidPrismButton && w.label == 'Add a prominent tap',
+        (w) => w is PrismButton && w.label == 'Add a prominent tap',
       );
       final context = tester.element(button);
-      expect(LiquidPrismTheme.brightnessOf(context), Brightness.dark);
-      expect(LiquidPrismTheme.tintOf(context), GlassColors.dark.purple);
-      expect(LiquidPrismTheme.of(context).glass, Glass.clear);
+      expect(PrismTheme.brightnessOf(context), Brightness.dark);
+      expect(PrismTheme.tintOf(context), PrismColors.dark.purple);
+      expect(PrismTheme.of(context).glass, PrismGlass.clear);
       await press(tester, 'Add a prominent tap');
       await press(tester, 'Favorite');
       expect(find.text('1 tap'), findsOneWidget);
@@ -177,10 +179,7 @@ void main() {
       await press(tester, 'Explore Buttons');
       expect(find.text('1 tap'), findsOneWidget);
       expect(find.byIcon(CupertinoIcons.heart_fill), findsOneWidget);
-      expect(
-        LiquidPrismTheme.tintOf(tester.element(button)),
-        GlassColors.light.blue,
-      );
+      expect(PrismTheme.tintOf(tester.element(button)), PrismColors.light.blue);
       expect(tester.takeException(), isNull);
     },
   );
@@ -192,7 +191,7 @@ void main() {
       phone(tester, size: size);
       tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      await tester.pumpWidget(const LiquidPrismExample());
+      await tester.pumpWidget(const PrismExample());
       expect(tester.takeException(), isNull);
       await tab(tester, 'Studio');
       expect(tester.takeException(), isNull);
@@ -216,9 +215,8 @@ void phone(WidgetTester tester, {Size size = const Size(402, 874)}) {
   addTearDown(tester.view.resetPhysicalSize);
 }
 
-Finder action(String label) => find.byWidgetPredicate(
-  (w) => w is LiquidPrismPressable && w.label == label,
-);
+Finder action(String label) =>
+    find.byWidgetPredicate((w) => w is PrismPressable && w.label == label);
 Future<void> press(WidgetTester tester, String label) async {
   final target = action(label);
   await tester.ensureVisible(target);
@@ -229,7 +227,7 @@ Future<void> press(WidgetTester tester, String label) async {
 
 Future<void> input(WidgetTester tester, String label) async {
   final target = find.byWidgetPredicate(
-    (w) => w is LiquidPrismSwitch && w.label == label,
+    (w) => w is PrismSwitch && w.label == label,
   );
   await tester.ensureVisible(target);
   await tester.pumpAndSettle();

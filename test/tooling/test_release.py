@@ -24,6 +24,7 @@ class ReleaseTest(unittest.TestCase):
                    "Pod::Spec.new do |s|\n  s.version          = '0.1.0'\nend\n")
         self.write('CHANGELOG.md', '# Changelog\n\n## Unreleased\n\n- New thing.\n'
                    '\n## 0.1.0\n\n- First.\n')
+        self.write('README.md', '```yaml\n    git:\n      ref: v0.1.0\n```\n')
 
     def write(self, name, text):
         (self.root / name).write_text(text)
@@ -46,6 +47,14 @@ class ReleaseTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn('podspec version 0.0.9', err)
 
+    def test_check_rejects_a_stale_readme_ref_and_allows_no_readme(self):
+        self.write('README.md', '      ref: v0.0.9\n')
+        code, _, err = self.run_main('check')
+        self.assertEqual(code, 1)
+        self.assertIn('README.md ref v0.0.9 != v0.1.0', err)
+        (self.root / 'README.md').unlink()
+        self.assertEqual(self.run_main('check'), (0, '0.1.0', ''))
+
     def test_check_rejects_missing_changelog_section_and_wrong_tag(self):
         self.write('CHANGELOG.md', '# Changelog\n\n## Unreleased\n')
         self.assertIn('no "## 0.1.0"', self.run_main('check')[2])
@@ -56,6 +65,7 @@ class ReleaseTest(unittest.TestCase):
         self.assertEqual(self.run_main('bump', '0.2.0'), (0, '0.2.0', ''))
         self.assertIn('version: 0.2.0', self.read('pubspec.yaml'))
         self.assertIn("s.version          = '0.2.0'", self.read('ios/liquid_prism.podspec'))
+        self.assertIn('ref: v0.2.0', self.read('README.md'))
         self.assertTrue(self.read('CHANGELOG.md').startswith(
             '# Changelog\n\n## Unreleased\n\n## 0.2.0\n\n- New thing.\n\n## 0.1.0'))
         self.assertEqual(self.run_main('notes', '0.2.0'), (0, '- New thing.', ''))

@@ -1,26 +1,25 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:liquid_prism/liquid_menu.dart';
-import 'package:liquid_prism/liquid_menu_platform_interface.dart';
-import 'package:liquid_prism/liquid_menu_method_channel.dart';
+import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/src/menu/menu_engine.dart';
+import 'package:liquid_prism/src/menu/menu_method_channel.dart';
+import 'package:liquid_prism/src/menu/menu_platform_interface.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'fake_platform.dart';
 
-/// Exercises the Flutter `showMenu` fallback path (non-iOS or rejected native).
 void main() {
-  late FakeLiquidMenuPlatform platform;
+  late FakePrismMenuPlatform platform;
 
   setUp(() {
-    platform = FakeLiquidMenuPlatform()..nativeMenu = false;
-    LiquidMenuPlatform.instance = platform;
-    LiquidMenuEngine.instance.resetForTests();
-    LiquidMenuEngine.debugTargetPlatformOverride = .android;
+    platform = FakePrismMenuPlatform()..nativeMenu = false;
+    PrismMenuPlatform.instance = platform;
+    PrismMenuEngine.instance.resetForTests();
+    PrismMenuEngine.debugTargetPlatformOverride = .android;
   });
 
   tearDown(() {
-    LiquidMenuEngine.debugTargetPlatformOverride = null;
+    PrismMenuEngine.debugTargetPlatformOverride = null;
   });
 
   Widget app(Widget child) => MaterialApp(home: Scaffold(body: child));
@@ -28,34 +27,35 @@ void main() {
   testWidgets('fallback works when no native plugin channels are installed', (
     t,
   ) async {
-    final channels = MethodChannelLiquidMenu();
-    LiquidMenuPlatform.instance = channels;
+    final channels = MethodChannelPrismMenu();
+    PrismMenuPlatform.instance = channels;
     final messenger =
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(channels.methodChannel, (_) async {
-      throw MissingPluginException('No native menu plugin');
-    });
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          ..setMockMethodCallHandler(channels.methodChannel, (_) async {
+            throw MissingPluginException('No native menu plugin');
+          });
     var eventSubscriptions = 0;
     messenger.setMockMessageHandler('liquid_prism/menus/events', (_) async {
       eventSubscriptions++;
       return const StandardMethodCodec().encodeSuccessEnvelope(null);
     });
     addTearDown(() {
-      messenger.setMockMethodCallHandler(channels.methodChannel, null);
-      messenger.setMockMessageHandler('liquid_prism/menus/events', null);
+      messenger
+        ..setMockMethodCallHandler(channels.methodChannel, null)
+        ..setMockMessageHandler('liquid_prism/menus/events', null);
     });
-    LiquidMenuEngine.instance.resetForTests();
+    PrismMenuEngine.instance.resetForTests();
     Object? selected;
     await t.pumpWidget(
       app(
         Builder(
           builder: (context) => TextButton(
             onPressed: () async {
-              selected = await liquidMenus.show(
+              selected = await prismMenus.show<Object?>(
                 context: context,
-                menu: const LiquidMenu(
+                menu: const PrismMenu(
                   children: [
-                    LiquidMenuAction<String>(
+                    PrismMenuAction<String>(
                       title: 'No plugin needed',
                       value: 'works',
                     ),
@@ -85,17 +85,17 @@ void main() {
         Builder(
           builder: (context) => TextButton(
             onPressed: () async {
-              selected = await liquidMenus.show<Object?>(
+              selected = await prismMenus.show<Object?>(
                 context: context,
-                menu: LiquidMenu(
+                menu: PrismMenu(
                   children: [
-                    LiquidMenuAction(
+                    PrismMenuAction<Object?>(
                       title: 'First',
                       value: 'first',
                       onSelected: () => callbackValue = 'cb',
                     ),
-                    const LiquidMenuDivider(),
-                    LiquidMenuAction(
+                    const PrismMenuDivider(),
+                    const PrismMenuAction<Object?>(
                       title: 'Gone',
                       destructive: true,
                       enabled: false,
@@ -128,14 +128,16 @@ void main() {
       app(
         Builder(
           builder: (context) => TextButton(
-            onPressed: () => liquidMenus.show(
+            onPressed: () => prismMenus.show<Object?>(
               context: context,
-              menu: LiquidMenu(
+              menu: const PrismMenu(
                 children: [
-                  LiquidMenuAction(title: 'Top'),
-                  LiquidMenuSection(
+                  PrismMenuAction<Object?>(title: 'Top'),
+                  PrismMenuSection(
                     title: 'Section Title',
-                    children: [LiquidMenuAction(title: 'Inside', state: .on)],
+                    children: [
+                      PrismMenuAction<Object?>(title: 'Inside', state: .on),
+                    ],
                   ),
                 ],
               ),
@@ -151,7 +153,7 @@ void main() {
     expect(find.text('Section Title'), findsOneWidget);
     expect(find.text('Inside'), findsOneWidget);
     expect(find.byType(PopupMenuDivider), findsWidgets);
-    // checkmark rendered for the .on row
+
     expect(find.byIcon(Icons.check), findsOneWidget);
   });
 
@@ -162,14 +164,14 @@ void main() {
         Builder(
           builder: (context) => TextButton(
             onPressed: () async {
-              selected = await liquidMenus.show(
+              selected = await prismMenus.show<Object?>(
                 context: context,
-                menu: LiquidMenu(
+                menu: const PrismMenu(
                   children: [
-                    LiquidSubmenu(
+                    PrismSubmenu(
                       title: 'More',
                       children: [
-                        LiquidMenuAction(title: 'Deep', value: 'deep'),
+                        PrismMenuAction<Object?>(title: 'Deep', value: 'deep'),
                       ],
                     ),
                   ],
@@ -200,12 +202,14 @@ void main() {
       app(
         Builder(
           builder: (context) => TextButton(
-            onPressed: () => liquidMenus.show(
+            onPressed: () => prismMenus.show<Object?>(
               context: context,
-              menu: LiquidMenu(
+              menu: PrismMenu(
                 children: [
-                  LiquidMenuDeferred(
-                    loader: () async => [LiquidMenuAction(title: 'Loaded')],
+                  PrismMenuDeferred(
+                    loader: () async => [
+                      const PrismMenuAction<Object?>(title: 'Loaded'),
+                    ],
                   ),
                 ],
               ),
@@ -228,9 +232,11 @@ void main() {
         Builder(
           builder: (context) => TextButton(
             onPressed: () async {
-              selected = await liquidMenus.show(
+              selected = await prismMenus.show<Object?>(
                 context: context,
-                menu: LiquidMenu(children: [LiquidMenuAction(title: 'A')]),
+                menu: const PrismMenu(
+                  children: [PrismMenuAction<Object?>(title: 'A')],
+                ),
               );
             },
             child: const Text('open'),

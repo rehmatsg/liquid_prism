@@ -1,26 +1,62 @@
 name: Release
+
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
 permissions:
-  contents: write
+  contents: read
+
 concurrency:
   group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  release:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      # The tag must name the version in pubspec.yaml, the podspec and the
-      # changelog before anything is built.
-      - run: python3 tool/release.py check --tag "$GITHUB_REF_NAME"
+      - name: Check the tag against pubspec, podspec, README and changelog
+        run: python3 tool/release.py check --tag "$GITHUB_REF_NAME"
       - uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: '3.50.0'
           channel: stable
           cache: true
       - run: ./tool/check.sh
+      - run: flutter pub publish --dry-run
+
+  publish:
+    needs: verify
+    if: vars.PUBLISH_TO_PUB_DEV == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dart-lang/setup-dart@v1
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: '3.50.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter pub publish --force
+
+  github-release:
+    needs: [verify, publish]
+    if: >-
+      always() && needs.verify.result == 'success' &&
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
       - name: Publish the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -31,3 +67,14 @@ jobs:
           [[ "$version" == *-* ]] && prerelease=(--prerelease)
           gh release create "$GITHUB_REF_NAME" --verify-tag \
             --title "Liquid Prism $version" --notes-file notes.md "${prerelease[@]}"
+
+  docs:
+    needs: github-release
+    if: >-
+      always() && needs.github-release.result == 'success' &&
+      vars.DEPLOY_API_DOCS == 'true' && !contains(github.ref_name, '-')
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml

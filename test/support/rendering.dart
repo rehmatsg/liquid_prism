@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,10 +37,10 @@ Future<List<List<int>>> pixelsAt(
   List<Offset> points,
 ) async {
   final boundary =
-      imageKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      imageKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
   return (await tester.runAsync(() async {
     final image = await boundary.toImage();
-    final data = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+    final data = (await image.toByteData())!;
     final bytes = data.buffer.asUint8List();
     final pixels = [
       for (final point in points)

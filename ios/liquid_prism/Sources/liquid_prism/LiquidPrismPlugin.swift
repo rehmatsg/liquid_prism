@@ -1,21 +1,11 @@
 import Flutter
 import UIKit
 
-/// Thin bridge between Flutter and the native menu presenter. Decodes
-/// method-channel arguments into `MenuSpec`s, drives `MenuPresenter`, and
-/// streams lifecycle events back over the event channel. Flutter invokes
-/// channel handlers on the main thread, so UI is touched directly (no actor
-/// hop).
-///
-/// Everything it presents with comes from the `LiquidMenu` core package; this
-/// target adds only the channel plumbing and the wire format.
+/// Bridges Flutter method and event channels to native menus and system chrome.
 public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private var eventSink: FlutterEventSink?
   private var methods: FlutterMethodChannel?
 
-  /// The presenter lives on the plugin instance — one per engine. Created
-  /// lazily: `MenuPresenter` is main-actor-isolated and the plugin's own
-  /// initializer is not.
   private var _presenter: MenuPresenter?
 
   @MainActor
@@ -26,12 +16,9 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     return created
   }
 
-  /// Streams the system's bar placement for the Flutter view.
   private var systemChrome: SystemChromeStreamHandler?
   private var display: GlassDisplayStreamHandler?
 
-  /// The menuId currently bound to `presenter` callbacks. A stale dismissal
-  /// from a replaced menu must not be reported as the new menu's.
   private var currentMenuId: String?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -56,14 +43,10 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
           chrome.handle(call, result: result)
         }
       }
-    // Menus belong to the window showing this engine's Flutter view, and
-    // close when that window resizes, as UIKit menus do (iPhone Duo folds,
-    // Split View, Stage Manager).
     MainActor.assumeIsolated {
       let host = MenuOverlayHost.shared
       host.preferredWindow = { [weak registrar] in registrar?.viewController?.view.window }
       host.onResize = { [weak instance] in instance?.presenter.dismiss() }
-      // Install the overlay eagerly so the first menu can anchor immediately.
       host.ensureInstalled()
     }
   }
@@ -89,7 +72,6 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     switch call.method {
     case "handshake":
-      // Fresh Dart isolate: drop any menu state left over from a hot restart.
       presenter.dismiss()
       currentMenuId = nil
       MenuOverlayHost.shared.ensureInstalled()
@@ -144,7 +126,6 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       result(["dismissed": wasPresented])
 
     case "debugSelect":
-      // Testing hook — see MenuPresenter.debugSelect.
       let actionId = (call.arguments as? [String: Any])?["actionId"] as? String ?? ""
       presenter.debugSelect(actionId)
       result(nil)
@@ -161,8 +142,6 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     eventSink?(map)
   }
 
-  /// A deferred element's provider round-trips to Dart: the wire element
-  /// carries only an id; Dart resolves its children at display time.
   private func makeDeferred(_ id: String, menuId: String) -> MenuDeferred {
     MenuDeferred(id: id) { [methods] in
       guard let methods else { return [] }
@@ -180,7 +159,6 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     }
   }
 
-  // MARK: - FlutterStreamHandler
 
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     eventSink = events
@@ -193,8 +171,6 @@ public class LiquidPrismPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   }
 }
 
-/// The listener's lifetime owns the EDR request. Cancellation restores the
-/// layer's previous request, including one made by the host app.
 final class GlassDisplayStreamHandler: NSObject, FlutterStreamHandler {
   private weak var registrar: (any FlutterPluginRegistrar)?
   private var sink: FlutterEventSink?
@@ -242,10 +218,6 @@ final class GlassDisplayStreamHandler: NSObject, FlutterStreamHandler {
   }
 }
 
-/// Streams [SystemChrome] for the engine's Flutter view on
-/// `liquid_prism/system_chrome`, and applies preferences sent on
-/// `liquid_prism/system`. The view may not exist when Dart listens, so
-/// attaching retries briefly.
 final class SystemChromeStreamHandler: NSObject, FlutterStreamHandler {
   private weak var registrar: (any FlutterPluginRegistrar)?
   private var sink: FlutterEventSink?
@@ -276,8 +248,6 @@ final class SystemChromeStreamHandler: NSObject, FlutterStreamHandler {
   func handle(_ call: FlutterMethodCall, result: FlutterResult) {
     switch call.method {
     case "setVerticalBarBehavior":
-      // Applies only where UIKit has a vertical bar and the app opted into
-      // the view controller that can report a preference.
       guard #available(iOS 27.1, *),
         let controller = registrar?.viewController as? LiquidPrismViewController
       else {

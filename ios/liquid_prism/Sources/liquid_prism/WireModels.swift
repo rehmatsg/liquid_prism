@@ -1,20 +1,9 @@
 import Flutter
 import UIKit
 
-/// Wire decoding for the menu models: the `[String: Any]` method-channel
-/// payloads Dart sends, turned into the Flutter-free models of the
-/// `LiquidMenu` core package via their public initializers.
-///
-/// This file is **bridge** code (it may import Flutter); the core models
-/// themselves know nothing about the wire format. Keys and defaults must stay
-/// in lockstep with `liquid_prism/lib/src/` — see the wire-protocol invariants
-/// in CLAUDE.md.
 
-// MARK: - Color
 
 extension UIColor {
-  /// Builds a color from a 32-bit ARGB int (`0xAARRGGBB`), matching Flutter's
-  /// `Color.toARGB32()`.
   convenience init(argb: Int) {
     let a = CGFloat((argb >> 24) & 0xFF) / 255.0
     let r = CGFloat((argb >> 16) & 0xFF) / 255.0
@@ -24,7 +13,6 @@ extension UIColor {
   }
 }
 
-// MARK: - Icon
 
 extension MenuIcon {
   init?(wire value: Any?) {
@@ -53,7 +41,6 @@ extension MenuIcon {
   }
 }
 
-// MARK: - Anchor
 
 extension MenuAnchor {
   init?(wire value: Any?) {
@@ -73,7 +60,6 @@ extension MenuAnchor {
   }
 }
 
-// MARK: - Elements
 
 extension MenuOptions {
   init(wire map: [String: Any]) {
@@ -104,8 +90,6 @@ extension MenuAction {
 }
 
 extension MenuElement {
-  /// Decodes one element. `deferred` turns a deferred id into a display-time
-  /// provider — supplied by the plugin, which round-trips to Dart.
   static func wire(
     _ value: Any?,
     deferred makeDeferred: (String) -> MenuDeferred
@@ -134,7 +118,6 @@ extension MenuElement {
 }
 
 extension MenuSpec {
-  /// Decodes a `show` menu payload or a nested submenu/section `menu` object.
   init?(wire value: Any?, deferred makeDeferred: (String) -> MenuDeferred) {
     guard let map = value as? [String: Any] else { return nil }
     self.init(
