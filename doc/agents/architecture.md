@@ -2,63 +2,25 @@
 
 ## Public boundary
 
-Consumers import `package:liquid_prism/liquid_prism.dart`. It exports widgets,
-materials, styles, motion, semantic colors and the merged menu API. The separate
-`liquid_menu.dart` entry point supports menu-only consumers. Implementation files
-under `lib/src/` are not a consumer contract.
+- `package:liquid_prism/liquid_prism.dart` exports consumer widgets, styles, themes, motion, haptics, badges, and native menus.
+- `package:liquid_prism/primitives.dart` exports low-level optical, pressable, edge-blur, and system-chrome building blocks (`PrismOptics`, `PrismLensStyle`, `PrismPressable`, `PrismSelection`, `PrismEdgeBlur`, `PrismEdgeFade`, `PrismPresence`, `PrismSystemChrome`, `PrismTabReselection`).
+- `lib/src/` is private implementation detail organized by domain:
 
-| Files | Responsibility |
+| Directory | Responsibility |
 | --- | --- |
-| `material.dart`, `style.dart` | Declarative glass variants, contours and optical packets |
-| `appearance.dart`, `tab_bar_style.dart`, `theme.dart` | Partial component styles, inheritance and palette |
-| `glass.dart`, `glass_group.dart`, `recipe.dart` | Surface composition, shader/fallback dispatch and explicit role IDs |
-| `edge_blur.dart`, `edge_fade.dart`, `scroll_edge.dart` | Progressive edge blur passes, the smootherstep fade and scroll edge effects |
-| `layer_transform.dart` | Composited (raster) transforms versus laid-out transforms |
-| `pressable.dart`, `motion.dart` | Button interaction and interruptible spring controllers |
-| `control_interaction.dart`, `control_lens_motion.dart` | Controlled small-control input, cancellation and velocity deformation |
-| `control_material.dart`, `control_lens.dart` | Track paint and shared resting/lifted lens with external shadows |
-| `switch.dart`, `slider.dart`, `segmented_control.dart` | Per-component layout, logical value mapping and native defaults |
-| `tab_bar.dart`, `tab_content_lens.dart` | Compact navigation layout, independent tab motion and foreground filter |
-| `toolbar.dart`, `chrome_material.dart`, `search_field.dart` | Grouped action layout with animated item diffing, multi-group toolbars, and owned/borrowed search resources |
-| `chrome_layout.dart`, `sidebar.dart` | Scaffold placement (bottom bar, side rail or sidebar), chrome axis scope and body padding |
-| `refresh.dart`, `shaders/refresh.frag`, `ios/.../SensorHousing.swift` | Scaffold pull to refresh: scroll-driven state, the island, notch or top-edge anchor, and the drop's signed-distance shader with a path fallback |
-| `system_chrome.dart`, `ios/.../SystemChromeObserver.swift` | iOS 27.1 vertical bar edge and reserved regions, streamed on `liquid_prism/system_chrome` |
-| `glass_display.dart`, `ios/.../GlassDisplayObserver.swift` | iOS EDR surface request and available rim headroom, streamed on `liquid_prism/display` |
-| `menu/`, `ios/Classes/` | Menu models, platform interface, fallback and UIKit presentation |
-| `shaders/` | Impeller glass, batched surfaces, tab glyph refraction, the progressive edge blur and its haze mask |
+| `lib/src/core/` | `PrismGlass`, `PrismShape`, `PrismOptics`, `PrismColors`, `PrismMotion`, `PrismSpring`, `PrismHaptics`, `PrismBadge`, `PrismLensStyle` |
+| `lib/src/theme/` | `PrismTheme`, `PrismThemeData`, native tint matrices, accent vibrancy |
+| `lib/src/rendering/` | `Prism.initialize()`, `PrismSurface`, internal `RawPrismSurface`, render objects/layers, `PrismGroup`, `PrismEdgeBlur`, `PrismEdgeFade`, `PrismVisibility`, `PrismRecipe` (`PrismRole` ABI), `ContentLensWindow`, `PrismDisplay`, superellipse uniforms |
+| `lib/src/controls/` | `ControlGestureRecognizer`, `ControlInteraction`, `ControlLens`, `PrismPressable`, `PrismSelection`, `PrismButton`, `PrismSwitch`, `PrismSlider`, `PrismSegmentedControl`, `PrismSearchField`, and their `Prism*Style` classes |
+| `lib/src/navigation/` | `PrismScaffold` (split under `scaffold/`), `PrismSliverAppBar`, `PrismNavigationBarStyle`, `PrismTitle`, `PrismTabBar`, `PrismToolbar`, `PrismBackButton`, `PrismScrollEdge`, `PrismRefreshController`, `PrismSystemChrome`, `PrismSidebar`, `PrismTabReselection` |
+| `lib/src/menu/` | `PrismMenu` models, platform interface, method channel, engine, `PrismMenuRegion`, `prismMenus` facade, and Material fallback |
+| `ios/liquid_prism/Sources/liquid_prism/` | Swift UIKit plugin, `UIMenu` presenter, system chrome, sensor housing, and EDR headroom observers |
+| `shaders/` | Impeller GLSL fragment shaders (`glass.frag`, `glass_batch.frag`, `frost_fill.frag`, `edge_blur.frag`, `refresh.frag`, `tab_content.frag`) |
 
-## Ownership
+## Ownership & invariants
 
-Widgets own geometry; interaction wrappers own pointer/key/semantics input and
-animation. Values remain parent-owned. A native menu trigger owns a single
-activation path and delegates popup presentation to the platform bridge.
-
-The search field disposes only controllers/focus nodes it created. Caller-owned
-objects may be replaced during rebuild; listeners must move to the new objects.
-Keep borrowed objects alive and preserve editor value when switching to an owned
-controller. Controller mutation does not imply `onChanged`, as with Flutter editors.
-
-Themes merge nullable fields. Component styles resolve before building internal
-materials. Native geometry and palette are fallbacks, not eagerly filled style
-fields: filling them early would defeat inheritance.
-
-## Rendering order
-
-A surface samples already-painted background. A lifted lens samples the track or
-housing beneath it. External shadows paint after lens capture so their clipped
-masks cannot appear as an extra shape inside the glass. Slider track minification
-is off by default even though its knob enlarges.
-
-Tab foreground is special: draw ordinary content outside the selection and filter
-a separately tinted pass inside its contour. It has independent sampling bounds,
-DPR and SDF depth. Housing minification cannot substitute for glyph refraction.
-See [rendering](rendering.md) before altering this path.
-
-## Reference and consumer apps
-
-`example/lib/main.dart` runs the showcase. `example/lib/api_main.dart` is a small
-customization example. Controls/chrome entry points isolate measurements.
-`example/test_driver/` contains simulator interaction/recording fixtures.
-`tool/native_showcase/` is the SwiftUI reference; other `tool/native_*` projects
-measure native properties. Inspection hooks stay in probes, never in the plugin.
-The package does not depend on local captures under `_research/` or `artifacts/`.
+- Values are parent-owned; controls propose updates and settle to the authoritative parent value if rejected.
+- Every immutable style, theme, optics, motion, badge, tab, toolbar, and menu data class implements `==` and `hashCode` so `PrismTheme` (`InheritedWidget`) never triggers spurious rebuilds.
+- Internal shader plumbing (`role`, `lensRim`, `chromaticSplit`, `chromaticBand`, `underlay`, `resting`, `materialOptics`, `disabledProminent`) stays on `@internal RawPrismSurface`, never on public `PrismSurface`.
+- External shadows paint after lifted lens capture so clipped shadow masks never refract inside the glass.
+- Research probes, measurement specs, and benchmarks live under `research/` and are excluded from published archives via `.pubignore`.

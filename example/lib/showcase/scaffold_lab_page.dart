@@ -1,9 +1,9 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
 
-import 'widgets.dart';
-import 'sheet_route.dart';
 import 'scaffold_lab_options.dart';
+import 'sheet_route.dart';
+import 'widgets.dart';
 
 enum _Heading { automatic, large, inlineLarge, inline, header }
 
@@ -11,8 +11,6 @@ enum _Edge { soft, hard, off }
 
 enum _Scrolling { automatic, sticky, away, reveal }
 
-/// Live scaffold and sliver-app-bar previews with native defaults and
-/// independently resettable style overrides.
 class ScaffoldLabPage extends StatefulWidget {
   const ScaffoldLabPage({
     super.key,
@@ -47,7 +45,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
   Widget _toggle(String title, bool value, ValueChanged<bool> onChanged) =>
       ListRow(
         title: title,
-        trailing: LiquidPrismSwitch(
+        trailing: PrismSwitch(
           key: ValueKey('lab-$title'),
           label: title,
           value: value,
@@ -67,11 +65,11 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       children: [
         Text(title, style: const TextStyle(fontSize: 17)),
         const SizedBox(height: 10),
-        LiquidPrismSegmentedControl<T>(
+        PrismSegmentedControl<T>(
           label: title,
           selectedValue: value,
-          style: const GlassSegmentedStyle(
-            sizing: GlassSegmentedSizing.fitLabels,
+          style: const PrismSegmentedStyle(
+            sizing: PrismSegmentedSizing.fitLabels,
           ),
           onValueChanged: (v) => setState(() => onChanged(v)),
           children: {for (final e in options.entries) e.key: Text(e.value)},
@@ -94,24 +92,24 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
-    final share = GlassToolbarItem(
+    final colors = PrismColors.of(context);
+    final share = PrismToolbarItem(
       icon: const Icon(CupertinoIcons.square_arrow_up),
       label: 'Share',
       placement: _options.actionPlacement,
       onPressed: () {},
     );
-    final more = GlassToolbarItem(
+    final more = PrismToolbarItem(
       icon: const Icon(CupertinoIcons.ellipsis),
       label: 'More',
       placement: _options.actionPlacement,
       onPressed: () {},
     );
-    final inbox = GlassToolbarItem(
+    final inbox = PrismToolbarItem(
       icon: const Icon(CupertinoIcons.tray),
       label: 'Inbox',
       placement: _options.actionPlacement,
-      badge: _badges ? const GlassBadge.count(3) : null,
+      badge: _badges ? const PrismBadge.count(3) : null,
       onPressed: () {},
     );
     final content = [
@@ -203,18 +201,18 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
-              child: LiquidPrismButton(
+              child: PrismButton(
                 key: const ValueKey('lab-open-sheet'),
                 label: 'Open the same page in a sheet',
-                onPressed: () => Navigator.of(context, rootNavigator: true).push(
-                  ShowcaseSheetRoute(
-                    // The sheet's controller lets a pull at the top dismiss it.
-                    scrollableBuilder: (_, controller) => ScaffoldLabPage(
-                      sheet: true,
-                      scrollController: controller,
+                onPressed: () =>
+                    Navigator.of(context, rootNavigator: true).push(
+                      ShowcaseSheetRoute(
+                        scrollableBuilder: (_, controller) => ScaffoldLabPage(
+                          sheet: true,
+                          scrollController: controller,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
                 child: const Text('Open in a Sheet'),
               ),
             ),
@@ -251,7 +249,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
         ),
       ),
     ];
-    final scaffold = LiquidPrismScaffold(
+    final scaffold = PrismScaffold(
       sheet: widget.sheet,
       scrollController: widget.scrollController,
       style: _options.scaffold,
@@ -265,17 +263,11 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
           ? CupertinoButton(onPressed: () {}, child: const Text('Edit'))
           : null,
       tabBar: _options.tabs
-          ? LiquidPrismTabBar(
+          ? PrismTabBar(
               tabs: const [
-                LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
-                LiquidPrismTab(
-                  label: 'Saved',
-                  icon: Icon(CupertinoIcons.bookmark),
-                ),
-                LiquidPrismTab(
-                  label: 'Profile',
-                  icon: Icon(CupertinoIcons.person),
-                ),
+                PrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+                PrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+                PrismTab(label: 'Profile', icon: Icon(CupertinoIcons.person)),
               ],
               selectedIndex: _tab,
               onSelected: (value) => setState(() => _tab = value),
@@ -284,33 +276,32 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       leading: _options.leadingKind == 2
           ? null
           : _options.leadingKind == 1
-          ? LiquidPrismButton(
+          ? PrismButton(
               onPressed: () {},
               label: 'Custom leading',
               child: const Icon(CupertinoIcons.star),
             )
           : widget.sheet
-          ? LiquidPrismBackButton(
+          ? PrismBackButton(
               close: true,
               onPressed: () => Navigator.of(context).pop(),
             )
           : null,
       navigationBarStyle: _options.navigation(
         switch (_scrolling) {
-          _Scrolling.automatic => GlassToolbarMinimizationBehavior.automatic,
-          _Scrolling.sticky => GlassToolbarMinimizationBehavior.never,
+          _Scrolling.automatic => PrismMinimizationBehavior.automatic,
+          _Scrolling.sticky => PrismMinimizationBehavior.never,
           _Scrolling.away ||
-          _Scrolling.reveal => GlassToolbarMinimizationBehavior.onScrollDown,
+          _Scrolling.reveal => PrismMinimizationBehavior.onScrollDown,
         },
         _scrolling == _Scrolling.away
-            ? GlassToolbarMinimizationRestoration.atScrollEdge
-            : GlassToolbarMinimizationRestoration.automatic,
+            ? PrismMinimizationRestoration.atScrollEdge
+            : PrismMinimizationRestoration.automatic,
         titleDisplayMode: switch (_heading) {
-          _Heading.automatic => GlassToolbarTitleDisplayMode.automatic,
-          _Heading.large => GlassToolbarTitleDisplayMode.large,
-          _Heading.inlineLarge => GlassToolbarTitleDisplayMode.inlineLarge,
-          _Heading.inline ||
-          _Heading.header => GlassToolbarTitleDisplayMode.inline,
+          _Heading.automatic => PrismTitleDisplayMode.automatic,
+          _Heading.large => PrismTitleDisplayMode.large,
+          _Heading.inlineLarge => PrismTitleDisplayMode.inlineLarge,
+          _Heading.inline || _Heading.header => PrismTitleDisplayMode.inline,
         },
       ),
       backgroundColor: switch (_options.background) {
@@ -324,7 +315,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       title: switch (_options.titleKind) {
         0 => const Text('Scaffold Lab'),
         4 => null,
-        _ => LiquidPrismTitle(
+        _ => PrismTitle(
           avatar: _options.titleKind == 2 ? const _LabAvatar() : null,
           leading: _options.titleKind == 3 ? const _LabAvatar() : null,
           onPressed: () => setState(
@@ -363,11 +354,11 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
           : null,
       toolbar: _twoCapsules
           ? [
-              GlassToolbarGroup(
+              PrismToolbarGroup(
                 placement: _options.actionPlacement,
                 items: [inbox],
               ),
-              GlassToolbarGroup(
+              PrismToolbarGroup(
                 placement: _options.actionPlacement,
                 items: [share, more],
               ),
@@ -376,8 +367,8 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       scrollEdge: _edge != _Edge.off,
       scrollEdgeStyle: _options.edge(
         _edge == _Edge.hard
-            ? GlassScrollEdgeVariant.hard
-            : GlassScrollEdgeVariant.soft,
+            ? PrismScrollEdgeVariant.hard
+            : PrismScrollEdgeVariant.soft,
         colors,
       ),
       accessory: _accessory
@@ -387,10 +378,10 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
                 _options.n('accessoryHeight') ?? 48,
               ),
               child: Center(
-                child: LiquidPrismSegmentedControl<int>(
+                child: PrismSegmentedControl<int>(
                   selectedValue: _segment,
-                  style: const GlassSegmentedStyle(
-                    sizing: GlassSegmentedSizing.fitLabels,
+                  style: const PrismSegmentedStyle(
+                    sizing: PrismSegmentedSizing.fitLabels,
                   ),
                   onValueChanged: (v) => setState(() => _segment = v),
                   children: const {
@@ -411,7 +402,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       bottomBar: _bottomBar
           ? Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: LiquidPrismButton(
+              child: PrismButton(
                 key: const ValueKey('lab-bottom-action'),
                 label: 'Primary action',
                 onPressed: () {},
@@ -427,7 +418,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
       slivers: _options.bodyMode || _options.scrollDepth > 0 ? null : content,
     );
     final preview = _options.sliverAppBar
-        ? LiquidPrismScaffold(
+        ? PrismScaffold(
             sheet: widget.sheet,
             backgroundColor: scaffold.backgroundColor,
             placement: scaffold.placement,
@@ -441,7 +432,7 @@ class _ScaffoldLabPageState extends State<ScaffoldLabPage> {
               builder: (context) => CustomScrollView(
                 controller: widget.scrollController,
                 slivers: [
-                  LiquidPrismSliverAppBar(
+                  PrismSliverAppBar(
                     title: scaffold.title,
                     largeTitle: scaffold.largeTitle,
                     subtitle: scaffold.subtitle,
@@ -488,7 +479,7 @@ class _LabAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
-      color: GlassColors.of(context).teal,
+      color: PrismColors.of(context).teal,
       shape: BoxShape.circle,
     ),
     child: const Center(

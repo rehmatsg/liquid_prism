@@ -1,18 +1,10 @@
 import Flutter
 import UIKit
 
-/// A `FlutterViewController` whose vertical bar preference Dart can set with
-/// `LiquidPrismSystemChrome.setVerticalBarBehavior`.
-///
-/// UIKit reads `preferredVerticalBarBehavior` from the root view controller,
-/// which a plugin cannot override on `FlutterViewController` itself. Use this
-/// class for your Flutter view controller (in `Main.storyboard`, set the
-/// custom class to `LiquidPrismViewController`) only if your app needs to opt
-/// out of the iPhone Duo vertical bar, such as for a full-screen video player.
+/// A Flutter view controller with a vertical bar preference configurable from Dart.
 @objc(LiquidPrismViewController)
 open class LiquidPrismViewController: FlutterViewController {
-  /// Hide the vertical bar: bars fall back to the horizontal top and bottom
-  /// positions and the status bar returns to the horizontal axis.
+  /// Hides the vertical bar and restores horizontal bars and status bar placement.
   @objc public var verticalBarDisabled = false {
     didSet {
       guard verticalBarDisabled != oldValue else { return }
@@ -22,7 +14,6 @@ open class LiquidPrismViewController: FlutterViewController {
     }
   }
 
-  // Built with an SDK before iOS 27.1 there is no vertical bar to opt out of.
   #if canImport(UIKit, _version: 9127.0.85)
   @available(iOS 27.1, *)
   open override var preferredVerticalBarBehavior: UIVerticalBarBehavior {

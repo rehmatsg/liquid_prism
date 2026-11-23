@@ -1,27 +1,29 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:liquid_prism/liquid_menu.dart';
-import 'package:liquid_prism/liquid_menu_platform_interface.dart';
+import 'package:liquid_prism/liquid_prism.dart';
 import 'package:liquid_prism/src/menu/menu_engine.dart';
+import 'package:liquid_prism/src/menu/menu_platform_interface.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'fake_platform.dart';
 
 void main() {
-  late FakeLiquidMenuPlatform platform;
+  late FakePrismMenuPlatform platform;
 
   setUp(() {
-    platform = FakeLiquidMenuPlatform();
-    LiquidMenuPlatform.instance = platform;
-    LiquidMenuEngine.instance.resetForTests();
-    LiquidMenuEngine.debugTargetPlatformOverride = .iOS;
+    platform = FakePrismMenuPlatform();
+    PrismMenuPlatform.instance = platform;
+    PrismMenuEngine.instance.resetForTests();
+    PrismMenuEngine.debugTargetPlatformOverride = .iOS;
   });
 
   tearDown(() {
-    LiquidMenuEngine.debugTargetPlatformOverride = null;
+    PrismMenuEngine.debugTargetPlatformOverride = null;
   });
 
   testWidgets('tapPoint anchor mode presents at the tap point', (t) async {
-    final menu = LiquidMenu(children: [LiquidMenuAction(title: 'A')]);
+    final menu = const PrismMenu(
+      children: [PrismMenuAction<Object?>(title: 'A')],
+    );
     await t.pumpWidget(
       Directionality(
         textDirection: .ltr,
@@ -29,7 +31,7 @@ void main() {
           child: SizedBox(
             width: 200,
             height: 60,
-            child: LiquidMenuRegion(
+            child: PrismMenuRegion(
               menu: menu,
               anchor: .tapPoint,
               child: const Text('trigger'),
@@ -39,7 +41,6 @@ void main() {
       ),
     );
 
-    // Tap at a known point inside the region.
     await t.tapAt(t.getCenter(find.text('trigger')) + const Offset(20, 5));
     await t.pump();
 
@@ -54,13 +55,15 @@ void main() {
   testWidgets('default (triggerRect) anchor sends the region bounds', (
     t,
   ) async {
-    final menu = LiquidMenu(children: [LiquidMenuAction(title: 'A')]);
+    final menu = const PrismMenu(
+      children: [PrismMenuAction<Object?>(title: 'A')],
+    );
     await t.pumpWidget(
       Directionality(
         textDirection: .ltr,
         child: Align(
           alignment: .topLeft,
-          child: LiquidMenuRegion(
+          child: PrismMenuRegion(
             menu: menu,
             child: const SizedBox(
               width: 100,
@@ -84,12 +87,14 @@ void main() {
   testWidgets('builder mode: the child drives show; pointer still anchors', (
     t,
   ) async {
-    final menu = LiquidMenu(children: [LiquidMenuAction(title: 'A')]);
+    final menu = const PrismMenu(
+      children: [PrismMenuAction<Object?>(title: 'A')],
+    );
     await t.pumpWidget(
       Directionality(
         textDirection: .ltr,
         child: Center(
-          child: LiquidMenuRegion.builder(
+          child: PrismMenuRegion.builder(
             menu: menu,
             builder: (context, show) => GestureDetector(
               onTap: show,
@@ -108,13 +113,13 @@ void main() {
 
   testWidgets('onSelected is called after dismissal with the value', (t) async {
     Object? reported;
-    final menu = LiquidMenu(
-      children: [LiquidMenuAction(title: 'A', value: 'alpha')],
+    final menu = const PrismMenu(
+      children: [PrismMenuAction<Object?>(title: 'A', value: 'alpha')],
     );
     await t.pumpWidget(
       Directionality(
         textDirection: .ltr,
-        child: LiquidMenuRegion(
+        child: PrismMenuRegion(
           menu: menu,
           onSelected: (v) => reported = v,
           child: const SizedBox(width: 100, height: 40, child: Text('trigger')),
@@ -128,18 +133,20 @@ void main() {
     final actionId =
         ((platform.shows.single.menu['items'] as List).single as Map)['id']
             as String;
-    platform.emit(LiquidMenuActionEvent(menuId: menuId, actionId: actionId));
-    platform.emit(LiquidMenuDismissed(menuId: menuId));
+    platform.emit(PrismMenuActionEvent(menuId: menuId, actionId: actionId));
+    platform.emit(PrismMenuDismissed(menuId: menuId));
     await t.pump();
     expect(reported, 'alpha');
   });
 
   testWidgets('long-press trigger opens on long press, not tap', (t) async {
-    final menu = LiquidMenu(children: [LiquidMenuAction(title: 'A')]);
+    final menu = const PrismMenu(
+      children: [PrismMenuAction<Object?>(title: 'A')],
+    );
     await t.pumpWidget(
       Directionality(
         textDirection: .ltr,
-        child: LiquidMenuRegion(
+        child: PrismMenuRegion(
           menu: menu,
           trigger: .longPress,
           child: const SizedBox(width: 100, height: 40, child: Text('trigger')),

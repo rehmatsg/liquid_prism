@@ -1,7 +1,6 @@
 import XCTest
 @testable import liquid_prism
 
-/// The channel payload Dart parses in `lib/src/system_chrome.dart`.
 final class SystemChromeTests: XCTestCase {
   func testEncodesEdgeRegionsAndMargins() {
     let chrome = SystemChrome(

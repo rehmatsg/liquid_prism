@@ -3,9 +3,9 @@ import 'dart:ui' show DisplayFeatureState;
 
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 
-/// System grouped-list colors the package palette doesn't carry.
-extension ShowcaseColors on GlassColors {
+extension ShowcaseColors on PrismColors {
   bool get _dark => brightness == Brightness.dark;
   Color get groupedBackground =>
       _dark ? const Color(0xFF000000) : const Color(0xFFF2F2F7);
@@ -25,14 +25,11 @@ extension ShowcaseColors on GlassColors {
         );
 }
 
-Color ink(BuildContext context) => GlassColors.of(context).label;
-Color muted(BuildContext context) => GlassColors.of(context).secondaryLabel;
+Color ink(BuildContext context) => PrismColors.of(context).label;
+Color muted(BuildContext context) => PrismColors.of(context).secondaryLabel;
 
-/// Widest readable column on iPad and the unfolded iPhone Duo.
 const double readableWidth = 720;
 
-/// A scrolling page with an iOS large title. Chrome from the enclosing
-/// [LiquidPrismScaffold] floats over it; its padding keeps content clear.
 class LargeTitlePage extends StatelessWidget {
   const LargeTitlePage({
     super.key,
@@ -49,7 +46,7 @@ class LargeTitlePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     final titleStyle = CupertinoTheme.of(context)
         .textTheme
         .navLargeTitleTextStyle
@@ -69,8 +66,7 @@ class LargeTitlePage extends StatelessWidget {
       ],
       const SizedBox(height: 20),
     ];
-    // A bent iPhone Duo reports its fold as a display feature. Interactive
-    // content moves off the crease: the sections reflow into two columns.
+
     final fold = MediaQuery.displayFeaturesOf(context)
         .where(
           (feature) =>
@@ -148,13 +144,11 @@ class LargeTitlePage extends StatelessWidget {
         );
       }(),
     };
-    // The scaffold's scroll edge effect softens content under the bar; the
-    // page paints no fade of its own.
+
     return content;
   }
 }
 
-/// A titled inset-grouped list section.
 class InsetSection extends StatelessWidget {
   const InsetSection({
     super.key,
@@ -167,7 +161,7 @@ class InsetSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 28),
       child: Column(
@@ -218,7 +212,6 @@ class InsetSection extends StatelessWidget {
   }
 }
 
-/// A grouped-list cell background with continuous corners.
 class GroupedCard extends StatelessWidget {
   const GroupedCard({
     super.key,
@@ -231,14 +224,13 @@ class GroupedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: ShapeDecoration(
-      color: GlassColors.of(context).cell,
+      color: PrismColors.of(context).cell,
       shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(26)),
     ),
     child: Padding(padding: padding, child: child),
   );
 }
 
-/// One list row: optional icon, title and subtitle, and a trailing control.
 class ListRow extends StatelessWidget {
   const ListRow({
     super.key,
@@ -259,7 +251,7 @@ class ListRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     final row = ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 52),
       child: Padding(
@@ -304,7 +296,7 @@ class ListRow extends StatelessWidget {
       ),
     );
     if (onPressed == null) return row;
-    return LiquidPrismPressable(
+    return PrismPressable(
       label: label ?? title,
       onPressed: onPressed,
       child: row,
@@ -312,7 +304,6 @@ class ListRow extends StatelessWidget {
   }
 }
 
-/// A Settings-style rounded square with a white symbol.
 class SymbolTile extends StatelessWidget {
   const SymbolTile({
     super.key,
@@ -338,7 +329,6 @@ class SymbolTile extends StatelessWidget {
   );
 }
 
-/// A section heading above free-form content.
 class SectionTitle extends StatelessWidget {
   const SectionTitle(this.title, {super.key, this.subtitle});
   final String title;
@@ -367,8 +357,6 @@ class SectionTitle extends StatelessWidget {
   );
 }
 
-/// A circular glass back button, 44 pt like the native one.
-/// Columns of at least [minimumWidth], filling the available width.
 class FlowGrid extends StatelessWidget {
   const FlowGrid({
     super.key,
@@ -398,7 +386,6 @@ class FlowGrid extends StatelessWidget {
   );
 }
 
-/// Original abstract artwork for glass to refract.
 class Art extends StatelessWidget {
   const Art({super.key, this.variant = 0, this.child});
   final int variant;
@@ -406,10 +393,8 @@ class Art extends StatelessWidget {
 
   static const names = ['Meadow', 'Dusk', 'Apricot'];
 
-  /// Legible ink on each artwork.
   static const inks = [Color(0xFF233B36), Color(0xFF1F1D3D), Color(0xFF4A3029)];
 
-  /// Each artwork's base color, for fades toward it.
   static const backgrounds = [
     Color(0xFF8EBEB5),
     Color(0xFF495D96),
@@ -501,7 +486,6 @@ class _ArtPainter extends CustomPainter {
   bool shouldRepaint(_ArtPainter old) => old.variant != variant;
 }
 
-/// Artwork clipped to a continuous rounded rectangle.
 class ArtCanvas extends StatelessWidget {
   const ArtCanvas({
     super.key,
@@ -532,7 +516,7 @@ class ArtCanvas extends StatelessWidget {
 class CanvasClip extends CustomClipper<Path> {
   const CanvasClip();
   @override
-  Path getClip(Size size) => const GlassShape.rect(cornerRadius: 26).path(size);
+  Path getClip(Size size) => const PrismShape.rect(cornerRadius: 26).path(size);
   @override
   bool shouldReclip(CanvasClip old) => false;
 }

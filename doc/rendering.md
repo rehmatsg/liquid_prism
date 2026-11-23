@@ -1,7 +1,7 @@
 # Rendering and performance
 
 Liquid Prism draws glass entirely in Flutter. Impeller's shader filters provide
-live backdrop refraction; `LiquidPrism.isShaderSupported` reports that capability.
+live backdrop refraction; `Prism.isShaderSupported` reports that capability.
 Unsupported renderers use a frosted fallback retaining content and interaction.
 Glass does not use platform views or an OS-native glass renderer. The separate
 iOS plugin presents popup menus using UIKit. Web and desktop support is outside this package's contract.
@@ -12,7 +12,8 @@ Put glass over content already painted in the same scene. A flat background cann
 show much refraction. Ordinary surface content stays sharp. The lifted tab pill separately refracts
 its selected icon/label near the rim. Avoid wrapping glass
 in an ancestor `Opacity` or `ImageFiltered` save layer: that can isolate its backdrop.
-Fade glass with `LiquidPrismPresence` instead. Presence travels in the recipe:
+Fade glass with `PrismVisibility` or `PrismVisibility.driven` instead.
+Both are exported by `package:liquid_prism/liquid_prism.dart`. Presence travels in the recipe:
 shader slot `u_state.z` carries absence (1 − presence, so the zero default stays
 fully present) and premultiplies the output, shadows scale with it, and frost
 (a separate backdrop pass) grows with presence. Materializing also grows the
@@ -30,10 +31,10 @@ glyphs pop between pixels against the unfiltered ones.
 
 Default regular glass also draws an inner ring shadow and a negative edge
 highlight. Shadow inputs were extracted from the iOS Simulator; the compositor
-mapping and its measured limits are described in [native shadows](native_shadows.md).
+mapping and its measured limits are described in [native shadows](../research/specs/native_shadows.md).
 
 Regular frost follows the device Liquid Glass setting as native does (see
-[native defaults](native_defaults.md)): the backdrop stays sharp under a wide
+[native defaults](../research/specs/native_defaults.md)): the backdrop stays sharp under a wide
 blur fill that is blended twice, lighten (darken in dark appearance) and then
 normally, the normal share growing with the setting until the fill covers the
 face. Surfaces taller than 64 points add a size-scaled base blur, and in dark
@@ -73,15 +74,11 @@ and primary transition, and uses plain transforms for covered pages and sheets.
 Consumer sheet routes need the same composition constraint.
 
 ```dart
-// Keeps glass aligned: a plain transform layer.
 Transform.scale(scale: scale, alignment: Alignment.topCenter, child: page)
-
-// Misplaces glass inside `page` while the scale is not 1.
-Transform.scale(scale: scale, filterQuality: FilterQuality.medium, child: page)
 ```
 
 The plain transform rasterizes the scaled page directly, which is also how
-Impeller samples text and images under it. `example/lib/transform_main.dart`
+Impeller samples text and images under it. `research/benchmarks/transform_main.dart`
 shows both compositions; run it with `--dart-define=PRISM_TRANSFORM_MODE=filter`
 or `transform`, and `PRISM_TRANSFORM_T=-1` to animate.
 
@@ -159,11 +156,11 @@ The backdrop itself remains live: movement, scrolling, material changes and
 presses update the filter inputs during scene composition. Reusing a description
 does not eliminate the GPU work needed to filter a changing background.
 
-`LiquidPrismGroup` can share a shader pass among compatible regular circular-corner shapes and
+`PrismGroup` can share a shader pass among compatible regular circular-corner shapes and
 circles:
 
 ```dart
-LiquidPrismGroup(child: myControls)
+PrismGroup(child: myControls)
 ```
 
 Grouping preserves semantics but is an optimization, not a merging/morphing effect.
@@ -181,17 +178,17 @@ member. Each capture ends the render pass and copies the whole screen on a
 tile-based GPU, so this removes most of the pass breaks without resampling any
 output.
 
-`LiquidPrismScaffold` hosts a group around its floating chrome (leading control,
+`PrismScaffold` hosts a group around its floating chrome (leading control,
 actions and tab bar) automatically; the body paints first and is not a member.
 Wrap your own app-bar chrome, such as toolbar groups painted over a page, in a
-`LiquidPrismGroup` to get the same sharing. Plain clips between a member and
+`PrismGroup` to get the same sharing. Plain clips between a member and
 its group (a scroll view's viewport, an app bar's toolbar clip) do not keep it
 out: the hoisted shadow and frost are clipped the same way. A saveLayer clip,
 an `Opacity` below 1 or a filter does.
 
 ### Shared captures and edge effects
 
-A `LiquidPrismScrollEdge`, `LiquidPrismScrollFade` or `LiquidPrismEdgeBlur`
+A `PrismScrollEdge`, `PrismScrollEdge.fade` or `PrismEdgeBlur`
 inside a group paints its own passes in place, and glass painted after it sits
 on top: the members' captures include the blurred, faded content, which their
 optical passes refract, as SwiftUI glass does over a scroll edge effect. The
@@ -218,9 +215,9 @@ Light regular glass can draw a rim brighter than page white on supported iOS
 HDR displays. The package enables EDR on Flutter's existing extended-range
 surface and adapts to available headroom. SDR displays retain the SDR path.
 To disable HDR rim lighting for the engine, call
-`await LiquidPrism.preload(enableHDR: false)` after initializing Flutter bindings.
+`await Prism.initialize(enableHDR: false)` after initializing Flutter bindings.
 Later calls without the option preserve that choice. See
-[HDR measurements and limits](native_hdr_rim.md).
+[HDR measurements and limits](../research/specs/native_hdr_rim.md).
 
 Regular and clear glass use vertical key/fill highlights and a thin dark
 exterior rim, calibrated against iOS 27 references; regular glass uses the
@@ -232,7 +229,7 @@ The built-in regular surface, button and tab-bar face recipes use the extracted
 iOS 27 black/white levels, saturation and fill alpha. Clear glass uses its own
 extracted face values. Named material tints use full RGB matrices, and the tab
 pill uses the decoded native color matrix with normalized offsets converted to
-Flutter units. [Native color provenance](native_colors.md) records the source and
+Flutter units. [Native color provenance](../research/specs/native_colors.md) records the source and
 scope. Ordinary buttons and selected tabs retain their separately calibrated
 resting foreground; explicit foreground overrides remain literal, and prominent
 buttons default to white.

@@ -1,8 +1,6 @@
 import QuartzCore
 import UIKit
 
-/// Enables EDR only on Flutter's existing nonlinear extended-sRGB XR surface.
-/// The engine owns its pixel format and color space; neither is changed here.
 @MainActor
 final class GlassDisplayObserver {
   var onChange: ((Double) -> Void)?
@@ -44,8 +42,6 @@ final class GlassDisplayObserver {
       })
     }
     refresh()
-    // EDR headroom ramps up after the first drawable. Bounded startup reads
-    // also cover OS versions that don't deliver KVO for that transition.
     let token = generation
     for delay in [0.25, 0.75, 1.5, 3.0] {
       DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
@@ -81,8 +77,6 @@ final class GlassDisplayObserver {
       originalEDR = target.wantsExtendedDynamicRangeContent
     }
     let supported = Self.supports(target)
-    // The system's HDR usage limit (Control Center, app switcher) is not a
-    // reason to drop the rim: native glass keeps its HDR rendition there.
     let allowed = UIApplication.shared.applicationState != .background
     let requested = originalEDR || (enabled && supported && allowed)
     if target.wantsExtendedDynamicRangeContent != requested {

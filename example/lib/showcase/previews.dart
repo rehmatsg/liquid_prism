@@ -1,15 +1,16 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 
-import 'model.dart';
-import 'widgets.dart';
-import 'package_features_demo.dart';
-import 'search_page.dart';
-import 'sliver_bar_page.dart';
 import 'conversation_page.dart';
 import 'header_page.dart';
-import 'scaffold_lab_page.dart';
+import 'model.dart';
+import 'package_features_demo.dart';
 import 'refresh_page.dart';
+import 'scaffold_lab_page.dart';
+import 'search_page.dart';
+import 'sliver_bar_page.dart';
+import 'widgets.dart';
 
 class LensPlayground extends StatefulWidget {
   const LensPlayground({
@@ -20,7 +21,7 @@ class LensPlayground extends StatefulWidget {
   });
   final ShowcaseModel model;
   final bool expert;
-  final Glass? glass;
+  final PrismGlass? glass;
   @override
   State<LensPlayground> createState() => _LensPlaygroundState();
 }
@@ -32,14 +33,14 @@ class _LensPlaygroundState extends State<LensPlayground> {
     builder: (context, constraints) {
       final width = (constraints.maxWidth - 44).clamp(80.0, 200.0);
       final titleStyle = TextStyle(
-        color: GlassColors.light.label,
+        color: PrismColors.light.label,
         fontSize: 19,
         fontWeight: FontWeight.w600,
         letterSpacing: -.6,
       );
       final captionStyle = TextStyle(
         fontSize: 11,
-        color: GlassColors.light.label,
+        color: PrismColors.light.label,
       );
       double textHeight(String text, TextStyle style) {
         final painter = TextPainter(
@@ -108,11 +109,11 @@ class _LensPlaygroundState extends State<LensPlayground> {
                       child: SizedBox(
                         width: width,
                         height: height,
-                        child: LiquidPrism(
+                        child: PrismSurface(
                           key: const ValueKey('studio-lens'),
                           glass: widget.glass ?? widget.model.glass,
                           optics: widget.expert
-                              ? LiquidPrismStyle(
+                              ? PrismOptics(
                                   frost: widget.model.frost,
                                   refraction: widget.model.refraction,
                                   tint: widget.model.tint.withValues(
@@ -120,7 +121,7 @@ class _LensPlaygroundState extends State<LensPlayground> {
                                   ),
                                 )
                               : null,
-                          shape: const GlassShape.rect(cornerRadius: 28),
+                          shape: const PrismShape.rect(cornerRadius: 28),
                           child: Center(
                             child: Padding(
                               padding: const EdgeInsets.all(14),
@@ -130,7 +131,7 @@ class _LensPlaygroundState extends State<LensPlayground> {
                                   Icon(
                                     CupertinoIcons.cube,
                                     size: 30,
-                                    color: GlassColors.light.label,
+                                    color: PrismColors.light.label,
                                   ),
                                   const SizedBox(height: 10),
                                   Text('A new view.', style: titleStyle),
@@ -190,21 +191,21 @@ class _ComponentPreviewState extends State<ComponentPreview> {
           LensPlayground(
             model: m,
             glass: selectedSurface == 0
-                ? Glass.regular
+                ? PrismGlass.regular
                 : selectedSurface == 1
-                ? Glass.clear
+                ? PrismGlass.clear
                 : selectedSurface == 2
-                ? Glass.regular.tint(m.tint.withValues(alpha: .3))
-                : Glass.identity,
+                ? PrismGlass.regular.tint(m.tint.withValues(alpha: .3))
+                : PrismGlass.identity,
           ),
           const SizedBox(height: 16),
-          LiquidPrismGroup(
+          PrismGroup(
             child: Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
                 for (var i = 0; i < 4; i++)
-                  LiquidPrismButton(
+                  PrismButton(
                     label: 'Select surface $i',
                     selected: selectedSurface == i,
                     onPressed: () => setState(() => selectedSurface = i),
@@ -260,22 +261,24 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  LiquidPrismButton(
+                  PrismButton(
                     label: 'Add a tap',
                     onPressed: () => m.change(() => m.taps++),
                     child: const Text('Glass'),
                   ),
-                  LiquidPrismButton(
+                  PrismButton(
                     label: 'Add a prominent tap',
-                    variant: GlassButtonVariant.prominent,
+                    variant: PrismButtonVariant.prominent,
                     onPressed: () => m.change(() => m.taps++),
                     child: const Text('Prominent'),
                   ),
-                  LiquidPrismButton(
+                  PrismButton(
                     label: 'Favorite',
                     selected: m.favorite,
-                    shape: GlassShape.circle,
-                    padding: const EdgeInsets.all(15),
+                    style: const PrismButtonStyle(
+                      shape: PrismShape.circle,
+                      padding: EdgeInsets.all(15),
+                    ),
                     onPressed: () => m.change(() => m.favorite = !m.favorite),
                     child: Icon(
                       m.favorite
@@ -312,7 +315,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                       ),
                     ),
                   ),
-                  LiquidPrismSwitch(
+                  PrismSwitch(
                     label: 'Let it glow',
                     value: m.enabled,
                     onChanged: (v) => m.change(() => m.enabled = v),
@@ -356,7 +359,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 ],
               ),
               const SizedBox(height: 26),
-              LiquidPrismSlider(
+              PrismSlider(
                 key: const ValueKey('component-slider'),
                 label: 'Intensity',
                 value: m.level,
@@ -372,7 +375,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
               ),
             ],
             ComponentKind.segments => [
-              LiquidPrismSegmentedControl<int>(
+              PrismSegmentedControl<int>(
                 label: 'Perspective',
                 selectedValue: m.segment,
                 onValueChanged: (v) => m.change(() => m.segment = v),
@@ -418,7 +421,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 30),
-              LiquidPrismTabBar(
+              PrismTabBar(
                 selectedIndex: selectedTab,
                 onSelected: (v) => setState(() => selectedTab = v),
                 tabs: _demoTabs,
@@ -436,7 +439,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  LiquidPrismTabBar(
+                  PrismTabBar(
                     key: const ValueKey('demo-rail'),
                     axis: Axis.vertical,
                     selectedIndex: selectedTab,
@@ -454,14 +457,14 @@ class _ComponentPreviewState extends State<ComponentPreview> {
               const SizedBox(height: 26),
               Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: LiquidPrismToolbar(
+                child: PrismToolbar(
                   key: const ValueKey('demo-toolbar'),
-                  size: GlassToolbarSize.navigation,
+                  size: PrismToolbarSize.navigation,
                   content: [
-                    GlassToolbarGroup(
+                    PrismToolbarGroup(
                       items: [
                         if (extraAction)
-                          GlassToolbarItem(
+                          PrismToolbarItem(
                             icon: const Icon(CupertinoIcons.star),
                             label: 'Star',
                             width: 42 + 1 / 3,
@@ -469,11 +472,9 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                           ),
                       ],
                     ),
-                    GlassToolbarGroup(
+                    PrismToolbarGroup(
                       items: [
-                        GlassToolbarItem(
-                          // One item whose glyph and label change, so it swaps
-                          // in place rather than leaving and re-entering.
+                        PrismToolbarItem(
                           key: const ValueKey('toggle-star'),
                           icon: Icon(
                             extraAction
@@ -484,19 +485,19 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                           onPressed: () =>
                               setState(() => extraAction = !extraAction),
                         ),
-                        GlassToolbarItem(
+                        PrismToolbarItem(
                           icon: const Icon(CupertinoIcons.share),
                           label: 'Share',
                           width: 38 + 2 / 3,
                           onPressed: () => setState(() => actions++),
                         ),
                         if (extraAction)
-                          GlassToolbarItem(
+                          PrismToolbarItem(
                             icon: const Icon(CupertinoIcons.square_pencil),
                             label: 'Compose',
                             onPressed: () => setState(() => actions++),
                           ),
-                        GlassToolbarItem.menu(
+                        PrismToolbarItem.menu(
                           icon: const Icon(CupertinoIcons.ellipsis),
                           label: 'More',
                           menu: _actionMenu(),
@@ -510,14 +511,14 @@ class _ComponentPreviewState extends State<ComponentPreview> {
               const SizedBox(height: 20),
               Align(
                 alignment: Alignment.centerLeft,
-                child: LiquidPrismToolbarGroup(
+                child: PrismToolbar.group(
                   items: [
-                    GlassToolbarItem(
+                    PrismToolbarItem(
                       icon: const Icon(CupertinoIcons.chevron_left),
                       label: 'Previous',
                       onPressed: () => setState(() => actions++),
                     ),
-                    GlassToolbarItem(
+                    PrismToolbarItem(
                       icon: const Icon(CupertinoIcons.chevron_right),
                       label: 'Next',
                       onPressed: () => setState(() => actions++),
@@ -538,15 +539,15 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  LiquidPrismToolbarGroup(
+                  PrismToolbar.group(
                     axis: Axis.vertical,
                     items: [
-                      GlassToolbarItem(
+                      PrismToolbarItem(
                         icon: const Icon(CupertinoIcons.heart),
                         label: 'Like',
                         onPressed: () => setState(() => actions++),
                       ),
-                      GlassToolbarItem(
+                      PrismToolbarItem(
                         icon: const Icon(CupertinoIcons.bookmark),
                         label: 'Bookmark',
                         onPressed: () => setState(() => actions++),
@@ -585,7 +586,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Each page below is one LiquidPrismScaffold or sliver bar, '
+                'Each page below is one PrismScaffold or sliver bar, '
                 'with no scroll view, padding or grouping of its own.',
                 style: TextStyle(fontSize: 14, height: 1.35),
               ),
@@ -635,7 +636,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                       SearchPage(model: m),
                     ),
                   ]) ...[
-                LiquidPrismButton(
+                PrismButton(
                   key: ValueKey(key),
                   label: label,
                   onPressed: () =>
@@ -662,11 +663,11 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 runSpacing: 14,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  LiquidPrismButton.menu(
+                  PrismButton.menu(
                     key: const ValueKey('native-menu-button'),
                     label: 'Open native menu',
                     menu: _actionMenu(),
-                    variant: GlassButtonVariant.prominent,
+                    variant: PrismButtonVariant.prominent,
                     onSelected: _menuSelected,
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -677,9 +678,9 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                       ],
                     ),
                   ),
-                  LiquidPrismToolbarGroup(
+                  PrismToolbar.group(
                     items: [
-                      GlassToolbarItem.menu(
+                      PrismToolbarItem.menu(
                         key: const ValueKey('native-menu-toolbar'),
                         icon: const Icon(CupertinoIcons.ellipsis),
                         label: 'Open toolbar menu',
@@ -691,15 +692,15 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 ],
               ),
               const SizedBox(height: 22),
-              LiquidMenuRegion(
+              PrismMenuRegion(
                 key: const ValueKey('native-context-menu'),
-                trigger: LiquidMenuTrigger.longPress,
-                anchor: LiquidMenuAnchorMode.tapPoint,
+                trigger: PrismMenuTrigger.longPress,
+                anchor: PrismMenuAnchorMode.tapPoint,
                 menu: _actionMenu(),
                 onSelected: _menuSelected,
-                child: LiquidPrism(
-                  shape: const GlassShape.rect(cornerRadius: 18),
-                  child: const Padding(
+                child: const PrismSurface(
+                  shape: PrismShape.rect(cornerRadius: 18),
+                  child: Padding(
                     padding: EdgeInsets.all(18),
                     child: Row(
                       children: [
@@ -725,7 +726,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 22),
-              LiquidPrismSearchField(
+              PrismSearchField(
                 key: const ValueKey('demo-search'),
                 placeholder: 'Search your ideas',
                 onChanged: (v) => setState(() => query = v),
@@ -738,7 +739,7 @@ class _ComponentPreviewState extends State<ComponentPreview> {
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 22),
-              LiquidPrismButton(
+              PrismButton(
                 key: const ValueKey('open-search-page'),
                 label: 'Open the search page',
                 onPressed: () => Navigator.of(context).push<void>(
@@ -756,9 +757,9 @@ class _ComponentPreviewState extends State<ComponentPreview> {
   }
 
   static const _demoTabs = [
-    LiquidPrismTab(label: 'Discover', icon: Icon(CupertinoIcons.compass)),
-    LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
-    LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+    PrismTab(label: 'Discover', icon: Icon(CupertinoIcons.compass)),
+    PrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+    PrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
   ];
 
   void _menuSelected(Object? value) {
@@ -767,70 +768,72 @@ class _ComponentPreviewState extends State<ComponentPreview> {
     }
   }
 
-  LiquidMenu _actionMenu() => LiquidMenu(
+  PrismMenu _actionMenu() => PrismMenu(
     children: [
-      LiquidMenuAction<String>(
+      PrismMenuAction<String>(
         id: 'menu-favorite',
         title: m.favorite ? 'Remove favorite' : 'Add to favorites',
         value: 'Favorite',
-        icon: const LiquidMenuSfSymbol('heart'),
-        state: m.favorite ? MenuElementState.on : MenuElementState.off,
+        icon: const PrismMenuSfSymbol('heart'),
+        state: m.favorite
+            ? PrismMenuElementState.on
+            : PrismMenuElementState.off,
         onSelected: () => m.change(() => m.favorite = !m.favorite),
       ),
-      LiquidMenuAction<String>(
+      PrismMenuAction<String>(
         id: 'menu-new',
         title: 'A new idea',
         value: 'A new idea',
-        icon: const LiquidMenuSfSymbol('sparkles'),
+        icon: const PrismMenuSfSymbol('sparkles'),
         onSelected: () => m.change(() => m.taps++),
       ),
-      const LiquidMenuDivider(),
-      LiquidSubmenu(
+      const PrismMenuDivider(),
+      PrismSubmenu(
         title: 'Artwork',
-        icon: const LiquidMenuSfSymbol('photo'),
+        icon: const PrismMenuSfSymbol('photo'),
         singleSelection: true,
         children: [
           for (var i = 0; i < 3; i++)
-            LiquidMenuAction<String>(
+            PrismMenuAction<String>(
               id: 'menu-art-$i',
               title: ['Meadow', 'Dusk', 'Apricot'][i],
               value: ['Meadow', 'Dusk', 'Apricot'][i],
               state: m.wallpaper == i
-                  ? MenuElementState.on
-                  : MenuElementState.off,
+                  ? PrismMenuElementState.on
+                  : PrismMenuElementState.off,
               onSelected: () => m.change(() => m.wallpaper = i),
             ),
         ],
       ),
-      LiquidMenuSection(
+      PrismMenuSection(
         title: 'On opening',
         children: [
-          LiquidMenuDeferred(
+          PrismMenuDeferred(
             id: 'menu-deferred',
             loader: () async => [
-              LiquidMenuAction<String>(
+              PrismMenuAction<String>(
                 id: 'menu-count',
                 title: '${m.taps} ideas so far',
                 value: 'Idea count',
-                icon: const LiquidMenuSfSymbol('lightbulb'),
+                icon: const PrismMenuSfSymbol('lightbulb'),
               ),
             ],
           ),
         ],
       ),
-      const LiquidMenuAction<String>(
+      const PrismMenuAction<String>(
         id: 'menu-unavailable',
         title: 'Coming soon',
         enabled: false,
-        icon: LiquidMenuSfSymbol('clock'),
+        icon: PrismMenuSfSymbol('clock'),
       ),
-      const LiquidMenuDivider(),
-      LiquidMenuAction<String>(
+      const PrismMenuDivider(),
+      PrismMenuAction<String>(
         id: 'menu-reset',
         title: 'Reset this demo',
         value: 'Demo reset',
         destructive: true,
-        icon: const LiquidMenuSfSymbol('arrow.counterclockwise'),
+        icon: const PrismMenuSfSymbol('arrow.counterclockwise'),
         onSelected: () => m.change(() {
           m.taps = 0;
           m.favorite = false;
@@ -840,9 +843,6 @@ class _ComponentPreviewState extends State<ComponentPreview> {
   );
 }
 
-/// A bar over a scrolling list inside one [LiquidPrismGroup]: the scroll edge
-/// effect and the bar's capsules share captures, so the glass refracts the
-/// rows beneath it while the strip around it blurs and fades.
 class ScrollEdgePreview extends StatefulWidget {
   const ScrollEdgePreview({super.key, required this.model});
   final ShowcaseModel model;
@@ -868,7 +868,7 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
       borderRadius: BorderRadius.circular(22),
       child: SizedBox(
         height: 300,
-        child: LiquidPrismGroup(
+        child: PrismGroup(
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -901,8 +901,7 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
                   ),
                 ),
               ),
-              // The bar: its effect fills the bar's box and reaches below it;
-              // the capsules paint above it. All of them are group members.
+
               Positioned(
                 top: 0,
                 left: 0,
@@ -913,15 +912,15 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
                   children: [
                     AnimatedBuilder(
                       animation: controller,
-                      builder: (context, _) => LiquidPrismScrollEdge(
-                        progress: LiquidPrismScrollEdge.progressFor(
+                      builder: (context, _) => PrismScrollEdge(
+                        progress: PrismScrollEdge.progressFor(
                           controller.hasClients ? controller.offset : 0,
                         ),
                         color: Art.backgrounds[widget.model.wallpaper],
-                        style: GlassScrollEdgeStyle(
+                        style: PrismScrollEdgeStyle(
                           variant: hard
-                              ? GlassScrollEdgeVariant.hard
-                              : GlassScrollEdgeVariant.soft,
+                              ? PrismScrollEdgeVariant.hard
+                              : PrismScrollEdgeVariant.soft,
                         ),
                       ),
                     ),
@@ -929,10 +928,10 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Row(
                         children: [
-                          LiquidPrismToolbarGroup(
-                            size: GlassToolbarSize.navigation,
+                          PrismToolbar.group(
+                            size: PrismToolbarSize.navigation,
                             items: [
-                              GlassToolbarItem(
+                              PrismToolbarItem(
                                 icon: const Icon(CupertinoIcons.chevron_back),
                                 label: 'Back to top',
                                 onPressed: () => controller.animateTo(
@@ -944,10 +943,10 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
                             ],
                           ),
                           const Spacer(),
-                          LiquidPrismToolbarGroup(
-                            size: GlassToolbarSize.navigation,
+                          PrismToolbar.group(
+                            size: PrismToolbarSize.navigation,
                             items: [
-                              GlassToolbarItem(
+                              PrismToolbarItem(
                                 icon: Icon(
                                   likes.isOdd
                                       ? CupertinoIcons.heart_fill
@@ -956,7 +955,7 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
                                 label: 'Like',
                                 onPressed: () => setState(() => likes++),
                               ),
-                              GlassToolbarItem(
+                              PrismToolbarItem(
                                 icon: Icon(
                                   hard
                                       ? CupertinoIcons
@@ -983,7 +982,6 @@ class _ScrollEdgePreviewState extends State<ScrollEdgePreview> {
   }
 }
 
-/// A horizontal row of chips whose edges soften while more lie past them.
 class ScrollFadePreview extends StatelessWidget {
   const ScrollFadePreview({super.key});
   static const _names = [
@@ -1007,7 +1005,7 @@ class ScrollFadePreview extends StatelessWidget {
     final ink = DefaultTextStyle.of(context).style.color!;
     return SizedBox(
       height: 44,
-      child: LiquidPrismScrollFade(
+      child: PrismScrollEdge.fade(
         key: const ValueKey('scroll-fade'),
         axis: Axis.horizontal,
         extent: 48,

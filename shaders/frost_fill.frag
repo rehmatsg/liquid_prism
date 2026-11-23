@@ -1,13 +1,6 @@
 #include <flutter/runtime_effect.glsl>
 precision highp float;
 
-// Carries a blurred backdrop to the optical pass in the framebuffer's alpha.
-// Drawn with BlendMode.modulate, the white colour leaves the sharp backdrop
-// untouched while alpha stores the blur: columns repeat marker (1), red,
-// green and blue, each colour scaled to at most 0.9. The blur varies slowly,
-// so the optical pass rebuilds it from four neighbouring pixels
-// (readFill in glass_core.glsl).
-// ImageFilter ABI: the engine supplies the input texture size.
 uniform vec2 u_textureSize;
 uniform sampler2D u_texture;
 out vec4 frag_color;

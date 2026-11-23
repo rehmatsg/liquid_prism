@@ -3,7 +3,6 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import 'widgets.dart';
 
-/// Scroll, hold a tab, or change a segment to exercise package-owned chrome.
 class PackageFeaturesDemo extends StatefulWidget {
   const PackageFeaturesDemo({super.key});
   @override
@@ -19,30 +18,30 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
     child: MediaQuery(
       data: MediaQuery.of(context)
           .copyWith(padding: EdgeInsets.zero, viewPadding: EdgeInsets.zero),
-      child: LiquidPrismScaffold(
+      child: PrismScaffold(
         automaticallyImplyLeading: false,
         title: const Text('Inbox'),
         largeTitle: const Text('Inbox'),
-        backgroundColor: GlassColors.of(context).groupedBackground,
+        backgroundColor: PrismColors.of(context).groupedBackground,
         toolbar: [
-          GlassToolbarGroup(
+          PrismToolbarGroup(
             items: [
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.bell),
                 label: 'Activity',
-                badge: const GlassBadge.dot(),
+                badge: const PrismBadge.dot(),
                 onPressed: () {},
               ),
             ],
           ),
-          GlassToolbarGroup(
+          PrismToolbarGroup(
             items: [
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.square_arrow_up),
                 label: 'Share',
                 onPressed: () {},
               ),
-              GlassToolbarItem(
+              PrismToolbarItem(
                 icon: const Icon(CupertinoIcons.ellipsis),
                 label: 'More',
                 onPressed: () {},
@@ -50,18 +49,18 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
             ],
           ),
         ],
-        tabBar: LiquidPrismTabBar(
+        tabBar: PrismTabBar(
           selectedIndex: tab,
           onSelected: (value) => setState(() => tab = value),
           onLongPressed: (value) =>
               setState(() => held = ['Inbox', 'Saved'][value]),
           tabs: const [
-            LiquidPrismTab(
+            PrismTab(
               label: 'Inbox',
               icon: Icon(CupertinoIcons.tray),
-              badge: GlassBadge.count(125),
+              badge: PrismBadge.count(125),
             ),
-            LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+            PrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
           ],
         ),
         body: ListView(
@@ -75,11 +74,11 @@ class _PackageFeaturesDemoState extends State<PackageFeaturesDemo> {
               ),
             ),
             Center(
-              child: LiquidPrismSegmentedControl<int>(
+              child: PrismSegmentedControl<int>(
                 selectedValue: segment,
                 onValueChanged: (value) => setState(() => segment = value),
-                style: const GlassSegmentedStyle(
-                  sizing: GlassSegmentedSizing.fitLabels,
+                style: const PrismSegmentedStyle(
+                  sizing: PrismSegmentedSizing.fitLabels,
                 ),
                 children: const {0: Text('All'), 1: Text('Unread messages')},
               ),

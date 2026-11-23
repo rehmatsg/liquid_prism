@@ -3,10 +3,6 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import 'widgets.dart';
 
-/// A detail page built on [LiquidPrismScaffold.slivers]: a header that
-/// scrolls away under the bar before the title swaps in, sticky tabs that pin
-/// below the bar, a trailing pill, pull to refresh and a bottom bar, with no
-/// scroll view, padding or grouping of its own.
 class HeaderPage extends StatefulWidget {
   const HeaderPage({super.key});
 
@@ -19,20 +15,20 @@ class _HeaderPageState extends State<HeaderPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
-    return LiquidPrismScaffold(
+    final colors = PrismColors.of(context);
+    return PrismScaffold(
       backgroundColor: colors.groupedBackground,
       title: const Text('Glass Surfaces'),
       subtitle: const Text('Component'),
       toolbar: [
-        GlassToolbarGroup(
+        PrismToolbarGroup(
           items: [
-            GlassToolbarItem(
+            PrismToolbarItem(
               icon: const Icon(CupertinoIcons.bookmark),
               label: 'Save',
               onPressed: () {},
             ),
-            GlassToolbarItem(
+            PrismToolbarItem(
               icon: const Icon(CupertinoIcons.ellipsis),
               label: 'More',
               onPressed: () {},
@@ -86,7 +82,7 @@ class _HeaderPageState extends State<HeaderPage> {
       ),
       bottomBar: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: LiquidPrismButton(
+        child: PrismButton(
           label: 'Use this surface',
           onPressed: () {},
           child: const Text('Use This Surface'),
@@ -97,11 +93,11 @@ class _HeaderPageState extends State<HeaderPage> {
           pinned: true,
           delegate: _StickyTabs(
             background: colors.groupedBackground,
-            child: LiquidPrismSegmentedControl<int>(
+            child: PrismSegmentedControl<int>(
               key: const ValueKey('header-tabs'),
               selectedValue: _tab,
-              style: const GlassSegmentedStyle(
-                sizing: GlassSegmentedSizing.fitLabels,
+              style: const PrismSegmentedStyle(
+                sizing: PrismSegmentedSizing.fitLabels,
               ),
               onValueChanged: (v) => setState(() => _tab = v),
               children: const {
@@ -137,7 +133,6 @@ class _HeaderPageState extends State<HeaderPage> {
   }
 }
 
-/// Tabs that pin below the bar once the header has scrolled away.
 class _StickyTabs extends SliverPersistentHeaderDelegate {
   _StickyTabs({required this.background, required this.child});
   final Color background;

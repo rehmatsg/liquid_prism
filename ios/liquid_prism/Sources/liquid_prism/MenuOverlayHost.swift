@@ -1,36 +1,24 @@
 import UIKit
 
-/// Installs and owns the overlay the menus anchor into. Lives for the app's
-/// lifetime as a singleton so presentation state survives individual menus
-/// (and a hot restart is handled explicitly via the plugin's handshake flush).
-///
-/// The overlay is a transparent, non-interactive view added above the app's
-/// own content **in the same window**, so the anchor control lives in a real
-/// view hierarchy for the context-menu interaction to attach to.
+/// Owns the shared transparent overlay used to anchor menus in the app window.
 @MainActor
 public final class MenuOverlayHost {
   public static let shared = MenuOverlayHost()
 
-  /// The container menus anchor into. Non-nil once [ensureInstalled] ran while
-  /// a window existed.
+  /// The anchor container, available after installation in an existing window.
   public private(set) var hostView: UIView?
 
-  /// The window Flutter draws into, when the caller knows it. Preferred over
-  /// searching connected scenes, which can pick another window of the app.
+  /// The preferred Flutter window, used before searching connected scenes.
   public var preferredWindow: (@MainActor () -> UIWindow?)?
 
-  /// Called when the host's window changes size: resizing, folding or
-  /// rotation. A menu anchored in the old geometry should close, as UIKit's
-  /// own menus do.
+  /// Called when the host window changes size so an anchored menu can close.
   public var onResize: (@MainActor () -> Void)?
 
   private var observersAdded = false
 
   private init() {}
 
-  /// Ensures the overlay is attached to Flutter's window. Idempotent, and
-  /// safe to call before a window exists — it retries on the next runloop and
-  /// on scene activation.
+  /// Ensures the overlay is installed, retrying when a window becomes available.
   @discardableResult
   public func ensureInstalled() -> Bool {
     addObserversIfNeeded()
@@ -71,14 +59,12 @@ public final class MenuOverlayHost {
     hostView = host
   }
 
-  /// Keeps the overlay frontmost if the app later adds sibling views.
   func bringToFront() {
     guard let host = hostView, let superview = host.superview else { return }
     superview.bringSubviewToFront(host)
   }
 
-  /// The fallback window when no preferred window is known: the
-  /// foreground-active scene's key window, with progressively looser fallbacks.
+  /// Returns a key window, preferring the foreground-active scene.
   public static func activeWindow() -> UIWindow? {
     let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
     let scene = windowScenes.first { $0.activationState == .foregroundActive }
@@ -104,7 +90,6 @@ public final class MenuOverlayHost {
   }
 }
 
-/// The overlay container. Reports size changes after its first layout.
 final class MenuHostView: UIView {
   var onResize: (@MainActor () -> Void)?
   private var laidOutSize: CGSize?

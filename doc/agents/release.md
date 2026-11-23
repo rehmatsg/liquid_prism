@@ -1,66 +1,15 @@
-# Delivery and packaging
+# Releases and packaging
 
-## Before committing
+## Automated releases (Release Please)
 
-Run [checks](testing.md), inspect `git diff --check`, review `git diff --stat` and
-verify only task-owned files are staged. Preserve upstream license notices.
-Update public guides for API changes. Do not include build products, captures,
-provisioning, signing secrets or local research in the commit.
+Liquid Prism uses [Release Please](https://github.com/googleapis/release-please) configured in `release-please-config.json`, `.release-please-manifest.json`, and `.github/workflows/release-please.yml`:
 
-Respect the current user's commit/push authorization. Verify the actual branch,
-remote and push result. Publishing to pub.dev, deployment and messages to others
-are separate actions; do not infer those from a request to improve the library.
+1. Merge PRs to `main` using Conventional Commits (`feat:`, `fix:`, `feat!:`, etc.).
+2. Release Please maintains a release PR that bumps `pubspec.yaml`, `ios/liquid_prism.podspec`, `README.md`, `.release-please-manifest.json`, and `CHANGELOG.md`.
+3. Merging the release PR tags `vX.Y.Z` and creates the GitHub Release automatically.
 
-## Build matrix
+`tool/check_versions.py` (invoked by `tool/check.sh`) guarantees that `pubspec.yaml`, `ios/liquid_prism.podspec`, `.release-please-manifest.json`, and `README.md` never drift out of sync.
 
-```sh
-cd example
-flutter build ios --simulator --debug
-flutter build apk --debug
-# Physical iPhone:
-flutter build ios --release
-```
+## Package archive verification
 
-Use the configured Xcode installation and existing signing settings. Do not
-invent a new bundle ID/team to bypass a provisioning issue. Native showcase builds
-use the project/scheme under `tool/native_showcase/`; list schemes first. Its
-release app and Flutter release app are distinct products.
-
-## Physical iPhone
-
-```sh
-xcrun devicectl list devices
-xcrun devicectl device install app --device <device-id> <absolute-app-path>
-xcrun devicectl device process launch --device <device-id> <bundle-id> --terminate-existing
-```
-
-Confirm the connected device and install result. If the phone is unavailable,
-finish independent verification and explain the concrete blocker. Existing user
-permission to install persists across turns. Do not claim a simulator launch was
-an iPhone install. Do not commit device identifiers or signing credentials to docs.
-
-## Package archive
-
-Run `flutter pub publish --dry-run` from the repository root. Inspect its file
-list and warnings. `.pubignore` excludes tooling, tests, local artifacts and
-platform-generated example directories. Public docs and agent guides are small
-text sources and may ship in the archive. The package is distributed through Git tags and GitHub Releases; it is not
-published on pub.dev.
-
-No runtime code may depend on `_research/`, `artifacts/` or a local probe. Native
-popup bridge code and shader assets must be packaged. Keep the BSD and merged
-Liquid Menu MIT notices available to consumers.
-
-## Tagged GitHub releases
-
-The release preparation PR keeps `pubspec.yaml`, `ios/liquid_prism.podspec`,
-`CHANGELOG.md` and the README installation ref aligned. For a version increase,
-`python3 tool/release.py bump X.Y.Z` moves the Unreleased notes into that version.
-Check an already prepared version with `python3 tool/release.py check --tag vX.Y.Z`
-and inspect `python3 tool/release.py notes X.Y.Z`.
-
-After the preparation PR merges and its CI passes, tag that main-branch commit
-as `vX.Y.Z` and push the tag. `.github/workflows/release.yml` verifies version
-consistency, runs the checks and creates the GitHub Release from the changelog.
-Wait for the workflow and confirm the published release before upgrading a
-consumer to its tag. Publishing requires the user's explicit release authorization.
+Run `flutter pub publish --dry-run` from the repository root. `.pubignore` excludes `research/`, `tool/`, `test/`, `.github/`, and generated build directories while packaging `lib/`, `ios/`, `shaders/`, licenses, and `THIRD_PARTY_NOTICES.md`.

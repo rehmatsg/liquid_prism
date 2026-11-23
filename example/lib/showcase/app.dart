@@ -1,19 +1,20 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
-import 'package:material_ui/material_ui.dart' show DefaultMaterialLocalizations;
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
+import 'package:material_ui/material_ui.dart' show DefaultMaterialLocalizations;
 
 import 'component_page.dart';
 import 'model.dart';
 import 'pages.dart';
 import 'widgets.dart';
 
-class LiquidPrismExample extends StatefulWidget {
-  const LiquidPrismExample({super.key});
+class PrismExample extends StatefulWidget {
+  const PrismExample({super.key});
   @override
-  State<LiquidPrismExample> createState() => _LiquidPrismExampleState();
+  State<PrismExample> createState() => _PrismExampleState();
 }
 
-class _LiquidPrismExampleState extends State<LiquidPrismExample> {
+class _PrismExampleState extends State<PrismExample> {
   final model = ShowcaseModel();
 
   @override
@@ -26,7 +27,7 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: model,
     builder: (context, _) {
-      final colors = GlassColors(model.brightness);
+      final colors = PrismColors(model.brightness);
       return CupertinoApp(
         title: 'Liquid Prism',
         localizationsDelegates: const [DefaultMaterialLocalizations.delegate],
@@ -44,22 +45,20 @@ class _LiquidPrismExampleState extends State<LiquidPrismExample> {
             ),
           ),
         ),
-        builder: (context, child) => LiquidPrismTheme(
-          data: LiquidPrismThemeData(
+        builder: (context, child) => PrismTheme(
+          data: PrismThemeData(
             brightness: model.brightness,
             tint: model.tint,
             glass: model.glass,
-            // Studio's optics, app-wide when its switch is on; surfaces with
-            // their own optics, such as held control lenses, keep theirs.
+
             blur: model.globalOptics ? model.frost : null,
             refraction: model.globalOptics ? model.refraction : null,
-            tabBar: GlassTabBarStyle(
-              labelBehavior: model.labels ? null : GlassTabLabelBehavior.never,
+            tabBar: PrismTabBarStyle(
+              labelBehavior: model.labels ? null : PrismTabLabelBehavior.never,
             ),
           ),
-          // Publishes iPhone Duo bar placement and keeps dialogs out of the
-          // fold, for every route.
-          child: LiquidPrismSystemChrome(
+
+          child: PrismSystemChrome(
             child: DefaultTextStyle(
               style: CupertinoTheme.of(context).textTheme.textStyle,
               child: child!,
@@ -104,7 +103,6 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
   void select(ShowcaseTab value) {
     searchFocus.unfocus();
     if (value == tab && scroll[value]!.hasClients) {
-      // Tapping the current tab scrolls back to the top, as on iOS.
       scroll[value]!.animateTo(
         0,
         duration: const Duration(milliseconds: 350),
@@ -124,27 +122,26 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
   }
 
   @override
-  Widget build(BuildContext context) => LiquidPrismScaffold(
-    backgroundColor: GlassColors.of(context).groupedBackground,
+  Widget build(BuildContext context) => PrismScaffold(
+    backgroundColor: PrismColors.of(context).groupedBackground,
     tabBarPlacement: model.sidebar
-        ? GlassTabBarPlacement.sidebar
-        : GlassTabBarPlacement.automatic,
+        ? PrismTabBarPlacement.sidebar
+        : PrismTabBarPlacement.automatic,
     toolbar: appearanceActions(model),
-    // Every tab pulls to refresh; the showcase has nothing to reload.
+
     onRefresh: () => Future<void>.delayed(const Duration(milliseconds: 1400)),
-    tabBar: LiquidPrismTabBar(
+    tabBar: PrismTabBar(
       key: const ValueKey('showcase-navigation'),
       selectedIndex: tab.index,
       onSelected: (index) => select(ShowcaseTab.values[index]),
       tabs: const [
-        LiquidPrismTab(label: 'Explore', icon: Icon(CupertinoIcons.sparkles)),
-        LiquidPrismTab(
+        PrismTab(label: 'Explore', icon: Icon(CupertinoIcons.sparkles)),
+        PrismTab(
           label: 'Studio',
           icon: Icon(CupertinoIcons.slider_horizontal_3),
         ),
-        // SwiftUI tab bars draw every item with the symbol's fill variant,
-        // selected or not; the native showcase's Library is always filled.
-        LiquidPrismTab(
+
+        PrismTab(
           label: 'Library',
           icon: Icon(CupertinoIcons.square_grid_2x2_fill),
         ),
@@ -172,27 +169,26 @@ class _ShowcaseHomeState extends State<ShowcaseHome> {
   );
 }
 
-/// The appearance toggle and artwork menu shared by every screen.
-List<GlassToolbarItem> appearanceActions(ShowcaseModel model) => [
-  GlassToolbarItem(
+List<PrismToolbarItem> appearanceActions(ShowcaseModel model) => [
+  PrismToolbarItem(
     icon: Icon(model.dark ? CupertinoIcons.sun_max : CupertinoIcons.moon),
     label: 'Toggle appearance',
     onPressed: () => model.change(() => model.dark = !model.dark),
   ),
-  GlassToolbarItem.menu(
+  PrismToolbarItem.menu(
     icon: const Icon(CupertinoIcons.photo),
     label: 'Choose artwork',
-    menu: LiquidMenu(
+    menu: PrismMenu(
       title: 'Artwork',
       children: [
         for (var i = 0; i < Art.names.length; i++)
-          LiquidMenuAction<int>(
+          PrismMenuAction<int>(
             id: 'artwork-$i',
             title: Art.names[i],
             value: i,
             state: model.wallpaper == i
-                ? MenuElementState.on
-                : MenuElementState.off,
+                ? PrismMenuElementState.on
+                : PrismMenuElementState.off,
             onSelected: () => model.change(() => model.wallpaper = i),
           ),
       ],

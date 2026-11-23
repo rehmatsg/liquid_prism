@@ -3,19 +3,17 @@ import 'package:liquid_prism/liquid_prism.dart';
 
 import 'widgets.dart';
 
-/// Nullable overrides keep the lab on native defaults until explicitly enabled.
 class ScaffoldLabOptions {
   final values = <String, double>{};
   final expanded = <String>{};
-  GlassTitleAlignment titleAlignment = GlassTitleAlignment.automatic;
-  GlassTitleAlignment largeTitleAlignment = GlassTitleAlignment.automatic;
-  GlassToolbarMinimizationSafeAreaAdjustment safeArea =
-      GlassToolbarMinimizationSafeAreaAdjustment.automatic;
-  GlassToolbarMinimizationBehavior? minimization;
-  GlassToolbarMinimizationRestoration? restoration;
-  GlassChromePlacement? placement;
-  GlassTabBarPlacement tabPlacement = GlassTabBarPlacement.automatic;
-  GlassToolbarPlacement actionPlacement = GlassToolbarPlacement.automatic;
+  PrismTitleAlignment titleAlignment = PrismTitleAlignment.automatic;
+  PrismTitleAlignment largeTitleAlignment = PrismTitleAlignment.automatic;
+  PrismMinimizationSafeArea safeArea = PrismMinimizationSafeArea.automatic;
+  PrismMinimizationBehavior? minimization;
+  PrismMinimizationRestoration? restoration;
+  PrismChromePlacement? placement;
+  PrismTabBarPlacement tabPlacement = PrismTabBarPlacement.automatic;
+  PrismToolbarPlacement actionPlacement = PrismToolbarPlacement.automatic;
   var titleKind = 0;
   var leadingKind = 0;
   var background = 0;
@@ -38,10 +36,10 @@ class ScaffoldLabOptions {
   double? n(String key) => values[key];
   Duration? duration(String key) =>
       n(key) == null ? null : Duration(milliseconds: n(key)!.round());
-  GlassSpring? spring(String prefix) =>
+  PrismSpring? spring(String prefix) =>
       n('${prefix}Response') == null && n('${prefix}Bounce') == null
       ? null
-      : GlassSpring(
+      : PrismSpring(
           response:
               duration('${prefix}Response') ??
               const Duration(milliseconds: 400),
@@ -88,17 +86,17 @@ class ScaffoldLabOptions {
     3 => AlignmentDirectional.centerEnd,
     _ => null,
   };
-  GlassNavigationBarStyle navigation(
-    GlassToolbarMinimizationBehavior behavior,
-    GlassToolbarMinimizationRestoration restore, {
-    required GlassToolbarTitleDisplayMode titleDisplayMode,
-  }) => GlassNavigationBarStyle(
+  PrismNavigationBarStyle navigation(
+    PrismMinimizationBehavior behavior,
+    PrismMinimizationRestoration restore, {
+    required PrismTitleDisplayMode titleDisplayMode,
+  }) => PrismNavigationBarStyle(
     titleDisplayMode: titleDisplayMode,
     titleAlignment: titleAlignment,
     largeTitleAlignment: largeTitleAlignment,
     minimizationBehavior: minimization ?? behavior,
     minimizationRestoration: restoration ?? restore,
-    minimizationSafeAreaAdjustment: safeArea,
+    minimizationSafeArea: safeArea,
     minimizationThreshold: n('minimizationThreshold'),
     controlRowHeight: n('controlRowHeight'),
     contentPadding: insets('contentPadding', directional: true),
@@ -121,7 +119,7 @@ class ScaffoldLabOptions {
       3 => Curves.easeOutCubic,
       _ => null,
     },
-    titleCapsule: GlassTitleStyle(
+    titleCapsule: PrismTitleStyle(
       avatarSize: n('avatarSize'),
       avatarOverlap: n('avatarOverlap'),
       leadingSize: n('leadingSize'),
@@ -144,13 +142,13 @@ class ScaffoldLabOptions {
           : null,
       minHeight: n('titleMinHeight'),
       glass: switch (capsuleGlass) {
-        1 => Glass.regular,
-        2 => Glass.clear,
+        1 => PrismGlass.regular,
+        2 => PrismGlass.clear,
         _ => null,
       },
     ),
   );
-  GlassScaffoldStyle get scaffold => GlassScaffoldStyle(
+  PrismScaffoldStyle get scaffold => PrismScaffoldStyle(
     tabBarAlignment: alignment(tabAlignment),
     tabBarMargin: insets('tabBarMargin'),
     tabBarMaxWidth: n('tabBarMaxWidth'),
@@ -158,10 +156,10 @@ class ScaffoldLabOptions {
     bottomBarMargin: insets('bottomBarMargin'),
     bottomBarMaxWidth: n('bottomBarMaxWidth'),
   );
-  GlassScrollEdgeStyle edge(
-    GlassScrollEdgeVariant variant,
-    GlassColors colors,
-  ) => GlassScrollEdgeStyle(
+  PrismScrollEdgeStyle edge(
+    PrismScrollEdgeVariant variant,
+    PrismColors colors,
+  ) => PrismScrollEdgeStyle(
     variant: variant,
     sigma: n('sigma'),
     falloff: n('falloff'),
@@ -206,7 +204,7 @@ class ScaffoldLabOptions {
     Widget toggle(String label, bool value, void Function(bool) write) =>
         ListRow(
           title: label,
-          trailing: LiquidPrismSwitch(
+          trailing: PrismSwitch(
             key: ValueKey('lab-$label'),
             label: label,
             value: value,
@@ -247,7 +245,7 @@ class ScaffoldLabOptions {
                 ],
               ),
               if (n(key) != null)
-                LiquidPrismSlider(
+                PrismSlider(
                   key: ValueKey('lab-$key'),
                   label: key,
                   value: n(key)!,
@@ -306,18 +304,18 @@ class ScaffoldLabOptions {
           cycle(
             'Toolbar placement',
             actionPlacement,
-            GlassToolbarPlacement.values,
+            PrismToolbarPlacement.values,
             (v) => actionPlacement = v,
           ),
-          cycle<GlassChromePlacement?>('Chrome placement', placement, [
+          cycle<PrismChromePlacement?>('Chrome placement', placement, [
             null,
-            ...GlassChromePlacement.values,
+            ...PrismChromePlacement.values,
           ], (v) => placement = v),
           toggle('Tab bar', tabs, (v) => tabs = v),
           cycle(
             'Tab placement',
             tabPlacement,
-            GlassTabBarPlacement.values,
+            PrismTabBarPlacement.values,
             (v) => tabPlacement = v,
           ),
           cycle(
@@ -361,31 +359,31 @@ class ScaffoldLabOptions {
           cycle(
             'Inline alignment',
             titleAlignment,
-            GlassTitleAlignment.values,
+            PrismTitleAlignment.values,
             (v) => titleAlignment = v,
           ),
           cycle(
             'Large alignment',
             largeTitleAlignment,
-            GlassTitleAlignment.values,
+            PrismTitleAlignment.values,
             (v) => largeTitleAlignment = v,
           ),
-          cycle<GlassToolbarMinimizationBehavior?>(
+          cycle<PrismMinimizationBehavior?>(
             'Minimization override',
             minimization,
-            [null, ...GlassToolbarMinimizationBehavior.values],
+            [null, ...PrismMinimizationBehavior.values],
             (v) => minimization = v,
           ),
-          cycle<GlassToolbarMinimizationRestoration?>(
+          cycle<PrismMinimizationRestoration?>(
             'Restoration override',
             restoration,
-            [null, ...GlassToolbarMinimizationRestoration.values],
+            [null, ...PrismMinimizationRestoration.values],
             (v) => restoration = v,
           ),
           cycle(
             'Safe-area adjustment',
             safeArea,
-            GlassToolbarMinimizationSafeAreaAdjustment.values,
+            PrismMinimizationSafeArea.values,
             (v) => safeArea = v,
           ),
           cycle(

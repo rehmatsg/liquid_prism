@@ -2,18 +2,18 @@ import 'dart:math';
 
 final Random _rng = Random.secure();
 
-/// Wire-id minting: `lm_<sessionPrefix>_<counter>`. The session prefix is
-/// random per isolate and sent in `handshake` — native flushes on every
-/// handshake, which clears stale state after a hot restart.
+/// Mints session-scoped menu identifiers for the native bridge.
 final class MenuIds {
   MenuIds._();
 
+  /// The random identifier prefix for this isolate.
   static final String session = List.generate(
     6,
     (_) => _rng.nextInt(36).toRadixString(36),
   ).join();
   static int _counter = 0;
 
+  /// Returns a fresh wire identifier.
   static String mint() =>
       'lm_$session-${(_counter++).toString().padLeft(4, '0')}';
 }

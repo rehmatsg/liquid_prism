@@ -4,22 +4,21 @@ precision highp float;
 uniform vec2 u_textureSize;
 uniform vec2 u_origin;
 uniform vec2 u_extent;
-uniform vec4 u_geometry; // pixel ratio, lift, radius, continuous contour.
+uniform vec4 u_geometry;
 uniform vec4 u_shapeA;
 uniform vec4 u_shapeB;
 uniform vec4 u_shapeC;
 uniform vec4 u_shapeD;
 uniform vec4 u_curve[65];
-uniform vec4 u_effect; // Displacement/depth (pt), effective split (px), band (pt).
-uniform float u_tone;  // Grey level of the bar beneath the foreground.
-uniform float u_wrapper; // Outer content-wrapper displacement (pt, scaled).
+uniform vec4 u_effect;
+uniform float u_tone;
+uniform float u_wrapper;
 uniform sampler2D u_content;
 out vec4 frag_color;
 
 #include "superellipse.glsl"
 #include "chromatic_fringe.glsl"
 
-// Circular SDF profile: one at the contour, zero past depth h.
 float fieldProfile(float depth, float h) {
     float t = clamp(1.-depth/h,0.,1.);
     return 1.-sqrt(max(1.-t*t,0.));
@@ -59,7 +58,6 @@ void main() {
     }
     float depth = -field.x;
     float lift = u_geometry.y;
-    // Compose wrapper and inner lens at the outer pass's displaced depth.
     float outer = u_wrapper*lift*fieldProfile(depth,u_effect.y);
     float inner = u_effect.x*lift*fieldProfile(depth+outer,u_effect.y);
     vec2 displaced = pixel-field.yz*((outer+inner)*u_geometry.x);
@@ -71,7 +69,6 @@ void main() {
             (.77*glyphFringeWeight(depth,band)*size*u_effect.z);
         vec4 red = readContent(displaced-shift);
         vec4 blue = readContent(displaced+shift);
-        // Fill missing channel coverage with the bar tone to stay premultiplied.
         vec4 split = vec4(red.r,green.g,blue.b,max(max(red.a,green.a),blue.a));
         split.rgb += (split.a-vec3(red.a,green.a,blue.a))*u_tone;
         frag_color = mix(green,split,.5);

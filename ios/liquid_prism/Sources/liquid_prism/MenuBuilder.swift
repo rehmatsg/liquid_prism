@@ -3,9 +3,7 @@ import UIKit
 /// Turns `MenuSpec` trees into `UIMenu`/`UIAction` hierarchies.
 public enum MenuBuilder {
 
-  /// Builds the menu tree. `onAction` receives each selected action's id —
-  /// per tap, including repeats while `keepsMenuPresented` rows hold the menu
-  /// open.
+  /// Builds the menu tree, calling `onAction` on every tap, including repeated taps.
   public static func menu(
     from spec: MenuSpec,
     onAction: @escaping @MainActor (String) -> Void
@@ -23,8 +21,6 @@ public enum MenuBuilder {
     return menu
   }
 
-  /// Builds a child list. `.divider` and `.section` split the surrounding run
-  /// into inline groups — that is how UIMenu renders separators.
   static func elements(
     from children: [MenuElement],
     onAction: @escaping @MainActor (String) -> Void
@@ -74,12 +70,10 @@ public enum MenuBuilder {
       attributes: attributes,
       state: spec.state.uiKit
     ) { _ in
-      // UIKit invokes action handlers on the main thread.
       MainActor.assumeIsolated { onAction(spec.id) }
     }
   }
 
-  /// A nested `UIMenu` — renders as a row navigating to a subpage.
   static func submenu(
     _ spec: MenuSpec,
     onAction: @escaping @MainActor (String) -> Void
@@ -87,7 +81,6 @@ public enum MenuBuilder {
     menu(from: spec, onAction: onAction)
   }
 
-  /// An inline section — `displayInline` is forced regardless of the spec.
   static func section(
     _ spec: MenuSpec,
     onAction: @escaping @MainActor (String) -> Void
@@ -105,7 +98,6 @@ public enum MenuBuilder {
     return menu
   }
 
-  /// Display-time content (`UIDeferredMenuElement.uncached`).
   static func deferred(
     _ spec: MenuDeferred,
     onAction: @escaping @MainActor (String) -> Void
@@ -122,7 +114,6 @@ public enum MenuBuilder {
   }
 }
 
-// MARK: - Wire-enum → UIKit mappings
 
 extension MenuOptions {
   var uiKit: UIMenu.Options {
@@ -187,7 +178,6 @@ extension SymbolScale {
 }
 
 extension MenuIcon {
-  /// The `UIImage` the menu element renders.
   var resolved: UIImage? {
     switch self {
     case .sfSymbol(let symbol):

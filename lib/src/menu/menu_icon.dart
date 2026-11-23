@@ -1,18 +1,21 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/painting.dart' show Color;
 
-/// A row's leading image (`UIAction.image` / `UIMenu.image`).
-sealed class LiquidMenuIcon {
-  const LiquidMenuIcon();
+/// An SF Symbol or encoded bitmap used by a menu.
+sealed class PrismMenuIcon {
+  /// Creates a PrismMenuIcon.
+  const PrismMenuIcon();
 
+  /// Serializes native wire fields.
   Map<String, Object?> toMap();
 }
 
-/// An SF Symbol by name, with optional weight, scale, rendering mode and
-/// palette colors — the native `UIImage.SymbolConfiguration` surface.
-final class LiquidMenuSfSymbol extends LiquidMenuIcon {
-  const LiquidMenuSfSymbol(
+/// An SF Symbol with optional configuration and palette colors.
+final class PrismMenuSfSymbol extends PrismMenuIcon {
+  /// Creates a PrismMenuSfSymbol.
+  const PrismMenuSfSymbol(
     this.name, {
     this.weight,
     this.scale,
@@ -20,15 +23,45 @@ final class LiquidMenuSfSymbol extends LiquidMenuIcon {
     this.palette = const [],
   });
 
+  /// The SF Symbol name.
   final String name;
-  final SymbolWeight? weight;
-  final SymbolScale? scale;
-  final SymbolRenderingMode renderingMode;
 
-  /// Palette colors for `.palette` mode; the first is also the base color for
-  /// `.hierarchical`.
+  /// The optional SF Symbol weight.
+  final PrismSymbolWeight? weight;
+
+  /// The optional SF Symbol scale.
+  final PrismSymbolScale? scale;
+
+  /// The SF Symbol rendering mode.
+  final PrismSymbolRenderingMode renderingMode;
+
+  /// The SF Symbol palette colors in rendering order.
   final List<Color> palette;
 
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuSfSymbol &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          weight == other.weight &&
+          scale == other.scale &&
+          renderingMode == other.renderingMode &&
+          listEquals(palette, other.palette));
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    name,
+    weight,
+    scale,
+    renderingMode,
+    Object.hashAll(palette),
+  );
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'kind': 'sfSymbol',
@@ -40,14 +73,32 @@ final class LiquidMenuSfSymbol extends LiquidMenuIcon {
   };
 }
 
-/// A bitmap supplied as encoded image bytes (PNG/etc.). `templated` makes
-/// single-color artwork pick up the menu's own tint.
-final class LiquidMenuImage extends LiquidMenuIcon {
-  const LiquidMenuImage(this.bytes, {this.templated = false});
+/// Encoded bitmap bytes with optional template tinting.
+final class PrismMenuImage extends PrismMenuIcon {
+  /// Creates a bitmap menu icon.
+  const PrismMenuImage(this.bytes, {this.templated = false});
 
+  /// The encoded image bytes.
   final Uint8List bytes;
+
+  /// Whether the bitmap uses the menu tint.
   final bool templated;
 
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuImage &&
+          runtimeType == other.runtimeType &&
+          listEquals(bytes, other.bytes) &&
+          templated == other.templated);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, Object.hashAll(bytes), templated);
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'kind': 'image',
@@ -56,27 +107,62 @@ final class LiquidMenuImage extends LiquidMenuIcon {
   };
 }
 
-/// `UIImage.SymbolWeight` as a wire-friendly enum.
-enum SymbolWeight {
+/// The native SF Symbol weight.
+enum PrismSymbolWeight {
+  /// Uses the ultralight weight.
   ultraLight,
+
+  /// Uses the thin weight.
   thin,
+
+  /// Uses the light weight.
   light,
+
+  /// Uses the regular weight.
   regular,
+
+  /// Uses the medium weight.
   medium,
+
+  /// Uses the semibold weight.
   semibold,
+
+  /// Uses the bold weight.
   bold,
+
+  /// Uses the heavy weight.
   heavy,
+
+  /// Uses the black weight.
   black,
 }
 
-/// `UIImage.SymbolScale` as a wire-friendly enum.
-enum SymbolScale { small, medium, large }
+/// The native SF Symbol scale.
+enum PrismSymbolScale {
+  /// The small setting.
+  small,
 
-/// `UIImage.SymbolRenderingMode` as a wire-friendly enum.
-enum SymbolRenderingMode {
+  /// The medium setting.
+  medium,
+
+  /// The large setting.
+  large,
+}
+
+/// The native SF Symbol rendering mode.
+enum PrismSymbolRenderingMode {
+  /// Uses the system rendering mode.
   automatic,
+
+  /// Uses a single tint color.
   monochrome,
+
+  /// Uses hierarchical tint levels.
   hierarchical,
+
+  /// Uses the configured palette colors.
   palette,
+
+  /// Uses the symbol’s built-in colors.
   multicolor,
 }

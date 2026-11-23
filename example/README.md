@@ -1,27 +1,35 @@
-# Liquid Prism showcase
+# Liquid Prism 1.0.0 examples
 
-A complete interactive gallery built with the public Liquid Prism API.
+`lib/main.dart` runs the interactive showcase: Explore, Studio, and Library pages
+cover glass surfaces, controls, adaptive navigation, scroll effects, and native
+iOS popup menus. Studio changes appearance, materials, accents, and optics.
+Artwork is drawn in Dart; no external assets or network services are required.
 
-- **Explore**: original artwork, live glass, interactive controls and collection highlights.
-- **Studio**: light/dark appearance, regular/clear glass, all 12 native accent colors, tab labels, three artwork palettes, adjustable frost and refraction, and a draggable lens.
-- **Library**: searchable examples for surfaces, buttons, switches, sliders, segmented controls, tab bars, grouped toolbar actions, search fields and native popup menus. Each example includes gesture guidance and, where relevant, disabled states.
+`lib/api_main.dart` runs a smaller customization example with shared
+`PrismThemeData`, local `Prism*Style` overrides, lens styling, controlled values,
+and app-owned search suggestions.
 
-Appearance, material, accent and sample values follow you between pages. Layouts adapt to narrow phones, larger text and wider windows. Artwork is drawn in Dart; no external assets or network services are required. Pickers are intentionally excluded.
+Run from `example/`:
 
 ```sh
 flutter pub get
-../tool/run_example.sh <device-id>
+flutter run -t lib/main.dart -d <device-id>
+flutter run -t lib/api_main.dart -d <device-id>
 ```
 
-Use `flutter devices` to find a simulator or device. Dart changes support hot reload; shader asset changes require a rebuild.
+Use `flutter devices` to find a device or simulator. Dart changes support hot
+reload; shader changes require a rebuild. Native popup menus require iOS.
 
-The separate `controls_main.dart` and `chrome_main.dart` entry points retain the focused native-comparison fixtures. `transform_main.dart` places glass on a page scaled like a modal sheet's covered page.
+Both entry points call `Prism.initialize()` before `runApp`. Import the consumer
+API from `package:liquid_prism/liquid_prism.dart`; import
+`package:liquid_prism/primitives.dart` for low-level optics, lenses, pressables,
+and system chrome. Keep visual overrides in immutable `Prism*Style` objects.
 
-To record the showcase, launch `flutter run -t test_driver/showcase.dart -d <device-id>`, then run `test_driver/showcase_video.dart` with `DART_VM_SERVICE_URL`, `PRISM_SIMULATOR_ID` and `PRISM_SHOWCASE_OUT` set. Videos and screenshots are local artifacts.
+See the [migration guide](../doc/migration-1.0.md),
+[components](../doc/components.md), and [customization](../doc/customization.md).
 
-## Customization example
-
-Run `flutter run -t lib/api_main.dart -d <device-id>` for a smaller, fully runnable
-example of shared themes, local styles, lens overrides, icon buttons and editor
-options. Its state stays in the app; controls only propose updates. See
-[components](../doc/components.md) and [customization](../doc/customization.md).
+```sh
+dart --suppress-analytics format lib test
+dart --suppress-analytics analyze
+flutter test
+```

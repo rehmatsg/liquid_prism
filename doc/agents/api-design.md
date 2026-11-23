@@ -1,86 +1,28 @@
 # Public API contracts
 
-## Defaults and overrides
+## Naming & barrel boundaries
 
-Prefer a short constructor for ordinary use, an immutable style for repeated
-component choices, and a scoped theme for app defaults. Do not expose internal
-role IDs or rendering states as routine consumer inputs.
+- Every public type uses the `Prism*` prefix (and `prismMenus` for the menu facade). Zero unprefixed public enums or classes.
+- Core consumer types export from `lib/liquid_prism.dart`; low-level building blocks export from `lib/primitives.dart`.
 
-Resolution is direct widget argument > local component style > component theme >
-native fallback. Shared lens defaults merge below a component's `lens`. Generic
-surface theme defaults sit below component-specific material settings. Do not
-apply generic glass/blur to lifted lenses accidentally: lenses have their own
-clear native recipe.
+## Widget vs. style split
 
-Nullable style fields mean "inherit". Respect explicit `false`, `0`, zero insets,
-transparent colors and `Glass.identity`. Text styles merge their fields;
-`LiquidPrismStyle` and `GlassMotion` are complete packets. Partial
-`GlassControlMotion` merges its individual fields. Never use truthiness or compare
-a supplied value to its default to decide whether it was explicit.
+- Widget constructors accept semantic and behavioral parameters (`value`, `onChanged`, `label`, `icon`, `variant`, `size`, `enabled`, `isLoading`, `autoLoading`, `destructive`, `selected`, `focusNode`, `style`, etc.).
+- Visual, geometry, optical, motion, padding, and haptic overrides live in immutable `Prism*Style` classes and inherit from `PrismThemeData`.
+- Resolution order: local widget `style` > `PrismThemeData` > native fallback.
+- Nullable style fields mean inherit; respect explicit `false`, `0`, zero insets, transparent colors, and `PrismGlass.identity`.
+- Every style, theme, optics, motion, and data class MUST implement `==`, `hashCode`, `copyWith`, and `merge` (for partial styles).
 
-For legacy constructors with non-null defaulted public fields, a nullable input
-plus a private supplied flag preserves the public field and recognizes explicit
-overrides. Existing examples include button padding, switch haptics and search
-cancel visibility. Do not replace a public field with nullable storage casually.
+## Input & callback semantics
 
-`copyWith` keeps a field when its argument is null. `merge` combines partial
-styles, including nested lenses and text fields. To remove a previously set field,
-construct a replacement style; `copyWith(null)` is not a reset. To discard outer
-theme inheritance, use `LiquidPrismTheme(inherit: false, ...)`. Material tint has
-its own explicit reset: `Glass.tint(null)`.
+- Null action/value callbacks disable all activation paths including semantics.
+- Parents own values; external updates and key reordering cancel obsolete gestures and settle to the current value.
+- `onChangeStart` / `onChangeEnd` are input-phase callbacks, not animation completion.
+- Switch haptics fire on iOS at user toggle boundaries; slider haptics fire when accepted user input reaches `min` or `max`.
+- Each tab bar, switch, slider, and segmented control has a single gesture owner (`ControlGestureRecognizer`). Disabled controls remain recognizer-free so scrolls pass through.
+- `PrismButton` with `isLoading` or `autoLoading` ignores activation while remaining enabled, focusable, and announced as a button.
 
-## Input and callback semantics
+## SemVer & compatibility
 
-- Null action/value callbacks disable all activation paths, including semantics.
-- Parents own values; a proposal may be rejected. External updates and key
-  reordering must cancel obsolete gestures and settle to the current value.
-- `onChangeStart`/`onChangeEnd` are input-phase callbacks, not animation completion.
-  Switch callbacks receive booleans, segment callbacks receive keys, slider
-  callbacks receive actual range values. Preserve existing cancellation behavior.
-- Slider formatting receives actual `min`–`max` values, including accessibility
-  increase/decrease previews. Divisions quantize values, not physical pixel travel.
-- Switch haptics occur on iOS at user toggle boundaries. External updates and
-  cancellation must not generate haptics.
-- Slider haptics occur on iOS when accepted user input first reaches the minimum
-  or maximum. `ControlInteraction` announces an end only when the parent rebuilds
-  with exactly the end a user input proposed in that frame; external updates,
-  cancellation and rejected or altered values only move the latch.
-- Each tab bar, switch, slider and segmented control has one gesture owner,
-  `ControlGestureRecognizer` (`lib/src/control_gesture.dart`). Contacts on the
-  thumb/selection (all of a switch or tab bar) claim the pointer on contact and
-  drag at any angle; an ancestor scrollable cannot take them. Inactive parts
-  (slider track, unselected segments) yield cross-axis drags to an ancestor
-  scrollable and lift nothing while held. Do not wrap controls in other
-  recognizers, and keep disabled controls recognizer-free so scrolls pass.
-- Async button callbacks may overlap unless the button opts in: `isLoading`, or
-  `autoLoading` while the returned future is pending, makes `LiquidPrismButton`
-  ignore activation while it stays enabled, focusable and announced as a
-  button. Other exclusive state belongs to the app.
-- Custom tab icons must currently avoid nested repaint boundaries; document this
-  renderer limitation rather than silently replacing their stateful subtree.
-
-## Geometry and accessibility
-
-Use logical pixels. Small-control `scale` multiplies geometry; text/track controls
-remain separately configurable. Keep minimum 44-point hit height and switch hit
-width. A lifted lens may paint outside resting layout. Do not clip it at the
-control boundary. Sliders/segments constrain preferred width to available space;
-compact tabs measure labels rather than always stretching.
-
-Validate ranges in constructors when const expressions allow it; validate compound
-Size/geometry relationships during layout. Ensure constraints can still become
-narrow/zero without division by zero. RTL changes physical mapping, not logical
-order. Preserve labels, keyboard activation, focus and Reduce Motion.
-
-## Adding an option
-
-Wire the option through public export, style constructor/fields, typed `copyWith`,
-`merge`, theme resolution, actual layout/paint, and docs. Test observable behavior
-and precedence. A field that is accepted but ignored is a broken API.
-
-Keep names consistent: component configuration uses `style`, direct typography
-uses `textStyle`, and button treatment uses `variant`. Toolbar composition uses
-`GlassToolbarContent` rather than runtime-checked lists of objects.
-
-Avoid new dependencies for a configuration object. Keep styles const-friendly,
-immutable and typed. Preserve direct-import enum reexports when moving declarations.
+- Follow SemVer starting at `1.0.0`. Additive changes are minor; bug/visual fixes are patch; breaking removals require a deprecation cycle (`@Deprecated`) and a major release (`2.0.0`).
+- Shader role IDs (`PrismRole.shaderId`) are explicit ABI values; never replace them with enum indices.

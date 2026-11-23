@@ -1,5 +1,6 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 
 import 'widgets.dart';
 
@@ -23,7 +24,6 @@ const _tints = [
   Color(0xFF007AFF),
 ];
 
-/// Where a pull's drop comes from on this device, for the pages' captions.
 String _anchorLabel(Rect? island) => island == null
     ? 'This window has no Dynamic Island, so the drop comes out of its notch '
           'or top edge.'
@@ -31,8 +31,6 @@ String _anchorLabel(Rect? island) => island == null
           '(${island.width.round()}×${island.height.round()} at '
           '${island.left.round()}, ${island.top.round()}).';
 
-/// Pull to refresh on [LiquidPrismScaffold.slivers]: one callback. Each
-/// refresh delivers new messages to the top of the inbox.
 class RefreshFeedPage extends StatefulWidget {
   const RefreshFeedPage({super.key, this.compact = true});
   final bool compact;
@@ -42,13 +40,12 @@ class RefreshFeedPage extends StatefulWidget {
 }
 
 class _RefreshFeedPageState extends State<RefreshFeedPage> {
-  /// Message ids, newest first.
   final _messages = [for (var i = 11; i >= 0; i--) i];
   var _unread = 0;
   var _slow = false;
   late var _compact = widget.compact;
   var _fail = false;
-  final _controller = LiquidPrismRefreshController();
+  final _controller = PrismRefreshController();
 
   @override
   void dispose() {
@@ -56,7 +53,6 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
     super.dispose();
   }
 
-  /// Completes with false when the refresh fails, which skips the check.
   Future<bool> _refresh() async {
     await Future<void>.delayed(Duration(milliseconds: _slow ? 3500 : 1200));
     if (!mounted || _fail) return false;
@@ -70,31 +66,31 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
-    return LiquidPrismScaffold(
+    final colors = PrismColors.of(context);
+    return PrismScaffold(
       backgroundColor: colors.groupedBackground,
       title: const Text('Inbox'),
       largeTitle: _compact ? null : const Text('Inbox'),
       refreshController: _controller,
       toolbar: [
-        GlassToolbarItem(
+        PrismToolbarItem(
           icon: const Icon(CupertinoIcons.textformat_size),
           label: _compact ? 'Use a large title' : 'Use a compact title',
           onPressed: () => setState(() => _compact = !_compact),
         ),
-        GlassToolbarItem(
+        PrismToolbarItem(
           key: const ValueKey('refresh-now'),
           icon: const Icon(CupertinoIcons.arrow_clockwise),
           label: 'Refresh now',
           onPressed: _controller.refresh,
         ),
-        GlassToolbarItem(
+        PrismToolbarItem(
           key: const ValueKey('refresh-fail'),
           icon: Icon(_fail ? CupertinoIcons.wifi_slash : CupertinoIcons.wifi),
           label: _fail ? 'Let refreshes succeed' : 'Make refreshes fail',
           onPressed: () => setState(() => _fail = !_fail),
         ),
-        GlassToolbarItem(
+        PrismToolbarItem(
           key: const ValueKey('refresh-slow'),
           icon: Icon(
             _slow ? CupertinoIcons.tortoise_fill : CupertinoIcons.hare,
@@ -109,7 +105,7 @@ class _RefreshFeedPageState extends State<RefreshFeedPage> {
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
           sliver: SliverToBoxAdapter(
             child: ValueListenableBuilder<Rect?>(
-              valueListenable: LiquidPrismSystemChrome.dynamicIsland,
+              valueListenable: PrismSystemChrome.dynamicIsland,
               builder: (context, island, _) => Text(
                 'Pull down to check for mail. ${_compact ? 'The indicator appears below this compact header.' : _anchorLabel(island)} '
                 '${_unread == 0 ? '' : '$_unread new since you arrived.'}',
@@ -162,7 +158,7 @@ class _MessageRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -234,9 +230,6 @@ class _MessageRow extends StatelessWidget {
   }
 }
 
-/// Pull to refresh on a [LiquidPrismScaffold.body]: the page owns its scroll
-/// view, here a short dark grid that still pulls, and the scaffold follows it.
-/// Dark content shows how the drop reads without a light page behind it.
 class RefreshGalleryPage extends StatefulWidget {
   const RefreshGalleryPage({super.key});
 
@@ -253,10 +246,10 @@ class _RefreshGalleryPageState extends State<RefreshGalleryPage> {
   }
 
   @override
-  Widget build(BuildContext context) => LiquidPrismTheme(
-    data: const LiquidPrismThemeData(brightness: Brightness.dark),
+  Widget build(BuildContext context) => PrismTheme(
+    data: const PrismThemeData(brightness: Brightness.dark),
     child: Builder(
-      builder: (context) => LiquidPrismScaffold(
+      builder: (context) => PrismScaffold(
         backgroundColor: const Color(0xFF0B0B0F),
         title: const Text('Gallery'),
         onRefresh: _refresh,
@@ -265,7 +258,7 @@ class _RefreshGalleryPageState extends State<RefreshGalleryPage> {
             final padding = MediaQuery.paddingOf(context);
             return GridView.builder(
               key: const ValueKey('refresh-gallery'),
-              // Six tiles don't fill the window; this keeps them pullable.
+
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.fromLTRB(
                 padding.left + 16,

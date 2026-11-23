@@ -3,8 +3,6 @@ import XCTest
 
 @testable import liquid_prism
 
-/// Builder-level coverage: MenuSpec → UIMenu structure, attributes, options.
-/// Runs without a window — pure model-to-UIKit mapping.
 @MainActor
 @available(iOS 17.4, *)
 final class MenuBuilderTests: XCTestCase {
@@ -13,8 +11,6 @@ final class MenuBuilderTests: XCTestCase {
     MenuBuilder.menu(from: spec) { _ in }
   }
 
-  /// The builder wraps each contiguous run in a `.displayInline` section —
-  /// flatten the root's children into the actions they contain.
   private func actions(in menu: UIMenu) -> [UIAction] {
     menu.children.flatMap { child -> [UIAction] in
       if let action = child as? UIAction { return [action] }
@@ -29,7 +25,6 @@ final class MenuBuilderTests: XCTestCase {
     menu.children.compactMap { $0 as? UIMenu }
   }
 
-  // ─── Structure ───
 
   func testFlatActionsBecomeOneInlineRun() {
     let menu = build(MenuSpec(children: [
@@ -87,7 +82,6 @@ final class MenuBuilderTests: XCTestCase {
         .action(MenuAction(id: "a", title: "A"))
       ])),
     ]))
-    // The submenu sits inside the enclosing inline run.
     let submenu = topLevelMenus(in: topLevelMenus(in: menu).first ?? UIMenu()).first
     XCTAssertEqual(submenu?.title, "More")
     XCTAssertFalse(submenu?.options.contains(.displayInline) ?? true)
@@ -101,7 +95,6 @@ final class MenuBuilderTests: XCTestCase {
     XCTAssertTrue(inner?.children.first is UIDeferredMenuElement)
   }
 
-  // ─── Action attributes ───
 
   func testActionAttributes() {
     let menu = build(MenuSpec(children: [
@@ -134,8 +127,6 @@ final class MenuBuilderTests: XCTestCase {
     XCTAssertEqual(actions(in: menu).first?.discoverabilityTitle, "Tap A")
   }
 
-  /// The action's identifier carries the wire id — that is what routes the
-  /// selection event back to Dart.
   func testActionIdentifierCarriesWireId() {
     let menu = build(MenuSpec(children: [
       .action(MenuAction(id: "pick-me", title: "Pick")),
@@ -143,7 +134,6 @@ final class MenuBuilderTests: XCTestCase {
     XCTAssertEqual(actions(in: menu).first?.identifier.rawValue, "pick-me")
   }
 
-  // ─── Menu-level ───
 
   func testMenuIdentifierAndTitle() {
     let menu = build(MenuSpec(title: "Root", identifier: "root", children: []))
@@ -173,8 +163,6 @@ final class MenuBuilderTests: XCTestCase {
         id: "a", title: "A",
         image: .sfSymbol(SFSymbolIcon(name: "not.a.symbol")))),
     ]))
-    // UIImage(systemName:) may return nil for unknown names — either way the
-    // builder must not crash and the action must exist.
     XCTAssertEqual(actions(in: menu).count, 1)
   }
 

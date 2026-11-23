@@ -1,135 +1,139 @@
 # Component guide
 
-Import `package:liquid_prism/liquid_prism.dart` and your Flutter widget library.
+Import `package:liquid_prism/liquid_prism.dart`, `package:flutter/material.dart`
+and `package:flutter/cupertino.dart` for the examples below.
+Also import `package:liquid_prism/primitives.dart` for examples using
+`PrismOptics`, `PrismLensStyle`, `PrismEdgeBlur`, `PrismEdgeBlurStrip`,
+`PrismEdgeFade`, `PrismSystemChrome` or `PrismTabReselection`.
 The snippets below use values and callbacks owned by your widget's State. A
 runnable customization example is in `example/lib/api_main.dart`.
 
 ## Appearance at three levels
 
-Use direct arguments for small local overrides, component styles for reusable
-appearance, and `LiquidPrismThemeData` for shared defaults.
+Keep semantic and behavioral inputs on widgets. Put visual, optical, geometry,
+motion and haptic overrides in immutable `Prism*Style` objects, and use
+`PrismThemeData` for shared defaults.
 
 | Widget | Local style | Theme field |
 | --- | --- | --- |
-| Button | `style: GlassButtonStyle` | `button` |
-| Switch | `style: GlassSwitchStyle` | `switchStyle` |
-| Slider | `style: GlassSliderStyle` | `slider` |
-| Segmented control | `style: GlassSegmentedStyle` | `segmentedControl` |
-| Tab bar | `style: GlassTabBarStyle` | `tabBar` |
-| Toolbar | `style: GlassToolbarStyle` | `toolbar` |
-| Search | `style: GlassSearchStyle` | `search` |
+| Button | `style: PrismButtonStyle` | `button` |
+| Switch | `style: PrismSwitchStyle` | `switchStyle` |
+| Slider | `style: PrismSliderStyle` | `slider` |
+| Segmented control | `style: PrismSegmentedStyle` | `segmentedControl` |
+| Tab bar | `style: PrismTabBarStyle` | `tabBar` |
+| Toolbar | `style: PrismToolbarStyle` | `toolbar` |
+| Search | `style: PrismSearchStyle` | `search` |
 | Every lifted lens | component style's `lens` | `lens` |
-| Small-control motion | widget `motion: GlassControlMotion` | `controlMotion` |
+| Small-control motion | component style's `motion: PrismControlMotion` | `controlMotion` |
 
 See [all style fields and defaults](style_reference.md),
 [customization](customization.md) for precedence and [motion/lenses](motion_and_lenses.md)
-for the advanced controls. Search's direct `textStyle` overrides
-`GlassSearchStyle.textStyle`.
+for the advanced controls. Search typography belongs in `PrismSearchStyle.textStyle`.
 
 ## Surfaces
 
 ```dart
-LiquidPrism(
-  glass: Glass.clear.tint(GlassColors.of(context).purple.withValues(alpha: .2)),
-  shape: const GlassShape.rect(cornerRadius: 28),
+PrismSurface(
+  glass: PrismGlass.clear.tint(PrismColors.of(context).purple.withValues(alpha: .2)),
+  shape: const PrismShape.rect(cornerRadius: 28),
   blur: 3,
   child: const Padding(padding: EdgeInsets.all(24), child: Text('A new view')),
 )
 ```
 
-`Glass.regular`, `clear`, and `identity` select a material. Fluent `.tint(null)`
+`PrismGlass.regular`, `clear`, and `identity` select a material. Fluent `.tint(null)`
 removes tint; `.interactive(false)` removes the surface's own press feedback.
-`LiquidPrismStyle` is the complete expert optical packet, with `copyWith` for
+`PrismOptics` is the complete expert optical packet, with `copyWith` for
 modifying refraction, edge width, dispersion, light, reflection, saturation and
-blur. An explicit `blur` overrides its frost. `GlassShape.rect` has continuous
+blur. An explicit `blur` overrides its frost. `PrismShape.rect` has continuous
 corners; `roundedRect` uses circular arcs. `circle` is inscribed in its bounds.
-`LiquidPrismGroup` shares backdrop captures among its members; see
-[rendering](rendering.md). `LiquidPrismScaffold` groups its own chrome.
+`PrismGroup` shares backdrop captures among its members; see
+[rendering](rendering.md). `PrismScaffold` groups its own chrome.
 
-Set `LiquidPrism(shadow: false)` to suppress exterior and inset material
-shadows while retaining rim lighting, or set `LiquidPrismThemeData(shadow: false)`
+Set `PrismSurface(shadow: false)` to suppress exterior and inset material
+shadows while retaining rim lighting, or set `PrismThemeData(shadow: false)`
 for a subtree. Widget values override the theme. Lifted control lens shadows
-have their separate `GlassLensStyle.shadow` setting.
+have their separate `PrismLensStyle.shadow` setting.
 
 ### Enter and exit
 
 ```dart
-LiquidPrismVisibility(
+PrismVisibility(
   visible: isEditing,
-  child: LiquidPrismButton(onPressed: save, child: const Text('Done')),
+  child: PrismButton(label: 'Done', onPressed: save),
 )
 ```
 
-`LiquidPrismVisibility` materializes glass in and out, like SwiftUI's
+`PrismVisibility` materializes glass in and out, like SwiftUI's
 `glassEffectTransition(.materialize)`. The lens, frost, light and shadows grow
 from the live backdrop while content fades in and sharpens. The child stays
 mounted through its exit, ignores pointers and leaves semantics while hidden,
-and is then removed. `GlassTransition.identity` switches instantly; Reduce Motion
-uses a short fade. `GlassTransitionStyle` (widget `style` or theme `transition`)
+and is then removed. `PrismTransition.identity` switches instantly; Reduce Motion
+uses a short fade. `PrismTransitionStyle` (widget `style` or theme `transition`)
 sets `enterSpring`, `exitSpring` and `contentBlur`.
 
 To drive presence yourself (a scroll, a drag), wrap the glass in
-`LiquidPrismPresence(progress: animation, child: ...)`. Nested presences multiply.
+`PrismVisibility.driven(progress: animation, child: ...)`. Nested presences multiply.
 Never fade glass with an ancestor `Opacity`: it cuts the lens off its backdrop.
 
 ## Buttons
 
 ```dart
-LiquidPrismButton(
+PrismButton(
   label: 'Save',
   onPressed: save,
-  style: const GlassButtonStyle(
-    variant: GlassButtonVariant.prominent,
+  style: const PrismButtonStyle(
+    variant: PrismButtonVariant.prominent,
     minimumSize: Size(120, 48),
     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
   ),
   child: const Text('Save'),
 )
 
-LiquidPrismButton.icon(
+PrismButton.icon(
   label: 'Favorite',
   icon: const Icon(CupertinoIcons.heart),
   onPressed: toggleFavorite,
 )
 
-LiquidPrismButton(
+PrismButton(
   label: 'Delete',
-  size: GlassControlSize.small,
+  style: const PrismButtonStyle(size: PrismControlSize.small),
   icon: const Icon(CupertinoIcons.trash),
   destructive: true,
   autoLoading: true,
-  onPressed: deleteDraft, // returns a Future
+  onPressed: deleteDraft,
 )
 ```
 
 The icon constructor defaults to a circle and a 48-point minimum extent.
 Style overrides include typography, icon size, material, optics, blur, shape,
-padding, foreground and motion. A direct `variant`, `padding` or
-`foregroundColor` wins over the style, including explicit defaults. Prominent
+padding, foreground and motion belong in `PrismButtonStyle`. The retained
+`variant` and `size` widget shortcuts override their style fields. Prominent
 buttons default to white text and use a neutral material tint while disabled.
 Null callbacks and `enabled: false` disable every activation path.
 `isLoading`, or `autoLoading` while the future `onPressed` returns is pending,
 swaps the content for an activity indicator in the same space and ignores
-activation while keeping its colors, focus and enabled semantics; `loadingIndicator` (or the
-style's) replaces the built-in indicator. Without either, async callbacks can
+activation while keeping its colors, focus and enabled semantics;
+`PrismButtonStyle.loadingIndicator` replaces the built-in indicator. Without either, async callbacks can
 overlap. `destructive` draws the system red as a regular button's foreground
 and a prominent button's tint, over a component theme's foreground (the
-widget's own `foregroundColor` or local `style` still wins); `tintColor` tints the glass directly. `icon`
+local style's `foregroundColor` still wins); style `tintColor` tints the glass directly. `icon`
 sits beside the label at the style's `labelPlacement` and `trailingIcon`
 follows both. `onLongPress` plays the theme's long-press haptic
-(`GlassHapticComponent.button`) and wins over the tap once recognized.
+(`PrismHapticComponent.button`) and wins over the tap once recognized.
 `semanticLabel` replaces the accessible name. Every button keeps a 44-point
-hit area, so `GlassControlSize.small` (28 points) suits text actions in a
+hit area, so `PrismControlSize.small` (28 points) suits text actions in a
 bar's `trailing` slot.
 
 ## Switches
 
 ```dart
-LiquidPrismSwitch(
+PrismSwitch(
   label: 'Notifications',
   value: notifications,
   onChanged: (next) => setState(() => notifications = next),
-  style: const GlassSwitchStyle(scale: 1.2, haptics: false),
+  style: const PrismSwitchStyle(scale: 1.2, haptics: false),
 )
 ```
 
@@ -139,8 +143,9 @@ Scale adjusts visible geometry proportionally; the hit area stays at least
 resting thumb and both insets. Track/lens contours and colors are separate.
 `onChangeStart` and `onChangeEnd` optionally report interaction boundaries.
 
-Default iOS haptics fire once on a toggle or each crossed drag boundary. A direct
-`haptics` argument wins over the style. Quick taps retain a 220 ms minimum lift.
+Default iOS haptics fire once on a toggle or each crossed drag boundary.
+Set `PrismSwitchStyle(haptics: false)` to disable them locally. Quick taps retain
+a 220 ms minimum lift.
 The whole switch is its thumb: a touch claims the pointer, so a drag at any
 angle toggles it, even inside a scroll view.
 The default track is 63 × 28; the rest/held thumbs are 37 × 24 and 58 × 38⅓.
@@ -148,7 +153,7 @@ The default track is 63 × 28; the rest/held thumbs are 37 × 24 and 58 × 38⅓
 ## Sliders
 
 ```dart
-LiquidPrismSlider(
+PrismSlider(
   label: 'Volume',
   value: volume,
   min: 0,
@@ -157,11 +162,11 @@ LiquidPrismSlider(
   semanticFormatterCallback: (value) => '${value.round()} percent volume',
   onChanged: (next) => setState(() => volume = next),
   onChangeEnd: saveVolume,
-  style: const GlassSliderStyle(
+  style: const PrismSliderStyle(
     trackHeight: 8,
     thumbSize: Size(40, 24),
     heldScale: 1.6,
-    lens: GlassLensStyle(shadowOpacity: .07),
+    lens: PrismLensStyle(shadowOpacity: .07),
   ),
 )
 ```
@@ -179,7 +184,7 @@ through it keeps its normal thickness. Both are preserved under customization.
 The held knob uses the slider's measured lens inputs: a 6.66-point rim with
 11.1 points of refraction, a face black point of .1 that lifts dark backdrops
 seen through it, and the contact shadow kept under the lifted knob. Tune them
-with `GlassLensStyle.rimWidth`, `rimRefraction`, `rimLight`, `faceBlack` and
+with `PrismLensStyle.rimWidth`, `rimRefraction`, `rimLight`, `faceBlack` and
 `heldContactShadow` in the slider's `lens`. Switches, segmented controls and the
 tab pill default to their own native rims (11.5 / 6.9, 8.8 / 7.04 and
 10.5 / 7 points of refraction / band).
@@ -188,7 +193,7 @@ On iOS a light impact plays when a drag, tap, key or accessibility step reaches
 the minimum or maximum and the parent accepts that value. It plays once per
 arrival: holding against the end is silent until the value leaves it. External
 value updates, cancellation and rejected values are silent. Turn it off with
-`haptics: false` on the slider (which wins) or `GlassSliderStyle(haptics: false)`.
+`PrismSliderStyle(haptics: false)` in the slider's `style`.
 
 Touches within the held thumb's half width (28.7 points by default, at least 22)
 grab it: the slider claims the pointer, lifts the thumb and follows a drag at
@@ -201,12 +206,12 @@ and a horizontal drag from it takes the thumb to the finger and follows.
 ## Segmented controls
 
 ```dart
-LiquidPrismSegmentedControl<String>(
+PrismSegmentedControl<String>(
   label: 'Appearance',
   selectedValue: appearance,
   onValueChanged: (next) => setState(() => appearance = next),
   children: const {'light': Text('Light'), 'dark': Text('Dark')},
-  style: const GlassSegmentedStyle(
+  style: const PrismSegmentedStyle(
     labelStyle: TextStyle(fontSize: 14),
     selectionInset: 3,
     liftInset: Size(10, 6),
@@ -218,7 +223,7 @@ Map insertion order determines order. Use two or more unique values and a
 selected value in that map. Reordering cancels an obsolete gesture. Each child
 can be any widget. Configure preferred width, geometry scale, hit/track/thumb
 heights, selection inset, lift inset per side, colors and typography.
-Direct color arguments override styles. `onChangeStart`/`onChangeEnd` use your
+Set colors in `PrismSegmentedStyle`; local fields override the component theme. `onChangeStart`/`onChangeEnd` use your
 value type. Touch commits on release; keys and semantics commit immediately.
 
 A touch on the selected segment grabs the selection: it claims the pointer,
@@ -229,27 +234,27 @@ finger while the selection travels there, lifted. A mostly vertical drag from an
 unselected segment scrolls an enclosing list and commits nothing.
 
 While the selection is held, labels under its rim bend inward, as on iOS 27;
-a label centred in the selection stays still. `GlassSegmentedStyle`'s
+a label centred in the selection stays still. `PrismSegmentedStyle`'s
 `refractContent: false` or `contentRefraction: 0` turns this off, and
 `contentDepth` sets the width of the bending band.
 
 ## Tab bars
 
 ```dart
-LiquidPrismTabBar(
+PrismTabBar(
   selectedIndex: selectedTab,
   onSelected: (next) => setState(() => selectedTab = next),
   tabs: const [
-    LiquidPrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
-    LiquidPrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
+    PrismTab(label: 'Home', icon: Icon(CupertinoIcons.house)),
+    PrismTab(label: 'Saved', icon: Icon(CupertinoIcons.bookmark)),
   ],
-  style: const GlassTabBarStyle(labelBehavior: GlassTabLabelBehavior.selected),
+  style: const PrismTabBarStyle(labelBehavior: PrismTabLabelBehavior.selected),
 )
 ```
 
 The default compact housing uses the widest measured label, with an 86-point
 minimum tab spacing and 32 points of label breathing room. Tune those with
-`minimumTabWidth` and `labelPadding`; use `sizing: GlassTabBarSizing.fill` to fill a bounded parent.
+`minimumTabWidth` and `labelPadding`; use `sizing: PrismTabBarSizing.fill` to fill a bounded parent.
 Hidden labels still have accessibility names. `selectedIcon` accepts custom
 selected artwork, shown for the selected tab and for any tab seen through the
 moving pill. While the pill is held or moving, the bar builds a display-only
@@ -267,8 +272,8 @@ or `contentRefraction: 0` disables glyph refraction. `contentDepth` adjusts its
 rim region (native defaults 14 displacement / 11.2 depth). `rimRefraction`
 (0–2, default 1) sets the held pill's chromatic rim: it splits the pill's view of
 the housing per color channel and adds a glint inside its contour, so the pill
-stays visible on a dark housing; 0 turns it off. Widget `motion` is
-`GlassMotion` for travel, press scale and projection; native lift/flex defaults
+stays visible on a dark housing; 0 turns it off. Style `motion` is
+`PrismMotion` for travel, press scale and projection; native lift/flex defaults
 remain calibrated separately. Safe-area positioning belongs to the parent.
 
 ## Scrolling pages
@@ -276,13 +281,18 @@ remain calibrated separately. Safe-area positioning belongs to the parent.
 Pass `slivers:` instead of `body:` and the scaffold builds the scroll view:
 
 ```dart
-LiquidPrismScaffold(
+PrismScaffold(
   title: const Text('Applications'),
   largeTitle: const Text('Applications'),
-  toolbar: [GlassToolbarGroup(items: [filter]), GlassToolbarGroup(items: [sort, search])],
+  toolbar: [PrismToolbarGroup(items: [filter]), PrismToolbarGroup(items: [sort, search])],
   onRefresh: reload,
-  bottomBar: SaveButton(...),
-  slivers: [SliverList.builder(...)],
+  bottomBar: PrismButton(label: 'Save', onPressed: save),
+  slivers: [
+    SliverList.builder(
+      itemCount: 30,
+      itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
+    ),
+  ],
 )
 ```
 
@@ -307,10 +317,15 @@ down, as in a tab view, pass `scrollDepth: 1`.
 `onRefresh` is the whole API, for `slivers` and for a `body`:
 
 ```dart
-LiquidPrismScaffold(
+PrismScaffold(
   title: const Text('Inbox'),
   onRefresh: () => inbox.reload(),
-  slivers: [SliverList.builder(...)],
+  slivers: [
+    SliverList.builder(
+      itemCount: 30,
+      itemBuilder: (context, index) => ListTile(title: Text('Message $index')),
+    ),
+  ],
 )
 ```
 
@@ -339,22 +354,25 @@ housing itself.
 The drop floats over the chrome and never moves the content, and it ignores a
 pull while a refresh is already running.
 
-**Start it from code.** Give the scaffold a `LiquidPrismRefreshController` to
+**Start it from code.** Give the scaffold a `PrismRefreshController` to
 refresh without a pull, such as when a tab is tapped again. The drop leaves its
 anchor, pinches off and spins exactly as after a released pull:
 
 ```dart
-final refresh = LiquidPrismRefreshController();
+final refresh = PrismRefreshController();
 
-LiquidPrismScaffold(
+PrismScaffold(
   onRefresh: feed.reload,
   refreshController: refresh,
-  slivers: [...],
+  slivers: const [SliverToBoxAdapter(child: Text('Feed'))],
 )
 
-await refresh.refresh();   // joins a refresh that is already running
-refresh.isRefreshing;      // and notifies listeners when it changes
+await refresh.refresh();
+final isRefreshing = refresh.isRefreshing;
 ```
+
+`refresh()` joins a refresh already running. The controller notifies listeners
+when `isRefreshing` changes; dispose it when its owner is disposed.
 
 **Report a failure.** A callback whose future completes with `false`, such as
 `() => feed.reload()` for a `Future<bool> reload()`, or one that throws, ends
@@ -367,28 +385,29 @@ the same tree either way.
 
 **Haptics** mark four moments on iOS and Android: the drop starting to leave
 its anchor, the pinch-off, releasing an armed pull, and a successful completion.
-They go through the theme's `GlassHaptics` hook when you set one, as
-`GlassHapticComponent.refresh` events of kind `refreshPulled`, `refreshArmed`,
+They go through the theme's `PrismHaptics` hook when you set one, as
+`PrismHapticComponent.refresh` events of kind `refreshPulled`, `refreshArmed`,
 `refreshReleased`, `refreshSucceeded` and `refreshFailed` (silent by default),
 so an app can route them through its own
 haptics setting or drop them.
 
 `refreshReleased` plays a light impact by default. It fires once when an armed
 pull is released, not for a programmatic refresh or a pull released below the
-arming threshold. Consumers with exhaustive switches over `GlassHapticKind`
+arming threshold. Consumers with exhaustive switches over `PrismHapticKind`
 must handle this event when updating.
 
 ```dart
-LiquidPrismThemeData(
-  haptics: GlassHaptics((context, event) => appHaptics.play(event)),
+PrismThemeData(
+  haptics: PrismHaptics((context, event) => appHaptics.play(event)),
 )
 ```
 
 It follows the scroll view that drives the bar (`scrollDepth`). `slivers` can
 always be pulled; a `body` scroll view shorter than the window needs
-`AlwaysScrollableScrollPhysics`. There is nothing to style or dispose: the
-drop is always black, and its position comes from the device.
-`LiquidPrismSystemChrome.dynamicIsland` reports the island's frame, or null,
+`AlwaysScrollableScrollPhysics`. The indicator owns its animation resources; an
+app-created refresh controller remains app-owned. The indicator is always black,
+and its position follows the device and header layout.
+`PrismSystemChrome.dynamicIsland` reports the island's frame, or null,
 for your own island-anchored effects.
 
 `header:` puts your own heading at the top of the slivers, such as a detail
@@ -402,13 +421,13 @@ to the leading edge when crowded to use the available space before truncating.
 They lead by default when the bar has more than one action (toolbar items and a
 `trailing` widget, in the bar or on the rail), and on the folded iPhone Duo
 outside sheets; sheets there, the unfolded Duo and other iPhones center.
-`LiquidPrismTitle` glass capsules retain their centered default. Set `titleAlignment`
+`PrismTitle` glass capsules retain their centered default. Set `titleAlignment`
 to `leading`, `center` or `trailing`; directional alignment mirrors in RTL.
 `largeTitleAlignment` independently controls the expanded title, leading by default.
 Title widgets keep their own pointer and keyboard input. Only the active title
 participates in focus and accessibility.
 
-Use `GlassNavigationBarStyle.titleDisplayMode` with either scaffold or sliver
+Use `PrismNavigationBarStyle.titleDisplayMode` with either scaffold or sliver
 bars. The four values correspond to SwiftUI's toolbar title modes.
 
 | Mode | iPhone Duo with a vertical bar | Horizontal bar |
@@ -423,7 +442,7 @@ On the Duo rail, large titles use 28-point bold type, or 22 points with an
 a 12-point subtitle. The measured title row is 58 points. Text styles, row
 height, padding, spacing and alignment still accept overrides. An explicit
 `largeTitleExtent` with a supplied `largeTitle` keeps a separate expanded row in
-automatic mode. Use `LiquidPrismSystemChrome.setVerticalBarBehavior` to select
+automatic mode. Use `PrismSystemChrome.setVerticalBarBehavior` to select
 the system's automatic or disabled vertical-bar behavior.
 
 Automatic minimization hides a titled rail bar as content advances and brings
@@ -451,7 +470,7 @@ interactive at the top. The Duo keeps 16 points between a top accessory and the
 body by default, which `contentSpacing` can override. A top-docked tab bar follows the
 navigation bar. Other docks remain independent. Minimization is scroll-driven
 and also works with `scrollEdge: false`. Use `header` for custom page content
-that scrolls away below the navigation bar. See [the measurements](navigation_bar_spec.json).
+that scrolls away below the navigation bar. See [the measurements](../research/specs/navigation_bar_spec.json).
 
 `trailing:` places a widget of your own before the action capsules, such as a
 credits pill or a counter, centred on the control row 8 points from the first
@@ -476,14 +495,14 @@ sit at the rail's bottom, a gap above any tab bar there, keeping their groups,
 while the rest keep the bottom bar, as Photos keeps a "Show Selected" label
 below its grid while Share and Delete move into the rail. A group moves only
 when all of its items can, so related items share an axis. Override the
-inference with `GlassToolbarItem(axisBehavior:)`, as SwiftUI's
+inference with `PrismToolbarItem(axisBehavior:)`, as SwiftUI's
 `axisBehavior(_:)`: `horizontalOnly` for an item whose label alternates
 between a symbol and text, `verticalPreferred` for a custom widget with a good
 vertical form. Flexible spacers collapse on the rail; fixed spacers keep their
 extent.
 
 `hiddenScrollEdges` drops the scroll edge effect on the edges it names, as
-SwiftUI's `scrollEdgeEffectHidden(_:for:)`: `{GlassEdge.bottom}` for a
+SwiftUI's `scrollEdgeEffectHidden(_:for:)`: `{PrismEdge.bottom}` for a
 floating selection bar whose glass needs no fade beneath it. `scrollEdge:
 false` still turns both edges off.
 
@@ -502,29 +521,29 @@ same title widget identity to preserve the transition; rapid changes retarget th
 spring, and Reduce Motion snaps to the new layout. The Conversation showcase
 cycles through all three by tapping its title.
 
-`LiquidPrismTitle` puts the title in a glass capsule, as SwiftUI chat and
+`PrismTitle` puts the title in a glass capsule, as SwiftUI chat and
 contact screens do. `child` is the title (usually `Text`, or any widget),
 `leading` sits inside the capsule before it (a small avatar), and `avatar` sits
 above it, with the capsule tucked 6 points under (a conversation header). Each
 is optional except the title; `onPressed` makes the whole capsule one button.
 
 ```dart
-LiquidPrismScaffold(
-  title: LiquidPrismTitle(
+PrismScaffold(
+  title: PrismTitle(
     avatar: ClipOval(child: Image.asset('friday.png')),
     onPressed: openContact,
     child: const Text('Friday'),
   ),
-  toolbar: [GlassToolbarItem(icon: const Icon(CupertinoIcons.phone), label: 'Call', onPressed: call)],
+  toolbar: [PrismToolbarItem(icon: const Icon(CupertinoIcons.phone), label: 'Call', onPressed: call)],
   body: conversation,
 )
 
-LiquidPrismScaffold(
-  title: LiquidPrismTitle(
+PrismScaffold(
+  title: PrismTitle(
     leading: ClipOval(child: Image.asset('spacy.png')),
     child: const Text('Spacy'),
   ),
-  trailing: LiquidPrismButton(label: 'Invite', onPressed: invite, child: const Text('Invite')),
+  trailing: PrismButton(label: 'Invite', onPressed: invite, child: const Text('Invite')),
   body: conversation,
 )
 ```
@@ -533,7 +552,7 @@ The avatar and leading are laid out in squares (64 and 22 points by default)
 so the bar knows its height: with an avatar it grows below the control row,
 which the leading control, actions and `trailing` keep, and the content starts
 below the capsule. For an inline company avatar, use `leading` with
-`GlassTitleStyle(leadingSize: 32)`. The leading is centred in the capsule's
+`PrismTitleStyle(leadingSize: 32)`. The leading is centred in the capsule's
 height and treated as a circle, as far from the capsule's start as from its top
 and bottom at every height. A rounded-square logo passes its
 `leadingCornerRadius`, which moves it in until its corners clear the capsule's
@@ -544,8 +563,8 @@ bar's icon-button height by default (44 points on top bars, 48 on rails), using
 adaptive vertical insets around logos and subtitle lines. Custom toolbar heights
 are respected. Explicit title padding/minimum heights and larger accessibility
 text can require a taller capsule. Sizes, padding and
-glass come from `GlassTitleStyle`, on the title or app-wide in
-`GlassNavigationBarStyle.titleCapsule`.
+glass come from `PrismTitleStyle`, on the title or app-wide in
+`PrismNavigationBarStyle.titleCapsule`.
 
 A static glass title uses toolbar optics, retaining refraction at compact heights.
 A glass title reveals through its optical material presence, with its logo and
@@ -572,7 +591,7 @@ standalone groups own their own. Activity badges without a count use the full na
 badge height, placed consistently in horizontal and vertical bars. Counted toolbar badges grow inward from their trailing edge; tab/sidebar badge centers stay fixed as text grows.
 
 A `slivers` page scrolls back to the top when its tab is tapped again and, on
-iOS, when the status bar is tapped. `LiquidPrismTabReselection.maybeOf(context)`
+iOS, when the status bar is tapped. `PrismTabReselection.maybeOf(context)`
 reports reselections for anything else, such as focusing a search field. The
 scaffold supplies the background, keyboard avoidance and these behaviours, so a
 page needs no Material `Scaffold`; keep one (or a `Material` ancestor) only for
@@ -580,53 +599,55 @@ Material widgets that need it, such as ink effects or snack bars.
 
 ## Sliver app bar
 
-`LiquidPrismSliverAppBar` is the scaffold's top bar as a pinned sliver, for
+`PrismSliverAppBar` is the scaffold's top bar as a pinned sliver, for
 pages built on a `CustomScrollView`. Make it the first sliver:
 
 ```dart
 CustomScrollView(
   slivers: [
-    LiquidPrismSliverAppBar(
+    PrismSliverAppBar(
       title: const Text('Library'),
       largeTitle: const Text('Library'),
-      toolbar: [GlassToolbarGroup(items: [activity]), GlassToolbarGroup(items: [share, more])],
+      toolbar: [PrismToolbarGroup(items: [activity]), PrismToolbarGroup(items: [share, more])],
       accessory: PreferredSize(preferredSize: const Size.fromHeight(48), child: tabs),
     ),
-    SliverList.builder(...),
+    SliverList.builder(
+      itemCount: 30,
+      itemBuilder: (context, index) => ListTile(title: Text('Item $index')),
+    ),
   ],
 )
 ```
 
 It takes `leading` (or implies a back or close button), `title`,
 `largeTitle`, `subtitle`, `toolbar`, `trailing`, `accessory`, `sheet`, `backgroundColor` (the fade colour),
-`scrollEdge`, `scrollEdgeStyle`, `hiddenScrollEdges` and `navigationBarStyle`, with the scaffold's
+`scrollEdge`, `scrollEdgeStyle` and `navigationBarStyle`, with the scaffold's
 measured geometry: 16-point edges, the 44-point control row under the status
 bar, a 52-point large title row that rides the scroll before the titles swap
 on a timer, and 16 points of clearance before the content. The bar's glass and
-its edge effect share one glass group, so the controls refract the content
-before the effect.
+its edge effect share one glass group; the controls refract the blurred, faded
+content painted by that effect.
 
 ## Adaptive layout
 
-`LiquidPrismScaffold` places a `tabBar`, typed `toolbar` content and a
-`leading` control over a full-window `body`. Consecutive `GlassToolbarItem`s
-share a capsule; explicit `GlassToolbarGroup(items: [...])` entries create
+`PrismScaffold` places a `tabBar`, typed `toolbar` content and a
+`leading` control over a full-window `body`. Consecutive `PrismToolbarItem`s
+share a capsule; explicit `PrismToolbarGroup(items: [...])` entries create
 separate capsules. An empty group draws nothing and materializes in when it gains
 an item. In the iPhone Duo rail, groups stack or fold into one "More" menu. With no `leading`, a route that
-can pop gets a `LiquidPrismBackButton`: a glass back chevron, or a close mark
+can pop gets a `PrismBackButton`: a glass back chevron, or a close mark
 on a fullscreen dialog, popping through `Navigator.maybePop`. Pass
 `automaticallyImplyLeading: false` to suppress it, or your own
-`LiquidPrismBackButton(icon: ...)` for a custom glyph.
+`PrismBackButton(icon: ...)` for a custom glyph.
 
 To use an icon pack's glyphs everywhere, including the implied button, set
 them in the theme:
 
 ```dart
-LiquidPrismThemeData(
-  toolbar: GlassToolbarStyle(
+PrismThemeData(
+  toolbar: PrismToolbarStyle(
     backIcon: Icon(MyIcons.chevronLeft),
     closeIcon: Icon(MyIcons.close),
-    // This chevron draws "<" in both text directions.
     backIconMirrors: false,
   ),
 )
@@ -644,18 +665,18 @@ On iOS 27.1 and later the plugin reports where UIKit itself would put its
 bars: `UITraitCollection.verticalBarEdge` picks the rail and its edge
 (including the left edge for an app on the left of Split View, and horizontal
 bars on the inner display in portrait), and the status bar's reserved region
-sets where the rail's actions begin. Elsewhere, `GlassChromePlacement.resolve`
+sets where the rail's actions begin. Elsewhere, `PrismChromePlacement.resolve`
 picks the rail when one side's safe area is at least 48 pt deeper than the
 other. Pass `placement` to force one. The [adaptive layout
-measurements](native_adaptive_layout.md) record the native frames this follows.
+measurements](../research/specs/native_adaptive_layout.md) record the native frames this follows.
 
 The body receives `MediaQuery.padding` that includes the space the chrome
 covers plus 16 points below the top bar's capsules, so scroll views keep
 content clear while it still shows through the glass. When the device is partly folded, the fold reaches the body as a
 `MediaQuery.displayFeatures` entry; `DisplayFeatureSubScreen` keeps content out
-of it. Read `LiquidPrismScaffold.placementOf(context)` to adapt your own layout.
+of it. Read `PrismScaffold.placementOf(context)` to adapt your own layout.
 For overlays outside the body, such as a sheet's drag handle, use
-`LiquidPrismScaffold.contentInsetsOf(context)` to align with its content area.
+`PrismScaffold.contentInsetsOf(context)` to align with its content area.
 This includes physical safe insets and the rail's minimum width, but not measured
 top/bottom bar coverage. The body's `MediaQuery.padding` already includes both;
 do not add these insets again there. An explicit `placement` argument overrides
@@ -665,7 +686,7 @@ When the rail is too short for both the actions and the tab bar, the actions
 collapse into one "More" item whose native menu lists them, as native bars do
 before compressing the tab bar.
 
-Inside the scaffold, `LiquidPrismTabBar` and the actions group adopt the
+Inside the scaffold, `PrismTabBar` and the actions group adopt the
 placement's axis. Set `axis` on either widget to choose it yourself. A vertical
 tab bar is icon-only; labels remain the accessible names. Arrow up and down move
 between its tabs, and it reads top to bottom in both text directions.
@@ -674,8 +695,8 @@ The scaffold hides a bottom tab bar while the keyboard is up and adds the
 keyboard height to the body's bottom padding. Native popup menus close when the
 window resizes, as UIKit menus do.
 
-Set `tabBarPlacement: GlassTabBarPlacement.sidebar` to list a
-`LiquidPrismTabBar`'s tabs in a leading sidebar while the window has regular
+Set `tabBarPlacement: PrismTabBarPlacement.sidebar` to list a
+`PrismTabBar`'s tabs in a leading sidebar while the window has regular
 width, such as the unfolded iPhone Duo. Apple suggests it for
 information-dense apps. The sidebar is a frosted glass panel over full-width
 content. Its toggle slides it away while the content reflows into the space,
@@ -686,12 +707,12 @@ UIKit's size class on iOS 27.1, or a 700 pt window elsewhere.
 
 ### Your own sheets, dialogs and bars
 
-`LiquidPrismSystemChrome` exposes what UIKit reports, so screens that don't use
+`PrismSystemChrome` exposes what UIKit reports, so screens that don't use
 the scaffold can follow it too. Put it in your app's builder:
 
 ```dart
 CupertinoApp(
-  builder: (context, child) => LiquidPrismSystemChrome(child: child!),
+  builder: (context, child) => PrismSystemChrome(child: child!),
   home: const Home(),
 )
 ```
@@ -699,17 +720,17 @@ CupertinoApp(
 - Dialogs, popup menus and modal sheets then avoid an active fold: it is added
   to `MediaQuery.displayFeatures`, which Flutter's routes and
   `DisplayFeatureSubScreen` already respect.
-- `LiquidPrismSystemChrome.of(context)` returns a `GlassSystemChrome`:
+- `PrismSystemChrome.of(context)` returns a `PrismSystemChromeData`:
   `verticalBarEdge` (left, right or null), `hasVerticalBar`, and the
   `occlusions` (status bar, camera) and `divisions` (fold) as
-  `GlassReservedRegion`s with a frame, interactive margins and an `active`
+  `PrismReservedRegion`s with a frame, interactive margins and an `active`
   flag. Use them to place custom bars or sheet controls on the same edge as the
   system's vertical bar and below the status bar.
-- `LiquidPrismSystemChrome.listenable` gives the same report outside widgets.
-- `LiquidPrismSystemChrome.deviceGlassTintAmount` is the device's Liquid Glass
+- `PrismSystemChrome.listenable` gives the same report outside widgets.
+- `PrismSystemChrome.deviceGlassTintAmount` is the device's Liquid Glass
   setting (0–1, null where iOS has none). Glass follows it already; read it to
-  match your own surfaces, or override it with `LiquidPrismThemeData.glassTint`.
-- A `LiquidPrismScaffold` inside a sheet lays out its own rail too.
+  match your own surfaces, or override it with `PrismThemeData.glassTint`.
+- A `PrismScaffold` inside a sheet lays out its own rail too.
 - To keep interactive content off a bent fold, read
   `MediaQuery.displayFeaturesOf(context)` for a feature in
   `DisplayFeatureState.postureHalfOpened` and lay out on either side of its
@@ -719,22 +740,21 @@ CupertinoApp(
 The report is null on other platforms, before iOS 27.1 and without the plugin.
 
 To keep horizontal bars for a screen better served by them, such as a
-full-screen video player, use `LiquidPrismViewController` as your Flutter view
-controller (in `Main.storyboard`, set the custom class) and call
-`LiquidPrismSystemChrome.setVerticalBarBehavior(GlassVerticalBarBehavior.disabled)`.
+full-screen video player, use the package's native Flutter view-controller subclass and call
+`PrismSystemChrome.setVerticalBarBehavior(PrismVerticalBarBehavior.disabled)`.
 It returns false where it can't apply. Apple asks that this be a stable choice,
 not one that changes as people navigate.
 
 ## Toolbar composition
 
-`GlassToolbarItem` renders its label when `icon` is omitted. Native menus use
+`PrismToolbarItem` renders its label when `icon` is omitted. Native menus use
 `.menu`; `.custom(child: ...)` hosts app-owned input without a second gesture or
 semantics owner. Custom content has no additional glass unless placed inside an
-explicit `GlassToolbarGroup`. `width` sets its main-axis extent inside a group;
+explicit `PrismToolbarGroup`. `width` sets its main-axis extent inside a group;
 ungrouped custom content may size intrinsically.
 
-`LiquidPrismScaffold.toolbar` and `LiquidPrismSliverAppBar.toolbar` accept
-`List<GlassToolbarContent>`. Items default to the top trailing region. Set
+`PrismScaffold.toolbar` and `PrismSliverAppBar.toolbar` accept
+`List<PrismToolbarContent>`. Items default to the top trailing region. Set
 `placement` to `topLeading`, `principal`, `bottomLeading`, `bottom` or
 `bottomTrailing`. Principal content replaces the inline title while the large
 title remains independent. Bottom regions form a window footer in a scaffold;
@@ -745,24 +765,27 @@ floating tab bar's 24-point side margin, clear of the display's rounded
 corners. The margin follows the tab bar's measured margin; the bottom
 toolbar's own has not been measured separately.
 
-Consecutive loose actions share one capsule. `GlassToolbarGroup(items: [...])`
+Consecutive loose actions share one capsule. `PrismToolbarGroup(items: [...])`
 starts a separate capsule, with an optional local `style`. Fixed and flexible
-`GlassToolbarSpacer`s separate capsules; flexible space uses a bounded main axis
+`PrismToolbarSpacer`s separate capsules; flexible space uses a bounded main axis
 and collapses under unbounded constraints. A standalone toolbar respects list
 order and ignores placements. Long intrinsic toolbars scroll along their axis.
 Give stateful custom entries a stable `key` when reordering them.
 
-See the [release guide](releases/0.7.md) for migration and full placement examples.
+See the [1.0 migration guide](migration-1.0.md) for API changes.
 
 ### Shared capsule
 
 ```dart
-LiquidPrismToolbarGroup(
-  size: GlassToolbarSize.navigation,
-  style: const GlassToolbarStyle(spacing: 10, iconSize: 24),
+PrismToolbar.group(
+  style: const PrismToolbarStyle(
+    size: PrismToolbarSize.navigation,
+    spacing: 10,
+    iconSize: 24,
+  ),
   items: [
-    GlassToolbarItem(label: 'Previous', icon: const Icon(CupertinoIcons.chevron_left), onPressed: previous),
-    GlassToolbarItem(label: 'Next', icon: const Icon(CupertinoIcons.chevron_right), onPressed: next),
+    PrismToolbarItem(label: 'Previous', icon: const Icon(CupertinoIcons.chevron_left), onPressed: previous),
+    PrismToolbarItem(label: 'Next', icon: const Icon(CupertinoIcons.chevron_right), onPressed: next),
   ],
 )
 ```
@@ -784,19 +807,19 @@ present and interactive;
 it does not replay item entry/exit transitions. Use keys or distinct labels to
 identify actions. Toolbars containing custom content or spacers retain their
 normal transition behavior.
-`GlassToolbarStyle.itemTransition: GlassTransition.identity` swaps at once, as
+`PrismToolbarStyle.itemTransition: PrismTransition.identity` swaps at once, as
 Reduce Motion does; `itemTransitionStyle` sets the springs.
 
-Several capsules in one bar are one `LiquidPrismToolbar`, with typed content
-laid out `spacing` (default 8) apart. Declare every group the bar can show and
+Several capsules in one bar are one `PrismToolbar`, with typed content
+laid out with style `groupSpacing` (default 8) between them. Declare every group the bar can show and
 let emptiness animate, so groups keep their positions:
 
 ```dart
-LiquidPrismToolbar(
-  size: GlassToolbarSize.navigation,
+PrismToolbar(
+  size: PrismToolbarSize.navigation,
   content: [
-    GlassToolbarGroup(items: [if (hasSuggestions) suggestionsItem]),
-    GlassToolbarGroup(items: [sortItem, moreItem]),
+    PrismToolbarGroup(items: [if (hasSuggestions) suggestionsItem]),
+    PrismToolbarGroup(items: [sortItem, moreItem]),
   ],
 )
 ```
@@ -805,22 +828,22 @@ LiquidPrismToolbar(
 
 iOS softens content scrolled under a bar with a progressive blur and a partial
 fade, strongest at the edge and dissolving a little below the bar. The bar's
-glass controls refract the content beneath, not the blur.
+glass controls refract the blurred, faded content painted beneath them.
 
-`LiquidPrismScaffold` draws this effect under its top bar while the body's
+`PrismScaffold` draws this effect under its top bar while the body's
 outermost scroll view is scrolled, fading toward its `backgroundColor`
 (without one, it blurs only). `scrollEdge: false` turns it off and
 `scrollEdgeStyle`, or the theme's `scrollEdge`, tunes it. A scaffold bottom bar
 always uses the soft variant, including when its top edge is hard;
 `scrollEdge: false` disables both edges. The defaults are
-measured from iOS 27's own effect ([spec](native_scroll_edge_spec.md)): a
+measured from iOS 27's own effect ([spec](../research/specs/native_scroll_edge_spec.md)): a
 3-point variable blur and a half-opacity fade held over the top third of the
 strip and falling along a smoothstep over its last 98 points, a 32-point haze
 blended in at half opacity, 50 points of reach below the bar, and a 16-point
 scroll over which it arrives (the reveal is this package's; native shows it as
 soon as content is beneath).
 
-`GlassScrollEdgeVariant.hard` is the effect under a bar with a background, as
+`PrismScrollEdgeVariant.hard` is the effect under a bar with a background, as
 SwiftUI's `.hard` style: it stops at the bar's edge with a one-pixel hairline
 (10% black in light, 10% white in dark), blurs 2 points keeping a quarter of
 that to the edge, and holds its fade and haze flat. Give the scaffold an `accessory` (a `PreferredSizeWidget` such as
@@ -829,18 +852,22 @@ padding cover it. Together they make a bar like a native navigation bar with a
 palette of tabs:
 
 ```dart
-LiquidPrismScaffold(
+PrismScaffold(
   backgroundColor: background,
-  scrollEdgeStyle: const GlassScrollEdgeStyle(variant: GlassScrollEdgeVariant.hard),
+  scrollEdgeStyle: const PrismScrollEdgeStyle(variant: PrismScrollEdgeVariant.hard),
   accessory: PreferredSize(
     preferredSize: const Size.fromHeight(44),
-    child: LiquidPrismSegmentedControl<int>(...),
+    child: PrismSegmentedControl<int>(
+      selectedValue: selectedFilter,
+      onValueChanged: changeFilter,
+      children: const {0: Text('All'), 1: Text('Saved')},
+    ),
   ),
-  body: ...,
+  body: list,
 )
 ```
 
-For a bar of your own, lay `LiquidPrismScrollEdge` in the bar's background,
+For a bar of your own, lay `PrismScrollEdge` in the bar's background,
 filling the bar's box with the title and controls painted above it, and drive
 `progress` from the scroll offset:
 
@@ -849,31 +876,31 @@ SliverLayoutBuilder(
   builder: (context, constraints) => SliverAppBar(
     pinned: true,
     backgroundColor: Colors.transparent,
-    flexibleSpace: LiquidPrismScrollEdge(
-      progress: LiquidPrismScrollEdge.progressFor(constraints.scrollOffset),
+    flexibleSpace: PrismScrollEdge(
+      progress: PrismScrollEdge.progressFor(constraints.scrollOffset),
       color: Theme.of(context).scaffoldBackgroundColor,
     ),
-    leading: LiquidPrismToolbarGroup(size: GlassToolbarSize.navigation, items: [back]),
-    actions: [LiquidPrismToolbar(size: GlassToolbarSize.navigation, content: content)],
+    leading: PrismToolbar.group(size: PrismToolbarSize.navigation, items: [back]),
+    actions: [PrismToolbar(size: PrismToolbarSize.navigation, content: content)],
   ),
 )
 ```
 
 Wrap the page (the `CustomScrollView`, or the body around it) in a
-`LiquidPrismGroup` so the effect and the bar's capsules share two backdrop
-captures and the capsules see through the effect; see
+`PrismGroup` so compatible capsules share captures. Paint the edge effect
+first; it keeps its own passes, and the capsules refract its output. See
 [rendering](rendering.md#shared-captures-and-edge-effects).
 
-`LiquidPrismScrollFade` wraps a scroll view and springs the same blur and fade
+`PrismScrollEdge.fade` wraps a scroll view and springs the same blur and fade
 in at each edge while content extends past it, with `extent`, `sigma`,
-`fadeOpacity` and `plateau` to tune. Both build on `LiquidPrismEdgeBlur`, which
+`fadeOpacity` and `plateau` to tune. Both build on the primitive `PrismEdgeBlur`, which
 blurs and fades up to two opposite edges of any child per pixel along
-`GlassEdgeFade.curve`, a smootherstep whose onset the eye cannot find:
+`PrismEdgeFade.curve`, a smoothstep fade:
 
 ```dart
-LiquidPrismEdgeBlur(
+PrismEdgeBlur(
   edges: [
-    GlassEdgeBlur(edge: GlassEdge.top, extent: 96, sigma: 3, plateau: .35, fadeColor: background),
+    PrismEdgeBlurStrip(edge: PrismEdge.top, extent: 96, sigma: 3, plateau: .35, fadeColor: background),
   ],
   child: pinnedHeaderContent,
 )
@@ -888,13 +915,13 @@ blurs, they drop samples past its edges and reweight the rest, so content at
 the screen edge or below the strip does not bleed in. Animate by scaling `sigma`, `fadeOpacity` and
 `hazeOpacity`; an ancestor `Opacity` does not attenuate a backdrop blur. With
 nothing active the widget paints straight through without a layer, so child
-state survives. `GlassEdgeFade.gradient` builds the same fade as a plain
+state survives. `PrismEdgeFade.gradient` builds the same fade as a plain
 `LinearGradient` for decorations.
 
 ## Search
 
 ```dart
-LiquidPrismSearchField(
+PrismSearchField(
   controller: searchController,
   focusNode: searchFocus,
   placeholder: 'Search ideas',
@@ -902,7 +929,7 @@ LiquidPrismSearchField(
   onSubmitted: submitSearch,
   onCancel: closeSearch,
   textInputAction: TextInputAction.search,
-  style: const GlassSearchStyle(height: 52, showClearButton: true),
+  style: const PrismSearchStyle(height: 52, showClearButton: true),
 )
 ```
 
@@ -914,10 +941,10 @@ its clear action; `suffixBuilder` can keep or replace it instead. `onCleared` fi
 `onChanged('')`. Cancel clears when necessary, unfocuses, then calls `onCancel`.
 
 Style can change text/placeholder colors, icon/cursor/clear colors, geometry,
-material, contour, focus spring and clear/cancel action sizing. Direct
-`showCancelButton` and `restingInset` override inherited values. Cancel is hidden
+material, contour, focus spring and clear/cancel action sizing. Set
+`showCancelButton` and `restingInset` in `PrismSearchStyle` to override inherited values. Cancel is hidden
 when it cannot fit. Cancel shows while the field is focused; on a search screen
-of its own, `cancelVisibility: GlassSearchCancelVisibility.always` keeps it
+of its own, `PrismSearchStyle(cancelVisibility: PrismSearchCancelVisibility.always)` keeps it
 visible and tappable while unfocused, so `onCancel` can close the screen
 (tapping it also clears the field). Give search a bounded width and handle keyboard avoidance in
 the parent. Native bottom search uses a parent inset of 8 and resting inset of 20.
@@ -948,7 +975,7 @@ final link = LayerLink();
 final portal = OverlayPortalController();
 final group = Object();
 
-LiquidPrismSearchField(
+PrismSearchField(
   controller: query,
   focusNode: focus,
   groupId: group,
@@ -979,21 +1006,21 @@ the capsule with a key placed through `fieldBuilder`.
 ## Native menus
 
 ```dart
-LiquidPrismButton.menu(
+PrismButton.menu(
   label: 'More',
-  menu: const LiquidMenu(children: [
-    LiquidMenuAction<String>(title: 'Share', value: 'share', icon: LiquidMenuSfSymbol('square.and.arrow.up')),
-    LiquidMenuAction<String>(title: 'Delete', value: 'delete', destructive: true),
+  menu: const PrismMenu(children: [
+    PrismMenuAction<String>(title: 'Share', value: 'share', icon: PrismMenuSfSymbol('square.and.arrow.up')),
+    PrismMenuAction<String>(title: 'Delete', value: 'delete', destructive: true),
   ]),
   onSelected: handleMenuValue,
   child: const Text('More'),
 )
 ```
 
-Use `GlassToolbarItem.menu` inside a toolbar or `LiquidMenuRegion` for custom
+Use `PrismToolbarItem.menu` inside a toolbar or `PrismMenuRegion` for custom
 triggers. UIKit owns the iOS popup; customize its model (symbols, sections,
 submenus, selected/disabled/destructive items and deferred actions), not its
-renderer. For typed imperative results use `liquidMenus.show<T>`. See the
+renderer. For typed imperative results use `prismMenus.show<T>`. See the
 [menu guide](native_menus.md) for setup and callback/dismissal semantics.
 
 ## Tab actions, feedback, badges and navigation titles
@@ -1002,36 +1029,36 @@ Tabs accept `onLongPressed`; a hold uses Flutter's `kLongPressTimeout`, returns
 the pill to the selected tab and never selects on release. Use the package
 callback instead of an icon GestureDetector. A null `onSelected` disables it.
 
-Set theme `haptics: GlassHaptics((context, event) { ... })` for a shared app
+Set theme `haptics: PrismHaptics((context, event) { ... })` for a shared app
 feedback policy. Component `haptics: false` still silences feedback. Null retains
 existing native calls. Segmented controls do not generate package haptics.
 
 Text/RichText segments can opt into
-`GlassSegmentedStyle(sizing: GlassSegmentedSizing.fitLabels)`; equal widths fit
+`PrismSegmentedStyle(sizing: PrismSegmentedSizing.fitLabels)`; equal widths fit
 the widest label and text scaling. Custom widget labels need explicit width.
 
-Add `badge: GlassBadge.count(7)`, `GlassBadge.text('New')` or an empty
-`GlassBadge.dot()` to a tab or toolbar item. As on iOS 27, counts are never
+Add `badge: PrismBadge.count(7)`, `PrismBadge.text('New')` or an empty
+`PrismBadge.dot()` to a tab or toolbar item. As on iOS 27, counts are never
 shortened (1000 draws `1,000`); pass `overflow: 99` to draw `99+`. The full value
-is announced; supply a localized `semanticLabel` (and `GlassBadge.text` for a
+is announced; supply a localized `semanticLabel` (and `PrismBadge.text` for a
 locale's digit grouping). Styles expose `badgeColor` and `badgeTextStyle`.
 
-`LiquidPrismScaffold(title: Text('Inbox'), largeTitle: Text('Inbox'), body: list)`
+`PrismScaffold(title: Text('Inbox'), largeTitle: Text('Inbox'), body: list)`
 adds a header that follows the outermost vertical scroll view, even with
 `scrollEdge: false`. On a horizontal bar the large title scrolls away and
 the inline title rises in. On the iPhone Duo rail the large title shares the
-control row and returns on scroll reversal. Use `GlassToolbarTitleDisplayMode.inline`
+control row and returns on scroll reversal. Use `PrismTitleDisplayMode.inline`
 with a single title to request compact type. The accessory sits
 below the title rows. Keyboard height enters body padding once; the body's
 bottom viewInset is consumed. Set `resizeToAvoidBottomInset: false` to delegate
 keyboard avoidance to descendants.
 
-See [feature contracts and adoption](package_features_spec.md) for per-item
+See [feature contracts and adoption](../research/specs/package_features_spec.md) for per-item
 changes, native measurements and remaining gaps.
 
 ## Chrome layout overrides
 
-`GlassNavigationBarStyle.titleAlignment` supports automatic, leading, center and
+`PrismNavigationBarStyle.titleAlignment` supports automatic, leading, center and
 trailing alignment. `controlRowHeight` sets the minimum row height (44 by default),
 `contentPadding` adds directional insets inside the safe area, and
 `largeTitleExtent` replaces the typography-measured expanded row height. These
@@ -1041,18 +1068,18 @@ Centered scaffold titles use the content area's center, shifting only as far as
 needed to fit between the visible controls. A window's corner status-bar region
 still bounds top-row controls, but does not move a sheet title below that region.
 
-`GlassScaffoldStyle`, through scaffold `style` or theme `scaffold`, controls
+`PrismScaffoldStyle`, through scaffold `style` or theme `scaffold`, controls
 `tabBarMargin`, `tabBarAlignment`, `tabBarMaxWidth`, `bottomBarMargin`,
 `bottomBarAlignment` and `bottomBarMaxWidth`. Margins replace the corresponding
 package gaps; explicit zero is respected. Bottom content stays above the keyboard
 or bottom tab dock. Cross-axis alignment determines where a compact bar sits.
 
-`GlassTabBarPlacement.top`, `.bottom`, `.leading` and `.trailing` explicitly dock
+`PrismTabBarPlacement.top`, `.bottom`, `.leading` and `.trailing` explicitly dock
 tabs. Leading/trailing follow RTL and use vertical bars. `.automatic` preserves
 system rail behavior; `.sidebar` keeps the existing adaptive sidebar. Body and
 scroll-edge insets follow the dock. Bottom tabs hide while the keyboard is open;
 top and side docks remain visible. Compact sizing remains the default.
-`GlassTabBarSizing.fill` fills a bounded main axis; under unbounded constraints it
+`PrismTabBarSizing.fill` fills a bounded main axis; under unbounded constraints it
 uses compact sizing. Vertical labels default to hidden but honor explicit
 `labelBehavior`.
 
@@ -1061,14 +1088,14 @@ uses compact sizing. Vertical labels default to hidden but honor explicit
 The showcase's Scaffold Lab keeps its common heading, scroll behavior, accessory,
 edge and action controls at the top. Expand the advanced sections to override:
 
-- All `GlassNavigationBarStyle` fields: alignment, minimization and restoration,
+- All `PrismNavigationBarStyle` fields: alignment, minimization and restoration,
   safe-area adjustment, geometry, four title/subtitle typography styles, reveal
   and hide springs, fade timing/curve, and title-capsule styling.
-- All `GlassScaffoldStyle` fields: tab and bottom-bar alignment, margins and width.
-- All `GlassScrollEdgeStyle` fields, including material fade and edge motion.
+- All `PrismScaffoldStyle` fields: tab and bottom-bar alignment, margins and width.
+- All `PrismScrollEdgeStyle` fields, including material fade and edge motion.
 - Title compositions, custom/implicit leading, trailing content, toolbar regions,
   tabs and dock placement, background, keyboard avoidance, RTL, body/sliver mode,
-  nested scroll notification depth, and standalone `LiquidPrismSliverAppBar`.
+  nested scroll notification depth, and standalone `PrismSliverAppBar`.
 
 Numeric overrides are disabled initially, preserving inherited/native values.
 Switch an override off to clear it, or use **Reset to native defaults**. The
@@ -1080,5 +1107,5 @@ Large navigation titles scroll with the content and fade out over 200 ms with
 ease-in-out when replaced. They do not receive the compact title’s blur or
 15-point translation. The compact title uses its separate reveal/hide motion.
 A custom `header` is ordinary scrolling content and has no added exit animation;
-its disappearance triggers the compact title. See `doc/navigation_bar_spec.json`
+its disappearance triggers the compact title. See `research/specs/navigation_bar_spec.json`
 for native capture details.

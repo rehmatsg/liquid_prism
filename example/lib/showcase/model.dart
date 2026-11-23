@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 
 class ShowcaseModel extends ChangeNotifier {
   bool dark = false, clear = false, labels = true, verticalBar = true;
@@ -10,8 +11,6 @@ class ShowcaseModel extends ChangeNotifier {
   int wallpaper = 0;
   double frost = 4, refraction = 24;
 
-  /// Applies [frost] and [refraction] to every glass surface in the app,
-  /// not just the Studio canvas.
   bool globalOptics = false;
   bool previewOptics = false;
   bool enabled = true, favorite = false;
@@ -19,21 +18,20 @@ class ShowcaseModel extends ChangeNotifier {
   int segment = 0, taps = 0;
 
   Brightness get brightness => dark ? Brightness.dark : Brightness.light;
-  Glass get glass => clear ? Glass.clear : Glass.regular;
-  Color get tint => GlassColors(brightness).accents[accent]!;
+  PrismGlass get glass => clear ? PrismGlass.clear : PrismGlass.regular;
+  Color get tint => PrismColors(brightness).accents[accent]!;
   void change(VoidCallback update) {
     update();
     notifyListeners();
   }
 
-  /// Keeps bars in the iPhone Duo side bar, or asks iOS for horizontal bars.
   void setVerticalBar(bool value) {
     change(() => verticalBar = value);
     unawaited(
-      LiquidPrismSystemChrome.setVerticalBarBehavior(
+      PrismSystemChrome.setVerticalBarBehavior(
         value
-            ? GlassVerticalBarBehavior.automatic
-            : GlassVerticalBarBehavior.disabled,
+            ? PrismVerticalBarBehavior.automatic
+            : PrismVerticalBarBehavior.disabled,
       ),
     );
   }
@@ -80,7 +78,6 @@ class ComponentInfo {
   final IconData icon;
   final Color color;
 
-  /// Public API and behavior notes, as (title, detail) rows.
   final List<(String, String)> details;
   String get id => kind.name;
 }
@@ -96,9 +93,9 @@ const components = [
         'Glass bends the scene behind it while keeping your content crisp. '
         'Move the lens, then try regular, clear and tinted materials.',
     details: [
-      ('LiquidPrism', 'Any shape, with your content on top'),
-      ('Glass', 'Regular, clear, tinted and identity variants'),
-      ('LiquidPrismGroup', 'Nearby surfaces share one pass'),
+      ('PrismSurface', 'Any shape, with your content on top'),
+      ('PrismGlass', 'Regular, clear, tinted and identity variants'),
+      ('PrismGroup', 'Nearby surfaces share one pass'),
     ],
   ),
   ComponentInfo(
@@ -111,9 +108,9 @@ const components = [
         'An everyday action with a tactile response. Try a quiet glass '
         'button, a prominent action, or a circular favorite.',
     details: [
-      ('LiquidPrismButton', 'Glass and prominent styles'),
+      ('PrismButton', 'Glass and prominent styles'),
       ('Feedback', 'Lifts and flexes while held'),
-      ('Menus', 'LiquidPrismButton.menu opens a native menu'),
+      ('Menus', 'PrismButton.menu opens a native menu'),
     ],
   ),
   ComponentInfo(
@@ -126,7 +123,7 @@ const components = [
         'Tap to change your outlook. Hold and drag the thumb to feel its '
         'lift and the spring that brings it home.',
     details: [
-      ('LiquidPrismSwitch', 'Controlled value with onChanged'),
+      ('PrismSwitch', 'Controlled value with onChanged'),
       ('Haptics', 'A light tap when the value changes'),
     ],
   ),
@@ -140,7 +137,7 @@ const components = [
         'A little precision, a little play. Drag the thumb to change the '
         'value and watch it lift under your finger.',
     details: [
-      ('LiquidPrismSlider', 'Any range, continuous fill'),
+      ('PrismSlider', 'Any range, continuous fill'),
       ('Thumb', 'Grows into a lens while held'),
     ],
   ),
@@ -154,7 +151,7 @@ const components = [
         'A shared track with a gliding selection. Tap a perspective or hold '
         'the pill and slide to a new one.',
     details: [
-      ('LiquidPrismSegmentedControl', 'Typed values, any widgets'),
+      ('PrismSegmentedControl', 'Typed values, any widgets'),
       ('Gesture', 'Tap, or hold and slide'),
     ],
   ),
@@ -168,8 +165,8 @@ const components = [
         'A floating home for navigation. The selection lifts, follows your '
         'finger and settles into its next destination.',
     details: [
-      ('LiquidPrismTabBar', 'Compact by default, rows or columns'),
-      ('LiquidPrismScaffold', 'Bottom bar on iPhone, side rail on iPhone Duo'),
+      ('PrismTabBar', 'Compact by default, rows or columns'),
+      ('PrismScaffold', 'Bottom bar on iPhone, side rail on iPhone Duo'),
     ],
   ),
   ComponentInfo(
@@ -182,8 +179,8 @@ const components = [
         'Related actions share a single glass capsule. Each icon responds '
         'individually while the whole group lifts together.',
     details: [
-      ('LiquidPrismToolbarGroup', 'Navigation and bottom sizes'),
-      ('LiquidPrismToolbar', 'Several capsules; empty groups collapse'),
+      ('PrismToolbar.group', 'Navigation and bottom sizes'),
+      ('PrismToolbar', 'Several capsules; empty groups collapse'),
       ('Items', 'Materialize in and out as the list changes'),
       ('Axis', 'Stacks vertically in the iPhone Duo rail'),
     ],
@@ -199,12 +196,12 @@ const components = [
         'the edge. The glass controls see straight through it, as native '
         'bar buttons do.',
     details: [
-      ('LiquidPrismScrollEdge', 'A bar’s effect, driven by scroll progress'),
-      ('LiquidPrismScaffold', 'Draws it under the top bar by default'),
-      ('LiquidPrismEdgeBlur', 'Progressive blur and fade of any edge'),
-      ('LiquidPrismScrollFade', 'Edges of a scroll view, as content passes'),
+      ('PrismScrollEdge', 'A bar’s effect, driven by scroll progress'),
+      ('PrismScaffold', 'Draws it under the top bar by default'),
+      ('PrismEdgeBlur', 'Progressive blur and fade of any edge'),
+      ('PrismScrollEdge.fade', 'Edges of a scroll view, as content passes'),
       (
-        'LiquidPrismGroup',
+        'PrismGroup',
         'Glass over the effect refracts the content, not the blur',
       ),
     ],
@@ -220,11 +217,11 @@ const components = [
         'large title or header, an accessory, a bottom bar, pull to refresh '
         'and the edge effects, with its glass grouped for you.',
     details: [
-      ('LiquidPrismScaffold.slivers', 'The scaffold builds the scroll view'),
+      ('PrismScaffold.slivers', 'The scaffold builds the scroll view'),
       ('header', 'Your own heading, scrolling away under the bar'),
       ('bottomBar', 'Pinned above the home indicator or keyboard'),
       ('onRefresh', 'Pull to refresh, out of the Dynamic Island'),
-      ('LiquidPrismSliverAppBar', 'The same bar inside your own scroll view'),
+      ('PrismSliverAppBar', 'The same bar inside your own scroll view'),
     ],
   ),
   ComponentInfo(
@@ -238,8 +235,8 @@ const components = [
         'Symbols, submenus and items loaded when the menu opens. UIKit '
         'handles the presentation.',
     details: [
-      ('LiquidMenu', 'Actions, sections, submenus, deferred items'),
-      ('LiquidMenuRegion', 'Context menus on long press'),
+      ('PrismMenu', 'Actions, sections, submenus, deferred items'),
+      ('PrismMenuRegion', 'Context menus on long press'),
     ],
   ),
   ComponentInfo(
@@ -252,7 +249,7 @@ const components = [
         'A field that makes space when you need it. Type a thought, clear '
         'it, or cancel to return to the moment.',
     details: [
-      ('LiquidPrismSearchField', 'Owned or borrowed controller'),
+      ('PrismSearchField', 'Owned or borrowed controller'),
       ('Cancel', 'Appears while focused'),
     ],
   ),

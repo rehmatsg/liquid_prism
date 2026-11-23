@@ -18,12 +18,12 @@ void main() {
           ..scrollDepth = mode == 'nested' ? 1 : 0
           ..sliverAppBar = mode == 'standalone'
           ..rtl = width == 440
-          ..placement = width == 440 ? GlassChromePlacement.rightRail : null
+          ..placement = width == 440 ? PrismChromePlacement.rightRail : null
           ..titleKind = 3
-          ..titleAlignment = GlassTitleAlignment.leading
+          ..titleAlignment = PrismTitleAlignment.leading
           ..tabs = true
           ..trailing = true
-          ..minimization = GlassToolbarMinimizationBehavior.onScrollDown
+          ..minimization = PrismMinimizationBehavior.onScrollDown
           ..values.addAll({
             'controlRowHeight': 52,
             'gutter': 12,
@@ -52,12 +52,12 @@ void main() {
           greaterThan(0),
         );
         expect(tester.takeException(), isNull);
-        expect(find.byType(LiquidPrismTabBar), findsOneWidget);
+        expect(find.byType(PrismTabBar), findsOneWidget);
       });
     }
   }
 
-  for (final behavior in GlassToolbarMinimizationBehavior.values) {
+  for (final behavior in PrismMinimizationBehavior.values) {
     testWidgets('lab accessory stays visible with $behavior', (tester) async {
       final options = ScaffoldLabOptions()..minimization = behavior;
       await tester.pumpWidget(
@@ -110,7 +110,7 @@ void main() {
       CupertinoApp(
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(1.3)),
+              .copyWith(textScaler: const TextScaler.linear(1.3)),
           child: child!,
         ),
         home: ScaffoldLabPage(initialOptions: options),
@@ -153,11 +153,11 @@ void main() {
       );
       await tester.tap(composition);
       await tester.pumpAndSettle();
-      expect(find.byType(LiquidPrismTitle), findsOneWidget);
+      expect(find.byType(PrismTitle), findsOneWidget);
       await tester.tap(composition);
       await tester.pumpAndSettle();
       expect(
-        tester.widget<LiquidPrismTitle>(find.byType(LiquidPrismTitle)).avatar,
+        tester.widget<PrismTitle>(find.byType(PrismTitle)).avatar,
         isNotNull,
       );
       final geometry = find.byKey(
@@ -187,7 +187,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<LiquidPrismScaffold>(find.byType(LiquidPrismScaffold))
+            .widget<PrismScaffold>(find.byType(PrismScaffold))
             .navigationBarStyle!
             .controlRowHeight,
         greaterThan(44),
@@ -202,9 +202,7 @@ void main() {
       await tester.tap(reset);
       await tester.pumpAndSettle();
       expect(
-        tester
-            .widget<LiquidPrismScaffold>(find.byType(LiquidPrismScaffold))
-            .title,
+        tester.widget<PrismScaffold>(find.byType(PrismScaffold)).title,
         isA<Text>(),
       );
       expect(tester.takeException(), isNull);

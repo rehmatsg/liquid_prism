@@ -3,18 +3,17 @@ precision highp float;
 uniform vec2 u_textureSize;
 uniform float u_count;
 uniform float u_headroom;
-// Seventeen vec4 per lens, at most fifteen lenses.
 uniform vec4 u_lenses[256];
 uniform sampler2D u_backdrop;
 out vec4 frag_color;
 vec2 u_origin;
 vec2 u_extent;
 vec4 u_transform;
-vec4 u_optics;   // Edge width, displacement, frost, dispersion.
+vec4 u_optics;
 vec4 u_tint;
-vec4 u_finish;   // Saturation, light, reflection, splay.
-vec4 u_geometry; // Radius, device pixel ratio, reflection reach, face brightness.
-vec4 u_material; // Recipe (0 custom, 1 regular, 2 clear), dark, role, tint alpha.
+vec4 u_finish;
+vec4 u_geometry;
+vec4 u_material;
 vec4 u_tintRed;
 vec4 u_tintGreen;
 vec4 u_tintBlue;

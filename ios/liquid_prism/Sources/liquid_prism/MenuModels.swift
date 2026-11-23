@@ -2,18 +2,11 @@ import UIKit
 
 /// Where a presented menu is anchored, in **window coordinates**.
 public enum MenuAnchor: Equatable, Sendable {
-  /// Anchor to a rectangle — typically the trigger control's global bounds.
-  /// The menu hangs off the rect's bottom edge (pulldown style) when the
-  /// rect is in the window's upper half, or off its top edge when lower.
   case rect(CGRect)
 
-  /// Anchor at a point — typically the tap location. The attachment view is a
-  /// minimal rect centered on the point so the menu tracks the touch itself.
   case point(CGPoint)
 
-  /// The window-space frame the anchor view occupies — see
-  /// `MenuPresenter` for how rect anchors become a thin strip offset from
-  /// the trigger, which is what keeps the menu from covering it.
+  /// The window-space frame occupied by the anchor view.
   public var frame: CGRect {
     switch self {
     case .rect(let rect):
@@ -26,22 +19,14 @@ public enum MenuAnchor: Equatable, Sendable {
 
 /// One element in a menu's child list.
 public enum MenuElement {
-  /// A tappable row (`UIAction`).
   case action(MenuAction)
 
-  /// A nested menu: renders as a row that navigates to a second page.
   case submenu(MenuSpec)
 
-  /// An inline section: its children render as one separated group, with
-  /// `spec.title` as the section header when non-empty.
   case section(MenuSpec)
 
-  /// A separator between the surrounding rows — sugar for splitting the
-  /// enclosing run into inline sections.
   case divider
 
-  /// Rows resolved when the menu opens (`UIDeferredMenuElement`). The provider
-  /// runs on display; keep it fast, the menu waits on it.
   case deferred(MenuDeferred)
 
   public static func == (lhs: MenuElement, rhs: MenuElement) -> Bool {
@@ -111,8 +96,7 @@ public enum MenuElementState: String, Equatable, Sendable {
   case mixed
 }
 
-/// A menu or submenu (`UIMenu`). One spec serves the root menu, nested
-/// submenus, and inline sections — the element wrapper decides the role.
+/// A menu specification for root menus, submenus, and inline sections.
 public struct MenuSpec {
   public var title: String
   public var image: MenuIcon?
@@ -179,10 +163,8 @@ public enum MenuElementSize: String, Equatable, Sendable {
 
 /// A row's leading image (`UIAction.image` / `UIMenu.image`).
 public enum MenuIcon {
-  /// An SF Symbol by name, with optional weight/scale/rendering/palette.
   case sfSymbol(SFSymbolIcon)
 
-  /// A resolved bitmap (asset or byte-decoded on the caller side).
   case image(UIImage, templated: Bool)
 }
 

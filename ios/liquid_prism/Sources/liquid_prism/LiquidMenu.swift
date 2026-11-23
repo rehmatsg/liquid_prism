@@ -1,15 +1,6 @@
 import UIKit
 
-/// The native facade — mirror of the Dart `LiquidMenus` API for native apps.
-///
-/// ```swift
-/// LiquidMenu.present(
-///   MenuSpec(children: [.action(MenuAction(id: "save", title: "Save"))]),
-///   at: .point(tapLocation)
-/// ) { id in
-///   print("selected", id)
-/// }
-/// ```
+/// The native menu facade for presenting and dismissing menus.
 @MainActor
 public enum LiquidMenu {
 
@@ -19,8 +10,7 @@ public enum LiquidMenu {
   /// Whether a menu is currently up.
   public static var isPresented: Bool { presenter.isPresented }
 
-  /// Presents `spec` anchored in the app's key window. Returns `false` when
-  /// unsupported or no window is available yet.
+  /// Presents `spec` in the key window; returns false if unsupported or no window exists.
   @discardableResult
   public static func present(
     _ spec: MenuSpec,

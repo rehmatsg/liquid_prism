@@ -1,6 +1,11 @@
 /_research/
+/research/
 /artifacts/
+/example/artifacts/
 /.github/
+/.editorconfig
+/release-please-config.json
+/.release-please-manifest.json
 /example/android/
 /example/ios/
 /example/macos/

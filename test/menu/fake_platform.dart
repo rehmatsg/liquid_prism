@@ -1,18 +1,13 @@
 import 'dart:async';
 
-import 'package:liquid_prism/liquid_menu_platform_interface.dart';
-import 'package:liquid_prism/src/menu/menu_event.dart';
+import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/src/menu/menu_platform_interface.dart';
 
-/// A controllable [LiquidMenuPlatform] for engine/widget tests: records
-/// commands, injects events, and fakes capability.
-final class FakeLiquidMenuPlatform extends LiquidMenuPlatform {
-  /// Whether handshake reports `capabilities.nativeMenu`.
+final class FakePrismMenuPlatform extends PrismMenuPlatform {
   bool nativeMenu = true;
 
-  /// What `show` returns.
   bool acceptShow = true;
 
-  /// `dismiss` return value.
   bool wasPresented = false;
 
   String? session;
@@ -23,14 +18,13 @@ final class FakeLiquidMenuPlatform extends LiquidMenuPlatform {
   >
   shows = [];
 
-  /// Test hook — stands in for the channel's native→Dart deferred resolver.
   @override
   Future<List<Object?>?> Function(String menuId, String deferredId)?
   deferredResolver;
 
-  final _events = StreamController<LiquidMenuEvent>.broadcast();
+  final _events = StreamController<PrismMenuEvent>.broadcast();
 
-  void emit(LiquidMenuEvent event) => _events.add(event);
+  void emit(PrismMenuEvent event) => _events.add(event);
 
   @override
   Future<Map<String, Object?>> handshake(String session) async {
@@ -52,7 +46,6 @@ final class FakeLiquidMenuPlatform extends LiquidMenuPlatform {
     return acceptShow;
   }
 
-  /// Recorded debugSelect calls.
   final List<String> debugSelects = [];
 
   @override
@@ -69,5 +62,5 @@ final class FakeLiquidMenuPlatform extends LiquidMenuPlatform {
   }
 
   @override
-  Stream<LiquidMenuEvent> get events => _events.stream;
+  Stream<PrismMenuEvent> get events => _events.stream;
 }

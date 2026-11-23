@@ -9,7 +9,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const CupertinoApp(home: ConversationPage()));
     await tester.pumpAndSettle();
-    LiquidPrismTitle title() => tester.widget(find.byType(LiquidPrismTitle));
+    PrismTitle title() => tester.widget(find.byType(PrismTitle));
     expect(title().avatar, isNotNull);
     for (final mode in [1, 2, 0]) {
       await tester.tap(find.text('Maya'));

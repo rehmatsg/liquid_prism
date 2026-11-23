@@ -13,7 +13,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   liquid_prism:
     path: ..
-  liquid_glass_easy: 4.3.0
   material_ui: ^1.11.0
   cupertino_ui: ^1.1.6
 

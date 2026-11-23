@@ -3,7 +3,7 @@ name: liquid-prism
 description: Integrate, customize, migrate, or diagnose Liquid Prism components in Flutter apps, including adaptive scaffolds, app bars, pull to refresh, pinned rows, scroll edges, glass controls, and native menus.
 ---
 
-# Liquid Prism integration
+# Liquid Prism 1.0.0 integration
 
 Use Liquid Prism's public composition APIs and preserve native defaults unless
 an app explicitly chooses a different treatment. This skill is for consuming
@@ -17,8 +17,17 @@ and source. Check that version's public exports, constructor documentation and
 relevant examples before using an API. A checkout or online main branch may be
 newer than the app's dependency. Do not edit the package cache.
 
-Import `package:liquid_prism/liquid_prism.dart`, or `liquid_menu.dart` for
-menu-only use. Internal source can explain behavior but is not an app API.
+Import `package:liquid_prism/liquid_prism.dart` for widgets, styles and menus.
+Import `package:liquid_prism/primitives.dart` for low-level optics, lenses,
+pressables, edge effects and system chrome. Internal source can explain
+behavior but is not an app API.
+
+Initialize Flutter bindings, then call `await Prism.initialize()` before
+`runApp`. Render standalone glass with `PrismSurface`; group compatible surfaces
+with `PrismGroup`. Use the [1.0 migration guide](../../doc/migration-1.0.md)
+when updating an app to this contract. Visual, optical, geometry, motion and
+haptic overrides belong in immutable `Prism*Style` classes; widgets own semantic
+and behavioral inputs. Resolve local style > component theme > native fallback.
 
 ## Choose ownership before styling
 

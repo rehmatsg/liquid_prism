@@ -1,7 +1,9 @@
 # Integration verification
 
 Choose scenarios based on the affected composition, not a mandatory whole-app
-sweep for every edit.
+sweep for every edit. Analyze examples against the 1.0.0 public barrels. Check
+required button labels and keep component visuals, motion and haptics in styles.
+Low-level optics/lens examples also need `package:liquid_prism/primitives.dart`.
 
 For scaffold or pinned-row changes, check regular bottom chrome and side-rail
 placement, at the top, during collapse, fully pinned, reversing direction and

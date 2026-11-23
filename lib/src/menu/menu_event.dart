@@ -1,18 +1,19 @@
-/// Lifecycle events of one presented menu, streamed back over the event
-/// channel. Strings on the wire: `presented`/`dismissed`/`action`.
-sealed class LiquidMenuEvent {
-  const LiquidMenuEvent({required this.menuId});
+/// A native menu lifecycle or selection event.
+sealed class PrismMenuEvent {
+  /// Creates a PrismMenuEvent.
+  const PrismMenuEvent({required this.menuId});
 
-  /// The Dart-minted id of the menu this event belongs to.
+  /// The identifier of the menu associated with this event.
   final String menuId;
 
-  static LiquidMenuEvent? fromMap(Map<Object?, Object?> map) {
+  /// Decodes a native event, ignoring unknown event types.
+  static PrismMenuEvent? fromMap(Map<Object?, Object?> map) {
     final menuId = map['menuId'] as String?;
     if (menuId == null) return null;
     return switch (map['event']) {
-      'presented' => LiquidMenuPresented(menuId: menuId),
-      'dismissed' => LiquidMenuDismissed(menuId: menuId),
-      'action' => LiquidMenuActionEvent(
+      'presented' => PrismMenuPresented(menuId: menuId),
+      'dismissed' => PrismMenuDismissed(menuId: menuId),
+      'action' => PrismMenuActionEvent(
         menuId: menuId,
         actionId: map['actionId'] as String? ?? '',
       ),
@@ -21,20 +22,60 @@ sealed class LiquidMenuEvent {
   }
 }
 
-/// The system began presenting the menu.
-final class LiquidMenuPresented extends LiquidMenuEvent {
-  const LiquidMenuPresented({required super.menuId});
+/// Reports that the system began presenting a menu.
+final class PrismMenuPresented extends PrismMenuEvent {
+  /// Creates a PrismMenuPresented.
+  const PrismMenuPresented({required super.menuId});
+
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuPresented &&
+          runtimeType == other.runtimeType &&
+          menuId == other.menuId);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(runtimeType, menuId);
 }
 
-/// The menu finished dismissing (selection or cancellation alike).
-final class LiquidMenuDismissed extends LiquidMenuEvent {
-  const LiquidMenuDismissed({required super.menuId});
+/// Reports that a menu finished dismissing.
+final class PrismMenuDismissed extends PrismMenuEvent {
+  /// Creates a PrismMenuDismissed.
+  const PrismMenuDismissed({required super.menuId});
+
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuDismissed &&
+          runtimeType == other.runtimeType &&
+          menuId == other.menuId);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(runtimeType, menuId);
 }
 
-/// A row was tapped. May fire repeatedly for `keepsMenuPresented` rows.
-final class LiquidMenuActionEvent extends LiquidMenuEvent {
-  const LiquidMenuActionEvent({required super.menuId, required this.actionId});
+/// Reports a row selection, including repeated selections.
+final class PrismMenuActionEvent extends PrismMenuEvent {
+  /// Creates a PrismMenuActionEvent.
+  const PrismMenuActionEvent({required super.menuId, required this.actionId});
 
-  /// The action's wire id (its `id` field, or the engine-minted one).
+  /// The selected action wire identifier.
   final String actionId;
+
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuActionEvent &&
+          runtimeType == other.runtimeType &&
+          menuId == other.menuId &&
+          actionId == other.actionId);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(runtimeType, menuId, actionId);
 }

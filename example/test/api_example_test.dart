@@ -1,7 +1,6 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_prism/liquid_prism.dart';
-
 import 'package:liquid_prism_example/api_main.dart';
 
 void main() {
@@ -9,22 +8,16 @@ void main() {
     await tester.pumpWidget(const ApiExample());
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(
-      tester.widget<LiquidPrismSwitch>(find.byType(LiquidPrismSwitch)).value,
-      true,
-    );
-    await tester.tap(find.byType(LiquidPrismSwitch));
+    expect(tester.widget<PrismSwitch>(find.byType(PrismSwitch)).value, true);
+    await tester.tap(find.byType(PrismSwitch));
     await tester.pumpAndSettle();
-    expect(
-      tester.widget<LiquidPrismSwitch>(find.byType(LiquidPrismSwitch)).value,
-      false,
-    );
+    expect(tester.widget<PrismSwitch>(find.byType(PrismSwitch)).value, false);
     await tester.tap(find.text('Dusk'));
     await tester.pumpAndSettle();
     expect(
       tester
-          .widget<LiquidPrismSegmentedControl<int>>(
-            find.byType(LiquidPrismSegmentedControl<int>),
+          .widget<PrismSegmentedControl<int>>(
+            find.byType(PrismSegmentedControl<int>),
           )
           .selectedValue,
       1,
@@ -51,7 +44,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const ApiExample());
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(LiquidPrismSearchField));
+    await tester.tap(find.byType(PrismSearchField));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(CupertinoTextField), 'pr');
     await tester.pumpAndSettle();
@@ -59,7 +52,7 @@ void main() {
     final suggestion = find.text('Prism');
     expect(
       tester.getTopLeft(suggestion).dy,
-      greaterThan(tester.getBottomLeft(find.byType(LiquidPrism).first).dy),
+      greaterThan(tester.getBottomLeft(find.byType(PrismSearchField)).dy),
     );
     await tester.tap(suggestion);
     await tester.pumpAndSettle();

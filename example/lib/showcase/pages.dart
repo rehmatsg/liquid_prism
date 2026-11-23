@@ -1,5 +1,6 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:liquid_prism/liquid_prism.dart';
+import 'package:liquid_prism/primitives.dart';
 
 import 'model.dart';
 import 'previews.dart';
@@ -33,8 +34,8 @@ class ExplorePage extends StatelessWidget {
           ListRow(
             title: 'A brighter idea',
             icon: CupertinoIcons.lightbulb_fill,
-            iconColor: GlassColors.of(context).yellow,
-            trailing: LiquidPrismSwitch(
+            iconColor: PrismColors.of(context).yellow,
+            trailing: PrismSwitch(
               label: 'A brighter idea',
               value: model.enabled,
               onChanged: (v) => model.change(() => model.enabled = v),
@@ -53,9 +54,9 @@ class ExplorePage extends StatelessWidget {
               runSpacing: 12,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                LiquidPrismButton(
+                PrismButton(
                   label: 'Try a button',
-                  variant: GlassButtonVariant.prominent,
+                  variant: PrismButtonVariant.prominent,
                   onPressed: () => model.change(() => model.taps++),
                   child: const Text('Try a button'),
                 ),
@@ -81,7 +82,7 @@ class ExplorePage extends StatelessWidget {
             title: 'Pull to refresh',
             subtitle: 'Pull this page down, or open an inbox',
             icon: CupertinoIcons.arrow_down_circle_fill,
-            iconColor: GlassColors.of(context).indigo,
+            iconColor: PrismColors.of(context).indigo,
             onPressed: () => Navigator.of(context).push<void>(
               CupertinoPageRoute(builder: (_) => const RefreshFeedPage()),
             ),
@@ -116,9 +117,9 @@ class ExploreHero extends StatelessWidget {
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 240),
-            child: LiquidPrism(
+            child: PrismSurface(
               key: const ValueKey('hero-glass'),
-              shape: const GlassShape.rect(cornerRadius: 28),
+              shape: const PrismShape.rect(cornerRadius: 28),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -130,14 +131,14 @@ class ExploreHero extends StatelessWidget {
                     Icon(
                       CupertinoIcons.sparkles,
                       size: 30,
-                      color: GlassColors.light.label,
+                      color: PrismColors.light.label,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Hello, glass.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: GlassColors.light.label,
+                        color: PrismColors.light.label,
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         letterSpacing: .2,
@@ -149,7 +150,7 @@ class ExploreHero extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
-                        color: GlassColors.light.secondaryLabel,
+                        color: PrismColors.light.secondaryLabel,
                       ),
                     ),
                   ],
@@ -169,9 +170,9 @@ class ExploreHero extends StatelessWidget {
               'Real refraction,\nright on the artwork.',
               style: TextStyle(fontSize: 15, height: 1.3),
             ),
-            LiquidPrismButton(
+            PrismButton(
               label: 'Make it yours',
-              variant: GlassButtonVariant.prominent,
+              variant: PrismButtonVariant.prominent,
               onPressed: onStudio,
               child: const Text('Make it yours'),
             ),
@@ -189,7 +190,7 @@ class StudioPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = GlassColors.of(context);
+    final colors = PrismColors.of(context);
     return LargeTitlePage(
       title: 'Studio',
       subtitle: 'Shape the glass. Every screen follows.',
@@ -214,7 +215,7 @@ class StudioPage extends StatelessWidget {
               title: 'Dark appearance',
               icon: CupertinoIcons.moon_fill,
               iconColor: colors.indigo,
-              trailing: LiquidPrismSwitch(
+              trailing: PrismSwitch(
                 label: 'Dark appearance',
                 value: model.dark,
                 onChanged: (v) => model.change(() => model.dark = v),
@@ -224,20 +225,20 @@ class StudioPage extends StatelessWidget {
               title: 'Clear material',
               icon: CupertinoIcons.drop_fill,
               iconColor: colors.cyan,
-              trailing: LiquidPrismSwitch(
+              trailing: PrismSwitch(
                 label: 'Clear material',
                 value: model.clear,
                 onChanged: (v) => model.change(() => model.clear = v),
               ),
             ),
-            // Only where iOS has a vertical bar, such as iPhone Duo.
-            if (LiquidPrismSystemChrome.of(context)?.verticalBarEdge != null)
+
+            if (PrismSystemChrome.of(context)?.verticalBarEdge != null)
               ListRow(
                 title: 'Side bar',
                 subtitle: 'Bars beside the content on iPhone Duo',
                 icon: CupertinoIcons.sidebar_right,
                 iconColor: colors.green,
-                trailing: LiquidPrismSwitch(
+                trailing: PrismSwitch(
                   label: 'Side bar',
                   value: model.verticalBar,
                   onChanged: model.setVerticalBar,
@@ -248,7 +249,7 @@ class StudioPage extends StatelessWidget {
               subtitle: 'Tabs in a sidebar on wide windows',
               icon: CupertinoIcons.sidebar_left,
               iconColor: colors.purple,
-              trailing: LiquidPrismSwitch(
+              trailing: PrismSwitch(
                 label: 'Sidebar',
                 value: model.sidebar,
                 onChanged: (v) => model.change(() => model.sidebar = v),
@@ -258,7 +259,7 @@ class StudioPage extends StatelessWidget {
               title: 'Tab labels',
               icon: CupertinoIcons.textformat,
               iconColor: colors.orange,
-              trailing: LiquidPrismSwitch(
+              trailing: PrismSwitch(
                 label: 'Tab labels',
                 value: model.labels,
                 onChanged: (v) => model.change(() => model.labels = v),
@@ -277,7 +278,7 @@ class StudioPage extends StatelessWidget {
                 runSpacing: 12,
                 children: [
                   for (final entry in colors.accents.entries)
-                    LiquidPrismPressable(
+                    PrismPressable(
                       label: 'Use ${entry.key} tint',
                       selected: model.accent == entry.key,
                       onPressed: () =>
@@ -330,17 +331,15 @@ class StudioPage extends StatelessWidget {
                 model.refraction = v;
               }),
             ),
-            // The device's own Liquid Glass setting, as the package reads it.
+
             ListenableBuilder(
               listenable: Listenable.merge([
-                LiquidPrismSystemChrome.deviceGlassTintAmount,
-                LiquidPrismSystemChrome.reduceTransparency,
+                PrismSystemChrome.deviceGlassTintAmount,
+                PrismSystemChrome.reduceTransparency,
               ]),
               builder: (context, _) {
-                final tint =
-                    LiquidPrismSystemChrome.deviceGlassTintAmount.value;
-                final reduced =
-                    LiquidPrismSystemChrome.reduceTransparency.value;
+                final tint = PrismSystemChrome.deviceGlassTintAmount.value;
+                final reduced = PrismSystemChrome.reduceTransparency.value;
                 return ListRow(
                   key: const ValueKey('device-glass'),
                   title: 'Device glass',
@@ -350,7 +349,6 @@ class StudioPage extends StatelessWidget {
                   icon: CupertinoIcons.device_phone_portrait,
                   iconColor: colors.indigo,
                   trailing: Text(
-                    // Short, so the row fits narrow screens at large text.
                     tint == null ? '—' : tint.toStringAsFixed(2),
                     style: TextStyle(color: colors.secondaryLabel),
                   ),
@@ -361,7 +359,7 @@ class StudioPage extends StatelessWidget {
               title: 'Whole app',
               icon: CupertinoIcons.square_stack_3d_up,
               iconColor: colors.teal,
-              trailing: LiquidPrismSwitch(
+              trailing: PrismSwitch(
                 label: 'Whole app',
                 value: model.globalOptics,
                 onChanged: (v) => model.change(() => model.globalOptics = v),
@@ -374,7 +372,7 @@ class StudioPage extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: LiquidPrismSegmentedControl<int>(
+              child: PrismSegmentedControl<int>(
                 label: 'Artwork',
                 selectedValue: model.wallpaper,
                 onValueChanged: (v) => model.change(() => model.wallpaper = v),
@@ -388,7 +386,7 @@ class StudioPage extends StatelessWidget {
         ),
         InsetSection(
           children: [
-            LiquidPrismPressable(
+            PrismPressable(
               label: 'Restore defaults',
               onPressed: model.reset,
               child: SizedBox(
@@ -438,7 +436,7 @@ class _LibraryPageState extends State<LibraryPage> {
       subtitle: 'Every component, with a live preview.',
       controller: widget.controller,
       children: [
-        LiquidPrismSearchField(
+        PrismSearchField(
           key: const ValueKey('library-search'),
           controller: widget.search,
           focusNode: widget.focus,
@@ -468,7 +466,7 @@ class _LibraryPageState extends State<LibraryPage> {
                       style: TextStyle(fontSize: 15, color: muted(context)),
                     ),
                     const SizedBox(height: 16),
-                    LiquidPrismButton(
+                    PrismButton(
                       label: 'Reset library search',
                       onPressed: () {
                         widget.search.clear();
@@ -495,7 +493,6 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 }
 
-/// A list row for one component, opening its detail page.
 class ComponentRow extends StatelessWidget {
   const ComponentRow({super.key, required this.info, required this.onPressed});
   final ComponentInfo info;
@@ -512,7 +509,6 @@ class ComponentRow extends StatelessWidget {
   );
 }
 
-/// A titled slider with its value, in a list.
 class SliderRow extends StatelessWidget {
   const SliderRow({
     super.key,
@@ -542,7 +538,7 @@ class SliderRow extends StatelessWidget {
             ),
           ],
         ),
-        LiquidPrismSlider(
+        PrismSlider(
           label: title,
           value: value,
           min: min,
@@ -559,16 +555,18 @@ class FavoriteButton extends StatelessWidget {
   final ShowcaseModel model;
 
   @override
-  Widget build(BuildContext context) => LiquidPrismButton(
+  Widget build(BuildContext context) => PrismButton(
     label: 'Favorite',
     selected: model.favorite,
-    shape: GlassShape.circle,
-    padding: const EdgeInsets.all(12),
+    style: const PrismButtonStyle(
+      shape: PrismShape.circle,
+      padding: EdgeInsets.all(12),
+    ),
     onPressed: () => model.change(() => model.favorite = !model.favorite),
     child: Icon(
       model.favorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
       size: 22,
-      color: model.favorite ? GlassColors.of(context).pink : null,
+      color: model.favorite ? PrismColors.of(context).pink : null,
     ),
   );
 }

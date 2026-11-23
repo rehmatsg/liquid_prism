@@ -1,10 +1,12 @@
+import 'package:flutter/foundation.dart' show listEquals;
+
 import 'menu_elements.dart';
 import 'menu_icon.dart';
 
-/// A native popup menu (`UIMenu`). The same shape serves the root menu and —
-/// through [LiquidSubmenu]/[LiquidMenuSection] — nested content.
-final class LiquidMenu {
-  const LiquidMenu({
+/// A native popup menu with ordered child elements.
+final class PrismMenu {
+  /// Creates a PrismMenu.
+  const PrismMenu({
     this.title = '',
     this.image,
     this.identifier,
@@ -12,18 +14,24 @@ final class LiquidMenu {
     this.preferredElementSize = .automatic,
   });
 
-  /// Shown as the menu's header title when non-empty.
+  /// The row or menu header text.
   final String title;
-  final LiquidMenuIcon? image;
 
-  /// `UIMenu.Identifier` — mainly useful for debugging.
+  /// The menu header image.
+  final PrismMenuIcon? image;
+
+  /// The optional native menu identifier.
   final String? identifier;
 
-  final List<LiquidMenuElement> children;
-  final MenuElementSize preferredElementSize;
+  /// The ordered child elements.
+  final List<PrismMenuElement> children;
 
+  /// The preferred native row density.
+  final PrismMenuElementSize preferredElementSize;
+
+  /// Serializes native wire fields.
   Map<String, Object?> toMap(
-    Map<String, Object?> Function(LiquidMenuElement) serializeChild,
+    Map<String, Object?> Function(PrismMenuElement) serializeChild,
   ) => {
     'title': title,
     if (image != null) 'image': image!.toMap(),
@@ -32,4 +40,27 @@ final class LiquidMenu {
     'options': const <String, Object?>{},
     'items': [for (final e in children) serializeChild(e)],
   };
+
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenu &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          image == other.image &&
+          identifier == other.identifier &&
+          listEquals(children, other.children) &&
+          preferredElementSize == other.preferredElementSize);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    title,
+    image,
+    identifier,
+    Object.hashAll(children),
+    preferredElementSize,
+  );
 }

@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
+
+### Breaking Changes
+
+- Unify all public types under the `Prism*` prefix (`Prism.initialize`, `PrismSurface`, `PrismGlass`, `PrismShape`, `PrismTheme`, `PrismColors`, `PrismButton`, `PrismSwitch`, `PrismSlider`, `PrismSegmentedControl`, `PrismSearchField`, `PrismTabBar`, `PrismToolbar`, `PrismScaffold`, `PrismSliverAppBar`, `PrismScrollEdge`, `PrismVisibility`, `PrismMenu`, `prismMenus`, etc.) and prefix all previously unprefixed menu enums.
+- Separate core consumer exports (`package:liquid_prism/liquid_prism.dart`) from low-level building blocks (`package:liquid_prism/primitives.dart`) and fold `liquid_menu.dart` into the main barrel.
+- Adopt a strict widget vs. style split: visual, geometry, optical, motion, padding, and haptic overrides move into immutable `Prism*Style` classes; widgets take semantic and behavioral inputs directly.
+- Consolidate `LiquidPrismToolbarGroup` into `PrismToolbar.group`, `LiquidPrismScrollFade` into `PrismScrollEdge.fade`, and `LiquidPrismPresence` into `PrismVisibility.driven` (with `PrismPresence` available in `primitives.dart`).
+- Remove internal shader plumbing parameters from public `PrismSurface` (moved to internal `RawPrismSurface`).
+- See [doc/migration-1.0.md](doc/migration-1.0.md) for the complete symbol mapping.
+
+### Fixes & Improvements
+
+- Implement `operator ==` and `hashCode` on `PrismThemeData` and every immutable style, optics, motion, badge, tab, toolbar, and menu data class, fixing spurious `PrismTheme` descendant rebuilds.
+- Reorganize `lib/src/` and `test/` into domain modules (`core`, `theme`, `rendering`, `controls`, `navigation`, `menu`) and move research probes, specs, and benchmarks into `research/`.
+- Enable strict static analysis (`strict-casts`, `strict-inference`, `strict-raw-types`, `--fatal-infos`) across both the package and `example/`.
+- Upgrade CI to run iOS SwiftPM unit tests, CocoaPods podspec validation, and Conventional Commit PR checks, and automate releases with Release Please.
 
 ## 0.20.1
 

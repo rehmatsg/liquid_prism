@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a rendering, gesture, layout, or API bug in Liquid Prism.
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Description
+      description: What happened vs. what you expected?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Paste a short runnable snippet using public exports.
+      render: dart
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Liquid Prism version / tag
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Flutter, Dart, and platform version
+      placeholder: Flutter 3.50.0, iOS 27.1 Simulator (Impeller)
+    validations:
+      required: true

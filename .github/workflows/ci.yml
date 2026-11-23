@@ -1,14 +1,41 @@
 name: CI
+
 on:
   push:
     branches: [main]
   pull_request:
+
 permissions:
   contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
+  pr-lint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            docs
+            test
+            ci
+            build
+            chore
+          requireScope: false
+
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -21,9 +48,10 @@ jobs:
           cache: true
       - run: ./tool/check.sh
       - run: flutter pub publish --dry-run
+
   ios:
     runs-on: macos-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2.23.0
@@ -31,9 +59,27 @@ jobs:
           flutter-version: '3.50.0'
           channel: stable
           cache: true
+      - name: Run Swift unit tests
+        run: |
+          SIM=$(xcrun simctl list devices available iPhone --json | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)['devices']
+          for runtime in sorted(data.keys(), reverse=True):
+              if 'iOS' not in runtime:
+                  continue
+              for dev in data[runtime]:
+                  if dev.get('isAvailable'):
+                      print(dev['udid'])
+                      sys.exit(0)
+          sys.exit(1)
+          ")
+          xcodebuild test -scheme liquid_prism-Package -destination "platform=iOS Simulator,id=$SIM"
+      - name: Validate CocoaPods podspec
+        run: pod lib lint ios/liquid_prism.podspec --allow-warnings --skip-tests
       - run: flutter pub get
       - run: flutter build ios --simulator --debug
         working-directory: example
+
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 25

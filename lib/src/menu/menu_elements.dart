@@ -1,25 +1,49 @@
 import 'dart:async' show FutureOr;
 
+import 'package:flutter/foundation.dart' show listEquals;
+
 import 'menu_icon.dart';
 
-/// Checkmark state of a menu row (`UIMenuElement.State`).
-enum MenuElementState { off, on, mixed }
+/// The checkmark state of a menu row.
+enum PrismMenuElementState {
+  /// The off setting.
+  off,
 
-/// `UIMenu.ElementSize` — the row density hint.
-enum MenuElementSize { automatic, small, medium, large }
+  /// The on setting.
+  on,
 
-/// One element in a [LiquidMenu]'s child list.
-sealed class LiquidMenuElement {
-  const LiquidMenuElement();
+  /// The mixed setting.
+  mixed,
+}
 
-  /// Serializes the element's own fields. Ids are minted and children wired by
-  /// the engine's serializer — do not emit 'id' or 'items'.
+/// The preferred native menu row density.
+enum PrismMenuElementSize {
+  /// The automatic setting.
+  automatic,
+
+  /// The small setting.
+  small,
+
+  /// The medium setting.
+  medium,
+
+  /// The large setting.
+  large,
+}
+
+/// An action, separator, section, submenu, or deferred menu element.
+sealed class PrismMenuElement {
+  /// Creates a PrismMenuElement.
+  const PrismMenuElement();
+
+  /// Serializes native wire fields.
   Map<String, Object?> toMap();
 }
 
-/// A tappable menu row (`UIAction`).
-final class LiquidMenuAction<T> extends LiquidMenuElement {
-  const LiquidMenuAction({
+/// A selectable menu row with an optional result and callback.
+final class PrismMenuAction<T> extends PrismMenuElement {
+  /// Creates a PrismMenuAction.
+  const PrismMenuAction({
     this.id,
     this.value,
     required this.title,
@@ -33,40 +57,75 @@ final class LiquidMenuAction<T> extends LiquidMenuElement {
     this.onSelected,
   });
 
-  /// Stable identifier. Auto-minted when omitted.
+  /// The stable wire identifier, minted automatically when omitted.
   final String? id;
 
-  /// The value `showLiquidMenu<T>` completes with when this row is selected.
+  /// The result returned after this action is selected and the menu closes.
   final T? value;
 
+  /// The row or menu header text.
   final String title;
-  final LiquidMenuIcon? icon;
 
-  /// Checkmark shown when [state] is `.on` (or a dash for `.mixed`).
-  final MenuElementState state;
+  /// The leading menu image.
+  final PrismMenuIcon? icon;
 
-  /// Renders the row in the system red destructive color.
+  /// The row checkmark state.
+  final PrismMenuElementState state;
+
+  /// Whether the system uses its destructive appearance.
   final bool destructive;
 
-  /// Disabled rows render dimmed and cannot be tapped.
+  /// Whether the row accepts selection.
   final bool enabled;
 
-  /// Hidden rows are omitted from the menu.
+  /// Whether the native menu omits the row.
   final bool hidden;
 
-  /// Keeps the menu open after the tap (`UIMenuElement.Attributes.
-  /// keepsMenuPresented`) — for multi-toggle menus. [onSelected] still fires
-  /// per tap; the show future completes on dismissal.
+  /// Whether the menu remains open for repeated selections.
   final bool keepsMenuPresented;
 
-  /// Secondary text surfaced in keyboard-shortcut UIs; not shown on iOS touch
-  /// menus but carried for completeness.
+  /// The optional keyboard shortcut discovery text.
   final String? discoverabilityTitle;
 
-  /// Fires when the row is tapped. For `keepsMenuPresented` rows this can
-  /// fire multiple times per presentation.
+  /// Called for each selection, including repeated row selections.
   final void Function()? onSelected;
 
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuAction<T> &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          value == other.value &&
+          title == other.title &&
+          icon == other.icon &&
+          state == other.state &&
+          destructive == other.destructive &&
+          enabled == other.enabled &&
+          hidden == other.hidden &&
+          keepsMenuPresented == other.keepsMenuPresented &&
+          discoverabilityTitle == other.discoverabilityTitle &&
+          onSelected == other.onSelected);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    value,
+    title,
+    icon,
+    state,
+    destructive,
+    enabled,
+    hidden,
+    keepsMenuPresented,
+    discoverabilityTitle,
+    onSelected,
+  );
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'type': 'action',
@@ -83,19 +142,30 @@ final class LiquidMenuAction<T> extends LiquidMenuElement {
   };
 }
 
-/// A separator between the surrounding rows — splits the enclosing run into
-/// inline sections, which is how UIMenu renders separators.
-final class LiquidMenuDivider extends LiquidMenuElement {
-  const LiquidMenuDivider();
+/// A separator between adjacent menu groups.
+final class PrismMenuDivider extends PrismMenuElement {
+  /// Creates a PrismMenuDivider.
+  const PrismMenuDivider();
 
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuDivider && runtimeType == other.runtimeType);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => const {'type': 'divider'};
 }
 
-/// An inline section: its [children] render as one separated group, with
-/// [title] as the section header when non-empty.
-final class LiquidMenuSection extends LiquidMenuElement {
-  const LiquidMenuSection({
+/// An inline group of menu elements with an optional header.
+final class PrismMenuSection extends PrismMenuElement {
+  /// Creates a PrismMenuSection.
+  const PrismMenuSection({
     this.title = '',
     this.icon,
     this.children = const [],
@@ -104,18 +174,50 @@ final class LiquidMenuSection extends LiquidMenuElement {
     this.preferredElementSize = .automatic,
   });
 
+  /// The row or menu header text.
   final String title;
-  final LiquidMenuIcon? icon;
-  final List<LiquidMenuElement> children;
 
-  /// Radio semantics — only one child may be `.on` at a time.
+  /// The leading menu image.
+  final PrismMenuIcon? icon;
+
+  /// The ordered child elements.
+  final List<PrismMenuElement> children;
+
+  /// Whether the group uses single-selection semantics.
   final bool singleSelection;
 
-  /// Renders the section as an icon palette.
+  /// Whether the section renders as an icon palette.
   final bool palette;
 
-  final MenuElementSize preferredElementSize;
+  /// The preferred native row density.
+  final PrismMenuElementSize preferredElementSize;
 
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuSection &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          icon == other.icon &&
+          listEquals(children, other.children) &&
+          singleSelection == other.singleSelection &&
+          palette == other.palette &&
+          preferredElementSize == other.preferredElementSize);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    title,
+    icon,
+    Object.hashAll(children),
+    singleSelection,
+    palette,
+    preferredElementSize,
+  );
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'type': 'section',
@@ -131,9 +233,10 @@ final class LiquidMenuSection extends LiquidMenuElement {
   };
 }
 
-/// A nested menu — renders as a row that navigates to a subpage.
-final class LiquidSubmenu extends LiquidMenuElement {
-  const LiquidSubmenu({
+/// A nested menu presented as a navigable row.
+final class PrismSubmenu extends PrismMenuElement {
+  /// Creates a PrismSubmenu.
+  const PrismSubmenu({
     required this.title,
     this.icon,
     this.children = const [],
@@ -142,13 +245,50 @@ final class LiquidSubmenu extends LiquidMenuElement {
     this.preferredElementSize = .automatic,
   });
 
+  /// The row or menu header text.
   final String title;
-  final LiquidMenuIcon? icon;
-  final List<LiquidMenuElement> children;
-  final bool destructive;
-  final bool singleSelection;
-  final MenuElementSize preferredElementSize;
 
+  /// The leading menu image.
+  final PrismMenuIcon? icon;
+
+  /// The ordered child elements.
+  final List<PrismMenuElement> children;
+
+  /// Whether the system uses its destructive appearance.
+  final bool destructive;
+
+  /// Whether the group uses single-selection semantics.
+  final bool singleSelection;
+
+  /// The preferred native row density.
+  final PrismMenuElementSize preferredElementSize;
+
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismSubmenu &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          icon == other.icon &&
+          listEquals(children, other.children) &&
+          destructive == other.destructive &&
+          singleSelection == other.singleSelection &&
+          preferredElementSize == other.preferredElementSize);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    title,
+    icon,
+    Object.hashAll(children),
+    destructive,
+    singleSelection,
+    preferredElementSize,
+  );
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'type': 'submenu',
@@ -164,15 +304,31 @@ final class LiquidSubmenu extends LiquidMenuElement {
   };
 }
 
-/// Rows resolved when the menu opens (`UIDeferredMenuElement`). [loader] runs
-/// at display time — keep it fast, the menu waits on it.
-final class LiquidMenuDeferred extends LiquidMenuElement {
-  const LiquidMenuDeferred({this.id, required this.loader});
+/// Menu elements loaded when the native menu requests them.
+final class PrismMenuDeferred extends PrismMenuElement {
+  /// Creates a PrismMenuDeferred.
+  const PrismMenuDeferred({this.id, required this.loader});
 
-  /// Correlates the resolve request; auto-minted when omitted.
+  /// The stable wire identifier, minted automatically when omitted.
   final String? id;
-  final FutureOr<List<LiquidMenuElement>> Function() loader;
 
+  /// Loads child elements when requested at display time.
+  final FutureOr<List<PrismMenuElement>> Function() loader;
+
+  /// Whether another value has the same type and fields.
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PrismMenuDeferred &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          loader == other.loader);
+
+  /// The hash of this value and its fields.
+  @override
+  int get hashCode => Object.hash(runtimeType, id, loader);
+
+  /// Serializes native wire fields.
   @override
   Map<String, Object?> toMap() => {
     'type': 'deferred',
